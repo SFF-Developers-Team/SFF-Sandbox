@@ -36,4 +36,16 @@ void World::WorldDraw() {
 
 
 }
-// void World::
+bool World::isBlockAccesible(int x, int y) {
+    return worldArr[x][y + 1] == AIR || worldArr[x][y - 1] == AIR || worldArr[x + 1][y] == AIR || worldArr[x - 1][y] == AIR;
+}
+void World::BlockCheck() {
+    for (int x = 0;x<256;x++) {
+        for(int y = 0;y<64;y++) {
+            if(isBlockAccesible(x,y) && worldArr[x][y] != AIR) {
+                hitboxes.push_back(Vector2 {(float)x, (float)y});
+            }
+        }
+    }
+
+}

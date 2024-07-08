@@ -18,5 +18,7 @@ public:
 
     void Generate();
     void WorldDraw();
-    // void Rectangle
+    void BlockCheck();
+    bool isBlockAccesible(int x, int y);
+    std::vector<Vector2> hitboxes;
 };  

@@ -23,9 +23,6 @@ void Game::render() {
 
         ClearBackground(SKYBLUE);    
         World.WorldDraw();
-    
+
     EndDrawing();
-
-
-
 }
