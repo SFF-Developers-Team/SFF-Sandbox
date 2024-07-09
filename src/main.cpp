@@ -1,5 +1,4 @@
-#include <world.hpp>
-#include <game.hpp>
+#include <Game.hpp>
 
 int main() {
     Game game;

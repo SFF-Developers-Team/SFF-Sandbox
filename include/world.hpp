@@ -1,3 +1,7 @@
+#pragma once
+#include <vector>
+#include <raylib.h>
+
 enum Blocks {
     AIR,
     GRASS,
@@ -5,20 +9,15 @@ enum Blocks {
     STONE
 };
 
-
-
-#pragma once
-#include <raylib.h>
-#include <game.hpp>
-
 class World {
 private:
     int worldArr[256][64];
-public:
 
+public:
     void Generate();
     void WorldDraw();
     void BlockCheck();
     bool isBlockAccesible(int x, int y);
+
     std::vector<Vector2> hitboxes;
 };  

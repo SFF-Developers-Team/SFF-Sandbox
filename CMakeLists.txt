@@ -15,7 +15,9 @@ add_subdirectory(libs/raylib)
 
 target_link_libraries(${PROJECT_NAME} raylib)
 
-target_include_directories(${PROJECT_NAME} PRIVATE 
+include_directories(
+    "libs/raylib"
     "include/"
-	"libs/raylib"
 )
+
+file(COPY assets DESTINATION /)
