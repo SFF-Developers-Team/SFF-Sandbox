@@ -1,6 +1,6 @@
 #include <Game.hpp>
 #include <Sprite.hpp>
-
+#include <player.hpp>
 void Game::init() {
     InitWindow(screenWidth, screenHeight, "FriendsTeam Sandbox");
     SetTargetFPS(60);
@@ -8,7 +8,7 @@ void Game::init() {
     Sprite::loadSprites();
 
     world.Generate();
-
+    this->player = new Player();
     while (!WindowShouldClose()) {
         this->render();
     }
