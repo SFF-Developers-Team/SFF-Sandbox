@@ -6,14 +6,14 @@ class Game {
 private:
     const int screenWidth = 1280;
     const int screenHeight = 720;
+    const int cameraSpeed = 6;
+
+    Camera2D camera;
 
 public:
-    static inline Texture2D Grass;
-    static inline Texture2D Dirt;
-    static inline Texture2D Stone;
-
     World world;
 
     void init();
     void render();
+    void updateControls();
 };
