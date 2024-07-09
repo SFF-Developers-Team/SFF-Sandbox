@@ -1,22 +1,20 @@
 #include <Game.hpp>
 #include <Sprite.hpp>
-#include <player.hpp>
+#include <Player.hpp>
+
 void Game::init() {
-    InitWindow(screenWidth, screenHeight, "FriendsTeam Sandbox");
+    InitWindow(m_screenWidth, m_screenHeight, "FriendsTeam Sandbox");
     SetTargetFPS(60);
 
     Sprite::loadSprites();
 
-    world.Generate();
-    this->player = new Player();
+    m_world = new World(256, 64);
+    m_player = new Player();
 
-    camera.target = {0, 0};
-    camera.offset = {0, 0};
-    camera.zoom = 1.0f;
-    camera.rotation = 0;
+    m_player->camera.offset = {m_screenWidth / 2.0f, m_screenHeight / 2.0f};
 
     while (!WindowShouldClose()) {
-        this->updateControls();
+        this->m_player->update();
         this->render();
     }
 
@@ -27,26 +25,17 @@ void Game::render() {
     BeginDrawing();
         ClearBackground(SKYBLUE);
 
-        BeginMode2D(this->camera);
-            world.WorldDraw();
+        BeginMode2D(this->m_player->camera);
+            m_world->draw(m_player->getPosition(), m_renderDistance, m_debug);
+            m_player->draw();
         EndMode2D();
+
+        DrawText(TextFormat("Player position %.02f %.02f", m_player->camera.target.x, m_player->camera.target.y), 0, 0, 24, WHITE);
     EndDrawing();
 }
 
-void Game::updateControls() {
-    if(IsKeyDown(KEY_W)) {
-        this->camera.target.y -= cameraSpeed;
-    }
-
-    if(IsKeyDown(KEY_S)) {
-        this->camera.target.y += cameraSpeed;
-    }
-
-    if(IsKeyDown(KEY_D)) {
-        this->camera.target.x += cameraSpeed;
-    }
-
-    if(IsKeyDown(KEY_A)) {
-        this->camera.target.x -= cameraSpeed;
+void Game::update() {
+    if(IsKeyPressed(KEY_F3)) {
+        m_debug = !m_debug;
     }
 }

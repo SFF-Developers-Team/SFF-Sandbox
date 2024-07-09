@@ -2,20 +2,24 @@
 #include <vector>
 #include <raylib.h>
 
-enum Blocks {
-    AIR,
-    GRASS,
-    DIRT,
-    STONE
-};
+#include "Block.hpp"
+
+#define CHUNK_SIZE 16
+
+class Chunk;
 
 class World {
-private:
-    int worldArr[256][64];
-
 public:
-    void Generate();
-    void WorldDraw();
+    Block* m_blocks;
+    std::vector<Chunk*> m_chunks;
+
+    int m_width;
+    int m_height;
+
+    World(int width, int height);
+
+    void generate();
+    void draw(Vector2 playerPosition, int renderDistance, bool debug);
     void BlockCheck();
     bool isBlockAccesible(int x, int y);
 

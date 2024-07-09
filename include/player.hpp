@@ -4,11 +4,21 @@
 
 class Player {
 private:
-Vector2 position;
-Vector2 playersize = {35,42};
-Rectangle hitbox;
-Texture2D player;
+    Rectangle m_rect;
+    Texture2D m_texture;
+
+    int playerSpeed = 3.0f;
+
 public:
+    Camera2D camera;
+
     Player();
+ 
     void update(); 
+    void draw();
+    void updateCamera();
+
+    inline Vector2 getPosition() {
+        return Vector2 {m_rect.x, m_rect.y};
+    }
 };
