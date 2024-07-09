@@ -14,7 +14,7 @@ void Game::init() {
     m_player->camera.offset = {m_screenWidth / 2.0f, m_screenHeight / 2.0f};
 
     while (!WindowShouldClose()) {
-        this->m_player->update();
+        this->update();
         this->render();
     }
 
@@ -26,7 +26,7 @@ void Game::render() {
         ClearBackground(SKYBLUE);
 
         BeginMode2D(this->m_player->camera);
-            m_world->draw(m_player->getPosition(), m_renderDistance, m_debug);
+            m_world->draw(m_debug);
             m_player->draw();
         EndMode2D();
 
@@ -38,4 +38,7 @@ void Game::update() {
     if(IsKeyPressed(KEY_F3)) {
         m_debug = !m_debug;
     }
+
+    m_player->update();
+    m_world->update(m_player->getPosition(), m_renderDistance);
 }

@@ -20,4 +20,4 @@ include_directories(
     "include/"
 )
 
-file(COPY assets DESTINATION /)
+file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
