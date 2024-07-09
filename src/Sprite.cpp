@@ -1,4 +1,5 @@
 #include <Sprite.hpp>
+#include <Block.hpp>
 #include <string>
 
 Sprite::Sprite(int id) {
@@ -18,7 +19,15 @@ int Sprite::getHeight() {
 }
 
 void Sprite::loadSprites() {
-    grass = new Sprite(1);
-    dirt = new Sprite(2);
-    stone = new Sprite(3);
+    Sprite::addSprite(GRASS);
+    Sprite::addSprite(DIRT);
+    Sprite::addSprite(STONE);
+}
+
+void Sprite::addSprite(int id) {
+    m_sprites[id] = new Sprite(id);
+}
+
+Sprite* Sprite::getSprite(int id) {
+    return m_sprites[id];
 }

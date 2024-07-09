@@ -1,15 +1,13 @@
 #pragma once
 #include <raylib.h>
+#include <map>
 
 class Sprite {
 private:
+    static inline std::map<int, Sprite*> m_sprites;
     Texture2D tex;
 
 public:
-    static inline Sprite* grass;
-    static inline Sprite* dirt;
-    static inline Sprite* stone;
-    
     Sprite(int id);
 
     Texture2D getTexture();
@@ -18,4 +16,6 @@ public:
     int getHeight();
 
     static void loadSprites();
+    static void addSprite(int id);
+    static Sprite* getSprite(int id);
 };

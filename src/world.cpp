@@ -37,38 +37,50 @@ void World::generate() {
     }
 }
 
-void World::draw(Vector2 playerPosition, int renderDistance, bool debug) {
-    int playerInChunk = (int)(playerPosition.x / 32 / CHUNK_SIZE) % CHUNK_SIZE;
+void World::update(Vector2 playerPosition, int renderDistance) {
+    m_playerInChunk = (int)(playerPosition.x / 32 / CHUNK_SIZE) % CHUNK_SIZE;
 
-    int minX = fmax((playerInChunk - ceil(renderDistance / 2)) * CHUNK_SIZE, 0);
-    int maxX = fmin((playerInChunk + ceil(renderDistance / 2)) * CHUNK_SIZE, m_width);
+    int minX = fmax((m_playerInChunk - ceil(renderDistance / 2)) * CHUNK_SIZE, 0);
+    int maxX = fmin((m_playerInChunk + ceil(renderDistance / 2)) * CHUNK_SIZE, m_width);
 
+    if(m_renderMinX != minX || m_renderMaxX != maxX) {
+        this->buildHitboxes();
+    }
 
-    for (int x = minX; x < maxX; x++) {
+    m_renderMinX = minX;
+    m_renderMaxX = maxX;
+}
+
+void World::buildHitboxes() {
+    m_hitboxes.clear();
+
+    for (int x = m_renderMinX; x < m_renderMaxX; x++) {
+        for(int y = 0; y < m_height; y++) {
+            if(isBlockAccesible(x, y) && m_blocks[x * m_height + y] != AIR) {
+                m_hitboxes.push_back(Vector2 {(float)x, (float)y});
+            }
+        }
+    }
+}
+
+void World::draw(bool debug) {
+    for (int x = m_renderMinX; x < m_renderMaxX; x++) {
         for(int y = 0; y < m_height; y++) {
             auto block = m_blocks[x * m_height + y];
+            auto sprite = Sprite::getSprite(block);
 
-            switch (block) {
-                case GRASS:
-                    DrawTexturePro(Sprite::grass->getTexture(), {0, 0, (float)Sprite::grass->getWidth(), (float)Sprite::grass->getHeight()}, {(float)x * 32, (float)y * 32, 32, 32}, {0, 0}, 0, WHITE);
-                    break;
-                
-                case DIRT:
-                    DrawTexturePro(Sprite::dirt->getTexture(), {0, 0, (float)Sprite::dirt->getWidth(), (float)Sprite::dirt->getHeight()}, {(float)x * 32, (float)y * 32, 32, 32}, {0, 0}, 0, WHITE);
-                    break;
-                
-                case STONE:
-                    DrawTexturePro(Sprite::stone->getTexture(), {0, 0, (float)Sprite::stone->getWidth(), (float)Sprite::stone->getHeight()}, {(float)x * 32, (float)y * 32, 32, 32}, {0, 0}, 0, WHITE);
-                    break;
+            if(block == AIR) continue;
 
-                default:
-                    break;
-            }
+            DrawTexturePro(sprite->getTexture(), {0, 0, (float)sprite->getWidth(), (float)sprite->getHeight()}, {(float)x * 32, (float)y * 32, 32, 32}, {0, 0}, 0, WHITE);
         }
 
         if(debug) {
-            DrawLineV({(float)playerInChunk * CHUNK_SIZE * 32, 0}, {(float)playerInChunk * CHUNK_SIZE * 32, (float)m_height * 32}, YELLOW);
-            DrawLineV({(float)playerInChunk * (CHUNK_SIZE * 2) * 32, 0}, {(float)playerInChunk * (CHUNK_SIZE * 2) * 32, (float)m_height * 32}, YELLOW);
+            DrawLineV({(float)m_playerInChunk * CHUNK_SIZE * 32, 0}, {(float)m_playerInChunk * CHUNK_SIZE * 32, (float)m_height * 32}, YELLOW);
+            DrawLineV({(float)m_playerInChunk * (CHUNK_SIZE * 2) * 32, 0}, {(float)m_playerInChunk * (CHUNK_SIZE * 2) * 32, (float)m_height * 32}, YELLOW);
+        
+            for(auto& hitbox : m_hitboxes) {
+                DrawRectangleLinesEx(Rectangle {hitbox.x * 32, hitbox.y * 32, 32, 32}, 1.0f, RED);
+            }
         }
     }
 }
@@ -79,13 +91,3 @@ bool World::isBlockAccesible(int x, int y) {
            m_blocks[(x + 1) * m_height + y] == AIR || 
            m_blocks[(x - 1) * m_height + y] == AIR;
 }
-
-// void World::BlockCheck() {
-//     for (int x = 0; x < 256; x++) {
-//         for(int y = 0; y < 64; y++) {
-//             if(isBlockAccesible(x, y) && worldArr[x][y] != AIR) {
-//                 hitboxes.push_back(Vector2 {(float)x, (float)y});
-//             }
-//         }
-//     }
-// }
