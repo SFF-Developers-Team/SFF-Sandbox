@@ -1,4 +1,4 @@
-#include <Player.hpp>
+#include <player.hpp>
 
 Player::Player() {
     this->m_texture = LoadTexture("assets/player.png");

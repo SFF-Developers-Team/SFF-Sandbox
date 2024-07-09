@@ -1,6 +1,7 @@
-#include <World.hpp>
+#include <world.hpp>
 #include <iostream>
 #include <Sprite.hpp>
+#include <cmath>
 
 World::World(int width, int height) : m_width(width), m_height(height) {
     m_blocks = new Block[width * height];

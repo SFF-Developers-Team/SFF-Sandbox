@@ -1,6 +1,6 @@
-#include <Game.hpp>
+#include <game.hpp>
 #include <Sprite.hpp>
-#include <Player.hpp>
+#include <player.hpp>
 
 void Game::init() {
     InitWindow(m_screenWidth, m_screenHeight, "FriendsTeam Sandbox");
