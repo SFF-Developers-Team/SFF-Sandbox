@@ -9,7 +9,14 @@ void Game::init() {
 
     world.Generate();
     this->player = new Player();
+
+    camera.target = {0, 0};
+    camera.offset = {0, 0};
+    camera.zoom = 1.0f;
+    camera.rotation = 0;
+
     while (!WindowShouldClose()) {
+        this->updateControls();
         this->render();
     }
 
@@ -18,8 +25,28 @@ void Game::init() {
     
 void Game::render() {
     BeginDrawing();
-        ClearBackground(SKYBLUE);    
-        
-        world.WorldDraw();
+        ClearBackground(SKYBLUE);
+
+        BeginMode2D(this->camera);
+            world.WorldDraw();
+        EndMode2D();
     EndDrawing();
+}
+
+void Game::updateControls() {
+    if(IsKeyDown(KEY_W)) {
+        this->camera.target.y -= cameraSpeed;
+    }
+
+    if(IsKeyDown(KEY_S)) {
+        this->camera.target.y += cameraSpeed;
+    }
+
+    if(IsKeyDown(KEY_D)) {
+        this->camera.target.x += cameraSpeed;
+    }
+
+    if(IsKeyDown(KEY_A)) {
+        this->camera.target.x -= cameraSpeed;
+    }
 }
