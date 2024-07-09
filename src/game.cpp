@@ -1,6 +1,6 @@
 #include <game.hpp>
 #include <Sprite.hpp>
-#include <player.hpp>
+#include <Debug.hpp>
 
 void Game::init() {
     InitWindow(m_screenWidth, m_screenHeight, "FriendsTeam Sandbox");
@@ -30,15 +30,19 @@ void Game::render() {
             m_player->draw();
         EndMode2D();
 
-        DrawText(TextFormat("Player position %.02f %.02f", m_player->camera.target.x, m_player->camera.target.y), 0, 0, 24, WHITE);
+        if(Debug::m_debug){
+            Debug::draw();
+        }
     EndDrawing();
 }
 
 void Game::update() {
     if(IsKeyPressed(KEY_F3)) {
-        m_debug = !m_debug;
+        Debug::m_debug = !Debug::m_debug;
     }
 
-    m_player->update();
+    Debug::addString(TextFormat("FPS: %d", GetFPS()));
+
     m_world->update(m_player->getPosition(), m_renderDistance);
+    m_player->update(m_world->m_hitboxes);
 }

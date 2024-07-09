@@ -1,6 +1,7 @@
 #pragma once
 #include <raylib.h>
 #include <map>
+#include <memory>
 
 class Sprite {
 private:
@@ -17,5 +18,5 @@ public:
 
     static void loadSprites();
     static void addSprite(int id);
-    static Sprite* getSprite(int id);
+    static Sprite* get(int id);
 };
