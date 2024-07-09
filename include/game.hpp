@@ -1,7 +1,7 @@
 #pragma once
 #include <raylib.h>
-#include "World.hpp"
-#include "Player.hpp"
+#include <world.hpp>
+#include <player.hpp>
 
 class Game {
 private:
@@ -12,7 +12,7 @@ private:
 public:
     World* m_world;
 
-    int m_renderDistance = 4;
+    int m_renderDistance = 1;
     bool m_debug = false;
 
     void init();
