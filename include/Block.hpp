@@ -27,9 +27,9 @@ public:
     Sprite* getSprite() const;
     BlockType getType() const;
 
-    virtual void update(); // error: undefined symbol: public: virtual void __cdecl Block::update(void)
+    virtual void update();
 
     // multiplayer stuff
-    SObject encodeObject() override; // undefined symbol: public: virtual class std::vector<unsigned char, class std::allocator<unsigned char>> __cdecl Block::encodeObject(void)
+    SObject encodeObject() override;
     void decodeObject(SObject &s) override {};
 };
