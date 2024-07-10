@@ -2,8 +2,9 @@
 
 #include <raylib.h>
 #include <vector>
+#include <SerializedObject.hpp>
 
-class Player {
+class Player : public SerializedObject {
 private:
     Rectangle m_rect;
     Texture2D m_texture;
@@ -23,4 +24,7 @@ public:
     inline Vector2 getPosition() {
         return Vector2 {m_rect.x, m_rect.y};
     }
+
+    SObject encodeObject() override;
+    int decodeObject(SObject &s) override;
 };

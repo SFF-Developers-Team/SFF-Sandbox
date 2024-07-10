@@ -22,14 +22,15 @@ protected:
     int m_y;
 public:
     Block(BlockType type);
-    Block(SObject &s);
 
     Sprite* getSprite() const;
     BlockType getType() const;
 
     virtual void update();
 
+    void setPosition(int x, int y);
+
     // multiplayer stuff
     SObject encodeObject() override;
-    void decodeObject(SObject &s) override {};
+    int decodeObject(SObject &s) override;
 };
