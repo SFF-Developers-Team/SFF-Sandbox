@@ -8,15 +8,17 @@ private:
     Rectangle m_rect;
     Texture2D m_texture;
 
-    int m_speed = 3.0f;
-    bool m_canJump = true;
+    Vector2 m_speed = {0.0f, 0.0f};
+    char m_direction = 1;
+    bool m_canJump = false;
+    bool m_fly = false;
 
 public:
     Camera2D camera;
 
     Player();
  
-    void update(std::vector<Vector2> envHitboxes); 
+    void update(std::vector<Rectangle> envHitboxes); 
     void draw();
     void updateCamera();
 
