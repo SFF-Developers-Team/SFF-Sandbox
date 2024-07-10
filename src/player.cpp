@@ -1,4 +1,4 @@
-#include <Player.hpp>
+#include <player.hpp>
 #include <Debug.hpp>
 #include "Block.hpp"
 
