@@ -10,7 +10,7 @@ class Chunk;
 
 class World {
 public:
-    Block* m_blocks;
+    std::vector<Block*> m_blocks;
     std::vector<Chunk*> m_chunks;
     std::vector<Vector2> m_hitboxes;
 
@@ -18,8 +18,8 @@ public:
     int m_height;
 
     int m_playerInChunk;
-    int m_renderMinX = 0;
-    int m_renderMaxX = 0;
+    int m_renderMinX = -1;
+    int m_renderMaxX = -1;
 
     World(int width, int height);
 
@@ -29,5 +29,6 @@ public:
     void buildHitboxes();
     bool isBlockAccesible(int x, int y);
 
-    std::vector<Vector2> hitboxes;
+    void placeBlock(int x, int y, enum Block::BlockType id);
+    void destroyBlock(int x, int y);
 };  

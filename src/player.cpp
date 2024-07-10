@@ -1,4 +1,10 @@
-#include <player.hpp>
+#include <Player.hpp>
+#include <Debug.hpp>
+#include "Block.hpp"
+
+
+#define DELTA 0.0041f
+#define G 9.8f
 
 Player::Player() {
     this->m_texture = LoadTexture("assets/player.png");
@@ -10,26 +16,52 @@ void Player::updateCamera() {
     this->camera.target = {m_rect.x + m_rect.width / 2, m_rect.y - m_rect.height / 2};
     this->camera.zoom = 1.5f;
     this->camera.rotation = 0.0f;
+
+    Debug::addString(TextFormat("Camera target: [%.0f, %.0f]", this->camera.target.x, this->camera.target.y));
+    Debug::addString(TextFormat("Camera zoom: %.02f", this->camera.zoom));
+    Debug::addString(TextFormat("Camera rotation: %.02f", this->camera.rotation));
 }
 
-void Player::update() {
+void Player::update(std::vector<Vector2> envHitboxes) {
     if (IsKeyDown(KEY_D)) {
-        m_rect.x += playerSpeed;
+        m_rect.x += m_speed;
     }
 
     if (IsKeyDown(KEY_A)) {
-        m_rect.x -= playerSpeed;
+        m_rect.x -= m_speed;
     }
 
-    if (IsKeyDown(KEY_W)) {
-        m_rect.y -= playerSpeed;
+    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_SPACE)) {
+        // m_speed = -10.f;
+        // m_canJump = false;
+        m_rect.y -= m_speed;
     }
 
     if (IsKeyDown(KEY_S)) {
-        m_rect.y += playerSpeed;
+        m_rect.y += m_speed;
     }
 
-    this->updateCamera();  
+    // bool hitObstacle = false;
+
+    // for(auto& hitbox : envHitboxes) {
+    //     if(CheckCollisionRecs(m_rect, {hitbox.x, hitbox.y, BLOCK_SIZE_PIXELS, BLOCK_SIZE_PIXELS})) {
+    //         hitObstacle = true;
+    //         m_speed = 0.0f;
+    //         break;
+    //     }
+    // }
+
+    // if (!hitObstacle) {
+    //     m_rect.y += m_speed;
+    //     m_speed += G;
+    //     m_canJump = false;
+    // } else { 
+    //     m_canJump = true;
+    // }
+
+    this->updateCamera();
+
+    Debug::addString(TextFormat("Player position: [%.0f, %.0f]", this->m_rect.x, this->m_rect.y));
 }
 
 void Player::draw() {

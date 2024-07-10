@@ -19,15 +19,15 @@ int Sprite::getHeight() {
 }
 
 void Sprite::loadSprites() {
-    Sprite::addSprite(GRASS);
-    Sprite::addSprite(DIRT);
-    Sprite::addSprite(STONE);
+    Sprite::addSprite((int)Block::BlockType::GRASS);
+    Sprite::addSprite((int)Block::BlockType::DIRT);
+    Sprite::addSprite((int)Block::BlockType::STONE);
 }
 
 void Sprite::addSprite(int id) {
     m_sprites[id] = new Sprite(id);
 }
 
-Sprite* Sprite::getSprite(int id) {
+Sprite* Sprite::get(int id) {
     return m_sprites[id];
 }
