@@ -1,6 +1,7 @@
-#include <Player.hpp>
+#include <player.hpp>
 #include <Debug.hpp>
 #include "Block.hpp"
+#include <GenericTools.hpp>
 
 #define WALK_SPEED 200
 #define JUMP_SPEED 350
@@ -10,6 +11,7 @@
 #define WP WALL_PADDING
 
 Player::Player() {
+    m_objectID = 1;
     this->m_texture = LoadTexture("assets/player.png");
     this->m_rect = {(float)(rand() % 256 * BLOCK_SIZE_PIXELS), 0.f, 32.f, 48.f};
     this->updateCamera();
@@ -127,4 +129,34 @@ void Player::draw() {
     if(Debug::m_debug) {
         DrawRectangleLinesEx(m_rect, 1.0f, GREEN);
     }
+}
+
+Player::SObject Player::encodeObject() {
+    SObject obj = SerializedObject::encodeObject();
+
+    GenericTools::addVectors(
+        &obj,
+        GenericTools::valueToVector<float>(&m_rect.x)
+    );
+    GenericTools::addVectors(
+        &obj,
+        GenericTools::valueToVector<float>(&m_rect.y)
+    );
+
+    return obj;
+};
+int Player::decodeObject(SObject &s) {
+    unsigned int _offset = SerializedObject::decodeObject(s);
+    unsigned int offset = _offset;
+    unsigned int required = sizeof(float) * 2;
+    
+    if (required > s.size() - offset) return s.size() - offset;
+
+    m_rect.x = GenericTools::vectorToValue<float>(s, offset);
+    offset += sizeof(float);
+
+    m_rect.y = GenericTools::vectorToValue<float>(s, offset);
+    offset += sizeof(float);
+
+    return s.size();
 }
