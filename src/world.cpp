@@ -1,4 +1,4 @@
-#include <world.hpp>
+#include <World.hpp>
 #include <iostream>
 #include <Sprite.hpp>
 #include <cmath>
@@ -92,7 +92,7 @@ void World::draw(bool debug) {
 }
 
 bool World::isBlockAccesible(int x, int y) {
-    if(x + 1 > m_width || y + 1 > m_height) return false;
+    if(x - 1 < -1 || y - 1 < -1 || x + 1 > m_width || y + 1 > m_height) return false;
     
     return m_blocks[x * m_height + (y + 1)] == nullptr || 
            m_blocks[x * m_height + (y - 1)] == nullptr || 
