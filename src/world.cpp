@@ -8,7 +8,6 @@ World::World(int width, int height) : m_width(width), m_height(height) {
     m_blocks.reserve(width * height);
 
     this->generate();
-    this->buildHitboxes();
 }
 
 void World::generate() {
@@ -40,35 +39,22 @@ void World::generate() {
 
 void World::update(Vector2 playerPosition, int renderDistance) {
     m_playerInChunk = (int)(playerPosition.x / BLOCK_SIZE_PIXELS / CHUNK_SIZE);
+    m_renderMinX = fmax((m_playerInChunk - ceil(abs(renderDistance / 2))) * CHUNK_SIZE, 0);
+    m_renderMaxX = fmin((m_playerInChunk + ceil(abs(renderDistance / 2))) * (CHUNK_SIZE * 2), m_width);
+    m_hitboxes.clear();
 
-    int minX = fmax((m_playerInChunk - ceil(abs(renderDistance / 2))) * CHUNK_SIZE, 0);
-    int maxX = fmin((m_playerInChunk + ceil(abs(renderDistance / 2))) * (CHUNK_SIZE * 2), m_width);
-
-    if(m_renderMinX != minX || m_renderMaxX != maxX) {
-        this->buildHitboxes();
+    for (int x = (int)(playerPosition.x / BLOCK_SIZE_PIXELS) - 5; x < (int)(playerPosition.x / BLOCK_SIZE_PIXELS) + 5; x++) {
+        for(int y = (int)(playerPosition.y / BLOCK_SIZE_PIXELS) - 5; y < (int)(playerPosition.y / BLOCK_SIZE_PIXELS) + 5; y++) {
+            if(m_blocks[x * m_height + y] != nullptr && isBlockAccesible(x, y)) {
+                m_hitboxes.push_back(Rectangle {(float)x * BLOCK_SIZE_PIXELS, (float)y * BLOCK_SIZE_PIXELS, (float)BLOCK_SIZE_PIXELS, (float)BLOCK_SIZE_PIXELS});
+            }
+        }
     }
-
-    m_renderMinX = minX;
-    m_renderMaxX = maxX;
 
     Debug::addString(TextFormat("World size: %dx%d", m_width, m_height));
     Debug::addString(TextFormat("Render min X: %d", m_renderMinX));
     Debug::addString(TextFormat("Render max X: %d", m_renderMaxX));
-    Debug::addString(TextFormat("Last render min X: %d", minX));
-    Debug::addString(TextFormat("Last render max X: %d", maxX)); 
     Debug::addString(TextFormat("Current chunk: %d", m_playerInChunk)); 
-}
-
-void World::buildHitboxes() {
-    m_hitboxes.clear();
-
-    for (int x = m_renderMinX; x < m_renderMaxX; x++) {
-        for(int y = 0; y < m_height; y++) {
-            if(m_blocks[x * m_height + y] != nullptr && isBlockAccesible(x, y)) {
-                m_hitboxes.push_back(Vector2 {(float)x, (float)y});
-            }
-        }
-    }
 }
 
 void World::draw(bool debug) {
@@ -99,13 +85,15 @@ void World::draw(bool debug) {
             );
         
             for(auto& hitbox : m_hitboxes) {
-                DrawRectangleLinesEx(Rectangle {hitbox.x * BLOCK_SIZE_PIXELS, hitbox.y * BLOCK_SIZE_PIXELS, BLOCK_SIZE_PIXELS, BLOCK_SIZE_PIXELS}, 1.0f, RED);
+                DrawRectangleLinesEx(hitbox, 1.0f, RED);
             }
         }
     }   
 }
 
 bool World::isBlockAccesible(int x, int y) {
+    if(x + 1 > m_width || y + 1 > m_height) return false;
+    
     return m_blocks[x * m_height + (y + 1)] == nullptr || 
            m_blocks[x * m_height + (y - 1)] == nullptr || 
            m_blocks[(x + 1) * m_height + y] == nullptr || 
