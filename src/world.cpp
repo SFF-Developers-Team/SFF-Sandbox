@@ -109,5 +109,8 @@ void World::placeBlock(int x, int y, enum Block::BlockType id) {
 void World::destroyBlock(int x, int y) {
     int index = x * m_height + y;
 
-    if (m_blocks[index] != nullptr) delete m_blocks[index];
+    if(m_blocks[index] != nullptr) {
+        delete m_blocks[index];
+        m_blocks[index] = nullptr;
+    } 
 }

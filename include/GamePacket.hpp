@@ -3,7 +3,7 @@
 #include <vector>
 
 class SerializedObject;
-
+class World;
 class GamePacket {
 private:
     struct PacketInto {
@@ -30,7 +30,8 @@ private:
     void performEncode();
 
     void clearObjects();
-public:
+public:    
+    World* m_world;
     GamePacket(std::vector<SerializedObject *> objects);
     GamePacket(std::vector<unsigned char> data);
     GamePacket(std::vector<std::vector<unsigned char>> data);
