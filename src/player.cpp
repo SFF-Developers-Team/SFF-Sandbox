@@ -3,7 +3,6 @@
 #include "Block.hpp"
 #include <GenericTools.hpp>
 #include <world.hpp>
-#include <iostream> // на время
 #define WALK_SPEED 200
 #define JUMP_SPEED 350
 #define G 400
@@ -27,20 +26,16 @@ void Player::updateCamera() {
     Debug::addString(TextFormat("Camera target: [%.0f, %.0f]", this->camera.target.x, this->camera.target.y));
     Debug::addString(TextFormat("Camera zoom: %.02f", this->camera.zoom));
     Debug::addString(TextFormat("Camera rotation: %.02f", this->camera.rotation));
-
 }
 
 void Player::update(std::vector<Rectangle> envHitboxes) {
+    cursor = GetMousePosition();
+    cameraCursor = Vector2Add(cursor,camera.target);
+    Vector2 cameraCursor3 = Vector2Add(camera.offset,cameraCursor);
+    cameraCursor2 = {cameraCursor3.x / camera.zoom, cameraCursor3.y / camera.zoom};
 
-        cursor = GetMousePosition();
-        cameraCursor = Vector2Add(cursor,camera.target);
-        Vector2 cameraCursor3 = Vector2Add(camera.offset,cameraCursor);
-        cameraCursor2 = {cameraCursor3.x / camera.zoom, cameraCursor3.y / camera.zoom};
-
-    
     if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         for(auto& hitbox : envHitboxes) {
-
             if(CheckCollisionPointRec(cameraCursor2,hitbox)) {
                 m_world->destroyBlock((int){hitbox.x} / BLOCK_SIZE_PIXELS,(int){hitbox.y} / BLOCK_SIZE_PIXELS);
             }
@@ -49,6 +44,7 @@ void Player::update(std::vector<Rectangle> envHitboxes) {
     for(auto& hitbox : envHitboxes) {
     Debug::addString(TextFormat("Block hitbox / 32: %.i, %i",(int){hitbox.x} / BLOCK_SIZE_PIXELS,(int){hitbox.y} / BLOCK_SIZE_PIXELS));
     }
+
     auto delta = GetFrameTime();
 
     m_speed.x = 0.0f;
@@ -140,7 +136,6 @@ void Player::update(std::vector<Rectangle> envHitboxes) {
 }
 
 void Player::draw() {
-    DrawRectangle((int){cameraCursor2.x}, (int){cameraCursor2.y},10,10,MAROON);
     DrawTexturePro(
         this->m_texture, 
         {0, 0, (float)m_texture.width * m_direction, (float)m_texture.height}, 
@@ -182,4 +177,3 @@ int Player::decodeObject(SObject &s) {
 
     return s.size();
 }
-
