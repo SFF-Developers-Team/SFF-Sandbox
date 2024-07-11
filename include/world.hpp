@@ -18,7 +18,7 @@ public:
     int m_height;
 
     int m_playerInChunk;
-    int m_renderMinX = -1;
+    int m_renderMinX = -5;
     int m_renderMaxX = -1;
 
     World(int width, int height);
@@ -30,4 +30,6 @@ public:
 
     void placeBlock(int x, int y, enum Block::BlockType id);
     void destroyBlock(int x, int y);
+
+    Block *getBlock(int x, int y);
 };  
