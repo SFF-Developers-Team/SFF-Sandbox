@@ -2,9 +2,9 @@
 
 #include <WorldGen.hpp>
 
-class WorldGenFlat : public WorldGen {
+class WorldGenNormal : public WorldGen {
 public:
-    WorldGenFlat(World *world);
+    WorldGenNormal(World *world);
 
     virtual Block *generateBlock(int x, int y) override;
 };

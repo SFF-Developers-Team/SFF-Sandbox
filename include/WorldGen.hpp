@@ -3,11 +3,14 @@
 #include <Block.hpp>
 
 class World;
+class Block;
 
 class WorldGen {
 protected:
     World *m_world;
 public:
-    virtual Block::BlockType generateBlock(int x, int y) = 0;
-    virtual void generateWorld(World *world);
+    WorldGen(World *world);
+
+    virtual Block *generateBlock(int x, int y) = 0;
+    virtual void generateWorld();
 };
