@@ -27,20 +27,27 @@ void Player::updateCamera() {
     Debug::addString(TextFormat("Camera zoom: %.02f", this->camera.zoom));
     Debug::addString(TextFormat("Camera rotation: %.02f", this->camera.rotation));
 }
-
-void Player::update(std::vector<Rectangle> envHitboxes) {
-    cursor = GetMousePosition();
-    cameraCursor = Vector2Add(cursor,camera.target);
-    Vector2 cameraCursor3 = Vector2Add(camera.offset,cameraCursor);
-    cameraCursor2 = {cameraCursor3.x / camera.zoom, cameraCursor3.y / camera.zoom};
-
+void Player::player_breakBlock(std::vector<Rectangle> envHitboxes) {
     if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         for(auto& hitbox : envHitboxes) {
-            if(CheckCollisionPointRec(cameraCursor2,hitbox)) {
+            if(CheckCollisionPointRec(cursorInWorld,hitbox)) {
                 m_world->destroyBlock((int){hitbox.x} / BLOCK_SIZE_PIXELS,(int){hitbox.y} / BLOCK_SIZE_PIXELS);
             }
         }
-    }  
+    } 
+}
+void Player::player_placeBlock(std::vector<Rectangle> envHitboxes) {
+    if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !CheckCollisionPointRec(cursorInWorld,m_rect)) {
+            m_world->placeBlock((int){cursorInWorld.x} / BLOCK_SIZE_PIXELS,(int){cursorInWorld.y} / BLOCK_SIZE_PIXELS,Block::BlockType::DIRT);
+    }
+}
+void Player::update(std::vector<Rectangle> envHitboxes) {
+    cursor = GetMousePosition();
+    cursorInWorld = {(camera.target.x - camera.offset.x / camera.zoom) + cursor.x / camera.zoom, (camera.target.y - camera.offset.y / camera.zoom) + cursor.y / camera.zoom};
+    player_breakBlock(m_world->m_hitboxes);
+    player_placeBlock(m_world->m_hitboxes);
+
+
     for(auto& hitbox : envHitboxes) {
     Debug::addString(TextFormat("Block hitbox / 32: %.i, %i",(int){hitbox.x} / BLOCK_SIZE_PIXELS,(int){hitbox.y} / BLOCK_SIZE_PIXELS));
     }
@@ -149,7 +156,8 @@ void Player::update(std::vector<Rectangle> envHitboxes) {
 }
 
 void Player::draw() {
-    DrawTexturePro(
+   DrawRectangle((int){cursorInWorld.x}, (int){cursorInWorld.y},10,10,MAROON);
+    DrawTexturePro( 
         this->m_texture, 
         {0, 0, (float)m_texture.width * m_direction, (float)m_texture.height}, 
         {m_rect.x, m_rect.y, (float)m_texture.width, (float)m_texture.height},

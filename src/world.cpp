@@ -1,4 +1,5 @@
 #include <world.hpp>
+#include <player.hpp>
 #include <iostream>
 #include <Sprite.hpp>
 #include <cmath>
@@ -86,8 +87,9 @@ bool World::isBlockAccesible(int x, int y) {
 void World::placeBlock(int x, int y, enum Block::BlockType id) {
     int index = x * m_height + y;
 
-    if (m_blocks[index] != nullptr) delete m_blocks[index];
+    if (m_blocks[index] == nullptr){
     m_blocks[index] = new Block(id);
+    }
 }
 void World::destroyBlock(int x, int y) {
     int index = x * m_height + y;
@@ -97,7 +99,10 @@ void World::destroyBlock(int x, int y) {
         m_blocks[index] = nullptr;
     } 
 }
-
+// Rectangle getTargetBlock() {
+//     CheckCollisionPointRec(cursorInWorld,hitbox);
+//     return;
+// }
 Block *World::getBlock(int x, int y) {
     for (Block *block : m_blocks) {
         auto pos = block->getPosition();
