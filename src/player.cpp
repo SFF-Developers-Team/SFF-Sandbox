@@ -37,7 +37,7 @@ void Player::player_breakBlock(std::vector<Rectangle> envHitboxes) {
     } 
 }
 void Player::player_placeBlock(std::vector<Rectangle> envHitboxes) {
-    if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !CheckCollisionPointRec(cursorInWorld,m_rect)) {
+    if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && CheckCollisionRecs(m_rect, {floor(cursorInWorld.x - ((int)cursorInWorld.x % BLOCK_SIZE_PIXELS)) , floor(cursorInWorld.y - ((int)cursorInWorld.y % BLOCK_SIZE_PIXELS)) , BS, BS})) {
             m_world->placeBlock((int){cursorInWorld.x} / BLOCK_SIZE_PIXELS,(int){cursorInWorld.y} / BLOCK_SIZE_PIXELS,Block::BlockType::DIRT);
     }
 }
