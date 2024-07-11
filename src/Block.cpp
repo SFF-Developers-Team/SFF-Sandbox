@@ -52,8 +52,6 @@ int Block::decodeObject(SObject &s) {
     m_y = GenericTools::vectorToValue<int>(s, offset);
     offset += sizeof(int);
 
-    sizeof(SerializedObject);
-
     return s.size();
 }
 

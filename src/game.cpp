@@ -4,7 +4,7 @@
 #include <GenericTools.hpp>
 #include <iostream>
 #include <GamePacket.hpp>
-
+#include <player.hpp>
 void Game::init() {
     InitWindow(m_screenWidth, m_screenHeight, "FriendsTeam Sandbox");
     SetTargetFPS(60);
@@ -12,7 +12,8 @@ void Game::init() {
     Sprite::loadSprites();
 
     m_world = new World(256, 64);
-    m_player = new Player();
+    m_player = new Player(m_world);
+    
 
     m_player->camera.offset = {m_screenWidth / 2.0f, m_screenHeight / 2.0f};
 
@@ -47,13 +48,13 @@ void Game::update() {
         std::vector<SerializedObject::SObject> data = {};
         std::vector<SerializedObject *> objs = {};
 
-        data.push_back((new Player())->encodeObject());
+        data.push_back((new Player(m_world))->encodeObject());
         data.push_back((new Block(Block::BlockType::AIR))->encodeObject());
-        data.push_back((new Player())->encodeObject());
+        data.push_back((new Player(m_world))->encodeObject());
         data.push_back((new Block(Block::BlockType::DIRT))->encodeObject());
-        data.push_back((new Player())->encodeObject());
+        data.push_back((new Player(m_world))->encodeObject());
         data.push_back((new Block(Block::BlockType::GRASS))->encodeObject());
-        data.push_back((new Player())->encodeObject());
+        data.push_back((new Player(m_world))->encodeObject());
         data.push_back((new Block(Block::BlockType::STONE))->encodeObject());
 
 
