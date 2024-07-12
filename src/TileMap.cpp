@@ -16,10 +16,10 @@ Vector2 TileMap::getPositionByIndex(int index) {
 Rectangle TileMap::getRectForTile(Vector2 position) {
     Rectangle r;
 
-    r.width = m_tileSize.x;
-    r.height = m_tileSize.y;
-    r.x = floor(position.x * m_tileSize.x);
-    r.y = floor(position.y * m_tileSize.y);
+    r.width = floor(m_tileSize.x);
+    r.height = floor(m_tileSize.y);
+    r.x = ceil(position.x * floor(m_tileSize.x));
+    r.y = ceil(position.y * floor(m_tileSize.y));
 
     return r;
 }

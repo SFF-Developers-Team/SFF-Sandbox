@@ -5,10 +5,9 @@
 #include <WorldGenFlat.hpp>
 #include <WorldGenNormal.hpp>
 #include <Game.hpp>
+#include <Chunk.hpp>
 
 World::World(int width, int height) : m_width(width), m_height(height) {
-    m_blocks.reserve(width * height);
-    m_lightDepths = new float[width * height];
     m_player = new Player(this);
 
     generate();
@@ -16,26 +15,25 @@ World::World(int width, int height) : m_width(width), m_height(height) {
 }
 
 World::~World() {
-    delete[] m_lightDepths;
     delete m_player;
 }
 
 void World::generate() {
-    WorldGenNormal generator = this;
+    for(int x = 0; x < m_width / CHUNK_SIZE; x++) {
+        auto chunk = new Chunk(this, x);
+        chunk->generate(new WorldGenNormal(this));
 
-    generator.generateWorld();
+        m_chunks.push_back(chunk);
+    }
 }
 
 void World::update(int renderDistance) {
-    auto playerPos = m_player->getPosition();
-    m_playerInChunk = (int)(playerPos.x / BLOCK_SIZE_PIXELS / CHUNK_SIZE);
-    m_renderMinX = fmax((m_playerInChunk - ceil(abs(renderDistance / 2))) * CHUNK_SIZE, 0);
-    m_renderMaxX = fmin((m_playerInChunk + ceil(abs(renderDistance / 2))) * (CHUNK_SIZE * 2), m_width);
+    auto pp = m_player->getPosition();
     m_hitboxes.clear();
 
-    for (int x = (int)(playerPos.x / BLOCK_SIZE_PIXELS) - 5; x < (int)(playerPos.x / BLOCK_SIZE_PIXELS) + 5; x++) {
-        for(int y = (int)(playerPos.y / BLOCK_SIZE_PIXELS) - 5; y < (int)(playerPos.y / BLOCK_SIZE_PIXELS) + 5; y++) {
-            if(m_blocks[x * m_height + y] != nullptr && isBlockAccesible(x, y)) {
+    for (int x = (int)(pp.x / BLOCK_SIZE_PIXELS) - 5; x < (int)(pp.x / BLOCK_SIZE_PIXELS) + 5; x++) {
+        for(int y = (int)(pp.y / BLOCK_SIZE_PIXELS) - 5; y < (int)(pp.y / BLOCK_SIZE_PIXELS) + 5; y++) {
+            if(getBlock(x, y) != nullptr && !isBlockClosed(x, y)) {
                 m_hitboxes.push_back(Rectangle {(float)x * BLOCK_SIZE_PIXELS, (float)y * BLOCK_SIZE_PIXELS, (float)BLOCK_SIZE_PIXELS, (float)BLOCK_SIZE_PIXELS});
             }
         }
@@ -44,40 +42,28 @@ void World::update(int renderDistance) {
     m_player->update(m_hitboxes);
 
     Debug::addString(TextFormat("World size: %dx%d", m_width, m_height));
-    Debug::addString(TextFormat("Render min X: %d", m_renderMinX));
-    Debug::addString(TextFormat("Render max X: %d", m_renderMaxX));
-    Debug::addString(TextFormat("Current chunk: %d", m_playerInChunk)); 
 }
 
 void World::draw(bool debug) {
-    for (int x = m_renderMinX; x < m_renderMaxX; x++) {
-        for(int y = 0; y < m_height; y++) {
-            auto block = m_blocks[x * m_height + y];
-            if(!block || block->getType() == Block::BlockType::AIR) continue;
+    for (auto& chunk : m_chunks) {
+        chunk->draw();
 
-            auto playerTarget = m_player->getTargetBlock();
-            auto tilemap = Game::get()->getBlocksTileMap();
-            auto dest = Rectangle {(float)x * BLOCK_SIZE_PIXELS, (float)y * BLOCK_SIZE_PIXELS, BLOCK_SIZE_PIXELS, BLOCK_SIZE_PIXELS};
-            Color color = ColorBrightness(WHITE, Clamp(m_lightDepths[x * m_height + y], -1.0f, 0.0f));
+        auto playerTarget = m_player->getTargetBlock();
 
-            // Самый жесткий костыль в мире
-            if(playerTarget.x == x && playerTarget.y == y) {
-                DrawRectangleRec(dest, WHITE);
-                color = ColorAlpha(WHITE, sin(GetTime() * 10.f) * 0.2f + 0.4f);
-            }
-
-            tilemap->drawTilePro(tilemap->getPositionByIndex((uint8_t)block->getType() - 1), dest, color);
+        // Selected block
+        if(playerTarget.x > 0 && playerTarget.y > 0) {
+            DrawRectangleV(Vector2Multiply(playerTarget, {BS, BS}), {BS, BS}, ColorAlpha(WHITE, sin(GetTime() * 10.f) * 0.2f + 0.4f));
         }
 
         if(Debug::m_debug) {
             DrawLineV({
-                (float)m_playerInChunk * CHUNK_SIZE * BLOCK_SIZE_PIXELS, 0}, 
-                {(float)m_playerInChunk * CHUNK_SIZE * BLOCK_SIZE_PIXELS, (float)m_height * BLOCK_SIZE_PIXELS}, YELLOW
+                (float)chunk->getPosition() * CHUNK_SIZE * BLOCK_SIZE_PIXELS, 0}, 
+                {(float)chunk->getPosition() * CHUNK_SIZE * BLOCK_SIZE_PIXELS, (float)m_height * BLOCK_SIZE_PIXELS}, YELLOW
             );
 
             DrawLineV({
-                (float)m_playerInChunk * (CHUNK_SIZE * 2) * BLOCK_SIZE_PIXELS, 0}, 
-                {(float)m_playerInChunk * (CHUNK_SIZE * 2) * BLOCK_SIZE_PIXELS, (float)m_height * BLOCK_SIZE_PIXELS}, YELLOW
+                (float)chunk->getPosition() * (CHUNK_SIZE * 2) * BLOCK_SIZE_PIXELS, 0}, 
+                {(float)chunk->getPosition() * (CHUNK_SIZE * 2) * BLOCK_SIZE_PIXELS, (float)m_height * BLOCK_SIZE_PIXELS}, YELLOW
             );
         
             for(auto& hitbox : m_hitboxes) {
@@ -89,42 +75,52 @@ void World::draw(bool debug) {
     m_player->draw();
 }
 
-bool World::isBlockAccesible(int x, int y) {
-    if(x - 1 < -1 || y - 1 < -1 || x + 1 > m_width || y + 1 > m_height) return false;
+bool World::isBlockClosed(int x, int y) {
+    auto chunk = getChunk(x / CHUNK_SIZE);
+    if(!chunk) return true;
     
-    return m_blocks[x * m_height + (y + 1)] == nullptr || 
-           m_blocks[x * m_height + (y - 1)] == nullptr || 
-           m_blocks[(x + 1) * m_height + y] == nullptr || 
-           m_blocks[(x - 1) * m_height + y] == nullptr;
+    return chunk->isBlockClosed(x % CHUNK_SIZE, y);
 }
 
 void World::calcLightDepths() {
-    std::fill_n(m_lightDepths, m_width * m_height, 0.0f);
+    for(auto& chunk : m_chunks) {
+        chunk->resetLightDepts();
 
-    for(int x = 0; x < m_width; x++) {
-        for(int y = 0; y < m_height; y++) {
-            int i = x * m_height + y;
-            int d = 1;
-            while(m_lightDepths[i] > -1.0f) {
-                if (m_blocks[(x - d) * m_height + y] != nullptr &&
-                    m_blocks[(x + d) * m_height + y] != nullptr &&
-                    m_blocks[x * m_height + (y - d)] != nullptr &&
-                    m_blocks[x * m_height + (y + d)] != nullptr) {
+        for(int x = 0; x < CHUNK_WIDTH; x++) {
+            for(int y = 0; y < m_height; y++) {
+                int d = 1;
+                auto absX = chunk->getPosition() * CHUNK_WIDTH + x;
+
+                while(chunk->getLightDepth(x, y) > -1.0f) {
+                    if (getBlock(absX - d, y) != nullptr && 
+                        getBlock(absX + d, y) != nullptr && 
+                        getBlock(absX, y - d) != nullptr && 
+                        getBlock(absX, y + d) != nullptr
+                    ) {
+                        chunk->setLightDepth(x, y, chunk->getLightDepth(x, y) - 0.4f);
                         d++;
-                        m_lightDepths[i] -= 0.4f;
-                } else {
-                    break;
+                    } else {
+                        break;
+                    }
                 }
             }
         }
     }
 }
 
+Chunk* World::getChunk(int position) {
+    for(auto& chunk : m_chunks) {
+        if(chunk->getPosition() == position) return chunk;
+    }
+
+    return nullptr;
+}
+
 void World::placeBlock(int x, int y, enum Block::BlockType id) {
     int index = x * m_height + y;
 
-    if(m_blocks[index] == nullptr){
-        m_blocks[index] = new Block(id);
+    if(getBlock(x, y) == nullptr){
+        setBlock(x, y, new Block(id));
         calcLightDepths();
     }
 }
@@ -132,21 +128,20 @@ void World::placeBlock(int x, int y, enum Block::BlockType id) {
 void World::destroyBlock(int x, int y) {
     int index = x * m_height + y;
 
-    if(m_blocks[index] != nullptr) {
-        delete m_blocks[index];
-        m_blocks[index] = nullptr;
-        calcLightDepths();
-    } 
+    setBlock(x, y, nullptr);
+    calcLightDepths();
 }
 
 Block *World::getBlock(int x, int y) {
-    if (x > m_width || y < 0 || x < 0 || y > m_height) return nullptr;
+    auto chunk = getChunk(x / CHUNK_WIDTH);
+    if(!chunk) return nullptr;
 
-    return m_blocks[x * m_height + y];
+    return chunk->getBlock(x % CHUNK_WIDTH, y);
 }
 
 void World::setBlock(int x, int y, Block* block) {
-    if(x < 0 || x > m_width || y < 0 || y > m_height) return;
+    auto chunk = getChunk(x / CHUNK_WIDTH);
+    if(!chunk) return;
 
-    m_blocks[x * m_height + y] = block;
+    chunk->setBlock(x % 16, y, block);
 }

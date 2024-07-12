@@ -60,5 +60,5 @@ public:
     int decodeObject(SObject &s) override;
 
     Vector2 convertToCameraPos(Vector2 pos);
-    Vector2 getTargetBlock();
+    Vector2 getTargetBlock(bool onlyExist = true);
 };

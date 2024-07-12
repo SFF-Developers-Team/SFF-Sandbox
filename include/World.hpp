@@ -7,19 +7,15 @@
 #define CHUNK_SIZE 16
 
 class Player;
+class Chunk;
 
 class World {
 private:
-    std::vector<Block*> m_blocks;
+    std::vector<Chunk*> m_chunks;
     std::vector<Rectangle> m_hitboxes;
-    float* m_lightDepths;
 
     int m_width;
     int m_height;
-
-    int m_playerInChunk;
-    int m_renderMinX = -5;
-    int m_renderMaxX = -1;
 
     Player* m_player;
 
@@ -29,8 +25,9 @@ public:
 
     void generate();
     void update(int renderDistance);
+    void updateHitboxes();
     void draw(bool debug);
-    bool isBlockAccesible(int x, int y);
+    bool isBlockClosed(int x, int y);
     void setBlock(int x, int y, Block* block);
 
     void calcLightDepths();
@@ -39,6 +36,7 @@ public:
     void destroyBlock(int x, int y);
 
     Block *getBlock(int x, int y);
+    Chunk* getChunk(int position);
 
     int getWidth() {
         return m_width;
@@ -48,20 +46,7 @@ public:
         return m_height;
     }
 
-    int getPlayerChunk() {
-        return m_playerInChunk;
-    }
-
-    // in blocks
-    Vector2 getRenderLimits() {
-        return Vector2 {(float)m_renderMinX, (float)m_renderMaxX};
-    }
-
     Player* getPlayer() {
         return m_player;
-    }
-
-    std::vector<Block*> getBlocks() {
-        return m_blocks;
     }
 };  

@@ -80,7 +80,7 @@ void Game::update() {
 
         unsigned int bytes = 0;
 
-        std::cout << "m_world->m_blocks.size() = " + std::to_string(m_world->getBlocks().size()) + "\n";
+        // std::cout << "m_world->m_blocks.size() = " + std::to_string(m_world->getBlocks().size()) + "\n";
 
         std::vector<Block::SObject> obj1 = {};
         std::vector<Block::SObject> obj2 = {};

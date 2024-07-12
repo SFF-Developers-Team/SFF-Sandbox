@@ -111,11 +111,12 @@ Vector2 Player::convertToCameraPos(Vector2 pos) {
     };
 }
 
-Vector2 Player::getTargetBlock() {
+Vector2 Player::getTargetBlock(bool onlyExist) {
     auto cur = convertToCameraPos(GetMousePosition());
+    auto targetBlock = Vector2 {floor(cur.x / BS), floor(cur.y / BS)};
 
-    if(Vector2Distance(cur, {m_hitbox.x, m_hitbox.y}) / BS <= 4) {
-        return Vector2 {floor(cur.x / BS), floor(cur.y / BS)};
+    if(Vector2Distance(cur, {m_hitbox.x, m_hitbox.y}) / BS <= 4 && (!onlyExist || m_world->getBlock(targetBlock.x, targetBlock.y) != nullptr)) {
+        return targetBlock;
     } else {
         return Vector2 {-1, -1};
     }
@@ -124,7 +125,7 @@ Vector2 Player::getTargetBlock() {
 void Player::update(std::vector<Rectangle> envHitboxes) {
     auto cursor = GetMousePosition();
     auto delta = GetFrameTime();
-    auto targetBlock = getTargetBlock();
+    auto targetBlock = getTargetBlock(false);
     bool hitFloor = false;
     bool hitWall = false;
     bool hitCeil = false;
@@ -163,7 +164,7 @@ void Player::update(std::vector<Rectangle> envHitboxes) {
     }
 
     if(IsKeyDown(KEY_R)) {
-        m_hitbox.x = (float)(rand() % 256 * BLOCK_SIZE_PIXELS);
+        m_hitbox.x = (float)(rand() % m_world->getWidth() * BLOCK_SIZE_PIXELS);
         m_hitbox.y = 0.0f;
     }
 

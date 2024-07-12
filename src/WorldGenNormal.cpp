@@ -12,7 +12,7 @@ WorldGenNormal::~WorldGenNormal() {
 }
 
 Block *WorldGenNormal::generateBlock(int x, int y) {
-    Block::BlockType type = Block::BlockType::AIR;
+    Block::BlockType type;
     bool valid_block = true;
 
     int grassLevel = m_world->getHeight() * (*((unsigned char*)m_perlinNoise.data + (x * 4))) / 255;
