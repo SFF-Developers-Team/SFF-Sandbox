@@ -35,6 +35,7 @@ private:
 
     char m_direction = 1;
     bool m_canJump = false;
+    bool m_sneak = false;
     bool m_fly = false;
 
 public:

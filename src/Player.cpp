@@ -130,7 +130,9 @@ void Player::update(std::vector<Rectangle> envHitboxes) {
     bool hitWall = false;
     bool hitCeil = false;
 
+    if(m_fly) m_speed.y = 0;
     m_speed.x = 0;
+    m_sneak = false;
     setAnimation(PLAYER_IDLE);
 
     if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && targetBlock.x >= 0 && targetBlock.y >= 0) {
@@ -146,21 +148,25 @@ void Player::update(std::vector<Rectangle> envHitboxes) {
 
     if(IsKeyDown(KEY_D)) {
         m_direction = -1;
-        m_speed.x = WALK_SPEED;
+        m_speed.x = WALK_SPEED / (IsKeyDown(KEY_LEFT_SHIFT) && m_canJump ? 2 : 1);
     }
 
     if(IsKeyDown(KEY_A)) {
         m_direction = 1;
-        m_speed.x = -WALK_SPEED;
+        m_speed.x = -WALK_SPEED / (IsKeyDown(KEY_LEFT_SHIFT) && m_canJump ? 2 : 1);
     }
 
-    if(IsKeyDown(KEY_W) && (m_canJump || m_fly)) {
+    if((IsKeyDown(KEY_W) || IsKeyDown(KEY_SPACE)) && (m_canJump || m_fly)) {
         m_speed.y = -JUMP_SPEED;
         m_canJump = false;
     }
 
     if(IsKeyDown(KEY_S) && m_fly && !hitFloor) {
         m_hitbox.y += WALK_SPEED * delta;
+    }
+
+    if(IsKeyDown(KEY_S) || IsKeyDown(KEY_LEFT_SHIFT) && !m_fly) {
+        m_sneak = true;
     }
 
     if(IsKeyDown(KEY_R)) {
@@ -225,7 +231,7 @@ void Player::update(std::vector<Rectangle> envHitboxes) {
     }
 
     if(m_speed.x != 0) {
-        setAnimation(PLAYER_MOVE);
+        setAnimation((m_sneak) ? PLAYER_SNEAK : PLAYER_MOVE);
     }
 
     if(!hitFloor) {
