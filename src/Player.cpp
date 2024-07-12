@@ -1,200 +1,259 @@
-#include <player.hpp>
+#include <Player.hpp>
 #include <Debug.hpp>
-#include "Block.hpp"
+#include <Block.hpp>
 #include <GenericTools.hpp>
-#include <world.hpp>
+#include <World.hpp>
+#include <Game.hpp>
+#include <algorithm>
+
 #define WALK_SPEED 200
-#define JUMP_SPEED 350
+#define JUMP_SPEED 200
 #define G 400
-#define BS BLOCK_SIZE_PIXELS
-#define WALL_PADDING 2
-#define WP WALL_PADDING
 
 Player::Player(World* world) {
     m_world = world;
     m_objectID = 1;
-    this->m_texture = LoadTexture("assets/player.png");
-    this->m_rect = {(float)(rand() % 256 * BLOCK_SIZE_PIXELS), 1250, 20.f, 41.f};
-    this->updateCamera();
+
+    auto game = Game::get();
+
+    m_texture = LoadTexture("assets/player.png");
+    m_hitbox = {(float)(rand() % m_world->getWidth() * BS), 0, 30.f, 44.f};
+    m_camera.offset = {game->getScreenWidth() / 2.0f, game->getScreenHeight() / 2.0f};
+
+    updateCamera();
+}
+
+Player::~Player() {
+    UnloadTexture(m_texture);
 }
 
 void Player::updateCamera() {
-    this->camera.target = {m_rect.x + m_rect.width / 2, m_rect.y - m_rect.height / 2};
-    this->camera.zoom = 1.5f;
-    this->camera.rotation = 0.0f;
+    this->m_camera.target = {m_hitbox.x + m_hitbox.width / 2, m_hitbox.y - m_hitbox.height / 2};
+    this->m_camera.zoom = 1.5f;
+    this->m_camera.rotation = 0.0f;
 
-    Debug::addString(TextFormat("Camera target: [%.0f, %.0f]", this->camera.target.x, this->camera.target.y));
-    Debug::addString(TextFormat("Camera zoom: %.02f", this->camera.zoom));
-    Debug::addString(TextFormat("Camera rotation: %.02f", this->camera.rotation));
+    Debug::addString(TextFormat("Camera target: [%.0f, %.0f]", this->m_camera.target.x, this->m_camera.target.y));
+    Debug::addString(TextFormat("Camera zoom: %.02f", this->m_camera.zoom));
+    Debug::addString(TextFormat("Camera rotation: %.02f", this->m_camera.rotation));
 }
-void Player::player_breakBlock(std::vector<Rectangle> envHitboxes) {
-    if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        for(auto& hitbox : envHitboxes) {
-            if(CheckCollisionPointRec(cursorInWorld,hitbox)) {
-                m_world->destroyBlock((int){hitbox.x} / BLOCK_SIZE_PIXELS,(int){hitbox.y} / BLOCK_SIZE_PIXELS);
-            }
+
+void Player::updateAnimation() {
+    if(GetTime() >= m_animLastFrameTime + (1.0f / m_animFps)) {
+        m_animLastFrameTime = GetTime();
+        m_animCurrentFrame++;
+
+        switch(m_animType) {
+            case PLAYER_IDLE:
+                m_animCurrentFrame = 0;
+                break;
+            case PLAYER_MOVE:
+                if(m_animCurrentFrame > 5) m_animCurrentFrame = 1;
+                break;
+            case PLAYER_SNEAK:
+                if(m_animCurrentFrame > 7) m_animCurrentFrame = 6;
+                break;
+            case PLAYER_JUMP:
+                m_animCurrentFrame = 8;
+                break;
+            case PLAYER_HIT:
+                if(m_animCurrentFrame > 13) m_animCurrentFrame = 9;
+                break;
+            case PLAYER_HURT:
+                m_animCurrentFrame = 14;
+                break;
+            case PLAYER_SIT:
+                m_animCurrentFrame = 15;
+                break;
+            case PLAYER_CART:
+                m_animCurrentFrame = 16;
+                break;
         }
-    } 
+    }
+
+    Debug::addString(TextFormat("Animation frame: %d", m_animCurrentFrame));
+    Debug::addString(TextFormat("Animation FPS: %d", m_animFps));
+    Debug::addString(TextFormat("Animation type: %s", getAnimationName(m_animType)));
+    Debug::addString(TextFormat("Animation last frame: %f", m_animLastFrameTime));
+    Debug::addString(TextFormat("GetTime(): %f", GetTime()));
 }
-void Player::player_placeBlock(std::vector<Rectangle> envHitboxes) {
-    if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !CheckCollisionPointRec(cursorInWorld,m_rect)) {
-            m_world->placeBlock((int){cursorInWorld.x} / BLOCK_SIZE_PIXELS,(int){cursorInWorld.y} / BLOCK_SIZE_PIXELS,Block::BlockType::DIRT);
+
+// for debug
+const char* Player::getAnimationName(AnimationType type) {
+    switch(type) {
+        case PLAYER_IDLE:
+            return "PLAYER_IDLE";
+        case PLAYER_MOVE:
+            return "PLAYER_MOVE";
+        case PLAYER_SNEAK:
+            return "PLAYER_SNEAK";
+        case PLAYER_JUMP:
+            return "PLAYER_JUMP";
+        case PLAYER_HIT:
+            return "PLAYER_HIT";
+        case PLAYER_HURT:
+            return "PLAYER_HURT";
+        case PLAYER_SIT:
+            return "PLAYER_SIT";
+        case PLAYER_CART:
+            return "PLAYER_CART";
     }
 }
+
+void Player::setAnimation(AnimationType type) {
+    m_animType = type;
+    // m_animLastFrameTime = GetTime();
+}
+
+Vector2 Player::convertToCameraPos(Vector2 pos) {
+    return Vector2 {
+        (m_camera.target.x - m_camera.offset.x / m_camera.zoom) + pos.x / m_camera.zoom, 
+        (m_camera.target.y - m_camera.offset.y / m_camera.zoom) + pos.y / m_camera.zoom
+    };
+}
+
+Vector2 Player::getTargetBlock() {
+    auto cur = convertToCameraPos(GetMousePosition());
+
+    if(Vector2Distance(cur, {m_hitbox.x, m_hitbox.y}) / BS <= 4) {
+        return Vector2 {floor(cur.x / BS), floor(cur.y / BS)};
+    } else {
+        return Vector2 {-1, -1};
+    }
+}
+
 void Player::update(std::vector<Rectangle> envHitboxes) {
-    cursor = GetMousePosition();
-    cursorInWorld = {(camera.target.x - camera.offset.x / camera.zoom) + cursor.x / camera.zoom, (camera.target.y - camera.offset.y / camera.zoom) + cursor.y / camera.zoom};
-    player_breakBlock(m_world->m_hitboxes);
-    player_placeBlock(m_world->m_hitboxes);
-
-
-    for(auto& hitbox : envHitboxes) {
-    Debug::addString(TextFormat("Block hitbox / 32: %.i, %i",(int){hitbox.x} / BLOCK_SIZE_PIXELS,(int){hitbox.y} / BLOCK_SIZE_PIXELS));
-    }
-
+    auto cursor = GetMousePosition();
     auto delta = GetFrameTime();
-
-    // m_speed.x = 0.0f;
-
-    // if (IsKeyDown(KEY_D)) {
-    //     m_direction = 1;
-    //     m_speed.x = WALK_SPEED;
-    // }
-
-    // if (IsKeyDown(KEY_A)) {
-    //     m_direction = -1;
-    //     m_speed.x = WALK_SPEED;
-    // }
-
-    // if (IsKeyDown(KEY_W) && (m_canJump || m_fly)) {
-    //     if(m_fly) {
-    //         m_rect.y -= WALK_SPEED * delta;
-    //     } else {
-    //         m_speed.y = -JUMP_SPEED;
-    //         m_canJump = false;
-    //     }
-    // }
-
-    // if(IsKeyDown(KEY_S) && m_fly) {
-    //     m_rect.y += WALK_SPEED * delta;
-    // }
-
-    // if (IsKeyDown(KEY_R)) {
-    //     m_rect.x = (float)(rand() % 256 * BLOCK_SIZE_PIXELS);
-    //     m_rect.y = 0.0f;
-    // }
-
-    // if (IsKeyPressed(KEY_F)) {
-    //     m_fly = !m_fly;
-    // }
-
-    _objects = envHitboxes;
-
-    processMovement();
-
-    processXAcceleration();
-
-    fixPlayerX();
-
-    processColliding();
-
-    processYAcceleration();
-    processGravity();
-
+    auto targetBlock = getTargetBlock();
     bool hitFloor = false;
     bool hitWall = false;
+    bool hitCeil = false;
 
-    for(auto& bh : envHitboxes) {
-        // // hit right wall
-        // if(bh.y >= m_rect.y && bh.y + bh.height <= m_rect.y + m_rect.height && m_rect.x + m_rect.width >= bh.x && m_rect.x + m_rect.width <= bh.x + bh.width) {
-        //     m_rect.x = bh.x - m_rect.width;          
-        //     m_speed.x = 0.0f;
-        //     hitWall = true;
-        // }
+    m_speed.x = 0;
+    setAnimation(PLAYER_IDLE);
 
-        // // hit left wall
-        // if(bh.y >= m_rect.y && bh.y + bh.height <= m_rect.y + m_rect.height && bh.x + bh.width <= m_rect.x) {
-        //     m_rect.x = bh.x + bh.width;
-        //     m_speed.x = 0.0f;
-        //     hitWall = true;
-        // }
-
-        // // hit the ceil
-        // if(CheckCollisionPointRec({m_rect.x, m_rect.y}, {bh.x * BS, bh.y * BS + (BS / 2), BS, BS / 2}) ||
-        //    CheckCollisionPointRec({m_rect.x + m_rect.width, m_rect.y}, {bh.x * BS, bh.y * BS + (BS / 2), BS, BS / 2})) {
-        //     m_rect.y = ((bh.y + 1) * BS);
-        //     m_speed.y = 0.0f;
-        // }
-
-        // // hit the floor
-        // if(CheckCollisionPointRec({m_rect.x, m_rect.y + m_rect.height}, {bh.x * BS, bh.y * BS, BS, BS / 2}) ||
-        //    CheckCollisionPointRec({m_rect.x + m_rect.width, m_rect.y + m_rect.height}, {bh.x * BS, bh.y * BS, BS, BS / 2})) {
-        //     m_rect.y = bh.y * BS - m_rect.height;
-        //     m_speed.y = 0.0f;
-        //     hitFloor = true;
-        // }
+    if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && targetBlock.x >= 0 && targetBlock.y >= 0) {
+        setAnimation(PLAYER_HIT);
+        m_world->destroyBlock(targetBlock.x, targetBlock.y);
     }
 
-    // if(!hitFloor && !m_fly) {
-    //     m_rect.y += m_speed.y * delta;
-    //     m_speed.y += G * delta;
-    //     m_canJump = false;
-    // } else {
-    //     m_canJump = true;
-    // }
+    if(IsMouseButtonPressed(MOUSE_RIGHT_BUTTON) && 
+        !CheckCollisionRecs(m_hitbox, {targetBlock.x * BS, targetBlock.y * BS, BS, BS}) && 
+        targetBlock.x >= 0 && targetBlock.y >= 0) {
+        m_world->placeBlock(targetBlock.x, targetBlock.y, Block::BlockType::STONE);
+    }
 
-    // if(!hitWall) {
-    //     m_rect.x += m_speed.x * m_direction * delta;
-    // }
+    if(IsKeyDown(KEY_D)) {
+        m_direction = -1;
+        m_speed.x = WALK_SPEED;
+    }
 
-    this->updateCamera();
+    if(IsKeyDown(KEY_A)) {
+        m_direction = 1;
+        m_speed.x = -WALK_SPEED;
+    }
 
-    Debug::addString(TextFormat("Player position: [%.0f, %.0f]", this->m_rect.x, this->m_rect.y));
+    if(IsKeyDown(KEY_W) && (m_canJump || m_fly)) {
+        m_speed.y = -JUMP_SPEED;
+        m_canJump = false;
+    }
+
+    if(IsKeyDown(KEY_S) && m_fly && !hitFloor) {
+        m_hitbox.y += WALK_SPEED * delta;
+    }
+
+    if(IsKeyDown(KEY_R)) {
+        m_hitbox.x = (float)(rand() % 256 * BLOCK_SIZE_PIXELS);
+        m_hitbox.y = 0.0f;
+    }
+
+    if(IsKeyPressed(KEY_F)) {
+        m_fly = !m_fly;
+    }
+
+    for(auto& bh : envHitboxes) {
+        // hit right wall
+        if (((bh.y > m_hitbox.y && bh.y < m_hitbox.y + m_hitbox.height) ||
+            (bh.y + bh.height > m_hitbox.y && bh.y + bh.height < m_hitbox.y + m_hitbox.height)) &&
+            m_hitbox.x + m_hitbox.width + m_speed.x * delta >= bh.x &&
+            m_hitbox.x + m_hitbox.width <= bh.x + bh.width
+
+        ) {
+            m_hitbox.x = bh.x - m_hitbox.width;          
+            m_speed.x = 0.0f;
+            hitWall = true;
+        }
+
+        // hit left wall
+        if (((bh.y > m_hitbox.y && bh.y < m_hitbox.y + m_hitbox.height) ||
+            (bh.y + bh.height > m_hitbox.y && bh.y + bh.height < m_hitbox.y + m_hitbox.height)) &&
+            m_hitbox.x + m_speed.x * delta <= bh.x + bh.width &&
+            m_hitbox.x >= bh.x
+
+        ) {
+            m_hitbox.x = bh.x + bh.width;          
+            m_speed.x = 0.0f;
+            hitWall = true;
+        }
+
+        // hit the ceil
+        if((bh.x < m_hitbox.x || bh.x < m_hitbox.x + m_hitbox.width) && 
+            bh.x + bh.width > m_hitbox.x && 
+            bh.y + bh.height <= m_hitbox.y && 
+            bh.y + bh.height >= m_hitbox.y + m_speed.y * delta
+        ) {
+            m_hitbox.y = bh.y + bh.height;
+            m_speed.y = abs(m_speed.y / 2);
+            hitCeil = true;
+        }
+
+        // hit the floor
+        if((bh.x < m_hitbox.x || bh.x < m_hitbox.x + m_hitbox.width) && 
+            bh.x + bh.width > m_hitbox.x && 
+            m_hitbox.y + m_hitbox.height <= bh.y && 
+            m_hitbox.y + m_hitbox.height + m_speed.y * delta >= bh.y
+        ) {
+            m_hitbox.y = bh.y - m_hitbox.height;
+            m_speed.y = 0.0f;
+            hitFloor = true;
+        }
+    }
+
+    if(!hitWall) {
+        m_hitbox.x += m_speed.x * delta;
+    }
+
+    if(m_speed.x != 0) {
+        setAnimation(PLAYER_MOVE);
+    }
+
+    if(!hitFloor) {
+        m_hitbox.y += m_speed.y * delta;
+        m_speed.y += (!m_fly) ? G * delta : 0;
+        setAnimation(PLAYER_JUMP);
+        m_canJump = false;
+    } else {
+        m_canJump = true;
+    }
+    
+    updateCamera();
+    updateAnimation();
+
+    Debug::addString(TextFormat("Player position: [%.0f, %.0f]", this->m_hitbox.x, this->m_hitbox.y));
+    Debug::addString(TextFormat("Player speed: [%.0f, %.0f]", this->m_speed.x, this->m_hitbox.y));
     Debug::addString(TextFormat("Hit floor: %d", hitFloor));
     Debug::addString(TextFormat("Hit wall: %d", hitWall));
     Debug::addString(TextFormat("Fly: %d", m_fly));
 }
 
 void Player::draw() {
-   DrawRectangle((int){cursorInWorld.x}, (int){cursorInWorld.y},10,10,MAROON);
-    DrawTexturePro( 
-        this->m_texture, 
-        {0, 0, (float)m_texture.width * m_direction, (float)m_texture.height}, 
-        {m_rect.x, m_rect.y, (float)m_texture.width, (float)m_texture.height},
-        {-m_rect.width / 2 + m_texture.width / 2, m_texture.height - m_rect.height}, 0, WHITE
-    );
+    float frameWidth = m_texture.width / 17;
+    Rectangle src = {m_animCurrentFrame * frameWidth, 0, frameWidth * m_direction, (float)m_texture.height};
+    Rectangle dest = {m_hitbox.x, m_hitbox.y + m_hitbox.height - m_texture.height * 2, frameWidth * 2, (float)m_texture.height * 2};
+    DrawTexturePro(m_texture, src, dest, {0, 0}, 0, WHITE);
 
     if(Debug::m_debug) {
-        DrawRectangleLinesEx(m_rect, 1.0f, GREEN);
-
-        auto parts = splitPlayerHitbox4();
-
-        std::unordered_map<std::string, Color> colors = {
-            {"top-right-corner", {255, 0, 0, 64}},
-            {"top-left-corner", {128, 255, 0, 64}},
-            {"bottom-right-corner", {0, 255, 128, 64}},
-            {"bottom-left-corner", {0, 0, 255, 64}},
-            {"left-side", {255, 0, 0, 255}},
-            {"right-side", {0, 0, 255, 255}},
-            {"top", {255, 0, 255, 255}},
-            {"bottom", {255, 128, 0, 255}}
-        };
-
-        // for (auto [k, v] : parts) {
-        //     DrawRectangleRec(v, colors[k]);
-        // }
-
-        parts = splitPlayerHitbox2V();
-
-        for (auto [k, v] : parts) {
-            DrawRectangleLinesEx(v, 1.5f, colors[k]);
-        }
-
-        // parts = splitPlayerHitbox2H();
-
-        // for (auto [k, v] : parts) {
-        //     DrawRectangleLinesEx(v, 1.f, colors[k]);
-        // }
+        DrawRectangleLinesEx(m_hitbox, 1.0f, GREEN);
     }
 }
 
@@ -203,15 +262,16 @@ Player::SObject Player::encodeObject() {
 
     GenericTools::addVectors(
         &obj,
-        GenericTools::valueToVector<float>(&m_rect.x)
+        GenericTools::valueToVector<float>(&m_hitbox.x)
     );
     GenericTools::addVectors(
         &obj,
-        GenericTools::valueToVector<float>(&m_rect.y)
+        GenericTools::valueToVector<float>(&m_hitbox.y)
     );
 
     return obj;
-};
+}
+
 int Player::decodeObject(SObject &s) {
     unsigned int _offset = SerializedObject::decodeObject(s);
     unsigned int offset = _offset;
@@ -219,431 +279,11 @@ int Player::decodeObject(SObject &s) {
     
     if (required > s.size() - offset) return s.size() - offset;
 
-    m_rect.x = GenericTools::vectorToValue<float>(s, offset);
+    m_hitbox.x = GenericTools::vectorToValue<float>(s, offset);
     offset += sizeof(float);
 
-    m_rect.y = GenericTools::vectorToValue<float>(s, offset);
+    m_hitbox.y = GenericTools::vectorToValue<float>(s, offset);
     offset += sizeof(float);
 
     return s.size();
-}
-
-float Player::getMaxSpeed() {
-    return 1.5f * _delta * 140;
-}
-float Player::getStopSpeed() {
-    return 4.5f * _delta * 130.f;
-}
-float Player::getAccelerationValue() {
-    return 8.f * _delta * 56;
-}
-
-void Player::moveRight() {
-    _lookingToRight = true;
-    _finishRight = false;
-
-    // try predict walls
-
-    int val = 2;
-
-    m_rect.x++;
-
-    processColliding();
-    
-    if (inWall()) {
-        m_rect.x--;
-        // _accelX = 0;
-        return;
-    }
-
-    m_rect.x--;
-    processColliding();
-
-    if (_accelX < getMaxSpeed()) {
-        this->_accelX += _delta * getAccelerationValue();
-    } else {
-        _accelX = getMaxSpeed();
-    }
-}
-
-void Player::moveLeft() {
-    _lookingToRight = false;
-    _finishLeft = false;
-
-    m_rect.x--;
-
-    processColliding();
-    
-    if (inWall()) {
-        m_rect.x++;
-        // _accelX = 0;
-        return;
-    }
-
-    m_rect.x++;
-    processColliding();
-
-    if (_accelX > -getMaxSpeed()) {
-        this->_accelX -= _delta * getAccelerationValue();
-    } else {
-        _accelX = -getMaxSpeed();
-    }
-}
-
-void Player::releaseMovementLeft() {
-    _finishLeft = true;
-}
-
-void Player::releaseMovementRight() {
-    _finishRight = true;
-}
-
-void Player::processMovement() { 
-    if (IsKeyReleased(KEY_D)) releaseMovementRight();
-    if (IsKeyReleased(KEY_A)) releaseMovementLeft();
-
-    if (IsKeyPressed(KEY_D)) {
-        m_direction = 1;
-    } else if (IsKeyPressed(KEY_A)) {
-        m_direction = -1;
-    }
-
-    if (IsKeyPressed(KEY_SPACE)) {
-        jump(false);
-    }
-    // if (IsKeyDown(KEY_SPACE)) {
-    //     jump(IsKeyDown(KEY_SPACE));
-    // }
-    
-    bool moving_right = IsKeyDown(KEY_D);
-    bool moving_left = IsKeyDown(KEY_A);
-
-    if (moving_right) moveRight();
-    if (moving_left) moveLeft();
-}
-
-void Player::processGravity() {
-    //printf("standing floor: %f %f %f %f\n", _standingObject.x, _standingObject.y, _standingObject.width, _standingObject.height);
-
-    float max_accel = 1.5f;
-
-    if (isFalling() && !_jumpRequested) {
-        if (_accelY > -getMaxSpeed()) {
-            this->_accelY -= _delta * -getAccelerationValue() / 0.5f;
-        } else {
-            _accelY = -getMaxSpeed();
-        }
-    } else {
-        _accelY = 0;
-        // _position.y = _floor.y - 8;
-    }
-
-    if (_jumpRequested) {
-        float speed = 2.9f;
-        float height = 4.5f;
-
-        if (_standingObject.width != 0 && this->_jumpAccelY > 0) {
-            _jumpRequested = false;
-            _jumpAccelY = 0;
-            auto rec = GetCollisionRec(_standingObject, m_rect);
-
-            if (!inWall()) m_rect.y += rec.height;
-
-            //printf("----------------- STOP JUMP LOGIC (%f)\n", rec.height);
-        } else {
-            if (_jumpAccelY < height) {
-                this->_jumpAccelY += _delta * getAccelerationValue() * speed / 3;
-                _accelY += -(height - this->_jumpAccelY) * _delta * 70;;
-
-                //printf("%f %f\n", _accelY, this->_jumpAccelY );
-            } else {
-                _jumpRequested = false;
-                _accelY = _jumpAccelY;
-                _jumpAccelY = 0;
-            }
-        }
-    }
-
-    if (_accelY == 0 && _jumpAccelY == 0) {
-        fixPlayerY();
-    }
-
-    return;
-}
-
-void Player::fixPlayerY() {
-    if (_standingObject.width == 0 || _standingObject.height == 0) return;
-    
-    if (getRoundedPosition().y < _standingObject.y) {
-        int v = getRoundedPosition().y - _standingObject.y < 0;
-
-        //printf("v=%d\n", v);
-
-        if (v < 0) return;
-
-        m_rect.y = _standingObject.y - m_rect.height;
-    }
-}
-
-bool Player::inWall() {
-    auto recs = splitPlayerHitbox2V();
-
-    for (auto [id, reс] : recs) {
-        for (auto obj : _objects) {
-            auto rec = GetCollisionRec(obj, reс);
-        
-            if (rec.width > 0) {
-                printf("Player::inWall(): id=%s -> return true;\n", id.c_str());
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
-void Player::fixPlayerX() {
-    // auto pl = m_rect;
-
-    // // get by sides
-    // // left
-    // pl.width /= 2;
-
-    // auto rec = GetCollisionRec(_standingObject, pl);
-    
-    // m_rect.x -= rec.width;
-
-    // pl.x += pl.width;
-
-    // rec = GetCollisionRec(_standingObject, pl);
-    
-    // m_rect.x += rec.width;
-
-    // float sz = -(pl.x - (_standingObject.x + _standingObject.width));
-
-    // printf("----------------- (%f)\n", sz);
-}
-
-void Player::processColliding() {
-    if (_standingObject.width != 0) {
-        _lastStandingObject = _standingObject;
-    }
-    _standingObject = {};
-
-    for (auto obj : _objects) {
-        Rectangle r1 = obj;
-        // r1.y -= 0.75;
-
-        Rectangle r2 = m_rect;
-
-        if (CheckCollisionRecs(r1, r2)) _standingObject = obj;
-    }
-}
-
-void Player::processXAcceleration() {
-    if (_finishRight) {
-        if (_accelX > 0) {
-            _accelX -= _delta * getStopSpeed();
-        } else {
-            _accelX = 0;
-            _finishRight = false;
-        }
-    }
-
-    if (_finishLeft) {
-        if (_accelX < 0) {
-            _accelX += _delta * getStopSpeed();
-        } else {
-            _accelX = 0;
-            _finishLeft = false;
-        }
-    }
-
-    m_rect.x += _accelX;
-
-    if (inWall()) m_rect.x -= _accelX;
-}
-
-void Player::processYAcceleration() {
-    _oldPosY = m_rect.y;
-    m_rect.y += _accelY + _jumpAccelY;
-}
-
-Vector2 Player::getRoundedPosition() {
-    Vector2 v;
-
-    v.x = (int)m_rect.x;
-    v.y = (int)m_rect.y;
-
-    return v;
-}
-
-void Player::setFloor(Rectangle floor) {
-    _objects.push_back(floor);
-}
-
-void Player::jump(bool hold) {
-    printf("JUMP\n");
-
-    if (isFalling()) {
-        _scheduledJump = true;
-        return;
-    }
-    if (_jumpRequested) {
-        if (hold) _scheduledJump = true;
-        return;
-    }
-
-    _jumpRequested = true;
-
-    fixPlayerY();
-}
-
-bool Player::isFalling() {
-    for (auto obj : _objects) {
-        Rectangle r1 = obj;
-        r1.y -= 1;
-
-        Rectangle r2 = m_rect;
-
-        Rectangle col = GetCollisionRec(r1, r2);
-
-        if (CheckCollisionRecs(r1, r2) && col.width > 0) return false;
-    }
-
-    return true;
-}
-
-void Player::resetFloors() {
-    _objects.clear();
-}
-
-void Player::setFloor(std::vector<Rectangle> floors) {
-    _objects.insert(_objects.end(), floors.begin(), floors.end());
-}
-
-std::unordered_map<std::string, Rectangle> Player::splitPlayerHitbox4() {
-    float width = m_rect.width / 2.f;
-    float height = m_rect.height / 2.f;
-
-    std::unordered_map<std::string, Rectangle> map = {};
-
-    Rectangle topRightCorner = {
-        m_rect.x + width, m_rect.y,
-        width, height
-    };
-    Rectangle topLeftCorner = {
-        m_rect.x, m_rect.y,
-        width, height
-    };
-    Rectangle bottomRightCorner = {
-        m_rect.x + width, m_rect.y + height,
-        width, height
-    };
-    Rectangle bottomLeftCorner = {
-        m_rect.x, m_rect.y + height,
-        width, height
-    };
-
-    map["top-right-corner"] = topRightCorner;
-    map["top-left-corner"] = topLeftCorner;
-    map["bottom-right-corner"] = bottomRightCorner;
-    map["bottom-left-corner"] = bottomLeftCorner;
-
-    return map;
-}
-
-std::unordered_map<std::string, Rectangle> Player::splitPlayerHitbox2V() {
-    float width = m_rect.width / 2.f;
-    float height = m_rect.height / 2.f;
-
-    std::unordered_map<std::string, Rectangle> map = {};
-
-    float padding = 1.f;
-    
-    Rectangle leftSide = {
-        m_rect.x, m_rect.y + padding,
-        width, height * 2.f - (padding * 2.f)
-    };
-    Rectangle rightSide = {
-        m_rect.x + width, m_rect.y + padding,
-        width, height * 2.f - (padding * 2.f)
-    };
-
-    map["left-side"] = leftSide;
-    map["right-side"] = rightSide;
-
-    return map;
-}
-
-std::unordered_map<std::string, Rectangle> Player::splitPlayerHitbox2H(bool precise) {
-    float width = m_rect.width / 2.f;
-    float height = m_rect.height / 2.f;
-
-    std::unordered_map<std::string, Rectangle> map = {};
-
-    float padding = 2.f;
-
-    if (precise) {
-        padding = 0.f;
-    }
-    
-    Rectangle leftSide = {
-        m_rect.x + padding, m_rect.y,
-        width * 2.f - (padding * 2.f), height
-    };
-    Rectangle rightSide = {
-        m_rect.x + padding, m_rect.y + height,
-        width * 2.f - (padding * 2.f), height
-    };
-
-    map["top"] = leftSide;
-    map["bottom"] = rightSide;
-
-    return map;
-}
-
-bool Player::reachedCeiling() {
-    Rectangle topRect = splitPlayerHitbox2H(true)["top"];
-
-    for (auto obj : _objects) {
-        auto rec = GetCollisionRec(obj, topRect);
-        
-        if (rec.width > 0) {
-            _reachedCeilingObject = obj;
-            _currentCollisionBox = rec;
-            // //printf("Player::reachedCeiling(): id=%s -> return true;\n", id.c_str());
-            return true;
-        }
-    }
-
-    return false;
-}
-
-Rectangle Player::roundRectangle(Rectangle rec) {
-    Rectangle new_rect = {
-        (int)rec.x,
-        (int)rec.y,
-        (int)rec.width,
-        (int)rec.height
-    };
-
-    return new_rect;
-    // return rec;
-}
-
-bool Player::wallVeryClose() {
-    m_rect.x -= 2.f;
-    if (inWall()) {
-        m_rect.x += 2.f;
-        return true;
-    }
-
-    m_rect.x += 4.f;
-    if (inWall()) {
-        m_rect.x -= 2.f;
-        return true;
-    }
-
-    return false;
 }

@@ -1,5 +1,5 @@
 #include <WorldGenFlat.hpp>
-#include <world.hpp>
+#include <World.hpp>
 #include <Block.hpp>
 
 WorldGenFlat::WorldGenFlat(World *world) : WorldGen(world) {}
@@ -8,7 +8,7 @@ Block *WorldGenFlat::generateBlock(int x, int y) {
     Block::BlockType type = Block::BlockType::AIR;
     bool valid_block = true;
 
-    int grassLevel = (int)(m_world->m_height * 2 / 3);
+    int grassLevel = (int)(m_world->getHeight() * 2 / 3);
 
     if(y == grassLevel) {
         type = Block::BlockType::GRASS;

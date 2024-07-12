@@ -1,15 +1,21 @@
 #include <GamePacket.hpp>
 #include <SerializedObject.hpp>
 #include <GenericTools.hpp>
-#include <world.hpp>
+#include <World.hpp>
+#include <Block.hpp>
+#include <Player.hpp>
+#include <Game.hpp>
+
 GamePacket::GamePacket(std::vector<SerializedObject *> objects) {
     _objects = objects;
     _shouldEncode = true;
 }
+
 GamePacket::GamePacket(std::vector<unsigned char> data) {
     _data = data;
     _shouldEncode = false;
 }
+
 GamePacket::GamePacket(std::vector<std::vector<unsigned char>> data) {
     _shouldEncode = false;
 
@@ -24,17 +30,15 @@ GamePacket::GamePacket(std::vector<std::vector<unsigned char>> data) {
 std::vector<SerializedObject *> &GamePacket::getEncoded() {
     return _objects;
 }
+
 std::vector<unsigned char> &GamePacket::getDecoded() {
     return _data;
 }
 
-#include <Block.hpp>
-#include <player.hpp>
-
 void GamePacket::performDecode() {
     auto offsets = findOffsets();
     if (!analyzeOffsets(offsets)) {
-        printf("GamePacket::performDecode(): error 1\n");
+        printf("%s: error 1\n", __FUNCTION__);
 
         return;
     }
@@ -59,7 +63,7 @@ void GamePacket::performDecode() {
                 break;
             }
             case 1: {
-                Player *_obj = new Player(m_world);
+                Player *_obj = new Player(Game::get()->getWorld());
                 
                 _obj->decodeObject(object_data);
                 _objects.push_back(_obj);
@@ -69,6 +73,7 @@ void GamePacket::performDecode() {
         }
     }
 }
+
 void GamePacket::performEncode() {
     _data.clear();
 

@@ -1,21 +1,16 @@
-#include <game.hpp>
-#include <Sprite.hpp>
+#include <Game.hpp>
 #include <Debug.hpp>
 #include <GenericTools.hpp>
 #include <iostream>
 #include <GamePacket.hpp>
-#include <player.hpp>
+#include <Player.hpp>
+
 void Game::init() {
-    InitWindow(m_screenWidth, m_screenHeight, "FriendsTeam Sandbox");
+    InitWindow(m_screenWidth, m_screenHeight, "SFF Sandbox");
     SetTargetFPS(60);
-
-    Sprite::loadSprites();
-
-    m_world = new World(256, 64);
-    m_player = new Player(m_world);
     
-
-    m_player->camera.offset = {m_screenWidth / 2.0f, m_screenHeight / 2.0f};
+    m_blocksMap = new TileMap("assets/blocks.png", Vector2 {16, 16});
+    m_world = new World(256, 64);
 
     while (!WindowShouldClose()) {
         this->update();
@@ -24,14 +19,18 @@ void Game::init() {
 
     CloseWindow();
 }
+
+Game::~Game() {
+    delete m_world;
+    delete m_blocksMap;
+}
     
 void Game::render() {
     BeginDrawing();
         ClearBackground(SKYBLUE);
 
-        BeginMode2D(this->m_player->camera);
-            m_world->draw(m_debug);
-            m_player->draw();
+        BeginMode2D(this->m_world->getPlayer()->getCamera());
+            m_world->draw(Debug::m_debug);
         EndMode2D();
 
         if(Debug::m_debug){
@@ -44,7 +43,8 @@ void Game::update() {
     if(IsKeyPressed(KEY_F3)) {
         Debug::m_debug = !Debug::m_debug;
     }
-    if (IsKeyPressed(KEY_F6)) {
+
+    if(IsKeyPressed(KEY_F6)) {
         std::vector<SerializedObject::SObject> data = {};
         std::vector<SerializedObject *> objs = {};
 
@@ -67,7 +67,8 @@ void Game::update() {
 
         delete packet;
     }
-    if (IsKeyPressed(KEY_F7)) {
+
+    if(IsKeyPressed(KEY_F7)) {
         std::vector<Block *> blocks_test;
 
         for (int i = 0; i < 16; i++) {
@@ -79,7 +80,7 @@ void Game::update() {
 
         unsigned int bytes = 0;
 
-        std::cout << "m_world->m_blocks.size() = " + std::to_string(m_world->m_blocks.size()) + "\n";
+        std::cout << "m_world->m_blocks.size() = " + std::to_string(m_world->getBlocks().size()) + "\n";
 
         std::vector<Block::SObject> obj1 = {};
         std::vector<Block::SObject> obj2 = {};
@@ -128,6 +129,5 @@ void Game::update() {
 
     Debug::addString(fps);
 
-    m_world->update(m_player->getPosition(), m_renderDistance);
-    m_player->update(m_world->m_hitboxes);
+    m_world->update(m_renderDistance);
 }

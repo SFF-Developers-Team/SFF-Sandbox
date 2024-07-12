@@ -1,77 +1,56 @@
 #include <TileMap.hpp>
 
-using namespace fightable;
-
 TileMap::TileMap(std::string path, Vector2 v) {
-    this->_map = LoadTexture(path.c_str());
-    this->_tileSize = v;
+    this->m_map = LoadTexture(path.c_str());
+    this->m_tileSize = v;
 }
 
 TileMap::~TileMap() {
-    UnloadTexture(this->_map);
+    UnloadTexture(this->m_map);
+}
 
-    clearDrawEffects();
+Vector2 TileMap::getPositionByIndex(int index) {
+    return Vector2 {floorf(index % (int)(m_map.width / m_tileSize.x)), floorf(index / (m_map.height / m_tileSize.y))};
 }
 
 Rectangle TileMap::getRectForTile(Vector2 position) {
     Rectangle r;
 
-    r.width = _tileSize.x;
-    r.height = _tileSize.y;
-    r.x = position.x * _tileSize.x;
-    r.y = position.y * _tileSize.y;
+    r.width = m_tileSize.x;
+    r.height = m_tileSize.y;
+    r.x = floor(position.x * m_tileSize.x);
+    r.y = floor(position.y * m_tileSize.y);
 
     return r;
 }
 
-void TileMap::drawTile(Vector2 tile, Vector2 position, bool flipedX) {
-    Color tint = WHITE;
-
-    for (auto effect : _effects) {
-        auto _1 = dynamic_cast<TileMapEffectColor *>(effect);
-
-        if (_1) {
-            tint = _1->_tint;
-        }
-    }
-
+void TileMap::drawTile(Vector2 tile, Vector2 position, Color color, bool flipedX) {
     auto rect = getRectForTile(tile);
     
     if (flipedX) {
         rect.width *= -1;
     }
 
-    DrawTextureRec(_map, rect, position, tint);
+    DrawTextureRec(m_map, rect, position, color);
 }
 
-void TileMap::applyDrawEffect(TileMapEffect &effect) {
-    auto _1 = dynamic_cast<TileMapEffectColor *>(&effect);
-
-    if (_1) {
-        TileMapEffectColor *_ = new TileMapEffectColor(*_1);
-        _effects.push_back(_);
-
-        return;
-    }
-
-    TileMapEffect *_ = new TileMapEffect(effect);
-    _effects.push_back(_);
-}
-void TileMap::clearDrawEffects() {
-    for (auto effect : _effects) {
-        delete effect;
-    }
-
-    _effects.clear();
-}
-
-Texture2D TileMap::loadTile(Vector2 tile) {
-    Image mapimg = LoadImageFromTexture(_map);
+void TileMap::drawTilePro(Vector2 tile, Rectangle dest, Color color, bool flipedX) {
+    auto rect = getRectForTile(tile);
     
-    ImageCrop(&mapimg, getRectForTile(tile));
+    if (flipedX) {
+        rect.width *= -1;
+    }
 
-    Texture2D _tile = LoadTextureFromImage(mapimg);
+    DrawTexturePro(m_map, rect, dest, {0, 0}, 0, color);
+}
+
+Texture2D TileMap::loadTile(Vector2 pos) {
+    Image mapimg = LoadImageFromTexture(m_map);
+    
+    ImageCrop(&mapimg, getRectForTile(pos));
+
+    Texture2D tile = LoadTextureFromImage(mapimg);
     UnloadImage(mapimg);
 
-    return _tile;
+    return tile;
 }

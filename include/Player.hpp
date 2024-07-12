@@ -9,103 +9,56 @@
 
 class World;
 class Player : public SerializedObject {
-private:
-    Rectangle m_rect;
-    Texture2D m_texture;
+public:
+    enum AnimationType {
+        PLAYER_IDLE,
+        PLAYER_MOVE,
+        PLAYER_SNEAK,
+        PLAYER_JUMP,
+        PLAYER_HIT,
+        PLAYER_HURT,
+        PLAYER_SIT,
+        PLAYER_CART
+    };
 
+private:
+    Rectangle m_hitbox;
+    Texture2D m_texture;
     Vector2 m_speed = {0.0f, 0.0f};
+    World* m_world;
+    Camera2D m_camera;
+
+    AnimationType m_animType = PLAYER_IDLE;
+    int m_animFps = 8;
+    int m_animCurrentFrame = 0;
+    double m_animLastFrameTime = 0.0f;
+
     char m_direction = 1;
     bool m_canJump = false;
     bool m_fly = false;
 
-    std::vector<Rectangle> _objects = {};
-
-    float _accelX = 0;
-        
-    float _accelY = 0;
-    float _jumpAccelY = 0;
-    
-    Rectangle _standingObject = {};
-    Rectangle _lastStandingObject = {};
-
-    float _delta = 1.f / 60.f;
-
-    bool _lookingToRight = true;
-
-    bool _finishRight = false;
-    bool _finishLeft = false;
-
-    bool _jumpRequested = false;
-
-    float _oldPosY = 0.f; 
-
-    bool _scheduledJump = false;
-
-    Rectangle _reachedCeilingObject;
-    Rectangle _currentCollisionBox;
-
-    void processXAcceleration();
-    void processYAcceleration();
-
-    void processGravity();
-
-    void processColliding();
-
-    void fixPlayerY();
-    void fixPlayerX();
-
-    bool inWall();
-
-    virtual float getMaxSpeed();
-    virtual float getStopSpeed();
-    virtual float getAccelerationValue();
-
-    static Rectangle roundRectangle(Rectangle rec);
 public:
-    Vector2 cursor;
-    Vector2 cursorInWorld;
-
-    World* m_world;
-    Camera2D camera;
-    Vector2 cameraCursor2;
     Player(World* world);
+    ~Player();
     
     void update(std::vector<Rectangle> envHitboxes); 
     void draw();
     void updateCamera();
-    void player_breakBlock(std::vector<Rectangle> envHitboxes);
-    void player_placeBlock(std::vector<Rectangle> envHitboxes);
-    
+    void updateAnimation();
+
+    void setAnimation(AnimationType type);
+    static const char* getAnimationName(AnimationType type);
     inline Vector2 getPosition() {
-        return Vector2 {m_rect.x, m_rect.y};
+        return Vector2 {m_hitbox.x, m_hitbox.y};
+    }
+
+    Camera2D getCamera() {
+        return m_camera;
     }
 
     SObject encodeObject() override;
     int decodeObject(SObject &s) override;
 
-    virtual void moveRight();
-    virtual void moveLeft();
-
-    virtual void releaseMovementRight();
-    virtual void releaseMovementLeft();
-
-    bool isFalling();
-
-    void setFloor(Rectangle floor);
-    void setFloor(std::vector<Rectangle> floors);
-    void resetFloors();
-
-    virtual void processMovement();
-
-    virtual void jump(bool hold);
-
-    Vector2 getRoundedPosition();
-
-    std::unordered_map<std::string, Rectangle> splitPlayerHitbox4();
-    std::unordered_map<std::string, Rectangle> splitPlayerHitbox2V();
-    std::unordered_map<std::string, Rectangle> splitPlayerHitbox2H(bool precise = false);
-
-    bool reachedCeiling();
-
-    bool wallVeryClose();
+    Vector2 convertToCameraPos(Vector2 pos);
+    Vector2 getTargetBlock();
 };

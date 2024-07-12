@@ -1,11 +1,10 @@
 #pragma once
-
-#include "Sprite.hpp"
 #include <memory>
 #include <SerializedObject.hpp>
 #include <array>
 
 #define BLOCK_SIZE_PIXELS 32
+#define BS BLOCK_SIZE_PIXELS
 
 class Block : public SerializedObject {
 public:
@@ -16,7 +15,6 @@ public:
         STONE
     };
 protected:
-    Sprite* m_sprite;
     BlockType m_type;
     float m_durability; // Прочность блока
     int m_x;
@@ -24,7 +22,6 @@ protected:
 public:
     Block(BlockType type);
 
-    Sprite* getSprite() const;
     BlockType getType() const;
 
     virtual void update();

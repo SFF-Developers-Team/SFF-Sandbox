@@ -1,8 +1,7 @@
-#include <game.hpp>
+#include <Game.hpp>
 
 int main() {
-    Game game;
-    game.init();
+    Game::get()->init();
 
     return 0;
 }

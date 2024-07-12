@@ -1,12 +1,8 @@
 #include "Block.hpp"
 #include "GenericTools.hpp"
 
-Block::Block(BlockType type) : m_type(type), m_sprite(Sprite::get((int)type)) {
+Block::Block(BlockType type) : m_type(type) {
     m_objectID = 0;
-}
-
-Sprite* Block::getSprite() const {
-    return m_sprite;
 }
 
 Block::BlockType Block::getType() const {
