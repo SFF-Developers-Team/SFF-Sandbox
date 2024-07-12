@@ -25,7 +25,6 @@ public:
 
     void generate();
     void update(int renderDistance);
-    void updateHitboxes();
     void draw(bool debug);
     bool isBlockClosed(int x, int y);
     void setBlock(int x, int y, Block* block);
