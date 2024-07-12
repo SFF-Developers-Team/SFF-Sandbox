@@ -3,7 +3,7 @@
 #include <raylib.h>
 #include <vector>
 #include <string>
-
+#include <cmath>
 class TileMap {
 protected:
     Texture2D m_map;
