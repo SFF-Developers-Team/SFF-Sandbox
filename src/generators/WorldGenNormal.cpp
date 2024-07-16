@@ -1,21 +1,23 @@
 #include <WorldGenNormal.hpp>
-#include <World.hpp>
+#include <Chunk.hpp>
 #include <Block.hpp>
 #include <stdlib.h>
+#include <Game.hpp>
+#include <PerlinNoise.hpp>
 
-WorldGenNormal::WorldGenNormal(World *world) : WorldGen(world) {
-    m_perlinNoise = GenImagePerlinNoise(world->getWidth(), 1, 0, 0, 2.0f);
-}
+WorldGenNormal::WorldGenNormal(World* world) : WorldGen(world) {}
 
-WorldGenNormal::~WorldGenNormal() {
-    UnloadImage(m_perlinNoise);
-}
+WorldGenNormal::~WorldGenNormal() {}
 
 Block *WorldGenNormal::generateBlock(int x, int y) {
     Block::BlockType type;
     bool valid_block = true;
 
-    int grassLevel = m_world->getHeight() * (*((unsigned char*)m_perlinNoise.data + (x * 4))) / 255;
+    siv::PerlinNoise perlin(1);
+
+    int grassLevel = m_world->getHeight() * perlin.noise1D_01((x * 0.01f));
+
+    if(y >= grassLevel + 10 && round(perlin.noise2D_01(x * 0.2f, y * 0.2f)) == 1 ) return nullptr;
 
     if(y == grassLevel) {
         type = Block::BlockType::GRASS;
@@ -23,7 +25,7 @@ Block *WorldGenNormal::generateBlock(int x, int y) {
         type = Block::BlockType::DIRT;
     } else if(y >= grassLevel + 5) {
         type = Block::BlockType::STONE;
-    }else {
+    } else {
         valid_block = false;
     }
 

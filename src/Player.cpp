@@ -1,23 +1,23 @@
 #include <Player.hpp>
 #include <Debug.hpp>
 #include <Block.hpp>
-#include <GenericTools.hpp>
 #include <World.hpp>
 #include <Game.hpp>
 #include <algorithm>
+#include <Chunk.hpp>
 
-#define WALK_SPEED 200
+#define WALK_SPEED 150
 #define JUMP_SPEED 200
 #define G 400
 
 Player::Player(World* world) {
     m_world = world;
-    m_objectID = 1;
+    m_header = Header::PLAYER;
 
     auto game = Game::get();
 
     m_texture = LoadTexture("assets/player.png");
-    m_hitbox = {(float)(rand() % m_world->getWidth() * BS), 0, 30.f, 44.f};
+    m_hitbox = {(float)(rand() % m_world->getWidth() * BS), 0, 25.f, 44.f};
     m_camera.offset = {game->getScreenWidth() / 2.0f, game->getScreenHeight() / 2.0f};
 
     updateCamera();
@@ -122,18 +122,8 @@ Vector2 Player::getTargetBlock(bool onlyExist) {
     }
 }
 
-void Player::update(std::vector<Rectangle> envHitboxes) {
-    auto cursor = GetMousePosition();
-    auto delta = GetFrameTime();
+void Player::updateControls() {
     auto targetBlock = getTargetBlock(false);
-    bool hitFloor = false;
-    bool hitWall = false;
-    bool hitCeil = false;
-
-    if(m_fly) m_speed.y = 0;
-    m_speed.x = 0;
-    m_sneak = false;
-    setAnimation(PLAYER_IDLE);
 
     if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && targetBlock.x >= 0 && targetBlock.y >= 0) {
         setAnimation(PLAYER_HIT);
@@ -148,12 +138,12 @@ void Player::update(std::vector<Rectangle> envHitboxes) {
 
     if(IsKeyDown(KEY_D)) {
         m_direction = -1;
-        m_speed.x = WALK_SPEED / (IsKeyDown(KEY_LEFT_SHIFT) && m_canJump ? 2 : 1);
+        m_speed.x = WALK_SPEED;
     }
 
     if(IsKeyDown(KEY_A)) {
         m_direction = 1;
-        m_speed.x = -WALK_SPEED / (IsKeyDown(KEY_LEFT_SHIFT) && m_canJump ? 2 : 1);
+        m_speed.x = -WALK_SPEED;
     }
 
     if((IsKeyDown(KEY_W) || IsKeyDown(KEY_SPACE)) && (m_canJump || m_fly)) {
@@ -161,12 +151,13 @@ void Player::update(std::vector<Rectangle> envHitboxes) {
         m_canJump = false;
     }
 
-    if(IsKeyDown(KEY_S) && m_fly && !hitFloor) {
-        m_hitbox.y += WALK_SPEED * delta;
+    if(IsKeyDown(KEY_S) && m_fly && !m_canJump) {
+        m_speed.y = JUMP_SPEED;
     }
 
-    if(IsKeyDown(KEY_S) || IsKeyDown(KEY_LEFT_SHIFT) && !m_fly) {
+    if((IsKeyDown(KEY_S) || IsKeyDown(KEY_LEFT_SHIFT)) && !m_fly && m_canJump) {
         m_sneak = true;
+        m_speed.x /= 2;
     }
 
     if(IsKeyDown(KEY_R)) {
@@ -177,6 +168,21 @@ void Player::update(std::vector<Rectangle> envHitboxes) {
     if(IsKeyPressed(KEY_F)) {
         m_fly = !m_fly;
     }
+}
+
+void Player::update(std::vector<Rectangle>& envHitboxes) {
+    auto cursor = GetMousePosition();
+    auto delta = GetFrameTime();
+    bool hitFloor = false;
+    bool hitWall = false;
+    bool hitCeil = false;
+
+    if(m_fly) m_speed.y = 0;
+    m_speed.x = 0;
+    m_sneak = false;
+    setAnimation(PLAYER_IDLE);
+
+    updateControls();
 
     for(auto& bh : envHitboxes) {
         // hit right wall
@@ -247,7 +253,7 @@ void Player::update(std::vector<Rectangle> envHitboxes) {
     updateAnimation();
 
     Debug::addString(TextFormat("Player position: [%.0f, %.0f]", this->m_hitbox.x, this->m_hitbox.y));
-    Debug::addString(TextFormat("Player speed: [%.0f, %.0f]", this->m_speed.x, this->m_hitbox.y));
+    Debug::addString(TextFormat("Player speed: [%.0f, %.0f]", this->m_speed.x, this->m_speed.y));
     Debug::addString(TextFormat("Hit floor: %d", hitFloor));
     Debug::addString(TextFormat("Hit wall: %d", hitWall));
     Debug::addString(TextFormat("Fly: %d", m_fly));
@@ -256,7 +262,7 @@ void Player::update(std::vector<Rectangle> envHitboxes) {
 void Player::draw() {
     float frameWidth = m_texture.width / 17;
     Rectangle src = {m_animCurrentFrame * frameWidth, 0, frameWidth * m_direction, (float)m_texture.height};
-    Rectangle dest = {m_hitbox.x, m_hitbox.y + m_hitbox.height - m_texture.height * 2, frameWidth * 2, (float)m_texture.height * 2};
+    Rectangle dest = {m_hitbox.x + m_hitbox.width / 2 - frameWidth, m_hitbox.y + m_hitbox.height - m_texture.height * 2, frameWidth * 2, (float)m_texture.height * 2};
     DrawTexturePro(m_texture, src, dest, {0, 0}, 0, WHITE);
 
     if(Debug::m_debug) {
@@ -264,33 +270,33 @@ void Player::draw() {
     }
 }
 
-Player::SObject Player::encodeObject() {
-    SObject obj = SerializedObject::encodeObject();
+std::vector<uint8_t>& Player::serialize() {
+    SerializedObject::serialize();
 
-    GenericTools::addVectors(
-        &obj,
-        GenericTools::valueToVector<float>(&m_hitbox.x)
-    );
-    GenericTools::addVectors(
-        &obj,
-        GenericTools::valueToVector<float>(&m_hitbox.y)
-    );
+    addBytes(m_hitbox.x);
+    addBytes(m_hitbox.y);
+    addBytes(m_animType);
+    addBytes(m_animCurrentFrame);
+    addBytes(m_direction);
 
-    return obj;
+    return m_bytes;
 }
 
-int Player::decodeObject(SObject &s) {
-    unsigned int _offset = SerializedObject::decodeObject(s);
-    unsigned int offset = _offset;
-    unsigned int required = sizeof(float) * 2;
-    
-    if (required > s.size() - offset) return s.size() - offset;
+void Player::deserialize(std::vector<uint8_t>& bytes) {
+    SerializedObject::deserialize(bytes);
 
-    m_hitbox.x = GenericTools::vectorToValue<float>(s, offset);
-    offset += sizeof(float);
+    m_hitbox.x = getBytes<float>(rand() % m_world->getWidth() * BS);
+    m_hitbox.y = getBytes<float>(0.0f);
+    m_animType = getBytes<AnimationType>(PLAYER_IDLE);
+    m_animCurrentFrame = getBytes<unsigned char>(0);
+    m_direction = getBytes<char>(1);
+}
 
-    m_hitbox.y = GenericTools::vectorToValue<float>(s, offset);
-    offset += sizeof(float);
+bool Player::isChunkInView(Chunk* chunk) {
+    auto minPos = chunk->getPosition() * CHUNK_WIDTH * BS;
+    auto maxPos = minPos + CHUNK_WIDTH * BS;
+    auto min = convertToCameraPos({0, 0});
+    auto max = convertToCameraPos({(float)GetScreenWidth(), (float)GetScreenHeight()});
 
-    return s.size();
+    return (minPos >= min.x && minPos <= max.x) || (maxPos >= min.x && maxPos <= max.x); 
 }

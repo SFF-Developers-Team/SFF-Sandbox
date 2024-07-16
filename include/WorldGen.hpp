@@ -7,10 +7,9 @@ class Block;
 
 class WorldGen {
 protected:
-    World *m_world;
+    World* m_world;
 public:
-    WorldGen(World *world);
+    WorldGen(World* world);
 
-    virtual Block *generateBlock(int x, int y) = 0;
-    virtual void generateWorld();
+    virtual Block* generateBlock(int x, int y) = 0;
 };

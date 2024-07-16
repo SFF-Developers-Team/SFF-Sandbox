@@ -6,11 +6,12 @@
 #include <WorldGenNormal.hpp>
 #include <Game.hpp>
 #include <Chunk.hpp>
+#include <fstream>
 
 World::World(int width, int height) : m_width(width), m_height(height) {
     m_player = new Player(this);
+    m_header = WORLD;
 
-    generate();
     calcLightDepths();
 }
 
@@ -18,13 +19,17 @@ World::~World() {
     delete m_player;
 }
 
-void World::generate() {
+void World::generate(WorldGen* generator) {
+    m_WorldGen = generator;
+
     for(int x = 0; x < m_width / CHUNK_SIZE; x++) {
         auto chunk = new Chunk(this, x);
-        chunk->generate(new WorldGenNormal(this));
+        chunk->generate();
 
         m_chunks.push_back(chunk);
     }
+
+    calcLightDepths();
 }
 
 void World::update(int renderDistance) {
@@ -33,7 +38,7 @@ void World::update(int renderDistance) {
 
     for (int x = (int)(pp.x / BLOCK_SIZE_PIXELS) - 5; x < (int)(pp.x / BLOCK_SIZE_PIXELS) + 5; x++) {
         for(int y = (int)(pp.y / BLOCK_SIZE_PIXELS) - 5; y < (int)(pp.y / BLOCK_SIZE_PIXELS) + 5; y++) {
-            if(getBlock(x, y) != nullptr && !isBlockClosed(x, y)) {
+            if(getBlock(x, y) != nullptr) {
                 m_hitboxes.push_back(Rectangle {(float)x * BLOCK_SIZE_PIXELS, (float)y * BLOCK_SIZE_PIXELS, (float)BLOCK_SIZE_PIXELS, (float)BLOCK_SIZE_PIXELS});
             }
         }
@@ -45,14 +50,19 @@ void World::update(int renderDistance) {
 }
 
 void World::draw(bool debug) {
+    int chunksDrawn = 0;
+
     for (auto& chunk : m_chunks) {
-        chunk->draw();
+        if(m_player->isChunkInView(chunk)) {
+            chunk->draw();
+            chunksDrawn++;
+        }
 
         auto playerTarget = m_player->getTargetBlock();
 
         // Selected block
         if(playerTarget.x > 0 && playerTarget.y > 0) {
-            DrawRectangleV(Vector2Multiply(playerTarget, {BS, BS}), {BS, BS}, ColorAlpha(WHITE, sin(GetTime() * 10.f) * 0.2f + 0.4f));
+            DrawRectangleLinesEx({playerTarget.x * BS, playerTarget.y * BS, BS, BS}, 1.0f, WHITE);
         }
 
         if(Debug::m_debug) {
@@ -72,14 +82,13 @@ void World::draw(bool debug) {
         }
     }
 
+    Debug::addString(TextFormat("Chunks drawn: %d", chunksDrawn));
+
     m_player->draw();
 }
 
 bool World::isBlockClosed(int x, int y) {
-    auto chunk = getChunk(x / CHUNK_SIZE);
-    if(!chunk) return true;
-    
-    return chunk->isBlockClosed(x % CHUNK_SIZE, y);
+    return getBlock(x - 1, y) && getBlock(x + 1, y) && getBlock(x, y - 1) && getBlock(x, y + 1);
 }
 
 void World::calcLightDepths() {
@@ -144,4 +153,57 @@ void World::setBlock(int x, int y, Block* block) {
     if(!chunk) return;
 
     chunk->setBlock(x % 16, y, block);
+}
+
+ByteVector& World::serialize() {
+    SerializedObject::serialize();
+
+    addBytes(m_width);
+    addBytes(m_height);
+    addBytes((unsigned int)m_chunks.capacity());
+
+    for(int i = 0; i < m_chunks.capacity(); i++) {
+        if(m_chunks[i] != nullptr) {
+            auto chunkBytes = m_chunks[i]->serialize();
+
+            addBytes((unsigned int)chunkBytes.size());
+            addBytes(chunkBytes);
+        }
+    }
+
+    return m_bytes;
+}
+
+int World::deserialize(ByteVector& bytes) {
+    SerializedObject::deserialize(bytes);
+    m_chunks.clear();
+
+    m_width = getBytes<int>();
+    m_height = getBytes<int>();
+    int chunkCount = getBytes<unsigned int>();
+
+    TraceLog(LOG_INFO, "Begin deserializing chunks");
+
+    for(int i = 0; i < chunkCount; i++) {
+        int chunkSize = getBytes<unsigned int>();
+        auto chunk = new Chunk(this);
+
+        ByteVector chunkBytes(m_bytes.begin() + m_offset, m_bytes.begin() + m_offset + chunkSize);
+        m_offset += chunk->deserialize(chunkBytes);
+
+        m_chunks.push_back(chunk);
+    }
+
+    TraceLog(LOG_INFO, "End deserializing chunks");
+
+    calcLightDepths();
+
+    return m_offset;
+}
+
+void World::save() {
+    auto worldData = this->serialize();
+    if(SaveFileData("world.dat", worldData.data(), worldData.size())) {
+        TraceLog(LOG_INFO, "Saved world to world.dat");
+    }
 }

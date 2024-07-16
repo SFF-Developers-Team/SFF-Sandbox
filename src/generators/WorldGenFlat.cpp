@@ -2,7 +2,7 @@
 #include <World.hpp>
 #include <Block.hpp>
 
-WorldGenFlat::WorldGenFlat(World *world) : WorldGen(world) {}
+WorldGenFlat::WorldGenFlat(World* world) : WorldGen(world) {}
 
 Block *WorldGenFlat::generateBlock(int x, int y) {
     Block::BlockType type = Block::BlockType::AIR;
@@ -17,10 +17,8 @@ Block *WorldGenFlat::generateBlock(int x, int y) {
     } else if(y >= grassLevel + 5) {
         type = Block::BlockType::STONE;
     } else {
-        valid_block = false;
+        return nullptr;
     }
-
-    if (!valid_block) return nullptr;
 
     auto ret = new Block(type);
     ret->setPosition(x, y);

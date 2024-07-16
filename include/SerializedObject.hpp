@@ -1,38 +1,76 @@
 #pragma once
-
 #include <vector>
-#include <SerializedObjectID.hpp>
 
-#pragma pack(push, 1)
+using ByteVector = std::vector<uint8_t>;
 
-
-struct SerializedObject {
-protected:
-    SerializedObjectID m_objectID;
+class SerializedObject {
 public:
-    using SObject = std::vector<unsigned char>;
+    enum Header : unsigned char {
+        PLAYER,
+        BLOCK,
+        CHUNK,
+        WORLD
+    };
 
-    virtual SObject encodeObject();
-    virtual int decodeObject(SObject &s);
+protected:
+    ByteVector m_bytes;
+    size_t m_offset = 0;
+    Header m_header;
 
-    static int getSizeForObject(unsigned char objectID);
-    
-    template<typename T>
-    static std::vector<T *> convertVector(std::vector<SerializedObject *> objs) {
-        std::vector<T *> ret = {};
+public:
+    inline ByteVector& serialize() {
+        m_bytes.clear();
+        addBytes(m_header);
 
-        for (SerializedObject *obj : objs) {
-            T *conv = dynamic_cast<T *>(obj);
-
-            if (conv == nullptr) continue;
-
-            ret.push_back(conv);
-        }
-
-        return ret;
+        return m_bytes;
     }
 
-    SerializedObject();
-};
+    inline int deserialize(ByteVector& bytes) {
+        m_bytes = bytes;
+        m_offset = 0;
 
-#pragma pack(pop)
+        m_header = getBytes<Header>();
+
+        return m_offset;
+    }
+
+    template<typename T>
+    void addBytes(T value) {
+        for(int i = 0; i < sizeof(T); i++) {
+            m_bytes.push_back(((uint8_t*)&value)[i]);
+        }
+    }
+
+    void addBytes(ByteVector& byteVec) {
+        for(uint8_t byte : byteVec) {
+            m_bytes.push_back(byte);
+        }
+    }
+
+    template<typename T>
+    T getBytes() {
+        size_t sz = sizeof(T);
+        T t = T();
+        
+        if (m_offset + sz > m_bytes.size()) return t;
+
+        auto data = m_bytes.data();
+        t = *(T*)&data[m_offset];
+        m_offset += sz;
+
+        return t;
+    }
+
+    template<typename T>
+    T getBytes(T defaultVal) {
+        size_t sz = sizeof(T);
+        T t(defaultVal);
+        
+        if (m_offset + sz > m_bytes.size()) return t;
+
+        t = *(T*)&m_bytes[m_offset];
+        m_offset += sz;
+
+        return t;
+    }
+};

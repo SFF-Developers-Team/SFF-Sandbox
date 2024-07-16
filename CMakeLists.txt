@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 file(GLOB SOURCES
     "src/*.cpp"
+    "src/generators/*.cpp"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -18,6 +19,7 @@ target_link_libraries(${PROJECT_NAME} raylib)
 include_directories(
     "libs/raylib"
     "include/"
+    "libs/perlin-noise"
 )
 
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR}/)

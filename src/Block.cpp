@@ -1,28 +1,20 @@
-#include "Block.hpp"
-#include "GenericTools.hpp"
+#include <Block.hpp>
+#include <SerializedObject.hpp>
 
 Block::Block(BlockType type) : m_type(type) {
-    m_objectID = 0;
+    m_header = Header::BLOCK;
+}
+
+Block::Block(BlockType type, int x, int y) : m_type(type), m_x(x), m_y(y) {
+    m_header = Header::BLOCK;
 }
 
 Block::BlockType Block::getType() const {
     return m_type;
 }
 
-SerializedObject::SObject Block::encodeObject() {
-    SObject vec = SerializedObject::encodeObject();
-
-    GenericTools::addVectors<unsigned char>(
-        &vec, GenericTools::valueToVector<BlockType>(&m_type)
-    );
-    GenericTools::addVectors<unsigned char>(
-        &vec, GenericTools::valueToVector<int>(&m_x)
-    );
-    GenericTools::addVectors<unsigned char>(
-        &vec, GenericTools::valueToVector<int>(&m_y)
-    );
-
-    return vec;
+Vector2 Block::getPosition() const {
+    return Vector2 {(float)m_x, (float)m_y};
 }
 
 void Block::update() {}
@@ -32,25 +24,36 @@ void Block::setPosition(int x, int y) {
     m_y = y;
 }
 
-int Block::decodeObject(SObject &s) {
-    unsigned int _offset = SerializedObject::decodeObject(s);
-    unsigned int offset = _offset;
-    unsigned int required = sizeof(BlockType) + sizeof(int) + sizeof(int);
+std::vector<uint8_t>& Block::serialize() {
+    SerializedObject::serialize();
 
-    if (required > s.size() - offset) return s.size() - offset;
+    addBytes(m_type);
+    addBytes(m_x);
+    addBytes(m_y);
 
-    m_type = GenericTools::vectorToValue<BlockType>(s, offset);
-    offset += sizeof(BlockType);
-
-    m_x = GenericTools::vectorToValue<int>(s, offset);
-    offset += sizeof(int);
-    
-    m_y = GenericTools::vectorToValue<int>(s, offset);
-    offset += sizeof(int);
-
-    return s.size();
+    return m_bytes;
 }
 
-std::array<int, 2> Block::getPosition() {
-    return {m_x, m_y};
+int Block::deserialize(std::vector<uint8_t>& bytes) {
+    SerializedObject::deserialize(bytes);
+
+    m_type = getBytes<BlockType>();
+    m_x = getBytes<int>();
+    m_y = getBytes<int>();
+
+    return m_offset;
+}
+
+size_t const Block::getSize() {
+    if(!m_size) {
+        // Testing block size
+        auto block = new Block(Block::BlockType::AIR);
+        auto bytes = block->serialize();
+        
+        m_size = bytes.size();
+        
+        delete block;
+    }
+
+    return m_size;
 }

@@ -6,6 +6,8 @@
 
 #define CHUNK_WIDTH 16
 
+class World;
+
 class Chunk : public SerializedObject {
 private:
     std::vector<Block*> m_blocks;
@@ -15,6 +17,7 @@ private:
 
 public:
     Chunk(World* world, int position);
+    Chunk(World* world);
     ~Chunk();
     
     int getPosition() {
@@ -23,10 +26,13 @@ public:
 
     void setBlock(int x, int y, Block::BlockType type);
     void setBlock(int x, int y, Block* block);
+    void setBlock(Vector2 pos, Block* block);
     void setBlock(Vector2 pos, Block::BlockType type);
 
     Block* getBlock(int x, int y);
     Block* getBlock(Vector2 pos);
+
+    int getHeight();
 
     void resetLightDepts();
     void setLightDepth(int x, int y, float d);
@@ -38,6 +44,9 @@ public:
 
     bool isOutOfBound(int x, int y);
 
-    void generate(WorldGen* gen);
+    void generate();
     void draw();
+
+    ByteVector& serialize();
+    int deserialize(ByteVector& bytes);
 };

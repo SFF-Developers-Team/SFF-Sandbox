@@ -2,9 +2,9 @@
 
 #include <WorldGen.hpp>
 
-class WorldGenFlat : public WorldGen {
+class WorldGenRubyDung : public WorldGen {
 public:
-    WorldGenFlat(World* world);
+    WorldGenRubyDung(World* world);
 
     virtual Block* generateBlock(int x, int y) override;
 };
