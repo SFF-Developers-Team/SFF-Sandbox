@@ -9,7 +9,8 @@ public:
         PLAYER,
         BLOCK,
         CHUNK,
-        WORLD
+        WORLD,
+        ENTITY
     };
 
 protected:

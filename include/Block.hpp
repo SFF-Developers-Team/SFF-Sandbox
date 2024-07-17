@@ -12,7 +12,9 @@ public:
         AIR = 0,
         GRASS,
         DIRT,
-        STONE
+        STONE,
+        COBLESTONE,
+        PLANKS
     };
 protected:
     static inline size_t m_size = 0;

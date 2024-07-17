@@ -45,6 +45,8 @@ void Game::render() {
             m_world->draw(Debug::m_debug);
         EndMode2D();
 
+        m_blocksMap->drawTilePro(m_blocksMap->getPositionByIndex((int)m_world->getPlayer()->getSelectedBlock() - 1), {m_screenWidth - 42.f, 10.f, 32.f, 32.f}, WHITE);
+
         if(Debug::m_debug){
             Debug::draw();
         }
@@ -64,5 +66,5 @@ void Game::update() {
 
     Debug::addString(fps);
 
-    m_world->update(m_renderDistance);
+    m_world->update();
 }

@@ -10,11 +10,13 @@
 class Player;
 class Chunk;
 class WorldGen;
+class Human;
 
 class World : public SerializedObject {
 private:
     std::vector<Chunk*> m_chunks;
     std::vector<Rectangle> m_hitboxes;
+    std::vector<Human*> m_humans;
     WorldGen* m_WorldGen;
 
     int m_width;
@@ -27,7 +29,7 @@ public:
     ~World();
 
     void generate(WorldGen* generator);
-    void update(int renderDistance);
+    void update();
     void draw(bool debug);
     bool isBlockClosed(int x, int y);
     void setBlock(int x, int y, Block* block);

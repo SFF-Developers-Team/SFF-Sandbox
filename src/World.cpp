@@ -6,11 +6,15 @@
 #include <WorldGenNormal.hpp>
 #include <Game.hpp>
 #include <Chunk.hpp>
-#include <fstream>
+#include <Human.hpp>
 
 World::World(int width, int height) : m_width(width), m_height(height) {
     m_player = new Player(this);
     m_header = WORLD;
+
+    for(int i = 0; i < 100; i++) {
+        m_humans.push_back(new Human(this));
+    }
 
     calcLightDepths();
 }
@@ -32,19 +36,12 @@ void World::generate(WorldGen* generator) {
     calcLightDepths();
 }
 
-void World::update(int renderDistance) {
-    auto pp = m_player->getPosition();
-    m_hitboxes.clear();
+void World::update() {
+    m_player->update();
 
-    for (int x = (int)(pp.x / BLOCK_SIZE_PIXELS) - 5; x < (int)(pp.x / BLOCK_SIZE_PIXELS) + 5; x++) {
-        for(int y = (int)(pp.y / BLOCK_SIZE_PIXELS) - 5; y < (int)(pp.y / BLOCK_SIZE_PIXELS) + 5; y++) {
-            if(getBlock(x, y) != nullptr) {
-                m_hitboxes.push_back(Rectangle {(float)x * BLOCK_SIZE_PIXELS, (float)y * BLOCK_SIZE_PIXELS, (float)BLOCK_SIZE_PIXELS, (float)BLOCK_SIZE_PIXELS});
-            }
-        }
+    for(auto& human : m_humans) {
+        human->update();
     }
-
-    m_player->update(m_hitboxes);
 
     Debug::addString(TextFormat("World size: %dx%d", m_width, m_height));
 }
@@ -75,16 +72,16 @@ void World::draw(bool debug) {
                 (float)chunk->getPosition() * (CHUNK_SIZE * 2) * BLOCK_SIZE_PIXELS, 0}, 
                 {(float)chunk->getPosition() * (CHUNK_SIZE * 2) * BLOCK_SIZE_PIXELS, (float)m_height * BLOCK_SIZE_PIXELS}, YELLOW
             );
-        
-            for(auto& hitbox : m_hitboxes) {
-                DrawRectangleLinesEx(hitbox, 1.0f, RED);
-            }
         }
     }
 
     Debug::addString(TextFormat("Chunks drawn: %d", chunksDrawn));
 
     m_player->draw();
+
+    for(auto& human : m_humans) {
+        human->draw();
+    }
 }
 
 bool World::isBlockClosed(int x, int y) {
