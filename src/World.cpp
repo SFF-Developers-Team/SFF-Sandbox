@@ -12,9 +12,9 @@ World::World(int width, int height) : m_width(width), m_height(height) {
     m_player = new Player(this);
     m_header = WORLD;
 
-    for(int i = 0; i < 100; i++) {
-        m_humans.push_back(new Human(this));
-    }
+    // for(int i = 0; i < 100; i++) {
+    //     m_humans.push_back(new Human(this));
+    // }
 
     calcLightDepths();
 }
@@ -84,8 +84,8 @@ void World::draw(bool debug) {
     }
 }
 
-bool World::isBlockClosed(int x, int y) {
-    return getBlock(x - 1, y) && getBlock(x + 1, y) && getBlock(x, y - 1) && getBlock(x, y + 1);
+bool World::isBlockClosed(int x, int y, uint8_t l) {
+    return getBlock(x - 1, y, l) && getBlock(x + 1, y, l) && getBlock(x, y - 1, l) && getBlock(x, y + 1, l);
 }
 
 void World::calcLightDepths() {
@@ -98,10 +98,10 @@ void World::calcLightDepths() {
                 auto absX = chunk->getPosition() * CHUNK_WIDTH + x;
 
                 while(chunk->getLightDepth(x, y) > -1.0f) {
-                    if (getBlock(absX - d, y) != nullptr && 
-                        getBlock(absX + d, y) != nullptr && 
-                        getBlock(absX, y - d) != nullptr && 
-                        getBlock(absX, y + d) != nullptr
+                    if (getBlock(absX - d, y, 1) != nullptr && 
+                        getBlock(absX + d, y, 1) != nullptr && 
+                        getBlock(absX, y - d, 1) != nullptr && 
+                        getBlock(absX, y + d, 1) != nullptr
                     ) {
                         chunk->setLightDepth(x, y, chunk->getLightDepth(x, y) - 0.4f);
                         d++;
@@ -122,34 +122,30 @@ Chunk* World::getChunk(int position) {
     return nullptr;
 }
 
-void World::placeBlock(int x, int y, enum Block::BlockType id) {
-    int index = x * m_height + y;
-
-    if(getBlock(x, y) == nullptr){
-        setBlock(x, y, new Block(id));
+void World::placeBlock(int x, int y, uint8_t layer, enum Block::BlockType id) {
+    if(getBlock(x, y, layer) == nullptr){
+        setBlock(x, y, layer, new Block(id));
         calcLightDepths();
     }
 }
 
-void World::destroyBlock(int x, int y) {
-    int index = x * m_height + y;
-
-    setBlock(x, y, nullptr);
+void World::destroyBlock(int x, int y, uint8_t layer) {
+    setBlock(x, y, layer, nullptr);
     calcLightDepths();
 }
 
-Block *World::getBlock(int x, int y) {
+Block *World::getBlock(int x, int y, uint8_t layer) {
     auto chunk = getChunk(x / CHUNK_WIDTH);
     if(!chunk) return nullptr;
 
-    return chunk->getBlock(x % CHUNK_WIDTH, y);
+    return chunk->getBlock(x % CHUNK_WIDTH, y, layer);
 }
 
-void World::setBlock(int x, int y, Block* block) {
+void World::setBlock(int x, int y, uint8_t layer, Block* block) {
     auto chunk = getChunk(x / CHUNK_WIDTH);
     if(!chunk) return;
 
-    chunk->setBlock(x % 16, y, block);
+    chunk->setBlock(x % 16, y, layer, block);
 }
 
 ByteVector& World::serialize() {

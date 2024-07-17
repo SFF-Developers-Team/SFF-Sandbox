@@ -1,4 +1,4 @@
-#include "Debug.hpp"
+#include <Debug.hpp>
 #include <raylib.h>
 
 #define FONT_SIZE 20

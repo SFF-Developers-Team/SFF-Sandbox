@@ -3,7 +3,6 @@
 #include <Block.hpp>
 #include <World.hpp>
 #include <Game.hpp>
-#include <algorithm>
 #include <Chunk.hpp>
 
 #define WALK_SPEED 150
@@ -54,7 +53,7 @@ Vector2 Player::getTargetBlock(bool onlyExist) {
     auto targetBlock = Vector2 {floor(cur.x / BS), floor(cur.y / BS)};
 
     if (Vector2Distance(cur, {m_hitbox.x, m_hitbox.y}) / BS <= 4 && 
-        (!onlyExist || m_world->getBlock(targetBlock.x, targetBlock.y) != nullptr)) {
+        (!onlyExist || m_world->getBlock(targetBlock.x, targetBlock.y, IsKeyPressed(KEY_LEFT_ALT) ? 0 : 1) != nullptr)) {
         return targetBlock;
     } else {
         return Vector2 {-1, -1};
@@ -66,15 +65,15 @@ void Player::updateControls() {
 
     if(IsMouseButtonDown(MOUSE_LEFT_BUTTON) && targetBlock.x >= 0 && targetBlock.y >= 0) {
         if(m_canJump) setAnimation(PLAYER_HIT);
-        m_world->destroyBlock(targetBlock.x, targetBlock.y);
+        m_world->destroyBlock(targetBlock.x, targetBlock.y, IsKeyDown(KEY_LEFT_ALT) ? 0 : 1);
     }
 
     if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && 
-        !CheckCollisionRecs(m_hitbox, {targetBlock.x * BS, targetBlock.y * BS, BS, BS}) && 
+        (IsKeyDown(KEY_LEFT_ALT) || !CheckCollisionRecs(m_hitbox, {targetBlock.x * BS, targetBlock.y * BS, BS, BS})) && 
         targetBlock.x >= 0 && targetBlock.y >= 0) {
             
         if(m_canJump) setAnimation(PLAYER_HIT);
-        m_world->placeBlock(targetBlock.x, targetBlock.y, m_selectedBlock);
+        m_world->placeBlock(targetBlock.x, targetBlock.y, IsKeyDown(KEY_LEFT_ALT) ? 0 : 1, m_selectedBlock);
     }
 
     for(int i = 0; i < 5; i++) {

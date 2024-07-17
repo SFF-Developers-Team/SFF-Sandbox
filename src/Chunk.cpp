@@ -5,13 +5,13 @@
 
 Chunk::Chunk(World* world, int pos) : m_world(world), m_position(pos) {
     m_header = Header::CHUNK;
-    m_blocks.reserve(CHUNK_WIDTH * world->getHeight());
+    m_blocks.reserve(CHUNK_WIDTH * world->getHeight() * LAYERS);
     m_lightDepths = new float[CHUNK_WIDTH * world->getHeight()];
 }
 
 Chunk::Chunk(World* world) : m_world(world) {
     m_header = Header::CHUNK;
-    m_blocks.reserve(CHUNK_WIDTH * world->getHeight());
+    m_blocks.reserve(CHUNK_WIDTH * world->getHeight() * LAYERS);
     m_lightDepths = new float[CHUNK_WIDTH * world->getHeight()];
 }
 
@@ -19,61 +19,70 @@ Chunk::~Chunk() {
     delete[] m_lightDepths;
 }
 
-bool Chunk::isOutOfBound(int x, int y) {
-    return (x < 0 || x > CHUNK_WIDTH || y < 0 || y > m_world->getHeight());
+bool Chunk::isOutOfBound(int x, int y, int layer) {
+    return (x < 0 || x > CHUNK_WIDTH || y < 0 || y > m_world->getHeight() || layer < 0 || layer > LAYERS - 1);
 }
 
-void Chunk::setBlock(int x, int y, Block* block) {
-    if(isOutOfBound(x, y)) return;
+int Chunk::getIndex(int x, int y, int layer) {
+    return (layer * CHUNK_WIDTH * m_world->getHeight()) + (y * CHUNK_WIDTH) + x;
+}
+
+void Chunk::setBlock(int x, int y, int layer, Block* block) {
+    if(isOutOfBound(x, y, layer)) return;
     
     // Destroy block
     // if(block == nullptr && getBlock(x, y) != nullptr) {
     //     delete m_blocks[x * m_world->getHeight() + y];        
     // }
 
-    if(block) block->setPosition(x, y);
+    if(block) block->setPosition(x, y, layer);
     
-    m_blocks[x * m_world->getHeight() + y] = block;
+    m_blocks[getIndex(x, y, layer)] = block;
 }
 
-void Chunk::setBlock(Vector2 pos, Block* block) {
-    setBlock(pos.x, pos.y, block);
+void Chunk::setBlock(Vector2 pos, int layer, Block* block) {
+    setBlock(pos.x, pos.y, layer, block);
 }
 
-void Chunk::setBlock(int x, int y, Block::BlockType type) {
-    setBlock(x, y, new Block(type));
+void Chunk::setBlock(int x, int y, int layer, Block::BlockType type) {
+    setBlock(x, y, layer, new Block(type));
 }
 
-void Chunk::setBlock(Vector2 pos, Block::BlockType type) {
-    setBlock(pos.x, pos.y, type);
+void Chunk::setBlock(Vector2 pos, int layer, Block::BlockType type) {
+    setBlock(pos.x, pos.y, layer, type);
 }
 
-Block* Chunk::getBlock(int x, int y) {
-    if(isOutOfBound(x, y)) return nullptr;
+Block* Chunk::getBlock(int x, int y, int layer) {
+    if(isOutOfBound(x, y, layer)) return nullptr;
 
-    return m_blocks[x * m_world->getHeight() + y];
+    return m_blocks[getIndex(x, y, layer)];
 }
 
-Block* Chunk::getBlock(Vector2 pos) {
-    return getBlock(pos.x, pos.y);
+Block* Chunk::getBlock(Vector2 pos, int layer) {
+    return getBlock(pos.x, pos.y, layer);
 }
 
 int Chunk::getHeight() {
     return m_world->getHeight();
 }
 
-bool Chunk::isBlockClosed(int x, int y) {
-    return getBlock(x - 1, y) && getBlock(x + 1, y) && getBlock(x, y - 1) && getBlock(x, y + 1);
+bool Chunk::isBlockClosed(int x, int y, int layer) {
+    return getBlock(x - 1, y, layer) && 
+           getBlock(x + 1, y, layer) && 
+           getBlock(x, y - 1, layer) && 
+           getBlock(x, y + 1, layer);
 }
 
-bool Chunk::isBlockClosed(Vector2 pos) {
-    return isBlockClosed(pos.x, pos.y);
+bool Chunk::isBlockClosed(Vector2 pos, int layer) {
+    return isBlockClosed(pos.x, pos.y, layer);
 }
 
 void Chunk::generate() {
     for(int x = 0; x < CHUNK_SIZE; x++) {
-        for(int y = 0; y < m_world->getHeight(); y++) {
-            setBlock(x, y, m_world->getGenerator()->generateBlock(m_position * CHUNK_SIZE + x, y));
+        for(int y = 0; y < m_world->getHeight(); y++) {\
+            for(int layer = 0; layer < LAYERS; layer++) {
+                setBlock(x, y, layer, m_world->getGenerator()->generateBlock(m_position * CHUNK_SIZE + x, y, layer));
+            }
         }
     }
 }
@@ -83,13 +92,13 @@ void Chunk::resetLightDepts() {
 }
 
 void Chunk::setLightDepth(int x, int y, float d) {
-    if(isOutOfBound(x, y)) return;
+    if(isOutOfBound(x, y, 1)) return;
 
     m_lightDepths[x * m_world->getHeight() + y] = Clamp(d, -1.0f, 1.0f);
 }
 
 float Chunk::getLightDepth(int x, int y) {
-    if(isOutOfBound(x, y)) return 0.0f;
+    if(isOutOfBound(x, y, 1)) return 0.0f;
 
     return m_lightDepths[x * m_world->getHeight() + y];
 }
@@ -99,19 +108,21 @@ void Chunk::draw() {
 
     for (int x = 0; x < CHUNK_SIZE; x++) {
         for(int y = 0; y < wh; y++) {
-            auto block = m_blocks[x * wh + y];
-            if(!block || block->getType() == Block::BlockType::AIR) continue;
+            for(int layer = 0; layer < LAYERS; layer++) {
+                auto block = getBlock(x, y, layer);
+                if(!block || block->getType() == Block::BlockType::AIR) continue;
 
-            auto tilemap = Game::get()->getBlocksTileMap();
-            auto dest = Rectangle {
-                (float)(m_position * CHUNK_SIZE * BLOCK_SIZE_PIXELS + x * BLOCK_SIZE_PIXELS), 
-                (float)(y * BLOCK_SIZE_PIXELS), 
-                BLOCK_SIZE_PIXELS, BLOCK_SIZE_PIXELS
-            };
+                auto tilemap = Game::get()->getBlocksTileMap();
+                auto dest = Rectangle {
+                    (float)(m_position * CHUNK_SIZE * BLOCK_SIZE_PIXELS + x * BLOCK_SIZE_PIXELS), 
+                    (float)(y * BLOCK_SIZE_PIXELS), 
+                    BLOCK_SIZE_PIXELS, BLOCK_SIZE_PIXELS
+                };
 
-            Color color = ColorBrightness(WHITE, getLightDepth(x, y));
+                Color color = ColorBrightness(WHITE, (layer == 1) ? getLightDepth(x, y) : -0.25f);
 
-            tilemap->drawTilePro(tilemap->getPositionByIndex((uint8_t)block->getType() - 1), dest, color);
+                tilemap->drawTilePro(tilemap->getPositionByIndex((uint8_t)block->getType() - 1), dest, color);
+            }
         }
     }
 }
@@ -130,10 +141,12 @@ ByteVector& Chunk::serialize() {
 
     for(int x = 0; x < CHUNK_SIZE; x++) {
         for(int y = 0; y < m_world->getHeight(); y++) {
-            auto block = getBlock(x, y);
+            for(int layer = 0; layer < LAYERS; layer++) {
+                auto block = getBlock(x, y, layer);
 
-            if(block != nullptr) {
-                addBytes(block->serialize());
+                if(block != nullptr) {
+                    addBytes(block->serialize());
+                }
             }
         }
     }
@@ -164,7 +177,7 @@ int Chunk::deserialize(ByteVector& bytes) {
         ByteVector blockBytes(m_bytes.begin() + m_offset, m_bytes.begin() + m_offset + blockSize);
 
         m_offset += block->deserialize(blockBytes);
-        setBlock(block->getPosition(), block);
+        setBlock(block->getPosition(), block->getLayer(), block);
     }
 
     return m_offset;

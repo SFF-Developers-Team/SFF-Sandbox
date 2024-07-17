@@ -1,6 +1,6 @@
 #include <Game.hpp>
 #include <Debug.hpp>
-#include <iostream>
+#include <string>
 #include <Player.hpp>
 #include <WorldGenNormal.hpp>
 

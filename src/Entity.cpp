@@ -19,7 +19,7 @@ void Entity::updateHitboxes() {
 
     for (int x = (int)(m_hitbox.x / BLOCK_SIZE_PIXELS) - 3; x < (int)(m_hitbox.x / BLOCK_SIZE_PIXELS) + 3; x++) {
         for (int y = (int)(m_hitbox.y / BLOCK_SIZE_PIXELS) - 3; y < (int)(m_hitbox.y / BLOCK_SIZE_PIXELS) + 3; y++) {
-            if(m_world->getBlock(x, y) != nullptr) {
+            if(m_world->getBlock(x, y, 1) != nullptr) {
                 m_hitboxes.push_back(Rectangle {(float)x * BLOCK_SIZE_PIXELS, (float)y * BLOCK_SIZE_PIXELS, (float)BLOCK_SIZE_PIXELS, (float)BLOCK_SIZE_PIXELS});
             }
         }

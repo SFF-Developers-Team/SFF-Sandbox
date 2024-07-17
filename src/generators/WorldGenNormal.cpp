@@ -9,15 +9,15 @@ WorldGenNormal::WorldGenNormal(World* world) : WorldGen(world) {}
 
 WorldGenNormal::~WorldGenNormal() {}
 
-Block *WorldGenNormal::generateBlock(int x, int y) {
+Block *WorldGenNormal::generateBlock(int x, int y, uint8_t layer) {
     Block::BlockType type;
     bool valid_block = true;
 
     siv::PerlinNoise perlin(1);
 
-    int grassLevel = m_world->getHeight() * perlin.noise1D_01((x * 0.01f));
+    int grassLevel = m_world->getHeight() * perlin.noise2D_01(x * 0.01f, layer * 0.01f);
 
-    if(y >= grassLevel + 10 && round(perlin.noise2D_01(x * 0.2f, y * 0.2f)) == 1 ) return nullptr;
+    if(y >= grassLevel + 10 && layer == 1 && round(perlin.noise2D_01(x * 0.2f, y * 0.2f)) == 1 ) return nullptr;
 
     if(y == grassLevel) {
         type = Block::BlockType::GRASS;
@@ -32,7 +32,7 @@ Block *WorldGenNormal::generateBlock(int x, int y) {
     if (!valid_block) return nullptr;
 
     auto ret = new Block(type);
-    ret->setPosition(x, y);
+    ret->setPosition(x, y, layer);
 
     return ret;
 }

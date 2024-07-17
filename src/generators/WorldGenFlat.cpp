@@ -4,7 +4,7 @@
 
 WorldGenFlat::WorldGenFlat(World* world) : WorldGen(world) {}
 
-Block *WorldGenFlat::generateBlock(int x, int y) {
+Block *WorldGenFlat::generateBlock(int x, int y, uint8_t layer) {
     Block::BlockType type = Block::BlockType::AIR;
     bool valid_block = true;
 
@@ -21,7 +21,7 @@ Block *WorldGenFlat::generateBlock(int x, int y) {
     }
 
     auto ret = new Block(type);
-    ret->setPosition(x, y);
+    ret->setPosition(x, y, layer);
 
     return ret;
 }

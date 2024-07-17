@@ -11,5 +11,5 @@ protected:
 public:
     WorldGen(World* world);
 
-    virtual Block* generateBlock(int x, int y) = 0;
+    virtual Block* generateBlock(int x, int y, uint8_t layer) = 0;
 };

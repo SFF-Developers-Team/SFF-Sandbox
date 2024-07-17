@@ -5,7 +5,7 @@ Block::Block(BlockType type) : m_type(type) {
     m_header = Header::BLOCK;
 }
 
-Block::Block(BlockType type, int x, int y) : m_type(type), m_x(x), m_y(y) {
+Block::Block(BlockType type, int x, int y, uint8_t layer) : m_type(type), m_x(x), m_y(y), m_layer(layer) {
     m_header = Header::BLOCK;
 }
 
@@ -17,11 +17,16 @@ Vector2 Block::getPosition() const {
     return Vector2 {(float)m_x, (float)m_y};
 }
 
+uint8_t Block::getLayer() const {
+    return m_layer;
+}
+
 void Block::update() {}
 
-void Block::setPosition(int x, int y) {
+void Block::setPosition(int x, int y, uint8_t layer) {
     m_x = x;
     m_y = y;
+    m_layer = layer;
 }
 
 std::vector<uint8_t>& Block::serialize() {
@@ -30,6 +35,7 @@ std::vector<uint8_t>& Block::serialize() {
     addBytes(m_type);
     addBytes(m_x);
     addBytes(m_y);
+    addBytes(m_layer);
 
     return m_bytes;
 }
@@ -40,6 +46,7 @@ int Block::deserialize(std::vector<uint8_t>& bytes) {
     m_type = getBytes<BlockType>();
     m_x = getBytes<int>();
     m_y = getBytes<int>();
+    m_layer = getBytes<unsigned char>(1);
 
     return m_offset;
 }

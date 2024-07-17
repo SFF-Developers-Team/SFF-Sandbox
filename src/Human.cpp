@@ -3,7 +3,6 @@
 #include <Block.hpp>
 #include <World.hpp>
 #include <Game.hpp>
-#include <algorithm>
 #include <Chunk.hpp>
 
 #define WALK_SPEED 150

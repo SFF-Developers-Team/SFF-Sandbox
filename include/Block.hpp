@@ -1,5 +1,4 @@
 #pragma once
-#include <memory>
 #include <SerializedObject.hpp>
 #include <raylib.h>
 
@@ -21,19 +20,21 @@ protected:
     BlockType m_type;
     int m_x;
     int m_y;
+    uint8_t m_layer;
     
 public:
     Block(BlockType type);
-    Block(BlockType type, int x, int y);
+    Block(BlockType type, int x, int y, uint8_t layer);
 
     BlockType getType() const;
     Vector2 getPosition() const;
+    uint8_t getLayer() const;
     static size_t const getSize();
 
     virtual void update();
 
-    void setPosition(int x, int y);
+    void setPosition(int x, int y, uint8_t layer);
 
-    std::vector<uint8_t>& serialize();
-    int deserialize(std::vector<uint8_t>& bytes);
+    ByteVector& serialize();
+    int deserialize(ByteVector& bytes);
 };

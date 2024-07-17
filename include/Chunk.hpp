@@ -5,6 +5,7 @@
 #include <WorldGen.hpp>
 
 #define CHUNK_WIDTH 16
+#define LAYERS 2
 
 class World;
 
@@ -24,25 +25,27 @@ public:
         return m_position;
     }
 
-    void setBlock(int x, int y, Block::BlockType type);
-    void setBlock(int x, int y, Block* block);
-    void setBlock(Vector2 pos, Block* block);
-    void setBlock(Vector2 pos, Block::BlockType type);
+    void setBlock(int x, int y, int layer, Block::BlockType type);
+    void setBlock(int x, int y, int layer, Block* block);
+    void setBlock(Vector2 pos, int layer, Block* block);
+    void setBlock(Vector2 pos, int layer, Block::BlockType type);
 
-    Block* getBlock(int x, int y);
-    Block* getBlock(Vector2 pos);
+    Block* getBlock(int x, int y, int layer);
+    Block* getBlock(Vector2 pos, int layer);
 
     int getHeight();
+    int getIndex(int x, int y, int layer);
 
     void resetLightDepts();
     void setLightDepth(int x, int y, float d);
     float getLightDepth(int x, int y);
 
     // Is block closed by other blocks in 4 directions
-    bool isBlockClosed(int x, int y);
-    bool isBlockClosed(Vector2 pos);
+    bool isBlockClosed(int x, int y, int layer);
+    bool isBlockClosed(Vector2 pos, int layer);
 
-    bool isOutOfBound(int x, int y);
+    bool isOutOfBound(int x, int y, int layer);
+    bool isOutOfBound(Vector2 pos, int layer);
 
     void generate();
     void draw();

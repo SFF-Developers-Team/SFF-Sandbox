@@ -31,17 +31,17 @@ public:
     void generate(WorldGen* generator);
     void update();
     void draw(bool debug);
-    bool isBlockClosed(int x, int y);
-    void setBlock(int x, int y, Block* block);
+    bool isBlockClosed(int x, int y, uint8_t layer);
+    void setBlock(int x, int y, uint8_t layer, Block* block);
 
     void calcLightDepths();
 
-    void placeBlock(int x, int y, enum Block::BlockType id);
-    void destroyBlock(int x, int y);
+    void placeBlock(int x, int y, uint8_t layer, enum Block::BlockType id);
+    void destroyBlock(int x, int y, uint8_t layer);
 
     void save();
 
-    Block *getBlock(int x, int y);
+    Block* getBlock(int x, int y, uint8_t layer);
     Chunk* getChunk(int position);
 
     ByteVector& serialize();
