@@ -4,19 +4,25 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <map>
+#include <filesystem>
+
 class TileMap {
 protected:
     Texture2D m_map;
     Vector2 m_tileSize = {0, 0};
+    std::map<uint16_t, Texture2D> m_cachedTextures; 
 
 public:
-    TileMap(std::string path, Vector2 tileSize);
+    TileMap(std::filesystem::path const& path, Vector2 tileSize);
     ~TileMap();
 
-    Vector2 getPositionByIndex(int index);
+    Vector2 getPositionByIndex(uint16_t index);
     Rectangle getRectForTile(Vector2 position);
-    void drawTile(Vector2 tile, Vector2 position, Color color = WHITE, bool flipedX = false);
-    void drawTilePro(Vector2 tile, Rectangle dest, Color color = WHITE, bool flipedX = false);
+    Rectangle getRectForTile(uint16_t index);
 
-    Texture2D loadTile(Vector2 tile);
+    void drawTile(uint16_t index, Vector2 position, Color color = WHITE, bool flipedX = false);
+    void drawTilePro(uint16_t index, Rectangle dest, Color color = WHITE, bool flipedX = false);
+
+    Texture2D getTextureOfTileCached(uint16_t index);
 };

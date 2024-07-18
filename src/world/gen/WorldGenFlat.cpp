@@ -6,9 +6,9 @@ WorldGenFlat::WorldGenFlat(World* world) : WorldGen(world) {}
 
 Block *WorldGenFlat::generateBlock(int x, int y, uint8_t layer) {
     Block::BlockType type = Block::BlockType::AIR;
-    bool valid_block = true;
-
     int grassLevel = (int)(m_world->getHeight() * 2 / 3);
+
+    if(y == m_world->getHeight() - 1) return new Block(Block::BlockType::BEDROCK, x, y, layer);
 
     if(y == grassLevel) {
         type = Block::BlockType::GRASS;

@@ -7,7 +7,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 file(GLOB SOURCES
     "src/*.cpp"
-    "src/generators/*.cpp"
+    "src/entity/*.cpp"
+    "src/world/blocks/*.cpp"
+    "src/world/gen/*.cpp"
+    "src/world/*.cpp"
+    "src/particle/*.cpp"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})

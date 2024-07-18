@@ -14,7 +14,8 @@ protected:
     std::vector<Rectangle> m_hitboxes;
 
     bool m_enabledPhysics = false;
-    float m_gravitation = 400;
+    bool m_remove = false;
+    float m_gravitation = 400.f;
 
 public:
     Entity(World* world);
@@ -26,6 +27,8 @@ public:
 
     virtual void processPhysics(bool hitWall, bool hitFloor, bool hitCeil) = 0;
 
+    void draw();
+
     ByteVector& serialize();
     int deserialize(ByteVector& bytes);
 
@@ -36,5 +39,13 @@ public:
 
     inline Vector2 getPosition() {
         return Vector2 {m_hitbox.x, m_hitbox.y};
+    }
+
+    inline void remove() {
+        m_remove = true;
+    }
+
+    bool willRemove() {
+        return m_remove;
     }
 };

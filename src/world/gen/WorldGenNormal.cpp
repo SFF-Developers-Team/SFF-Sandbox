@@ -12,11 +12,10 @@ WorldGenNormal::~WorldGenNormal() {}
 Block *WorldGenNormal::generateBlock(int x, int y, uint8_t layer) {
     Block::BlockType type;
     bool valid_block = true;
-
     siv::PerlinNoise perlin(1);
-
     int grassLevel = m_world->getHeight() * perlin.noise2D_01(x * 0.01f, layer * 0.01f);
 
+    if(y == m_world->getHeight() - 1) return new Block(Block::BlockType::BEDROCK, x, y, layer);
     if(y >= grassLevel + 10 && layer == 1 && round(perlin.noise2D_01(x * 0.2f, y * 0.2f)) == 1 ) return nullptr;
 
     if(y == grassLevel) {

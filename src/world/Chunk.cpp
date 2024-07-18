@@ -121,7 +121,7 @@ void Chunk::draw() {
 
                 Color color = ColorBrightness(WHITE, (layer == 1) ? getLightDepth(x, y) : -0.25f);
 
-                tilemap->drawTilePro(tilemap->getPositionByIndex((uint8_t)block->getType() - 1), dest, color);
+                tilemap->drawTilePro((uint16_t)block->getType() - 1, dest, color);
             }
         }
     }

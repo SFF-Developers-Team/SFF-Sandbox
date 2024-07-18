@@ -2,8 +2,6 @@
 #include <Block.hpp>
 #include <World.hpp>
 
-#define G 400
-
 Entity::Entity(World* world) : m_world(world) {
     m_header = ENTITY;
 }
@@ -98,6 +96,10 @@ void Entity::update() {
     if(m_enabledPhysics) {
         updatePhysics();
     }
+}
+
+void Entity::draw() {
+    DrawTexturePro(m_texture, {0, 0, (float)m_texture.width, (float)m_texture.height}, m_hitbox, {0, 0}, 0.0f, WHITE);
 }
 
 ByteVector& Entity::serialize() {

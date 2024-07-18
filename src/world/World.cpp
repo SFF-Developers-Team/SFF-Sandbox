@@ -43,10 +43,18 @@ void World::update() {
         human->update();
     }
 
+    for(int i = 0; i < m_particles.capacity(); i++) {
+        m_particles[i]->update();
+
+        if(m_particles[i]->willRemove()) {
+            m_particles.erase(m_particles.begin() + i);
+        }
+    }
+
     Debug::addString(TextFormat("World size: %dx%d", m_width, m_height));
 }
 
-void World::draw(bool debug) {
+void World::draw() {
     int chunksDrawn = 0;
 
     for (auto& chunk : m_chunks) {
@@ -63,13 +71,13 @@ void World::draw(bool debug) {
         }
 
         if(Debug::m_debug) {
-            DrawLineV({
-                (float)chunk->getPosition() * CHUNK_SIZE * BLOCK_SIZE_PIXELS, 0}, 
+            DrawLineV(
+                {(float)chunk->getPosition() * CHUNK_SIZE * BLOCK_SIZE_PIXELS, 0}, 
                 {(float)chunk->getPosition() * CHUNK_SIZE * BLOCK_SIZE_PIXELS, (float)m_height * BLOCK_SIZE_PIXELS}, YELLOW
             );
 
-            DrawLineV({
-                (float)chunk->getPosition() * (CHUNK_SIZE * 2) * BLOCK_SIZE_PIXELS, 0}, 
+            DrawLineV(
+                {(float)chunk->getPosition() * (CHUNK_SIZE * 2) * BLOCK_SIZE_PIXELS, 0}, 
                 {(float)chunk->getPosition() * (CHUNK_SIZE * 2) * BLOCK_SIZE_PIXELS, (float)m_height * BLOCK_SIZE_PIXELS}, YELLOW
             );
         }
@@ -130,6 +138,20 @@ void World::placeBlock(int x, int y, uint8_t layer, enum Block::BlockType id) {
 }
 
 void World::destroyBlock(int x, int y, uint8_t layer) {
+    auto block = getBlock(x, y, layer);
+    auto game = Game::get();
+    auto tilemap = game->getBlocksTileMap();
+
+    if(!block) return;
+
+    for(int offsetX = 0; offsetX < 8; offsetX++) {
+        for(int offsetY = 0; offsetY < 8; offsetY++) {
+            game->getParticleManager()->add(new Particle(this, 
+            Vector2 {(float)x * BLOCK_SIZE_PIXELS + offsetX + 4, (float)y * BLOCK_SIZE_PIXELS + offsetY + 4}, 
+            Vector2 {(rand() / RAND_MAX) * 50.f + 25.f * GetRandomValue(-1, 1), -75.f}, tilemap->getTextureOfTileCached((uint16_t)block->getType() - 1)));
+        }
+    }
+
     setBlock(x, y, layer, nullptr);
     calcLightDepths();
 }
@@ -194,9 +216,26 @@ int World::deserialize(ByteVector& bytes) {
     return m_offset;
 }
 
-void World::save() {
+bool World::save() {
     auto worldData = this->serialize();
-    if(SaveFileData("world.dat", worldData.data(), worldData.size())) {
-        TraceLog(LOG_INFO, "Saved world to world.dat");
+    return SaveFileData("world.dat", worldData.data(), worldData.size());
+}
+
+bool World::load() {
+    if(!FileExists("world.dat")) return false;
+
+    int worldSize;
+    auto worldData = LoadFileData("world.dat", &worldSize);
+        
+    if(!worldSize) {
+        UnloadFileData(worldData);
+        return false;
     }
+
+    auto worldBytes = ByteVector(worldData, worldData + worldSize);
+
+    deserialize(worldBytes);
+    UnloadFileData(worldData);
+    
+    return true;
 }

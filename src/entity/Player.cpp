@@ -61,22 +61,24 @@ Vector2 Player::getTargetBlock(bool onlyExist) {
 }
 
 void Player::updateControls() {
-    auto targetBlock = getTargetBlock(false);
+    auto targetBlockPos = getTargetBlock(false);
+    auto targetBlock = m_world->getBlock(targetBlockPos.x, targetBlockPos.y, !IsKeyDown(KEY_LEFT_ALT));
+    Block::BlockType targetBlockType = ((targetBlock != nullptr) ? targetBlock->getType() : Block::BlockType::AIR);
 
-    if(IsMouseButtonDown(MOUSE_LEFT_BUTTON) && targetBlock.x >= 0 && targetBlock.y >= 0) {
+    if(IsMouseButtonDown(MOUSE_LEFT_BUTTON) && targetBlockPos.x >= 0 && targetBlockPos.y >= 0 && targetBlockType != Block::BlockType::BEDROCK && targetBlockType != Block::BlockType::AIR) {
         if(m_canJump) setAnimation(PLAYER_HIT);
-        m_world->destroyBlock(targetBlock.x, targetBlock.y, IsKeyDown(KEY_LEFT_ALT) ? 0 : 1);
+        m_world->destroyBlock(targetBlockPos.x, targetBlockPos.y, !IsKeyDown(KEY_LEFT_ALT));
     }
 
     if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && 
-        (IsKeyDown(KEY_LEFT_ALT) || !CheckCollisionRecs(m_hitbox, {targetBlock.x * BS, targetBlock.y * BS, BS, BS})) && 
-        targetBlock.x >= 0 && targetBlock.y >= 0) {
+        (IsKeyDown(KEY_LEFT_ALT) || !CheckCollisionRecs(m_hitbox, {targetBlockPos.x * BS, targetBlockPos.y * BS, BS, BS})) && 
+        targetBlockPos.x >= 0 && targetBlockPos.y >= 0) {
             
         if(m_canJump) setAnimation(PLAYER_HIT);
-        m_world->placeBlock(targetBlock.x, targetBlock.y, IsKeyDown(KEY_LEFT_ALT) ? 0 : 1, m_selectedBlock);
+        m_world->placeBlock(targetBlockPos.x, targetBlockPos.y, !IsKeyDown(KEY_LEFT_ALT), m_selectedBlock);
     }
 
-    for(int i = 0; i < 5; i++) {
+    for(int i = 0; i < 6; i++) {
         if(IsKeyDown(KEY_ONE + i)) {
             m_selectedBlock = (Block::BlockType)(i + 1);
         }

@@ -13,7 +13,9 @@ public:
         DIRT,
         STONE,
         COBLESTONE,
-        PLANKS
+        PLANKS,
+        WOOL,
+        BEDROCK
     };
 protected:
     static inline size_t m_size = 0;
