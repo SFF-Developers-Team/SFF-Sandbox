@@ -1,0 +1,77 @@
+#pragma once
+#include <vector>
+#include <string>
+#include <map>
+#include <Types.hpp>
+#include <SerializedObject.hpp>
+#include <Block.hpp>
+#include <SimplePlayer.hpp>
+
+#define CHUNK_SIZE 16
+
+class Player;
+class Chunk;
+class WorldGen;
+
+class World : public SerializedObject {
+private:
+    std::vector<Chunk*> m_chunks;
+    std::map<PlayerID, SimplePlayer*> m_players;
+    WorldGen* m_WorldGen;
+
+    int m_width;
+    int m_height;
+    PlayerID m_lastPlayerID = 0;
+
+public:
+    World(int width, int height);
+    ~World();
+
+    void generate(WorldGen* generator);
+    void update();
+    bool isBlockClosed(int x, int y, uint8_t layer);
+
+    void setBlock(int x, int y, uint8_t layer, Block* block);
+    Block* getBlock(int x, int y, uint8_t layer);
+
+    void unloadChunk(int position);
+    void setChunk(Chunk* chunk);
+    Chunk* getChunk(int position);
+
+    std::vector<Rectf> getHitboxes(Rectf entityHitbox);
+
+    void placeBlock(int x, int y, uint8_t layer, enum Block::BlockType id);
+    void destroyBlock(int x, int y, uint8_t layer);
+
+    bool save();
+    bool load();
+
+    ByteVector& serialize();
+    int deserialize(ByteVector& bytes);
+
+    void addPlayer(PlayerID id, SimplePlayer* player);
+    PlayerID addPlayer(SimplePlayer* player);
+    SimplePlayer* getPlayer(PlayerID id);
+    void unloadPlayer(PlayerID id);
+    bool isUsernameAlreadyTaken(std::string const& username);
+
+    int getWidth() {
+        return m_width;
+    }
+
+    int getHeight() {
+        return m_height;
+    }
+
+    auto& getPlayers() {
+        return m_players;
+    }
+
+    auto& getChunks() {
+        return m_chunks;
+    }
+
+    WorldGen* getGenerator() {
+        return m_WorldGen;
+    }
+};  
