@@ -1,3 +1,6 @@
 [submodule "libs/raylib"]
 	path = libs/raylib
 	url = https://github.com/raysan5/raylib.git
+[submodule "libs/sockpp"]
+	path = libs/sockpp
+	url = https://github.com/fpagliughi/sockpp.git
