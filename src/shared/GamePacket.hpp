@@ -2,6 +2,7 @@
 #include <SerializedObject.hpp>
 
 #define MP_BUF_SIZE (1024 * 64) // 64kb
+#define CREATE_PACKET std::make_shared<GamePacket>
 
 class GamePacket : public SerializedObject {
 public:

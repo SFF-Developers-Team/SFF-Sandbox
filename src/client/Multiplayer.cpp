@@ -8,6 +8,10 @@
 
 using namespace std::chrono;
 
+Multiplayer::~Multiplayer() {
+    m_connector.shutdown();
+}
+
 bool Multiplayer::connect(std::string const& host, in_port_t port) {
     if (auto res = m_connector.connect(host, port); !res) {
         logE("Failed to connect to {}:{}: {}", host, port, res.error_message());
@@ -18,7 +22,7 @@ bool Multiplayer::connect(std::string const& host, in_port_t port) {
     auto myUsername = game->getUsername();
     auto player = game->getPlayer();
 
-    auto packet = new GamePacket(SerializedObject::Header::IDENTIFICATION);
+    auto packet = std::make_shared<GamePacket>(SerializedObject::Header::IDENTIFICATION);
     packet->addBytes(myUsername);
     send(packet);
 
@@ -41,136 +45,183 @@ bool Multiplayer::connect(std::string const& host, in_port_t port) {
     player->setID(id);
     game->getWorld()->addPlayer(id, player);
 
-    std::thread thr(&Multiplayer::thread, this);
-    thr.detach();
+    for(int i = 0; i < Game::get()->getWorld()->getWidth() / CHUNK_WIDTH; i++) {
+        addToQueue(CREATE_PACKET(SerializedObject::LOAD_CHUNK, i));
+    }
 
-    delete response;
+    addToQueue(CREATE_PACKET(Game::get()->getPlayer()->serialize()));
+
     return true;
 }
 
-void Multiplayer::send(GamePacket* packet) {
+bool Multiplayer::send(std::shared_ptr<GamePacket> packet) {
     auto bytes = packet->serialize();
-    m_connector.write(bytes.data(), bytes.size());
+    auto result = m_connector.write(bytes.data(), bytes.size());
+    Debug::addString("{} bytes sent", result.value());
 
-    delete packet;
+    return result.is_ok();
 }
 
-GamePacket* Multiplayer::read() {
+std::shared_ptr<GamePacket> Multiplayer::read() {
     return read(MP_BUF_SIZE);
 }
 
-GamePacket* Multiplayer::read(size_t n) {
+std::shared_ptr<GamePacket> Multiplayer::read(size_t n) {
     auto buf = ByteVector(n);
     return read(buf);
 }
 
-GamePacket* Multiplayer::read(ByteVector& buf) {
-    auto result = m_connector.read(buf.data(), buf.size());
-    // Ееее рок хардкод (10035 - EWOULDLOCK)
-    if(result.is_error() && result.error().value() == 10035) {
-        return new GamePacket(SerializedObject::Header::NULL_PACKET); 
+std::shared_ptr<GamePacket> Multiplayer::read(ByteVector& buf) {
+    sockpp::result<socket_t> result = m_connector.read(buf.data(), buf.size());
+
+    Debug::addString("{} bytes read", result.value());
+
+    if(result.error().value() == WSAEWOULDBLOCK || result.error().value() == WSAEINPROGRESS) {
+        // logD("WOULD BLOCK {}", result.value());
+        return std::make_shared<GamePacket>(SerializedObject::Header::NULL_PACKET); 
     }
 
-    return (result.is_ok() ? new GamePacket(buf) : nullptr);
+    if(result.is_error()) {
+        logE("Multiplayer error {}", result.error_message());
+    }
+
+    return (result.is_ok() ? CREATE_PACKET(buf) : CREATE_PACKET(SerializedObject::SERVER_ERROR, "End of stream."));
 }
 
-void Multiplayer::addToQueue(GamePacket* packet) {
+void Multiplayer::addToQueue(std::shared_ptr<GamePacket> packet) {
     m_packetQueue.push_back(packet);
+    // logD("added packet {}", (int)packet->getBytes<SerializedObject::Header>());
 }
 
-void Multiplayer::thread() {
+void Multiplayer::update() {
     static ByteVector buf(MP_BUF_SIZE);
     auto game = Game::get();
     auto world = game->getWorld();
-    auto player = game->getPlayer();
+    auto me = game->getPlayer(); // Player
 
-    while (true) {
-        if(m_packetQueue.size() > 0) {
-            send(*m_packetQueue.begin());
-            m_packetQueue.erase(m_packetQueue.begin());
-        }
+    Debug::addString("Queue size: {}", m_packetQueue.size());
 
-        auto packet = read(buf);
-        if(!packet) break;
-
-        switch (packet->getBytes<SerializedObject::Header>()) {
-            case SerializedObject::Header::SERVER_ERROR: {
-                logE("SERVER ERROR {}", packet->getBytes<std::string>());
-                std::exit(1);
-                break;
-            }
-
-            case SerializedObject::Header::LOAD_PLAYER: {
-                auto id = packet->getBytes<PlayerID>(-1);
-                logD("Load player {}", id);
-                if(id == -1 || world->getPlayer(id)) break;
-
-                auto username = packet->getBytes<std::string>("undefined");
-                auto player = new SimplePlayer(world, false);
-                player->setUsername(username);
-                world->addPlayer(id, player);
-                break;
-            }
-
-            case SerializedObject::Header::UNLOAD_PLAYER: {
-                auto id = packet->getBytes<PlayerID>(-1);
-                if(id == -1 || !world->getPlayer(id)) break;
-                
-                world->unloadPlayer(id);
-                break;
-            }
-
-            case SerializedObject::Header::PLAYER_POSITION: {
-                auto id = packet->getBytes<PlayerID>(-1);
-                auto pos = packet->getBytes<Vec2f>({0, 0});
-                auto player = world->getPlayer(id);
-                if(id == -1 || !player) break;
-
-                player->setPosition(pos);
-                break;
-            }
-
-            case SerializedObject::Header::PLAYER_ANIMATION: {
-                auto id = packet->getBytes<PlayerID>(-1);
-                auto frame = packet->getBytes<uint8_t>(0);
-                auto player = world->getPlayer(id);
-                if(id == -1 || !player) break;
-
-                player->setAnimCurrentFrame(frame);
-                break;
-            }
-
-            case SerializedObject::Header::PLAYER_DIRECTION: {
-                auto id = packet->getBytes<PlayerID>(-1);
-                auto dir = packet->getBytes<Player::Direction>(Player::Direction::RIGHT);
-                auto player = world->getPlayer(id);
-                if(id == -1 || !player) break;
-
-                player->turn(dir);
-                break;
-            }
-
-            case SerializedObject::Header::BLOCK: {
-                auto block = new Block(Block::BlockType::AIR);
-                block->deserialize(buf);
-                auto pos = block->getPosition();
-
-                world->setBlock(pos.x, pos.y, block->getLayer(), block);
-                break;
-            }
-
-            case SerializedObject::Header::CHUNK: {
-                auto chunk = new Chunk(world);
-                chunk->deserialize(buf);
-
-                world->setChunk(chunk);
-                break;
-            }
-        }
-
-        delete packet;
+    if(m_packetQueue.empty()) {
+        addToQueue(CREATE_PACKET(me->serialize()));
+        m_canSendNext = true;
     }
 
-    m_connector.set_non_blocking(false); // for future identifications
-    m_connector.shutdown();
+
+    if(m_packetQueue.size() > 0 && m_canSendNext) {
+        send(*m_packetQueue.begin());
+        m_packetQueue.erase(m_packetQueue.begin());
+        m_canSendNext = false;
+    }
+
+
+    auto packet = read(buf);
+
+    switch (packet->getBytes<SerializedObject::Header>()) {
+        case SerializedObject::Header::SERVER_ERROR: {
+            logE("SERVER ERROR {}", packet->getBytes<std::string>());
+            std::exit(1);
+            break;
+        }
+
+        case SerializedObject::Header::LOAD_PLAYER: {
+            auto id = packet->getBytes<PlayerID>(0);
+            logD("Load player {}", id);
+            if(!id) break;
+            
+            auto player = world->getPlayer(id);
+            auto username = packet->getBytes<std::string>("undefined");
+            
+            if(!player) {
+                player = new SimplePlayer(world, false);
+                world->addPlayer(id, player);
+            }
+
+            player->setUsername(username);
+            break;
+        }
+
+        case SerializedObject::Header::UNLOAD_PLAYER: {
+            auto id = packet->getBytes<PlayerID>(0);
+            logD("Unload player {}", id);
+            if(!world->getPlayer(id)) break;
+            
+            world->unloadPlayer(id);
+            break;
+        }
+
+        case SerializedObject::Header::PLAYERS: {
+            auto count = packet->getBytes<size_t>(0);
+            // logD("Players count {}", count);
+
+            for(auto i = 0; i < count; i++) {
+                auto bytes = packet->getBytes(SimplePlayer::getSize());
+                auto playerPacket = CREATE_PACKET(bytes);
+                
+                if(playerPacket->getBytes<SerializedObject::Header>() != SerializedObject::PLAYER) continue;
+                auto id = playerPacket->getBytes<PlayerID>(0);
+                if(!id) continue;
+
+                // logD("PlayerID: {}", id);
+
+                auto player = world->getPlayer(id);
+                if(!player) {
+                    player = new SimplePlayer(world);
+                    world->addPlayer(id, player);
+                }
+
+                if(player->getUsername().empty()) addToQueue(CREATE_PACKET(SerializedObject::LOAD_PLAYER, id));
+
+                player->deserialize(bytes);
+            }
+
+            break;
+        }
+
+        case SerializedObject::Header::PLAYER: {
+            auto id = packet->getBytes<PlayerID>(0);
+
+            if(id == me->getID()) {
+                me->deserialize(packet->serialize());
+                break;
+            } else if(!id) break;
+
+            auto otherPlayer = world->getPlayer(id);
+            if(!otherPlayer) {
+                otherPlayer = new SimplePlayer(world);
+                world->addPlayer(id, otherPlayer);
+            }
+
+            if(otherPlayer->getUsername().empty()) addToQueue(CREATE_PACKET(SerializedObject::LOAD_PLAYER, id));
+
+            otherPlayer->deserialize(packet->serialize());
+            break;
+        }
+
+        case SerializedObject::Header::BLOCK: {
+            auto block = std::make_unique<Block>(Block::BlockType::AIR);
+            block->deserialize(packet->serialize());
+            auto pos = block->getPosition();
+            auto layer = block->getLayer();
+            logD("Block {} [{}, {}]", (int)block->getType(), pos.x, pos.y);
+
+            world->setBlock(pos.x, pos.y, layer, std::move(block));
+            break;
+        }
+
+        case SerializedObject::Header::CHUNK: {
+            auto chunk = new Chunk(world);
+            chunk->deserialize(buf);
+
+            logD("Chunk {}", chunk->getPosition());
+
+            world->setChunk(chunk);
+            break;
+        }
+
+        case SerializedObject::Header::NULL_PACKET: {
+            return;
+        }
+    }
+
+    m_canSendNext = true;
 }

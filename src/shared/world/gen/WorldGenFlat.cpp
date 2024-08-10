@@ -4,11 +4,11 @@
 
 WorldGenFlat::WorldGenFlat(World* world) : WorldGen(world) {}
 
-Block *WorldGenFlat::generateBlock(int x, int y, uint8_t layer) {
+std::unique_ptr<Block> WorldGenFlat::generateBlock(int x, int y, uint8_t layer) {
     Block::BlockType type = Block::BlockType::AIR;
     int grassLevel = (int)(m_world->getHeight() * 2 / 3);
 
-    if(y == m_world->getHeight() - 1) return new Block(Block::BlockType::BEDROCK, x, y, layer);
+    if(y == m_world->getHeight() - 1) return std::make_unique<Block>(Block::BlockType::BEDROCK, x, y, layer);
 
     if(y == grassLevel) {
         type = Block::BlockType::GRASS;
@@ -16,12 +16,7 @@ Block *WorldGenFlat::generateBlock(int x, int y, uint8_t layer) {
         type = Block::BlockType::DIRT;
     } else if(y >= grassLevel + 5) {
         type = Block::BlockType::STONE;
-    } else {
-        return nullptr;
     }
 
-    auto ret = new Block(type);
-    ret->setPosition(x, y, layer);
-
-    return ret;
+    return std::make_unique<Block>(type, x, y, layer);
 }

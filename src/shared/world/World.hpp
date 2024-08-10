@@ -21,7 +21,7 @@ private:
 
     int m_width;
     int m_height;
-    PlayerID m_lastPlayerID = 0;
+    PlayerID m_lastPlayerID = 1;
 
 public:
     World(int width, int height);
@@ -31,12 +31,13 @@ public:
     void update();
     bool isBlockClosed(int x, int y, uint8_t layer);
 
-    void setBlock(int x, int y, uint8_t layer, Block* block);
+    void setBlock(int x, int y, uint8_t layer, std::unique_ptr<Block> block);
     Block* getBlock(int x, int y, uint8_t layer);
 
     void unloadChunk(int position);
     void setChunk(Chunk* chunk);
     Chunk* getChunk(int position);
+    Rectf getBlockHitbox(int x, int y);
 
     std::vector<Rectf> getHitboxes(Rectf entityHitbox);
 
@@ -54,6 +55,7 @@ public:
     SimplePlayer* getPlayer(PlayerID id);
     void unloadPlayer(PlayerID id);
     bool isUsernameAlreadyTaken(std::string const& username);
+    bool isOutOfBound(int x, int y, uint8_t layer);
 
     int getWidth() {
         return m_width;

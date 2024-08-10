@@ -22,7 +22,7 @@ private:
     bool m_sneak = false;
     bool m_fly = false;
 
-    PlayerID m_id = -1;
+    PlayerID m_id = 0;
 
     Rectf m_lastHitbox;
     uint8_t m_lastCurrentFrame;
@@ -41,9 +41,11 @@ public:
     void draw();
 
     bool isChunkInView(Chunk* chunk);
+    bool canDestroyBlock(Vec2i targetBlockPos, uint8_t layer);
+    bool canPlaceBlock(Vec2i targetBlockPos, uint8_t layer);
 
     Vector2 convertToCameraPos(Vector2 pos);
-    Vector2 getTargetBlock(bool onlyExist = true);
+    Vec2i getTargetBlock(bool onlyExist = true);
 
     auto getCamera() {
         return m_camera;

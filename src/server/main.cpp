@@ -1,7 +1,7 @@
 #include <Server.hpp>
 
 int main() {
-    Server* server = new Server();
+    auto server = Server::get();
     server->init();
 
     return 0;

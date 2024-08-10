@@ -6,10 +6,10 @@ WorldGenCaveGame::WorldGenCaveGame(World* world) : WorldGen(world) {
     m_perlin = siv::PerlinNoise(1);
 }
 
-Block *WorldGenCaveGame::generateBlock(int x, int y, uint8_t layer) {
+std::unique_ptr<Block> WorldGenCaveGame::generateBlock(int x, int y, uint8_t layer) {
     Block::BlockType type = Block::BlockType::AIR;
 
-    if(y == m_world->getHeight() - 1) return new Block(Block::BlockType::BEDROCK, x, y, layer);
+    if(y == m_world->getHeight() - 1) return std::make_unique<Block>(Block::BlockType::BEDROCK, x, y, layer);
 
     const float coef = 0.1f;
     if(round(m_perlin.noise2D_01(x * coef, y * coef)) == 0.0f) return nullptr;
@@ -24,5 +24,5 @@ Block *WorldGenCaveGame::generateBlock(int x, int y, uint8_t layer) {
         return nullptr;
     } 
 
-    return new Block(type, x, y, layer);
+    return std::make_unique<Block>(type, x, y, layer);
 }

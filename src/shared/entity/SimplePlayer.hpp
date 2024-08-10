@@ -29,6 +29,8 @@ public:
     };
 
 protected:
+    static inline size_t m_size = 0;
+
     AnimationType m_animType = PLAYER_IDLE;
 
     uint8_t m_animFps = 10;
@@ -41,10 +43,11 @@ protected:
     bool m_canJump = false;
 
     // multiplayer features
-    uint32_t m_id;
+    PlayerID m_id;
     std::string m_username;
 
 public:
+    SimplePlayer();
     SimplePlayer(World* world);
     SimplePlayer(World* world, bool enablePhysics);
     ~SimplePlayer();
@@ -60,11 +63,15 @@ public:
     ByteVector& serialize();
     int deserialize(ByteVector& bytes);
 
+    static size_t const getSize();
+
     void setUsername(std::string const& username) { m_username = username; }
     void setAnimCurrentFrame(uint8_t frame) { m_animCurrentFrame = frame; }
     void turn(SimplePlayer::Direction direction) { m_direction = direction; }
+    void setID(PlayerID id) { m_id = id; }
 
     auto getAnimCurrentFrame() { return m_animCurrentFrame; }
     auto getDirection() { return m_direction; }
     auto getUsername() { return m_username; }
+    auto getID() { return m_id; }
 };

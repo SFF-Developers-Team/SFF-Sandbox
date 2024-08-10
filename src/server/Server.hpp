@@ -1,10 +1,11 @@
 #pragma once
 #include <thread>
-#include <mutex>
+#include <memory>
 #include <map>
 #include <sockpp/tcp_acceptor.h>
 #include <SimplePlayer.hpp>
 #include <GamePacket.hpp>
+#include <toml.hpp>
 
 class World;
 
@@ -12,26 +13,38 @@ class Server {
 private:
     sockpp::tcp_acceptor m_acceptor;
     World* m_world;
+    toml::v3::table config;
 
-    std::map<PlayerID, std::vector<GamePacket*>> m_clientQueue;
+    std::map<PlayerID, std::vector<std::shared_ptr<GamePacket>>> m_clientQueue;
     
 public:
-    void acceptThread(sockpp::tcp_socket sock);
-    void init();
-    void loop();
+    static Server* get() {
+        static auto server = new Server();
+        return server;
+    }
+
     void destroy();
 
-    void addToQueueAll(GamePacket* packet);
-    void addToQueue(PlayerID id, GamePacket* packet);
-    void addToQueueExcept(PlayerID id, GamePacket* packet);
+    void acceptThread(sockpp::tcp_socket sock);
+    void inputThread();
+    void init();
+    void loop();
 
-    GamePacket* read(sockpp::tcp_socket& sock, ByteVector& buf);
-    GamePacket* read(sockpp::tcp_socket& sock, size_t n);
-    GamePacket* read(sockpp::tcp_socket& sock);
+    void addToQueueAll(std::shared_ptr<GamePacket> packet);
+    void addToQueue(PlayerID id, std::shared_ptr<GamePacket> packet);
+    void addToQueueExcept(PlayerID id, std::shared_ptr<GamePacket> packet);
 
-    bool send(sockpp::tcp_socket& sock, GamePacket* packet);
+    std::shared_ptr<GamePacket> read(sockpp::tcp_socket& sock, ByteVector& buf);
+    std::shared_ptr<GamePacket> read(sockpp::tcp_socket& sock, size_t n);
+    std::shared_ptr<GamePacket> read(sockpp::tcp_socket& sock);
+
+    bool send(sockpp::tcp_socket& sock, std::shared_ptr<GamePacket> packet);
 
     PlayerID joinPlayer(std::string const& username);
     void disconnectPlayer(PlayerID id);
     void closeSocket(sockpp::tcp_socket sock);
+
+    auto getWorld() { return m_world; }
 };
+
+void destroy();

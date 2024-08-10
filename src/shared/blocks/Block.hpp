@@ -32,10 +32,12 @@ public:
     Vec2i getPosition() const;
     uint8_t getLayer() const;
     static size_t const getSize();
+    Rectf getHitbox();
 
     virtual void update();
 
     void setPosition(int x, int y, uint8_t layer);
+    void setType(BlockType type) { m_type = type; }
 
     ByteVector& serialize();
     int deserialize(ByteVector& bytes);

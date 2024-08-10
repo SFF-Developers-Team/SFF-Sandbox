@@ -10,5 +10,5 @@ private:
 public:
     WorldGenCaveGame(World* world);
 
-    virtual Block* generateBlock(int x, int y, uint8_t layer) override;
+    virtual std::unique_ptr<Block> generateBlock(int x, int y, uint8_t layer) override;
 };

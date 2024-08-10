@@ -62,16 +62,15 @@ void World::setChunk(Chunk* chunk) {
 }
 
 void World::placeBlock(int x, int y, uint8_t layer, enum Block::BlockType id) {
-    if(getBlock(x, y, layer) == nullptr){
-        setBlock(x, y, layer, new Block(id));
-    }
+    auto block = getBlock(x, y, layer);
+    if(block && block->getType() == Block::BlockType::AIR) setBlock(x, y, layer, std::make_unique<Block>(id));
 }
 
 void World::destroyBlock(int x, int y, uint8_t layer) {
     auto block = getBlock(x, y, layer);
-    if(!block) return;
+    if(!block || block->getType() == Block::BlockType::AIR) return;
 
-    setBlock(x, y, layer, nullptr);
+    setBlock(x, y, layer, std::make_unique<Block>(Block::BlockType::AIR));
 }
 
 Block *World::getBlock(int x, int y, uint8_t layer) {
@@ -81,11 +80,11 @@ Block *World::getBlock(int x, int y, uint8_t layer) {
     return chunk->getBlock(x % CHUNK_WIDTH, y, layer);
 }
 
-void World::setBlock(int x, int y, uint8_t layer, Block* block) {
+void World::setBlock(int x, int y, uint8_t layer, std::unique_ptr<Block> block) {    
     auto chunk = getChunk(x / CHUNK_WIDTH);
     if(!chunk) return;
 
-    chunk->setBlock(x % 16, y, layer, block);
+    chunk->setBlock(x % 16, y, layer, std::move(block));
 }
 
 ByteVector& World::serialize() {
@@ -93,11 +92,13 @@ ByteVector& World::serialize() {
 
     addBytes(m_width);
     addBytes(m_height);
-    addBytes((unsigned int)m_chunks.capacity());
+    addBytes((unsigned int)m_chunks.size());
 
-    for(int i = 0; i < m_chunks.capacity(); i++) {
-        if(m_chunks[i] != nullptr) {
-            auto chunkBytes = m_chunks[i]->serialize();
+    logD("chunks count {}", m_chunks.size());
+
+    for(auto chunk : m_chunks) {
+        if(chunk) {
+            auto chunkBytes = chunk->serialize();
 
             addBytes((unsigned int)chunkBytes.size());
             addBytes(chunkBytes);
@@ -135,7 +136,7 @@ int World::deserialize(ByteVector& bytes) {
 bool World::save() {
     auto worldData = this->serialize();
     
-    std::ofstream file("myfile.bin", std::ios::binary);
+    std::ofstream file("world.dat", std::ios::binary);
     
     if(!file.is_open()) return false;
 
@@ -171,9 +172,15 @@ std::vector<Rectf> World::getHitboxes(Rectf entityHitbox) {
 
     for(int x = minX; x <= maxX; x++) {
         for(int y = minY; y <= maxY; y++) {
-            if(getBlock(x, y, 1) != nullptr) {
-                ret.push_back(Rectf {x * BS, y * BS, BS, BS});
-            }
+            auto block = getBlock(x, y, 1);
+            if(!block) continue;
+            
+            auto hitbox = getBlockHitbox(x, y);
+            if(hitbox.width == 0.0f || hitbox.height == 0.0f) continue;
+
+            hitbox.x = x * BS;
+            hitbox.y = y * BS;
+            ret.push_back(hitbox);
         }
     }
 
@@ -209,4 +216,15 @@ bool World::isUsernameAlreadyTaken(std::string const& username) {
     }
 
     return false;
+}
+
+Rectf World::getBlockHitbox(int x, int y) {
+    auto chunk = getChunk(x / CHUNK_WIDTH);
+    if(!chunk) return Rectf {0.0f, 0.0f, 0.0f, 0.0f};
+
+    return chunk->getBlock(x % CHUNK_WIDTH, y, 1)->getHitbox();
+}
+
+bool World::isOutOfBound(int x, int y, uint8_t layer) {
+    return (x < 0 || x > getWidth() || y < 0 || y >= getHeight() || layer < 0 || layer > LAYERS - 1);
 }

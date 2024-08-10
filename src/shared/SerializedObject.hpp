@@ -2,13 +2,14 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <Logger.hpp>
 
 using ByteVector = std::vector<uint8_t>;
 
 class SerializedObject {
 public:
     enum Header : uint8_t {
-        // Save headers (also uses in mp)
+        // World headers (also uses in mp)
         PLAYER,
         BLOCK,
         CHUNK,
@@ -16,16 +17,12 @@ public:
         ENTITY,
 
         // Multiplayer headers
-        IDENTIFICATION,
-        LOAD_PLAYER,
-        UNLOAD_PLAYER,
-
-        PLAYER_POSITION,
-        PLAYER_ANIMATION,
-        PLAYER_DIRECTION,
+        IDENTIFICATION, DISCONNECT,
+        LOAD_CHUNK,  UNLOAD_CHUNK,  CHUNKS,
+        LOAD_PLAYER, UNLOAD_PLAYER, PLAYERS,
+        BLOCK_PLACE, BLOCK_DESTROY,
 
         SERVER_ERROR,
-
         NULL_PACKET = 0xFF
     };
 
@@ -76,6 +73,13 @@ public:
         for(uint8_t byte : byteVec) {
             m_bytes.push_back(byte);
         }
+    }
+
+    ByteVector getBytes(size_t count) {
+        auto ret = ByteVector(m_bytes.begin() + m_offset, m_bytes.begin() + m_offset + count);
+        m_offset += count;
+        
+        return ret;
     }
 
     template<typename T>

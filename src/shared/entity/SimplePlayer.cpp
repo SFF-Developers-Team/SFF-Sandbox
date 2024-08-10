@@ -74,7 +74,6 @@ ByteVector& SimplePlayer::serialize() {
     addBytes(m_id);
     addBytes(m_hitbox.x);
     addBytes(m_hitbox.y);
-    addBytes(m_animType);
     addBytes(m_animCurrentFrame);
     addBytes(m_direction);
 
@@ -84,12 +83,15 @@ ByteVector& SimplePlayer::serialize() {
 int SimplePlayer::deserialize(ByteVector& bytes) {
     SerializedObject::deserialize(bytes);
 
-    m_id = getBytes<int>(0);
+    m_id = getBytes<PlayerID>(0);
     m_hitbox.x = getBytes<float>(rand() % m_world->getWidth() * BS);
     m_hitbox.y = getBytes<float>(0.0f);
-    m_animType = getBytes<AnimationType>(PLAYER_IDLE);
-    m_animCurrentFrame = getBytes<unsigned char>(0);
-    m_direction = getBytes<char>(1);
+    m_animCurrentFrame = getBytes<uint8_t>(0);
+    m_direction = getBytes<int8_t>(1);
 
     return m_offset;
+}
+
+size_t const SimplePlayer::getSize() {
+    return sizeof(Header) + sizeof(PlayerID) + (sizeof(float) * 2) + (sizeof(uint8_t) * 2);
 }

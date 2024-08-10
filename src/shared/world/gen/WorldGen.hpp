@@ -12,5 +12,5 @@ protected:
 public:
     WorldGen(World* world);
 
-    virtual Block* generateBlock(int x, int y, uint8_t layer) = 0;
+    virtual std::unique_ptr<Block> generateBlock(int x, int y, uint8_t layer) = 0;
 };

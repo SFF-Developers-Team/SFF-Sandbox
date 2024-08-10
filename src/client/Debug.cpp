@@ -3,12 +3,6 @@
 
 #define FONT_SIZE 20
 
-void Debug::addString(std::string str) {
-    if(m_debug) {
-        m_debugList.push_back(str);
-    }
-}
-
 void Debug::draw() {
     int y = 0;
     for (auto& str : m_debugList) {

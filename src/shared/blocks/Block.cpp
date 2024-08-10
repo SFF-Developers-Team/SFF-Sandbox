@@ -64,3 +64,8 @@ size_t const Block::getSize() {
 
     return m_size;
 }
+
+Rectf Block::getHitbox() {
+    if(m_layer == 0 || m_type == BlockType::AIR) return Rectf {0.0f, 0.0f, 0.0f, 0.0f};
+    return Rectf {m_x * BS, m_y * BS, BS, BS};
+}

@@ -28,9 +28,9 @@ Player::~Player() {
 void Player::updateCamera() {
     this->m_camera.target = {m_hitbox.x + m_hitbox.width / 2, m_hitbox.y - m_hitbox.height / 2};
 
-    Debug::addString(TextFormat("Camera target: [%.0f, %.0f]", this->m_camera.target.x, this->m_camera.target.y));
-    Debug::addString(TextFormat("Camera zoom: %.02f", this->m_camera.zoom));
-    Debug::addString(TextFormat("Camera rotation: %.02f", this->m_camera.rotation));
+    Debug::addString("Camera target: [{:0f}, {:0f}]", this->m_camera.target.x, this->m_camera.target.y);
+    Debug::addString("Camera zoom: {:02f}", this->m_camera.zoom);
+    Debug::addString("Camera rotation: {:02f}", this->m_camera.rotation);
 }
 
 void Player::updateAnimation() {
@@ -66,11 +66,11 @@ void Player::updateAnimation() {
         }
     }
     
-    Debug::addString(TextFormat("Animation frame: %d", m_animCurrentFrame));
-    Debug::addString(TextFormat("Animation FPS: %d", m_animFps));
-    Debug::addString(TextFormat("Animation type: %s", getAnimationName(m_animType)));
-    Debug::addString(TextFormat("Animation last frame: %f", m_animLastFrameTime));
-    Debug::addString(TextFormat("GetTime(): %f", GetTime()));
+    Debug::addString("Animation frame: {}", m_animCurrentFrame);
+    Debug::addString("Animation FPS: {}", m_animFps);
+    Debug::addString("Animation type: {}", getAnimationName(m_animType));
+    Debug::addString("Animation last frame: {}", m_animLastFrameTime);
+    Debug::addString("GetTime(): {}", GetTime());
 }
 
 Vector2 Player::convertToCameraPos(Vector2 pos) {
@@ -80,34 +80,69 @@ Vector2 Player::convertToCameraPos(Vector2 pos) {
     };
 }
 
-Vector2 Player::getTargetBlock(bool onlyExist) {
+Vec2i Player::getTargetBlock(bool onlyExist) {
     auto cur = convertToCameraPos(GetMousePosition());
-    auto targetBlock = Vector2 {floor(cur.x / BS), floor(cur.y / BS)};
+    auto targetBlock = Vec2i {(int)(cur.x / BS), (int)(cur.y / BS)};
 
     if (Vector2Distance(cur, {m_hitbox.x, m_hitbox.y}) / BS <= 4 && 
         (!onlyExist || m_world->getBlock(targetBlock.x, targetBlock.y, IsKeyPressed(KEY_LEFT_ALT) ? 0 : 1) != nullptr)) {
         return targetBlock;
     } else {
-        return Vector2 {-1, -1};
+        return Vec2i {-1, -1};
     }
 }
 
-void Player::updateControls() {
-    auto targetBlockPos = getTargetBlock(false);
-    auto targetBlock = m_world->getBlock(targetBlockPos.x, targetBlockPos.y, !IsKeyDown(KEY_LEFT_ALT));
-    Block::BlockType targetBlockType = ((targetBlock != nullptr) ? targetBlock->getType() : Block::BlockType::AIR);
+bool Player::canDestroyBlock(Vec2i pos, uint8_t layer) {
+    if(m_world->isOutOfBound(pos.x, pos.y, layer)) return false;
 
-    if(IsMouseButtonDown(MOUSE_LEFT_BUTTON) && targetBlockPos.x >= 0 && targetBlockPos.y >= 0 && targetBlockType != Block::BlockType::BEDROCK && targetBlockType != Block::BlockType::AIR) {
-        if(m_canJump) setAnimation(PLAYER_HIT);
-        m_world->destroyBlock(targetBlockPos.x, targetBlockPos.y, !IsKeyDown(KEY_LEFT_ALT));
+    auto block = m_world->getBlock(pos.x, pos.y, layer);
+    if(!block) return false;
+
+    Block::BlockType type = block->getType();
+    
+    return type != Block::BlockType::BEDROCK && type != Block::BlockType::AIR;
+}
+
+bool Player::canPlaceBlock(Vec2i pos, uint8_t layer) {
+    if(m_world->isOutOfBound(pos.x, pos.y, layer)) return false;
+
+    auto block = m_world->getBlock(pos.x, pos.y, layer);
+    if(!block) {
+        m_world->setBlock(pos.x, pos.y, layer, std::make_unique<Block>(Block::BlockType::AIR));
     }
 
-    if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && 
-        (IsKeyDown(KEY_LEFT_ALT) || !CheckCollisionRecs(m_hitbox.to<Rectangle>(), {targetBlockPos.x * BS, targetBlockPos.y * BS, BS, BS})) && 
-        targetBlockPos.x >= 0 && targetBlockPos.y >= 0) {
-            
+    if(layer == 1 && CheckCollisionRecs(m_hitbox.to<Rectangle>(), {pos.x * BS, pos.y * BS, BS, BS})) return false;
+    if (m_world->getBlock(pos.x - 1, pos.y, layer)->getType() == Block::BlockType::AIR &&
+        m_world->getBlock(pos.x + 1, pos.y, layer)->getType() == Block::BlockType::AIR &&
+        m_world->getBlock(pos.x, pos.y - 1, layer)->getType() == Block::BlockType::AIR &&
+        m_world->getBlock(pos.x, pos.y + 1, layer)->getType() == Block::BlockType::AIR && 
+        m_world->getBlock(pos.x, pos.y, !layer)->getType() == Block::BlockType::AIR
+    ) return false;
+    return m_world->getBlock(pos.x, pos.y, layer)->getType() == Block::BlockType::AIR;
+}
+
+void Player::updateControls() {
+    auto shouldSendBlock = false;
+    auto targetBlockPos = getTargetBlock(false);
+
+    if(IsMouseButtonDown(MOUSE_LEFT_BUTTON) && canDestroyBlock(targetBlockPos, !IsKeyDown(KEY_LEFT_ALT))) {
+        if(m_canJump) setAnimation(PLAYER_HIT);
+        m_world->destroyBlock(targetBlockPos.x, targetBlockPos.y, !IsKeyDown(KEY_LEFT_ALT));
+        shouldSendBlock = true;
+    }
+
+    if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && canPlaceBlock(targetBlockPos, !IsKeyDown(KEY_LEFT_ALT))) {
         if(m_canJump) setAnimation(PLAYER_HIT);
         m_world->placeBlock(targetBlockPos.x, targetBlockPos.y, !IsKeyDown(KEY_LEFT_ALT), m_selectedBlock);
+        shouldSendBlock = true;
+    }
+
+    if(Game::get()->isMultiplayer() && shouldSendBlock) {
+        auto mp = Game::get()->getMultiplayer();
+        auto block = m_world->getBlock(targetBlockPos.x, targetBlockPos.y, !IsKeyDown(KEY_LEFT_ALT));
+        if(block) {
+            mp->addToQueue(CREATE_PACKET(block->serialize()));
+        }
     }
 
     for(int i = 0; i < 6; i++) {
@@ -140,7 +175,7 @@ void Player::updateControls() {
         m_speed.x /= 2;
     }
 
-    if(IsKeyDown(KEY_R)) {
+    if(IsKeyPressed(KEY_R)) {
         m_hitbox.x = (float)(rand() % m_world->getWidth() * BLOCK_SIZE_PIXELS);
         m_hitbox.y = 0.0f;
     }
@@ -185,36 +220,25 @@ void Player::update() {
         updateMultiplayer();
     }
 
-    Debug::addString(TextFormat("Player position: [%.0f, %.0f]", this->m_hitbox.x, this->m_hitbox.y));
-    Debug::addString(TextFormat("Player speed: [%.0f, %.0f]", this->m_speed.x, this->m_speed.y));
-    Debug::addString(TextFormat("Fly: %d", m_fly));
-    Debug::addString(TextFormat("My playerID: %d", m_id));
+    Debug::addString("Player position: [{:0f}, {:0f}]", this->m_hitbox.x, this->m_hitbox.y);
+    Debug::addString("Player speed: [{:0f}, {:0f}]", this->m_speed.x, this->m_speed.y);
+    Debug::addString("Fly: {}", m_fly);
+    Debug::addString("My playerID: {}", m_id);
 }
 
 void Player::updateMultiplayer() {
-    static auto multiplayer = Game::get()->getMultiplayer();
-
-    if(m_lastHitbox.x != m_hitbox.x || m_lastHitbox.y != m_hitbox.y) {
-        multiplayer->addToQueue(new GamePacket(SerializedObject::PLAYER_POSITION, Vec2f {m_hitbox.x, m_hitbox.y}));
-        m_lastHitbox = m_hitbox;
-    }
-
-    if(m_lastCurrentFrame != m_animCurrentFrame) {
-        multiplayer->addToQueue(new GamePacket(SerializedObject::PLAYER_ANIMATION, m_animCurrentFrame));
-        m_lastCurrentFrame = m_animCurrentFrame;
-    }
-
-    if (m_lastDirection != m_direction) {
-        multiplayer->addToQueue(new GamePacket(SerializedObject::PLAYER_DIRECTION, m_direction));
-        m_lastDirection = m_direction;
-    }
+    // static auto multiplayer = Game::get()->getMultiplayer();
+    
+    // if(multiplayer->shouldSendPlayer()) {
+    //     multiplayer->addToQueue(CREATE_PACKET(serialize()));
+    // }
 }
 
 void Player::processPhysics(bool hitWall, bool hitFloor, bool hitCeil) {
     m_canJump = hitFloor;
 
-    Debug::addString(TextFormat("Hit floor: %d", hitFloor));
-    Debug::addString(TextFormat("Hit wall: %d", hitWall));
+    Debug::addString("Hit floor: {}", hitFloor);
+    Debug::addString("Hit wall: {}", hitWall);
 }
 
 void Player::draw() {

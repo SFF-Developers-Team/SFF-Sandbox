@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include <string>
+#include <format>
 
 class Debug {
 private:
@@ -10,5 +10,11 @@ public:
     static inline bool m_debug = false;
 
     static void draw();
-    static void addString(std::string str);
+
+    template <typename... Args>
+    static void addString(std::format_string<Args...> s, Args&&... args) {
+        if(m_debug) {
+            m_debugList.push_back(std::format(s, std::forward<Args>(args)...));
+        }
+    }
 };

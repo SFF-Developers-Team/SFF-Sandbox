@@ -10,6 +10,7 @@
 #include <GamePacket.hpp>
 
 void Game::init(std::vector<std::string>& args) {
+    setlocale(LOCALE_ALL, "ru");
     InitWindow(m_screenWidth, m_screenHeight, "SFF Sandbox");
     SetTargetFPS(60);
     SetWindowState(FLAG_WINDOW_RESIZABLE);
@@ -92,10 +93,13 @@ void Game::update() {
         m_world->save();
     }
 
-    std::string fps = "FPS: " + std::to_string(GetFPS());
-    Debug::addString(fps);
+    Debug::addString("{} FPS", GetFPS());
     
     // m_world->update();
     m_player->update();
     m_particleManager->update();
+
+    if(m_multiplayer) {
+        m_multiplayerManager->update();
+    }
 }

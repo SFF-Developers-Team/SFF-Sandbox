@@ -43,9 +43,9 @@ void RenderManager::renderWorld() {
         renderSimplePlayer(player);
     }
 
-    Debug::addString(TextFormat("World size: %dx%d", m_world->getWidth(), m_world->getHeight()));
-    Debug::addString(TextFormat("Chunks drawn: %d", chunksDrawn));
-    Debug::addString(TextFormat("Player count: %lu", m_world->getPlayers().size()));
+    Debug::addString("World size: {}x{}", m_world->getWidth(), m_world->getHeight());
+    Debug::addString("Chunks drawn: {}", chunksDrawn);
+    Debug::addString("Player count: {}", m_world->getPlayers().size());
 }
 
 void RenderManager::renderChunk(Chunk* chunk) {
@@ -76,8 +76,10 @@ void RenderManager::renderEntity(Entity* entity) {
 }
 
 void RenderManager::renderSimplePlayer(SimplePlayer* player) {
-    for(auto& hitbox : m_world->getHitboxes(player->getHitbox())) {
-        DrawRectangleLinesEx(hitbox.to<Rectangle>(), 2.0f, RED);
+    if(Debug::m_debug) {
+        for(auto& hitbox : m_world->getHitboxes(player->getHitbox())) {
+            DrawRectangleLinesEx(hitbox.to<Rectangle>(), 2.0f, RED);
+        }
     }
 
     float frameWidth = m_texture.width / 17;

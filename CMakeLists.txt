@@ -55,6 +55,7 @@ target_include_directories(SFFSandbox PRIVATE
 
 target_include_directories(SFFSandbox-server PRIVATE
     ${SHARED_HEADERS}
+    "libs/toml/"
     "src/server/world/gen"
     "src/server/world"
     "src/server/"

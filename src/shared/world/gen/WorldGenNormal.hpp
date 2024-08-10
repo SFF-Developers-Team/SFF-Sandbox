@@ -10,5 +10,5 @@ public:
     WorldGenNormal(World* world);
     ~WorldGenNormal();
 
-    virtual Block* generateBlock(int x, int y, uint8_t layer) override;
+    virtual std::unique_ptr<Block> generateBlock(int x, int y, uint8_t layer) override;
 };

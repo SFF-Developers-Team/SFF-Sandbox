@@ -4,7 +4,7 @@
 
 WorldGenRubyDung::WorldGenRubyDung(World* world) : WorldGen(world) {}
 
-Block *WorldGenRubyDung::generateBlock(int x, int y, uint8_t layer) {
+std::unique_ptr<Block> WorldGenRubyDung::generateBlock(int x, int y, uint8_t layer) {
     Block::BlockType type = Block::BlockType::AIR;
 
     int grassLevel = (int)(m_world->getHeight() * 2 / 3);
@@ -14,11 +14,8 @@ Block *WorldGenRubyDung::generateBlock(int x, int y, uint8_t layer) {
     } else if(y >= grassLevel) {
         type = Block::BlockType::STONE;
     } else {
-        return nullptr;
+        type = Block::BlockType::AIR;
     }
 
-    auto ret = new Block(type);
-    ret->setPosition(x, y, layer);
-
-    return ret;
+    return std::make_unique<Block>(type, x, y, layer);;
 }
