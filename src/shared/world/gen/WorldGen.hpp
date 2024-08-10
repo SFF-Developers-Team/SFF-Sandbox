@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Block.hpp>
-
+#include <memory>
 class World;
 class Block;
 

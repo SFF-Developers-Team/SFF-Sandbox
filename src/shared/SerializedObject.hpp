@@ -3,7 +3,8 @@
 #include <vector>
 #include <algorithm>
 #include <Logger.hpp>
-
+#include <string.h>
+#include <platform.hpp>
 using ByteVector = std::vector<uint8_t>;
 
 class SerializedObject {
@@ -28,7 +29,7 @@ public:
 
 protected:
     ByteVector m_bytes;
-    size_t m_offset = 0;
+    std::size_t m_offset = 0;
     Header m_header;
 
 public:
@@ -75,7 +76,7 @@ public:
         }
     }
 
-    ByteVector getBytes(size_t count) {
+    ByteVector getBytes(std::size_t count) {
         auto ret = ByteVector(m_bytes.begin() + m_offset, m_bytes.begin() + m_offset + count);
         m_offset += count;
         
@@ -142,7 +143,7 @@ public:
         }
 
         char* str = new char[m_offset - start];
-        strncpy_s(str, m_offset - start, (const char*)&m_bytes[start], m_offset - start);
+        strncpy(str, (const char*)&m_bytes[start], m_offset - start);
 
         return str;
     }

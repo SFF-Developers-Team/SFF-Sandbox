@@ -100,7 +100,7 @@ bool Player::canDestroyBlock(Vec2i pos, uint8_t layer) {
 
     Block::BlockType type = block->getType();
     
-    return type != Block::BlockType::BEDROCK && type != Block::BlockType::AIR;
+    return type != Block::BlockType::AIR; //type != Block::BlockType::BEDROCK &&
 }
 
 bool Player::canPlaceBlock(Vec2i pos, uint8_t layer) {
@@ -145,7 +145,7 @@ void Player::updateControls() {
         }
     }
 
-    for(int i = 0; i < 6; i++) {
+    for(int i = 0; i < 7; i++) {
         if(IsKeyDown(KEY_ONE + i)) {
             m_selectedBlock = (Block::BlockType)(i + 1);
         }

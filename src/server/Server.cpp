@@ -8,10 +8,20 @@
 #include <filesystem>
 #include <fstream>
 
+#if defined(_WIN32)
+  #define WOULDBLOCK WSAWOULDBLOCK
+#elif defined(__linux__)
+  #define WOULDBLOCK EWOULDBLOCK
+#else
+  #error Unknown platform WOULDBLOCK error code
+#endif
+
 using namespace std::chrono_literals;
 
 void Server::init() {
+#ifdef _WIN32
     setlocale(LOCALE_ALL, "ru");
+#endif
     logD("SFF Sandbox server is starting...");
 
     if(!std::filesystem::exists("config.toml")) {
@@ -227,7 +237,7 @@ void Server::addToQueueExcept(PlayerID id, std::shared_ptr<GamePacket> packet) {
 std::shared_ptr<GamePacket> Server::read(sockpp::tcp_socket& sock, ByteVector& buf) {
     auto result = sock.read(buf.data(), buf.size());
     
-    if(result.error().value() == WSAEWOULDBLOCK || result.error().value() == WSAEINPROGRESS) {
+    if(result.error().value() == WOULDBLOCK) {
         return CREATE_PACKET(SerializedObject::Header::NULL_PACKET); 
     }
 
@@ -245,7 +255,7 @@ std::shared_ptr<GamePacket> Server::read(sockpp::tcp_socket& sock) {
 
 bool Server::send(sockpp::tcp_socket& sock, std::shared_ptr<GamePacket> packet) {
     auto bytes = packet->serialize();
-    sockpp::result<socket_t> result = sock.write(bytes.data(), bytes.size());
+    auto result = sock.write(bytes.data(), bytes.size());
 
     // logD("{} of {} ({:.02f}%) bytes sent", result.value(), packet->getSize(), (result.value() / packet->getSize()) * 100.f);
 

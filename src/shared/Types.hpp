@@ -1,5 +1,4 @@
 #pragma once
-#define TYPES_SIZE(...) sum(sizeof(__VA_ARGS__))
 
 template <typename T>
 struct Vec2 {
@@ -43,10 +42,3 @@ using Vec2i = Vec2<int>;
 
 using Rectf = Rect<float>;
 using Recti = Rect<int>;
-
-template<typename... T>
-size_t sumOfArgs() {
-    size_t ret;
-    ret += sizeof(T);
-    return ret;
-}

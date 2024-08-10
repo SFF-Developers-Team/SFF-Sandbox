@@ -1,6 +1,7 @@
 #pragma once
 #include <SerializedObject.hpp>
 #include <Types.hpp>
+#include <cstddef>
 
 #define BLOCK_SIZE_PIXELS 32.f
 #define BS BLOCK_SIZE_PIXELS
@@ -18,7 +19,7 @@ public:
         BEDROCK
     };
 protected:
-    static inline size_t m_size = 0;
+    static inline std::size_t m_size = 0;
     BlockType m_type;
     int m_x;
     int m_y;
@@ -31,7 +32,7 @@ public:
     BlockType getType() const;
     Vec2i getPosition() const;
     uint8_t getLayer() const;
-    static size_t const getSize();
+    static std::size_t const getSize();
     Rectf getHitbox();
 
     virtual void update();
