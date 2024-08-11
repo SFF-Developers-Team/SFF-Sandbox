@@ -23,18 +23,18 @@ void RenderManager::renderWorld() {
 
         // Selected block
         if(playerTarget.x > 0 && playerTarget.y > 0) {
-            DrawRectangleLinesEx({playerTarget.x * BS, playerTarget.y * BS, BS, BS}, 1.0f, WHITE);
+            DrawRectangleLinesEx({(float)playerTarget.x, (float)playerTarget.y, 1.0f, 1.0f}, 1.0f, WHITE);
         }
 
         if(Debug::m_debug) {
             DrawLineV(
-                {chunk->getPosition() * CHUNK_SIZE * BS, 0}, 
-                {chunk->getPosition() * CHUNK_SIZE * BS, m_world->getHeight() * BS}, YELLOW
+                {(float)chunk->getPosition() * CHUNK_SIZE, 0}, 
+                {(float)chunk->getPosition() * CHUNK_SIZE, (float)m_world->getHeight()}, YELLOW
             );
 
             DrawLineV(
-                {chunk->getPosition() * (CHUNK_SIZE * 2) * BS, 0}, 
-                {chunk->getPosition() * (CHUNK_SIZE * 2) * BS, m_world->getHeight() * BS}, YELLOW
+                {(float)chunk->getPosition() * (CHUNK_SIZE * 2), 0}, 
+                {(float)chunk->getPosition() * (CHUNK_SIZE * 2), (float)m_world->getHeight()}, YELLOW
             );
         }
     }
@@ -58,10 +58,7 @@ void RenderManager::renderChunk(Chunk* chunk) {
                 if(!block || block->getType() == Block::BlockType::AIR) continue;
 
                 auto tilemap = Game::get()->getBlocksTileMap();
-                auto dest = Rectangle {
-                    chunk->getPosition() * CHUNK_SIZE * BS + x * BS, 
-                    y * BS, BS, BS
-                };
+                auto dest = Rectangle {(float)chunk->getPosition() * CHUNK_SIZE + x, (float)y, 1.0f, 1.0f};
 
                 Color color = ColorBrightness(WHITE, (layer == 1) ? 1.0f : -0.25f);
 
@@ -72,20 +69,25 @@ void RenderManager::renderChunk(Chunk* chunk) {
 }
 
 void RenderManager::renderEntity(Entity* entity) {
-    DrawTexturePro(m_texture, {0, 0, (float)m_texture.width, (float)m_texture.height}, entity->getHitbox().to<Rectangle>(), {0, 0}, 0.0f, WHITE);
+    DrawTexturePro(m_texture, {0, 0, (float)m_texture.width, (float)m_texture.height}, entity->getHitbox().getRect().to<Rectangle>(), {0, 0}, 0.0f, WHITE);
 }
 
 void RenderManager::renderSimplePlayer(SimplePlayer* player) {
     if(Debug::m_debug) {
         for(auto& hitbox : m_world->getHitboxes(player->getHitbox())) {
-            DrawRectangleLinesEx(hitbox.to<Rectangle>(), 2.0f, RED);
+            DrawRectangleLinesEx(hitbox.getRect().to<Rectangle>(), 0.05f, RED);
         }
     }
 
     float frameWidth = m_texture.width / 17;
     auto hitbox = player->getHitbox();
-    Rectangle src = {player->getAnimCurrentFrame() * frameWidth, 0, frameWidth * player->getDirection(), (float)m_texture.height};
-    Rectangle dest = {hitbox.x + hitbox.width / 2 - frameWidth, hitbox.y + hitbox.height - m_texture.height * 2, frameWidth * 2, (float)m_texture.height * 2};
+    Rectangle src = {player->getAnimCurrentFrame() * frameWidth, 0, frameWidth * (player->getDirection() == Entity::Direction::LEFT ? 1.0f : -1.0f), (float)m_texture.height};
+    Rectangle dest = {
+        hitbox.x + (hitbox.width / 2) - (hitbox.width * 1.45f) / 2, 
+        hitbox.y, 
+        hitbox.width * 1.45f, 
+        hitbox.height
+    };
     DrawTexturePro(m_texture, src, dest, {0, 0}, 0, WHITE);
 
     auto username = player->getUsername();
@@ -95,6 +97,7 @@ void RenderManager::renderSimplePlayer(SimplePlayer* player) {
     }
 
     if(Debug::m_debug) {
-        DrawRectangleLinesEx(hitbox.to<Rectangle>(), 1.0f, GREEN);
+        DrawRectangleLinesEx(hitbox.getRect().to<Rectangle>(), 0.025f, GREEN);
+        DrawRectangleLinesEx(hitbox.expand(player->getSpeed().x, player->getSpeed().y).getRect().to<Rectangle>(), 0.05f, ORANGE);
     }
 }

@@ -8,18 +8,18 @@ void ParticleManager::add(Particle* particle) {
 }
 
 void ParticleManager::update() {
-    for(auto i = 0; i < m_particles.size(); i++) {
-        m_particles[i]->update();
+    // for(auto i = 0; i < m_particles.size(); i++) {
+    //     m_particles[i]->update();
         
-        if(m_particles[i]->willRemove()) {
-            delete m_particles[i];
-            m_particles.erase(m_particles.begin() + i);
-        }
-    }
+    //     if(m_particles[i]->willRemove()) {
+    //         delete m_particles[i];
+    //         m_particles.erase(m_particles.begin() + i);
+    //     }
+    // }
 }
 
 void ParticleManager::render() {
-    for(auto& particle : m_particles) {
-        particle->draw();
-    }
+    // for(auto& particle : m_particles) {
+    //     particle->draw();
+    // }
 }

@@ -2,9 +2,6 @@
 #include <SerializedObject.hpp>
 #include <Types.hpp>
 
-#define BLOCK_SIZE_PIXELS 32.f
-#define BS BLOCK_SIZE_PIXELS
-
 class Block : public SerializedObject {
 public:
     enum class BlockType : unsigned char {

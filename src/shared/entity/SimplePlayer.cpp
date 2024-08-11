@@ -3,18 +3,12 @@
 #include <World.hpp>
 #include <Chunk.hpp>
 
-#define WALK_SPEED 150
-#define JUMP_SPEED 200
-#define G 400
+#define WALK_SPEED 15
+#define JUMP_SPEED 20
 
-SimplePlayer::SimplePlayer(World* world, bool enablePhysics) : Entity::Entity(world, {0, 0}, enablePhysics) {    
+SimplePlayer::SimplePlayer(World* world) : Entity::Entity(world) {
     m_header = Header::PLAYER;
-    m_hitbox = {(float)(rand() % m_world->getWidth() * BS), 0, 25.f, 44.f};
-    m_enabledPhysics = true;
-    m_gravitation = 400.f;
 }
-
-SimplePlayer::SimplePlayer(World* world) : SimplePlayer(world, true) {}
 
 SimplePlayer::~SimplePlayer() {}
 
@@ -49,24 +43,11 @@ void SimplePlayer::setAnimation(AnimationType type) {
     }
 }
 
-unsigned char SimplePlayer::animationClamp(unsigned char value, unsigned char min, unsigned char max) {
-    if(value > max) return min;
-    if(value < min) return min;
+uint8_t SimplePlayer::animationClamp(uint8_t value, uint8_t min, uint8_t max) {
+    if(value > max || value < min) return min;
     return value;
 }
 
-void SimplePlayer::update() {
-    Entity::update();
-}
-
-void SimplePlayer::processPhysics(bool hitWall, bool hitFloor, bool hitCeil) {
-    if(!hitFloor) {
-        setAnimation(PLAYER_JUMP);
-        m_canJump = false;
-    } else {
-        m_canJump = true;
-    }
-}
 
 ByteVector& SimplePlayer::serialize() {
     SerializedObject::serialize();
@@ -84,14 +65,14 @@ int SimplePlayer::deserialize(ByteVector& bytes) {
     SerializedObject::deserialize(bytes);
 
     m_id = getBytes<PlayerID>(0);
-    m_hitbox.x = getBytes<float>(rand() % m_world->getWidth() * BS);
+    m_hitbox.x = getBytes<float>(0.0f);
     m_hitbox.y = getBytes<float>(0.0f);
+    m_direction = getBytes<Direction>(Direction::LEFT);
     m_animCurrentFrame = getBytes<uint8_t>(0);
-    m_direction = getBytes<int8_t>(1);
 
     return m_offset;
 }
 
-size_t const SimplePlayer::getSize() {
-    return sizeof(Header) + sizeof(PlayerID) + (sizeof(float) * 2) + (sizeof(uint8_t) * 2);
+size_t const SimplePlayer::getSizeBytes() {
+    return sizeof(PlayerID) + sizeof(float) + sizeof(float) + sizeof(Direction) + sizeof(uint8_t);
 }

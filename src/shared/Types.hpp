@@ -1,5 +1,10 @@
 #pragma once
-#define TYPES_SIZE(...) sum(sizeof(__VA_ARGS__))
+#include <type_traits>
+// #define TYPES_SIZE(a1) sizeof(a1)
+// #define TYPES_SIZE(a1, a2) sizeof(a1) + sizeof(a2)
+// #define TYPES_SIZE(a1, a2, a3) sizeof(a1) + sizeof(a2) + sizeof(a3)
+// #define TYPES_SIZE(a1, a2, a3, a4) sizeof(a1) + sizeof(a2) + sizeof(a3) + sizeof(a4)
+// #define TYPES_SIZE(a1, a2, a3, a4, a5) sizeof(a1) + sizeof(a2) + sizeof(a3) + sizeof(a4) + sizeof(a5)
 
 template <typename T>
 struct Vec2 {
@@ -43,10 +48,3 @@ using Vec2i = Vec2<int>;
 
 using Rectf = Rect<float>;
 using Recti = Rect<int>;
-
-template<typename... T>
-size_t sumOfArgs() {
-    size_t ret;
-    ret += sizeof(T);
-    return ret;
-}

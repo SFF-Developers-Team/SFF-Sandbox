@@ -72,7 +72,7 @@ std::shared_ptr<GamePacket> Multiplayer::read(size_t n) {
 }
 
 std::shared_ptr<GamePacket> Multiplayer::read(ByteVector& buf) {
-    sockpp::result<socket_t> result = m_connector.read(buf.data(), buf.size());
+    auto result = m_connector.read(buf.data(), buf.size());
 
     Debug::addString("{} bytes read", result.value());
 
@@ -91,6 +91,13 @@ std::shared_ptr<GamePacket> Multiplayer::read(ByteVector& buf) {
 void Multiplayer::addToQueue(std::shared_ptr<GamePacket> packet) {
     m_packetQueue.push_back(packet);
     // logD("added packet {}", (int)packet->getBytes<SerializedObject::Header>());
+}
+
+void Multiplayer::onBlockChanged(Vec2i pos, uint8_t layer) {
+    auto block = Game::get()->getWorld()->getBlock(pos.x, pos.y, layer);
+    if(block) {
+        addToQueue(CREATE_PACKET(block->serialize()));
+    }
 }
 
 void Multiplayer::update() {
@@ -132,7 +139,7 @@ void Multiplayer::update() {
             auto username = packet->getBytes<std::string>("undefined");
             
             if(!player) {
-                player = new SimplePlayer(world, false);
+                player = new SimplePlayer(world);
                 world->addPlayer(id, player);
             }
 
@@ -154,7 +161,7 @@ void Multiplayer::update() {
             // logD("Players count {}", count);
 
             for(auto i = 0; i < count; i++) {
-                auto bytes = packet->getBytes(SimplePlayer::getSize());
+                auto bytes = packet->getBytes(SimplePlayer::getSizeBytes());
                 auto playerPacket = CREATE_PACKET(bytes);
                 
                 if(playerPacket->getBytes<SerializedObject::Header>() != SerializedObject::PLAYER) continue;

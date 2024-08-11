@@ -8,6 +8,7 @@
 #include <Chunk.hpp>
 #include <WorldGenNormal.hpp>
 #include <GamePacket.hpp>
+#include <GitHash.hpp>
 
 void Game::init(std::vector<std::string>& args) {
     setlocale(LOCALE_ALL, "ru");
@@ -22,6 +23,7 @@ void Game::init(std::vector<std::string>& args) {
     m_username = (args.size() > 0 ? args[0] : std::string("Player").append(std::to_string(rand()))); 
     m_multiplayer = args.size() > 1;
     m_blocksMap = new TileMap("assets/blocks.png", Vector2 {16, 16});
+    m_timer = new Timer(20);
     m_world = new World(256, 128);
     m_player = new Player(m_world);
     m_particleManager = new ParticleManager(m_world);
@@ -50,6 +52,7 @@ void Game::init(std::vector<std::string>& args) {
 
 Game::~Game() {
     delete m_world;
+    delete m_timer;
     delete m_blocksMap;
     delete m_particleManager;
     delete m_renderManager;
@@ -79,12 +82,23 @@ void Game::render() {
             Debug::draw();
         }
 
+        DrawText(std::format("SFF Sandbox {}-dev", GitHash::shortSha1).c_str(), 5, 5, 20, WHITE);
+        DrawText(std::format("{} FPS", GetFPS()).c_str(), 5, 30, 20, WHITE);
+
         // auto cur = GetMousePosition();
         // drawCrosshair(cur);
     EndDrawing();
 }
 
 void Game::update() {
+    m_timer->advanceTime();
+
+    for (uint32_t i = 0; i < m_timer->getTicks(); i++) {
+        m_world->onTick();
+    }
+
+    m_player->update();
+
     if(IsKeyPressed(KEY_F3)) {
         Debug::m_debug = !Debug::m_debug;
     }
@@ -92,12 +106,6 @@ void Game::update() {
     if(IsKeyPressed(KEY_F6)) {
         m_world->save();
     }
-
-    Debug::addString("{} FPS", GetFPS());
-    
-    // m_world->update();
-    m_player->update();
-    m_particleManager->update();
 
     if(m_multiplayer) {
         m_multiplayerManager->update();

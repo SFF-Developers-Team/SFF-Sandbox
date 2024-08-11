@@ -6,17 +6,14 @@
 #include <Chunk.hpp>
 #include <Logger.hpp>
 
-#define WALK_SPEED 150
-#define JUMP_SPEED 200
-#define G 400
+#define WALK_SPEED 10
 
 Player::Player(World* world) : SimplePlayer::SimplePlayer(world) {
     m_header = Header::PLAYER;
     m_texture = LoadTexture("assets/player.png");
     m_camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
-    m_camera.zoom = 1.5f;
+    m_camera.zoom = 50.0f;
     m_camera.rotation = 0.0f;
-    m_enabledPhysics = true;
 
     updateCamera();
 }
@@ -82,9 +79,9 @@ Vector2 Player::convertToCameraPos(Vector2 pos) {
 
 Vec2i Player::getTargetBlock(bool onlyExist) {
     auto cur = convertToCameraPos(GetMousePosition());
-    auto targetBlock = Vec2i {(int)(cur.x / BS), (int)(cur.y / BS)};
+    auto targetBlock = Vec2i {(int)(cur.x), (int)(cur.y)};
 
-    if (Vector2Distance(cur, {m_hitbox.x, m_hitbox.y}) / BS <= 4 && 
+    if (Vector2Distance(cur, {m_hitbox.x, m_hitbox.y}) <= 4 && 
         (!onlyExist || m_world->getBlock(targetBlock.x, targetBlock.y, IsKeyPressed(KEY_LEFT_ALT) ? 0 : 1) != nullptr)) {
         return targetBlock;
     } else {
@@ -111,7 +108,7 @@ bool Player::canPlaceBlock(Vec2i pos, uint8_t layer) {
         m_world->setBlock(pos.x, pos.y, layer, std::make_unique<Block>(Block::BlockType::AIR));
     }
 
-    if(layer == 1 && CheckCollisionRecs(m_hitbox.to<Rectangle>(), {pos.x * BS, pos.y * BS, BS, BS})) return false;
+    if(layer == 1 && CheckCollisionRecs(m_hitbox.getRect().to<Rectangle>(), {(float)pos.x, (float)pos.y, 1.0f, 1.0f})) return false;
     if (m_world->getBlock(pos.x - 1, pos.y, layer)->getType() == Block::BlockType::AIR &&
         m_world->getBlock(pos.x + 1, pos.y, layer)->getType() == Block::BlockType::AIR &&
         m_world->getBlock(pos.x, pos.y - 1, layer)->getType() == Block::BlockType::AIR &&
@@ -122,143 +119,118 @@ bool Player::canPlaceBlock(Vec2i pos, uint8_t layer) {
 }
 
 void Player::updateControls() {
-    auto shouldSendBlock = false;
     auto targetBlockPos = getTargetBlock(false);
+    auto gravitation = (!m_fly) ? 0.1f : 0.0f;
+    auto isAltLayer = IsKeyDown(KEY_LEFT_ALT);
+    auto forward = 0.0f;
+    auto mp = Game::get()->getMultiplayer();
 
-    if(IsMouseButtonDown(MOUSE_LEFT_BUTTON) && canDestroyBlock(targetBlockPos, !IsKeyDown(KEY_LEFT_ALT))) {
-        if(m_canJump) setAnimation(PLAYER_HIT);
-        m_world->destroyBlock(targetBlockPos.x, targetBlockPos.y, !IsKeyDown(KEY_LEFT_ALT));
-        shouldSendBlock = true;
+    m_sneak = false;
+
+    if(IsMouseButtonDown(MOUSE_LEFT_BUTTON) && canDestroyBlock(targetBlockPos, !isAltLayer)) {
+        m_world->destroyBlock(targetBlockPos.x, targetBlockPos.y, !isAltLayer);
+        if(m_onGround) setAnimation(PLAYER_HIT);
+        if(Game::get()->isMultiplayer()) mp->onBlockChanged(targetBlockPos, !isAltLayer);
     }
 
-    if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && canPlaceBlock(targetBlockPos, !IsKeyDown(KEY_LEFT_ALT))) {
-        if(m_canJump) setAnimation(PLAYER_HIT);
+    if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && canPlaceBlock(targetBlockPos, !isAltLayer)) {
+        if(m_onGround) setAnimation(PLAYER_HIT);
         m_world->placeBlock(targetBlockPos.x, targetBlockPos.y, !IsKeyDown(KEY_LEFT_ALT), m_selectedBlock);
-        shouldSendBlock = true;
+        if(Game::get()->isMultiplayer()) mp->onBlockChanged(targetBlockPos, !isAltLayer);
     }
 
-    if(Game::get()->isMultiplayer() && shouldSendBlock) {
-        auto mp = Game::get()->getMultiplayer();
-        auto block = m_world->getBlock(targetBlockPos.x, targetBlockPos.y, !IsKeyDown(KEY_LEFT_ALT));
-        if(block) {
-            mp->addToQueue(CREATE_PACKET(block->serialize()));
-        }
+    if(IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
+        m_direction = RIGHT;
+        forward++;
     }
 
-    for(int i = 0; i < 6; i++) {
-        if(IsKeyDown(KEY_ONE + i)) {
-            m_selectedBlock = (Block::BlockType)(i + 1);
-        }
+    if(IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
+        m_direction = LEFT;
+        forward--;
     }
 
-    if(IsKeyDown(KEY_D)) {
-        m_direction = -1;
-        m_speed.x = WALK_SPEED;
+    if((IsKeyDown(KEY_W) || IsKeyDown(KEY_UP) || IsKeyDown(KEY_SPACE)) && (m_onGround || m_fly)) {
+        m_speedY = ((!m_fly) ? -0.6f : -0.25f);
     }
 
-    if(IsKeyDown(KEY_A)) {
-        m_direction = 1;
-        m_speed.x = -WALK_SPEED;
+    if((IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)) && m_fly && !m_onGround) {
+        m_speedY = 0.25f;
     }
 
-    if((IsKeyDown(KEY_W) || IsKeyDown(KEY_SPACE)) && (m_canJump || m_fly)) {
-        m_speed.y = -JUMP_SPEED;
-        m_canJump = false;
-    }
-
-    if(IsKeyDown(KEY_S) && m_fly && !m_canJump) {
-        m_speed.y = JUMP_SPEED;
-    }
-
-    if((IsKeyDown(KEY_S) || IsKeyDown(KEY_LEFT_SHIFT)) && !m_fly && m_canJump) {
+    if((IsKeyDown(KEY_S) || IsKeyDown(KEY_LEFT_SHIFT)) && !m_fly && m_onGround) {
         m_sneak = true;
-        m_speed.x /= 2;
     }
 
-    if(IsKeyPressed(KEY_R)) {
-        m_hitbox.x = (float)(rand() % m_world->getWidth() * BLOCK_SIZE_PIXELS);
-        m_hitbox.y = 0.0f;
+    moveRelative(forward, (m_onGround ? (m_sneak ? 0.128f : 0.25f) : 0.225f));
+
+    m_speedY += gravitation;
+
+    move(m_speedX, m_speedY);
+
+    m_speedX *= 0.91f;
+    m_speedY *= 0.98f;
+
+    if (m_onGround) {
+        m_speedX *= 0.8f;
+        m_speedY *= 0.8f;
     }
 
-    if(IsKeyPressed(KEY_F)) {
-        m_fly = !m_fly;
+    if(m_fly) {
+        m_speedY *= 0.7f;
     }
 }
 
-void Player::update() {
-    if(m_fly) m_speed.y = 0;
-    m_speed.x = 0;
-    m_sneak = false;
-    m_gravitation = (!m_fly) ? 400.f : 0.0f;
+void Player::onTick() {
+    Entity::onTick();
     m_animFps = 10;
 
     updateControls();
-    Entity::update();
 
     auto hitLimit = m_animLimits.at(PLAYER_HIT);
     if(m_animCurrentFrame < hitLimit.first || m_animCurrentFrame >= hitLimit.second) {
         setAnimation(PLAYER_IDLE);
     }
 
-    if(m_sneak && m_speed.x == 0) {
+    if(m_sneak) {
         setAnimation(PLAYER_SNEAK);
         m_animFps = 0;
     }
 
-    if(m_speed.x != 0 && m_canJump) {
-        setAnimation((m_sneak) ? PLAYER_SNEAK : PLAYER_MOVE);
+    if(m_onGround && (m_speedX > 0.025f || m_speedX < -0.025f)) {
+        m_animFps = (m_sneak ? 7 : 10);
+        setAnimation((m_sneak ? PLAYER_SNEAK : PLAYER_MOVE));
     }
 
-    if(!m_canJump) {
+    if(!m_onGround) {
         setAnimation(PLAYER_JUMP);
     }
 
-    updateCamera();
-    updateAnimation();
     
-    if(Game::get()->isMultiplayer()) {
-        updateMultiplayer();
-    }
 
     Debug::addString("Player position: [{:0f}, {:0f}]", this->m_hitbox.x, this->m_hitbox.y);
-    Debug::addString("Player speed: [{:0f}, {:0f}]", this->m_speed.x, this->m_speed.y);
+    Debug::addString("Player speed: [{:0f}, {:0f}]", this->m_speedX, this->m_speedY);
     Debug::addString("Fly: {}", m_fly);
+    Debug::addString("OnGround: {}", m_onGround);
     Debug::addString("My playerID: {}", m_id);
 }
 
-void Player::updateMultiplayer() {
-    // static auto multiplayer = Game::get()->getMultiplayer();
-    
-    // if(multiplayer->shouldSendPlayer()) {
-    //     multiplayer->addToQueue(CREATE_PACKET(serialize()));
-    // }
-}
-
-void Player::processPhysics(bool hitWall, bool hitFloor, bool hitCeil) {
-    m_canJump = hitFloor;
-
-    Debug::addString("Hit floor: {}", hitFloor);
-    Debug::addString("Hit wall: {}", hitWall);
-}
-
-void Player::draw() {
-    float frameWidth = m_texture.width / 17;
-    Rectangle src = {m_animCurrentFrame * frameWidth, 0, frameWidth * m_direction, (float)m_texture.height};
-    Rectangle dest = {m_hitbox.x + m_hitbox.width / 2 - frameWidth, m_hitbox.y + m_hitbox.height - m_texture.height * 2, frameWidth * 2, (float)m_texture.height * 2};
-    DrawTexturePro(m_texture, src, dest, {0, 0}, 0, WHITE);
-
-    if(Debug::m_debug) {
-        // for(auto& hitbox : m_hitboxes) {
-        //     DrawRectangleLinesEx(hitbox, 1.0f, RED);
-        // }
-
-        DrawRectangleLinesEx(m_hitbox.to<Rectangle>(), 1.0f, GREEN);
+void Player::update() {
+    for(int i = 0; i < 6; i++) {
+        if(IsKeyDown(KEY_ONE + i)) {
+            m_selectedBlock = (Block::BlockType)(i + 1);
+        }
     }
+
+    if(IsKeyPressed(KEY_R)) resetPosition();
+    if(IsKeyPressed(KEY_F)) m_fly = !m_fly;
+
+    updateCamera();
+    updateAnimation();
 }
 
 bool Player::isChunkInView(Chunk* chunk) {
-    auto minPos = chunk->getPosition() * CHUNK_WIDTH * BS;
-    auto maxPos = minPos + CHUNK_WIDTH * BS;
+    auto minPos = chunk->getPosition() * CHUNK_WIDTH;
+    auto maxPos = minPos + CHUNK_WIDTH;
     auto min = convertToCameraPos({0, 0});
     auto max = convertToCameraPos({(float)GetScreenWidth(), (float)GetScreenHeight()});
 

@@ -2,7 +2,7 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <Types.hpp>
+#include <Hitbox.hpp>
 #include <SerializedObject.hpp>
 #include <Block.hpp>
 #include <SimplePlayer.hpp>
@@ -19,8 +19,8 @@ private:
     std::map<PlayerID, SimplePlayer*> m_players;
     WorldGen* m_WorldGen;
 
-    int m_width;
-    int m_height;
+    uint32_t m_width;
+    uint32_t m_height;
     PlayerID m_lastPlayerID = 1;
 
 public:
@@ -28,7 +28,7 @@ public:
     ~World();
 
     void generate(WorldGen* generator);
-    void update();
+    void onTick();
     bool isBlockClosed(int x, int y, uint8_t layer);
 
     void setBlock(int x, int y, uint8_t layer, std::unique_ptr<Block> block);
@@ -39,7 +39,7 @@ public:
     Chunk* getChunk(int position);
     Rectf getBlockHitbox(int x, int y);
 
-    std::vector<Rectf> getHitboxes(Rectf entityHitbox);
+    std::vector<Hitbox> getHitboxes(Hitbox entityHitbox);
 
     void placeBlock(int x, int y, uint8_t layer, enum Block::BlockType id);
     void destroyBlock(int x, int y, uint8_t layer);
@@ -57,23 +57,9 @@ public:
     bool isUsernameAlreadyTaken(std::string const& username);
     bool isOutOfBound(int x, int y, uint8_t layer);
 
-    int getWidth() {
-        return m_width;
-    }
-
-    int getHeight() {
-        return m_height;
-    }
-
-    auto& getPlayers() {
-        return m_players;
-    }
-
-    auto& getChunks() {
-        return m_chunks;
-    }
-
-    WorldGen* getGenerator() {
-        return m_WorldGen;
-    }
+    auto getWidth() { return m_width; }
+    auto getHeight() { return m_height; }
+    auto getGenerator() { return m_WorldGen; }
+    auto& getPlayers() { return m_players; }
+    auto& getChunks() { return m_chunks; }
 };  

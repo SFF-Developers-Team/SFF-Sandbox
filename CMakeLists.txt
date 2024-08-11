@@ -23,6 +23,7 @@ file(GLOB SHARED_SOURCES
     "src/shared/entity/*.cpp"
     "src/shared/world/gen/*.cpp"
     "src/shared/world/*.cpp"
+    "src/shared/*.cpp"
 )
 
 file(GLOB CLIENT_SOURCES
@@ -40,9 +41,10 @@ add_executable(SFFSandbox-server ${SHARED_SOURCES} ${SERVER_SOURCES})
 
 add_subdirectory(libs/sockpp)
 add_subdirectory(libs/raylib)
+add_subdirectory(libs/GitHash)
 
-target_link_libraries(SFFSandbox raylib sockpp)
-target_link_libraries(SFFSandbox-server sockpp)
+target_link_libraries(SFFSandbox raylib sockpp ${GITHASH_LIBRARIES})
+target_link_libraries(SFFSandbox-server sockpp ${GITHASH_LIBRARIES})
 
 target_include_directories(SFFSandbox PRIVATE
     ${SHARED_HEADERS}
