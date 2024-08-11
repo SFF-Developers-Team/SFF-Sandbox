@@ -92,6 +92,6 @@ int SimplePlayer::deserialize(ByteVector& bytes) {
     return m_offset;
 }
 
-size_t const SimplePlayer::getSize() {
+std::size_t const SimplePlayer::getSize() {
     return sizeof(Header) + sizeof(PlayerID) + (sizeof(float) * 2) + (sizeof(uint8_t) * 2);
 }
