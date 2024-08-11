@@ -22,6 +22,8 @@ private:
     bool m_fly = false;
 
     PlayerID m_id = 0;
+    
+    float wheel;
 
     Rectf m_lastHitbox;
     uint8_t m_lastCurrentFrame;

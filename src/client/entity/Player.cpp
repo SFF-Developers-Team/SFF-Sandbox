@@ -23,6 +23,12 @@ Player::~Player() {
 }
 
 void Player::updateCamera() {
+    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0) {
+        m_camera.zoom -= 1.0f;
+    }
+    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) {
+        m_camera.zoom += 1.0f;
+    }
     this->m_camera.target = {m_hitbox.x + m_hitbox.width / 2, m_hitbox.y - m_hitbox.height / 2};
 
     Debug::addString("Camera target: [{:0f}, {:0f}]", this->m_camera.target.x, this->m_camera.target.y);
@@ -215,12 +221,18 @@ void Player::onTick() {
 }
 
 void Player::update() {
+    wheel = GetMouseWheelMove();
     for(int i = 0; i < 6; i++) {
         if(IsKeyDown(KEY_ONE + i)) {
             m_selectedBlock = (Block::BlockType)(i + 1);
         }
     }
-
+    if (!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
+        if((int)m_selectedBlock >= 6) {
+            m_selectedBlock = (Block::BlockType)((int)(m_selectedBlock) - 6);
+        }
+        m_selectedBlock = (Block::BlockType)((int)(m_selectedBlock) + 1);
+    }
     if(IsKeyPressed(KEY_R)) resetPosition();
     if(IsKeyPressed(KEY_F)) m_fly = !m_fly;
 
