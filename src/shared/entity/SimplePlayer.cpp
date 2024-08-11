@@ -2,6 +2,7 @@
 #include <Block.hpp>
 #include <World.hpp>
 #include <Chunk.hpp>
+#include <Entity.hpp>
 
 #define WALK_SPEED 15
 #define JUMP_SPEED 20
@@ -73,11 +74,9 @@ int SimplePlayer::deserialize(ByteVector& bytes) {
     return m_offset;
 }
 
-<<<<<<< HEAD
-std::size_t const SimplePlayer::getSize() {
-    return sizeof(Header) + sizeof(PlayerID) + (sizeof(float) * 2) + (sizeof(uint8_t) * 2);
-=======
-size_t const SimplePlayer::getSizeBytes() {
-    return sizeof(PlayerID) + sizeof(float) + sizeof(float) + sizeof(Direction) + sizeof(uint8_t);
->>>>>>> 2f9760e2af06782b6f2bdc5eb399f07f065f1f12
+// std::size_t const SimplePlayer::getSize() {
+//     return sizeof(Header) + sizeof(PlayerID) + (sizeof(float) * 2) + (sizeof(uint8_t) * 2);
+// }
+std::size_t const SimplePlayer::getSizeBytes() {
+    return sizeof(PlayerID) + sizeof(float) + sizeof(float) + sizeof(Entity::Direction) + sizeof(uint8_t);
 }
