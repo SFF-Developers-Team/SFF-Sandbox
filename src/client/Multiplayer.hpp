@@ -1,8 +1,13 @@
 #pragma once
-#define NOGDI
-#define NOUSER
+
+#ifdef _WIN32
+    #define NOGDI
+    #define NOUSER
+#endif
+
 #include <sockpp/tcp_connector.h>
 #include <GamePacket.hpp>
+#include <Types.hpp>
 #include <memory>
 
 class Multiplayer {
@@ -25,6 +30,8 @@ public:
     std::shared_ptr<GamePacket> read(ByteVector& buf);
 
     void addToQueue(std::shared_ptr<GamePacket> packet);
+
+    void onBlockChanged(Vec2i pos, uint8_t layer);
 
     bool shouldSendPlayer() { return m_shouldSendPlayer; }
 };

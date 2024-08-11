@@ -4,3 +4,6 @@
 [submodule "libs/sockpp"]
 	path = libs/sockpp
 	url = https://github.com/fpagliughi/sockpp.git
+[submodule "libs/GitHash"]
+	path = libs/GitHash
+	url = https://github.com/Svalorzen/GitHash.git

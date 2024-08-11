@@ -25,9 +25,9 @@ void World::generate(WorldGen* generator) {
     }
 }
 
-void World::update() {
+void World::onTick() {
     for(auto& [id, player] : m_players) {
-        player->update();
+        player->onTick();
     }
 }
 
@@ -73,7 +73,7 @@ void World::destroyBlock(int x, int y, uint8_t layer) {
     setBlock(x, y, layer, std::make_unique<Block>(Block::BlockType::AIR));
 }
 
-Block *World::getBlock(int x, int y, uint8_t layer) {
+Block* World::getBlock(int x, int y, uint8_t layer) {
     auto chunk = getChunk(x / CHUNK_WIDTH);
     if(!chunk) return nullptr;
 
@@ -162,13 +162,15 @@ bool World::load() {
     return true;
 }
 
-std::vector<Rectf> World::getHitboxes(Rectf entityHitbox) {
-    int minX = entityHitbox.x / BS  - 1;
-    int maxX = (entityHitbox.x + entityHitbox.width) / BS + 1;
-    int minY = entityHitbox.y / BS - 1;
-    int maxY = (entityHitbox.y + entityHitbox.height) / BS + 1;
+std::vector<Hitbox> World::getHitboxes(Hitbox entityHitbox) {
+    int minX = entityHitbox.x - 1;
+    int maxX = ceil(entityHitbox.x + entityHitbox.width);
+    int minY = entityHitbox.y - 1;
+    int maxY = ceil(entityHitbox.y + entityHitbox.height);
 
-    std::vector<Rectf> ret;
+
+
+    std::vector<Hitbox> ret;
 
     for(int x = minX; x <= maxX; x++) {
         for(int y = minY; y <= maxY; y++) {
@@ -177,9 +179,6 @@ std::vector<Rectf> World::getHitboxes(Rectf entityHitbox) {
             
             auto hitbox = getBlockHitbox(x, y);
             if(hitbox.width == 0.0f || hitbox.height == 0.0f) continue;
-
-            hitbox.x = x * BS;
-            hitbox.y = y * BS;
             ret.push_back(hitbox);
         }
     }

@@ -2,92 +2,70 @@
 #include <Block.hpp>
 #include <World.hpp>
 
-Entity::Entity(World* world) : m_world(world) {
+Entity::Entity(World* world) : m_world(world), m_hitbox(0.0f, 0.0f, 0.8f, 1.65f) {
     m_header = ENTITY;
 }
 
-Entity::Entity(World* world, Vec2f position, bool enablePhysics) : m_world(world), m_enabledPhysics(enablePhysics) {
-    m_header = ENTITY;
-    m_hitbox.x = position.x;
-    m_hitbox.y = position.y;
+void Entity::setPosition(Vec2f pos) {
+    m_hitbox.x = pos.x;
+    m_hitbox.y = pos.y;
 }
 
-void Entity::updatePhysics() {
-    auto delta = 0.017f;
-    bool hitFloor = false;
-    bool hitWall = false;
-    bool hitCeil = false;
-
-    for(auto& bh : m_world->getHitboxes(m_hitbox)) {
-        // hit the floor
-        if((bh.x < m_hitbox.x || bh.x < m_hitbox.x + m_hitbox.width) && 
-            bh.x + bh.width > m_hitbox.x && 
-            m_hitbox.y + m_hitbox.height <= bh.y && 
-            m_hitbox.y + m_hitbox.height + m_speed.y * delta >= bh.y
-        ) {
-            m_hitbox.y = bh.y - m_hitbox.height;
-            m_speed.y = 0.0f;
-            hitFloor = true;
-        }
-
-        // hit the ceil
-        if((bh.x < m_hitbox.x || bh.x < m_hitbox.x + m_hitbox.width) && 
-            bh.x + bh.width > m_hitbox.x && 
-            bh.y + bh.height <= m_hitbox.y && 
-            bh.y + bh.height >= m_hitbox.y + m_speed.y * delta
-        ) {
-            m_hitbox.y = bh.y + bh.height;
-            m_speed.y = abs(m_speed.y / 2);
-            hitCeil = true;
-        }
-
-        // hit right wall
-        if (((bh.y > m_hitbox.y && bh.y < m_hitbox.y + m_hitbox.height) ||
-            (bh.y + bh.height > m_hitbox.y && bh.y + bh.height < m_hitbox.y + m_hitbox.height)) &&
-            m_hitbox.x + m_hitbox.width + m_speed.x * delta >= bh.x &&
-            m_hitbox.x + m_hitbox.width <= bh.x + bh.width
-
-        ) {
-            m_hitbox.x = bh.x - m_hitbox.width;          
-            m_speed.x = 0.0f;
-            hitWall = true;
-        }
-
-        // hit left wall
-        if (((bh.y > m_hitbox.y && bh.y < m_hitbox.y + m_hitbox.height) ||
-            (bh.y + bh.height > m_hitbox.y && bh.y + bh.height < m_hitbox.y + m_hitbox.height)) &&
-            m_hitbox.x + m_speed.x * delta <= bh.x + bh.width &&
-            m_hitbox.x >= bh.x
-
-        ) {
-            m_hitbox.x = bh.x + bh.width;          
-            m_speed.x = 0.0f;
-            hitWall = true;
-        }
-    }
-
-    if(!hitWall) {
-        m_hitbox.x += m_speed.x * delta;
-    }
-
-    if(!hitFloor) {
-        m_hitbox.y += m_speed.y * delta;
-        m_speed.y += m_gravitation * delta;
-    }
-
-    processPhysics(hitWall, hitFloor, hitCeil);
+void Entity::setSize(Vec2f size) {
+    m_hitbox.width = size.x;
+    m_hitbox.height = size.y;
 }
 
-void Entity::update() {
-    if(m_enabledPhysics) {
-        updatePhysics();
+void Entity::turn(Direction dir) {
+    m_direction = dir;
+}
+
+void Entity::onTick() {
+    m_prevX = m_hitbox.x;
+    m_prevY = m_hitbox.y;
+}
+
+void Entity::move(float x, float y) {
+    auto prevX = x;
+    auto prevY = y;
+    auto hitboxes = m_world->getHitboxes(m_hitbox.expand(x, y));
+
+    for (auto& hitbox : hitboxes) {
+        x = hitbox.clipXCollide(m_hitbox, x);
     }
+    m_hitbox.move(x, 0.0f);
+
+    for (auto& hitbox : hitboxes) {
+        y = hitbox.clipYCollide(m_hitbox, y);
+    }
+    m_hitbox.move(0.0f, y);
+
+    // Update on ground state
+    m_onGround = prevY != y && prevY > 0.f;
+
+    // Stop motion on collision
+    if (prevX != x) m_speedX = 0.f;
+    if (prevY != y) m_speedY = 0.f;
+}
+
+void Entity::moveRelative(float x, float speed) {
+    if(x < 0.01f && x > -0.01f) return;
+    float distance = speed / x;
+    x *= distance;
+    m_speedX = x * (m_direction == LEFT ? -1 : 1);
+}
+
+void Entity::resetPosition() {
+    m_hitbox.x = rand() % m_world->getWidth();
+    m_hitbox.y = -3.0f;
 }
 
 ByteVector& Entity::serialize() {
     SerializedObject::serialize();
 
-    addBytes(m_hitbox);
+    addBytes(m_hitbox.x);
+    addBytes(m_hitbox.y);
+    addBytes(m_direction);
 
     return m_bytes;
 }
@@ -95,7 +73,9 @@ ByteVector& Entity::serialize() {
 int Entity::deserialize(ByteVector& bytes) {
     SerializedObject::deserialize(bytes);
 
-    m_hitbox = getBytes<Rectf>();
+    m_hitbox.x = getBytes<float>();
+    m_hitbox.y = getBytes<float>();
+    m_direction = getBytes<Direction>();
 
     return m_offset;
 }

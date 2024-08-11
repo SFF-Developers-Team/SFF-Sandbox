@@ -3,6 +3,7 @@
 #include <World.hpp>
 #include <Player.hpp>
 #include <TileMap.hpp>
+#include <Timer.hpp>
 #include <ParticleManager.hpp>
 #include <RenderManager.hpp>
 #include <Multiplayer.hpp>
@@ -21,6 +22,7 @@ private:
     RenderManager* m_renderManager;
     TileMap* m_blocksMap;
     Multiplayer* m_multiplayerManager;
+    Timer* m_timer;
 
 public:
     static Game* get() {

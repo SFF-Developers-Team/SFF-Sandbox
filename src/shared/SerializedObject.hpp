@@ -61,6 +61,8 @@ public:
         for(char c : value) {
             m_bytes.push_back(c);
         }
+
+        m_bytes.push_back(0x00);
     }
 
     template<>
@@ -68,6 +70,8 @@ public:
         for(int i = 0; i < strlen(value); i++) {
             m_bytes.push_back(value[i]);
         }
+
+        m_bytes.push_back(0x00);
     }
 
     void addBytes(ByteVector& byteVec) {

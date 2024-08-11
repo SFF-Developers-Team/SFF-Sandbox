@@ -18,7 +18,6 @@ private:
     Texture2D m_texture;
     Block::BlockType m_selectedBlock = Block::BlockType::STONE;
 
-    bool m_canJump = false;
     bool m_sneak = false;
     bool m_fly = false;
 
@@ -32,13 +31,11 @@ public:
     Player(World* world);
     ~Player();
     
-    virtual void update() override; 
+    void onTick() override; 
+    void update();
     void updateControls();
     void updateCamera();
     void updateAnimation();
-    void updateMultiplayer();
-    void processPhysics(bool hitWall, bool hitFloor, bool hitCeil) override;
-    void draw();
 
     bool isChunkInView(Chunk* chunk);
     bool canDestroyBlock(Vec2i targetBlockPos, uint8_t layer);
