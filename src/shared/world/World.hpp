@@ -6,6 +6,7 @@
 #include <SerializedObject.hpp>
 #include <Block.hpp>
 #include <SimplePlayer.hpp>
+#include <memory>
 
 #define CHUNK_SIZE 16
 

@@ -5,8 +5,17 @@
 #include <Chunk.hpp>
 #include <thread>
 #include <Debug.hpp>
+#include <sockpp/platform.h>
 
 using namespace std::chrono;
+
+#if defined(_WIN32)
+  #define WOULDBLOCK WSAWOULDBLOCK
+#elif defined(__linux__)
+  #define WOULDBLOCK EWOULDBLOCK
+#else
+  #error Unknown platform WOULDBLOCK error code
+#endif
 
 Multiplayer::~Multiplayer() {
     m_connector.shutdown();
@@ -76,7 +85,7 @@ std::shared_ptr<GamePacket> Multiplayer::read(ByteVector& buf) {
 
     Debug::addString("{} bytes read", result.value());
 
-    if(result.error().value() == WSAEWOULDBLOCK || result.error().value() == WSAEINPROGRESS) {
+    if(result.error().value() == WOULDBLOCK) {
         // logD("WOULD BLOCK {}", result.value());
         return std::make_shared<GamePacket>(SerializedObject::Header::NULL_PACKET); 
     }

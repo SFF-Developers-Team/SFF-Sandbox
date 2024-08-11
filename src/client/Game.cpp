@@ -11,12 +11,14 @@
 #include <GitHash.hpp>
 
 void Game::init(std::vector<std::string>& args) {
+#ifdef _WIN32
     setlocale(LOCALE_ALL, "ru");
+    SetConsoleOutputCP(CP_UTF8);
+#endif
     InitWindow(m_screenWidth, m_screenHeight, "SFF Sandbox");
     SetTargetFPS(60);
     SetWindowState(FLAG_WINDOW_RESIZABLE);
 
-    SetConsoleOutputCP(CP_UTF8);
 
     sockpp::initialize();
 

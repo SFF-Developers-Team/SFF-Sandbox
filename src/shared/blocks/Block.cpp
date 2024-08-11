@@ -1,6 +1,5 @@
 #include <Block.hpp>
 #include <SerializedObject.hpp>
-
 Block::Block(BlockType type) : m_type(type) {
     m_header = Header::BLOCK;
 }
@@ -51,7 +50,7 @@ int Block::deserialize(std::vector<uint8_t>& bytes) {
     return m_offset;
 }
 
-size_t const Block::getSize() {
+std::size_t const Block::getSize() {
     if(!m_size) {
         // Testing block size
         auto block = new Block(Block::BlockType::AIR);

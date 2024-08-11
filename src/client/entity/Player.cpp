@@ -97,7 +97,7 @@ bool Player::canDestroyBlock(Vec2i pos, uint8_t layer) {
 
     Block::BlockType type = block->getType();
     
-    return type != Block::BlockType::BEDROCK && type != Block::BlockType::AIR;
+    return type != Block::BlockType::AIR; //type != Block::BlockType::BEDROCK &&
 }
 
 bool Player::canPlaceBlock(Vec2i pos, uint8_t layer) {

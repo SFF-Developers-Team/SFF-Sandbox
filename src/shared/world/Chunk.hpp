@@ -2,6 +2,7 @@
 #include <Block.hpp>
 #include <vector>
 #include <WorldGen.hpp>
+#include <memory>
 
 #define CHUNK_WIDTH 16
 #define LAYERS 2
