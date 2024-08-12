@@ -222,12 +222,14 @@ void Player::update() {
             m_selectedBlock = (Block::BlockType)(i + 1);
         }
     }
-    if (!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
-        if((int)m_selectedBlock >= 6) {
-            m_selectedBlock = (Block::BlockType)((int)(m_selectedBlock) - 6);
-        }
-        m_selectedBlock = (Block::BlockType)((int)(m_selectedBlock) + 1);
+    
+    if(!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
+        m_selectedBlock = (Block::BlockType)((int)(m_selectedBlock) + (wheel > 0 ? -1 : 1));
+
+        if(m_selectedBlock > Block::BlockType::WOOL) m_selectedBlock = Block::BlockType::GRASS;
+        if(m_selectedBlock < Block::BlockType::GRASS) m_selectedBlock = Block::BlockType::WOOL;
     }
+
     if(IsKeyPressed(KEY_R)) resetPosition();
     if(IsKeyPressed(KEY_F)) m_fly = !m_fly;
 
@@ -256,4 +258,12 @@ bool Player::isChunkInView(Chunk* chunk) {
     auto max = convertToCameraPos({(float)GetScreenWidth(), (float)GetScreenHeight()});
 
     return (minPos >= min.x && minPos <= max.x) || (maxPos >= min.x && maxPos <= max.x); 
+}
+
+bool Player::isBlockInView(Block* block) {
+    auto pos = block->getPosition();
+    auto min = convertToCameraPos({0, 0});
+    auto max = convertToCameraPos({(float)GetScreenWidth(), (float)GetScreenHeight()});
+
+    return (pos.x + 1.0f >= min.x && pos.x <= max.x) && (pos.y + 1.0f >= min.y && pos.y <= max.y); 
 }

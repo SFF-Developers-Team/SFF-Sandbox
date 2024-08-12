@@ -50,19 +50,29 @@ void RenderManager::renderWorld() {
 
 void RenderManager::renderChunk(Chunk* chunk) {
     auto wh = m_world->getHeight();
+    auto game = Game::get();
 
     for (int x = 0; x < CHUNK_SIZE; x++) {
         for(int y = 0; y < wh; y++) {
-            for(int layer = 0; layer < LAYERS; layer++) {
-                auto block = chunk->getBlock(x, y, layer);
-                if(!block || block->getType() == Block::BlockType::AIR) continue;
+            auto block0 = chunk->getBlock(x, y, 0);
+            auto block1 = chunk->getBlock(x, y, 1);
 
-                auto tilemap = Game::get()->getBlocksTileMap();
-                auto dest = Rectangle {(float)chunk->getPosition() * CHUNK_SIZE + x, (float)y, 1.0f, 1.0f};
+            // Пока что все блоки у нас одинакового размера
+            if(!game->getPlayer()->isBlockInView(block0)) continue;
+            auto tilemap = Game::get()->getBlocksTileMap();
+            auto dest = Rectangle {
+                // To support lightweight chunk format
+                (chunk->getPosition() > 0 && x < CHUNK_SIZE ? (float)chunk->getPosition() * CHUNK_SIZE + x : x), 
+                (float)y, 
+                1.0f, 1.0f
+            };
 
-                Color color = ColorBrightness(WHITE, (layer == 1) ? 1.0f : -0.25f);
+            if((block0 && block0->getType() != Block::BlockType::AIR) && (block1 && block1->getType() == Block::BlockType::AIR)) {
+                tilemap->drawTilePro((uint16_t)block0->getType() - 1, dest, ColorBrightness(WHITE, -0.25f));
+            }
 
-                tilemap->drawTilePro((uint16_t)block->getType() - 1, dest, color);
+            if(block1 && block1->getType() != Block::BlockType::AIR) {
+                tilemap->drawTilePro((uint16_t)block1->getType() - 1, dest, WHITE);
             }
         }
     }
@@ -92,8 +102,8 @@ void RenderManager::renderSimplePlayer(SimplePlayer* player) {
 
     auto username = player->getUsername();
     if(!username.empty()) {
-        auto size = MeasureText(username.c_str(), 10);
-        DrawText(username.c_str(), hitbox.x + hitbox.width / 2 - size / 2, hitbox.y - 15, 10, WHITE);
+        auto size = MeasureTextEx(GetFontDefault(), username.c_str(), 0.5f, 0.05f);
+        DrawTextEx(GetFontDefault(), username.c_str(), {hitbox.x + hitbox.width / 2.f - size.x / 2.f, hitbox.y - 1.f}, 0.5f, 0.05f, WHITE);
     }
 
     if(Debug::m_debug) {

@@ -66,7 +66,11 @@ bool Multiplayer::connect(std::string const& host, in_port_t port) {
 bool Multiplayer::send(std::shared_ptr<GamePacket> packet) {
     auto bytes = packet->serialize();
     auto result = m_connector.write(bytes.data(), bytes.size());
-    Debug::addString("{} bytes sent", result.value());
+
+    if(result.value() < packet->getSize()) {
+        logD("Packet lost! {} of {} ({:.02f}%) bytes sent", result.value(), packet->getSize(), (result.value() / packet->getSize()) * 100.f);
+        return false;
+    }
 
     return result.is_ok();
 }
@@ -109,7 +113,7 @@ void Multiplayer::onBlockChanged(Vec2i pos, uint8_t layer) {
     }
 }
 
-void Multiplayer::update() {
+void Multiplayer::onTick() {
     static ByteVector buf(MP_BUF_SIZE);
     auto game = Game::get();
     auto world = game->getWorld();
@@ -122,11 +126,11 @@ void Multiplayer::update() {
         m_canSendNext = true;
     }
 
-
     if(m_packetQueue.size() > 0 && m_canSendNext) {
-        send(*m_packetQueue.begin());
-        m_packetQueue.erase(m_packetQueue.begin());
-        m_canSendNext = false;
+        if(send(*m_packetQueue.begin())) {
+            m_packetQueue.erase(m_packetQueue.begin());
+            m_canSendNext = false;
+        }
     }
 
 
@@ -218,7 +222,6 @@ void Multiplayer::update() {
             block->deserialize(packet->serialize());
             auto pos = block->getPosition();
             auto layer = block->getLayer();
-            logD("Block {} [{}, {}]", (int)block->getType(), pos.x, pos.y);
 
             world->setBlock(pos.x, pos.y, layer, std::move(block));
             break;

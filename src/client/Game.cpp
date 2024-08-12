@@ -18,7 +18,6 @@ void Game::init(std::vector<std::string>& args) {
     SetConfigFlags(FLAG_VSYNC_HINT);
     InitWindow(m_screenWidth, m_screenHeight, "SFF Sandbox");
     SetTargetFPS(60);
-    SetWindowState(FLAG_WINDOW_RESIZABLE);
 
 
     sockpp::initialize();
@@ -32,7 +31,7 @@ void Game::init(std::vector<std::string>& args) {
     m_particleManager = new ParticleManager(m_world);
     m_renderManager = new RenderManager(m_world, m_player);
     m_multiplayerManager = new Multiplayer();
-    
+
     if(!m_multiplayer || !m_multiplayerManager->connect(args[1], (args.size() > 2 ? atoi(args[2].c_str()) : 7777))) {
         if(!m_world->load()) {
             m_world->generate(new WorldGenNormal(m_world));
@@ -111,6 +110,6 @@ void Game::update() {
     }
 
     if(m_multiplayer) {
-        m_multiplayerManager->update();
+        m_multiplayerManager->onTick();
     }
 }

@@ -40,6 +40,7 @@ void Server::init() {
 
     std::error_code ec;
     m_acceptor = sockpp::tcp_acceptor(config["port"].value_or(7777));
+    m_acceptor.set_non_blocking();
 
     if(ec) {
         logE("Error creating the acceptor: {}", ec.message());
@@ -49,6 +50,7 @@ void Server::init() {
     logD("Server listening *:{}", m_acceptor.address().port());
 
     m_world = new World(256, 128);
+    m_timer = new Timer(60);
 
     if(!m_world->load()) {
         logD("Generating world...");
@@ -76,17 +78,11 @@ void Server::inputThread() {
 
 void Server::loop() {
     while(true) {
-        sockpp::inet_address peer;
-        auto res = m_acceptor.accept(&peer);
+        m_timer->advanceTime();
 
-        if(!res) {
-            logE("Failed to connect player {}", res.error_message());
-            continue;
+        for(uint32_t i = 0; i < m_timer->getTicks(); i++) {
+            onTick();
         }
-        
-        sockpp::tcp_socket sock = res.release();
-        std::thread thread(&Server::acceptThread, this, std::move(sock));
-        thread.detach();
     }
 }
 
@@ -96,7 +92,18 @@ void Server::destroy() {
     std::exit(0);
 }
 
-void Server::acceptThread(sockpp::tcp_socket sock) {
+void Server::onTick() {
+    sockpp::inet_address peer;
+    auto res = m_acceptor.accept(&peer);
+
+    if(res) {
+        sockpp::tcp_socket sock = res.release();
+        std::thread thread(&Server::sessionThread, this, std::move(sock));
+        thread.detach();
+    }
+}
+
+void Server::sessionThread(sockpp::tcp_socket sock) {
     ByteVector buf(MP_BUF_SIZE);
     PlayerID playerId = 0;
 
@@ -139,83 +146,85 @@ void Server::acceptThread(sockpp::tcp_socket sock) {
 
     bool canSendNext = true;
 
-    while (true) {
-        auto packet = read(sock, buf);
-        if (!packet) break;
+    do {
+        for(uint32_t i = 0; i < m_timer->getTicks(); i++) {
+            auto packet = read(sock, buf);
+            if (!packet) break;
 
-        canSendNext = true;
+            canSendNext = true;
 
-        switch(packet->getBytes<SerializedObject::Header>()) {
-            case SerializedObject::Header::PLAYER: {
-                m_world->getPlayer(playerId)->deserialize(packet->serialize());
-                if(queue.empty()) {
-                    auto players = CREATE_PACKET(SerializedObject::PLAYERS, m_world->getPlayers().size() - 1);
+            switch(packet->getBytes<SerializedObject::Header>()) {
+                case SerializedObject::Header::PLAYER: {
+                    m_world->getPlayer(playerId)->deserialize(packet->serialize());
+                    if(queue.empty()) {
+                        auto players = CREATE_PACKET(SerializedObject::PLAYERS, m_world->getPlayers().size() - 1);
 
-                    for(auto [id, player] : m_world->getPlayers()) {
-                        player->setID(id);
-                        if(id == playerId) continue;
-                        players->addBytes(player->serialize());
+                        for(auto [id, player] : m_world->getPlayers()) {
+                            player->setID(id);
+                            if(id == playerId) continue;
+                            players->addBytes(player->serialize());
+                        }
+                        
+                        addToQueue(playerId, players);
                     }
-                    
-                    addToQueue(playerId, players);
+                    break;
                 }
-                break;
-            }
-            
-            case SerializedObject::Header::BLOCK: {
-                auto block = std::make_unique<Block>(Block::BlockType::AIR);
-                block->deserialize(packet->serialize());
+                
+                case SerializedObject::Header::BLOCK: {
+                    auto block = std::make_unique<Block>(Block::BlockType::AIR);
+                    block->deserialize(packet->serialize());
 
-                auto pos = block->getPosition();
-                auto layer = block->getLayer();
+                    auto pos = block->getPosition();
+                    auto layer = block->getLayer();
 
-                // logD("Block set {} {} {}", pos.x, pos.y, layer);
+                    // logD("Block set {} {} {}", pos.x, pos.y, layer);
 
-                addToQueueAll(CREATE_PACKET(block->serialize()));
-                m_world->setBlock(pos.x, pos.y, layer, std::move(block));
-                break;
-            }
-
-            case SerializedObject::Header::LOAD_CHUNK: {
-                auto position = packet->getBytes<ChunkPosition>();
-                auto chunk = m_world->getChunk(position);
-
-                if(chunk) addToQueue(playerId, CREATE_PACKET(chunk->serialize()));
-                break;
-            }
-
-            case SerializedObject::Header::LOAD_PLAYER: {
-                auto id = packet->getBytes<PlayerID>();
-                // logD("LOAD PLAYER {}", id);
-                if(!m_world->getPlayer(id)) {
-                    addToQueue(playerId, CREATE_PACKET(SerializedObject::LOAD_PLAYER, 0));
+                    addToQueueAll(CREATE_PACKET(block->serialize()));
+                    m_world->setBlock(pos.x, pos.y, layer, std::move(block));
                     break;
                 }
 
-                auto playerInfo = CREATE_PACKET(SerializedObject::LOAD_PLAYER, id);
-                playerInfo->addBytes(m_world->getPlayer(id)->getUsername());
-                addToQueue(playerId, playerInfo);
-                break;
+                case SerializedObject::Header::LOAD_CHUNK: {
+                    auto position = packet->getBytes<ChunkPosition>();
+                    auto chunk = m_world->getChunk(position);
+
+                    if(chunk) addToQueue(playerId, CREATE_PACKET(chunk->serialize()));
+                    break;
+                }
+
+                case SerializedObject::Header::LOAD_PLAYER: {
+                    auto id = packet->getBytes<PlayerID>();
+                    // logD("LOAD PLAYER {}", id);
+                    if(!m_world->getPlayer(id)) {
+                        addToQueue(playerId, CREATE_PACKET(SerializedObject::LOAD_PLAYER, 0));
+                        break;
+                    }
+
+                    auto playerInfo = CREATE_PACKET(SerializedObject::LOAD_PLAYER, id);
+                    playerInfo->addBytes(m_world->getPlayer(id)->getUsername());
+                    addToQueue(playerId, playerInfo);
+                    break;
+                }
+
+                case SerializedObject::Header::DISCONNECT: {
+                    disconnectPlayer(playerId);
+                    return;
+                }
+
+                case SerializedObject::Header::NULL_PACKET: {
+                    canSendNext = false;
+                    break;
+                }
             }
 
-            case SerializedObject::Header::DISCONNECT: {
-                disconnectPlayer(playerId);
-                return;
-            }
-
-            case SerializedObject::Header::NULL_PACKET: {
-                canSendNext = false;
-                break;
+            if(queue.size() > 0 && canSendNext) {
+                // logD("{} Queue size: {}", playerId, queue.size());
+                if(send(sock, *queue.begin())) { 
+                    queue.erase(queue.begin());
+                }
             }
         }
-
-        if(queue.size() > 0 && canSendNext) {
-            // logD("{} Queue size: {}", playerId, queue.size());
-            if(send(sock, *queue.begin())) { 
-                queue.erase(queue.begin());
-            }
-        }
-    }
+    } while(true);
 }
 
 void Server::addToQueueAll(std::shared_ptr<GamePacket> packet) {
@@ -256,8 +265,11 @@ std::shared_ptr<GamePacket> Server::read(sockpp::tcp_socket& sock) {
 bool Server::send(sockpp::tcp_socket& sock, std::shared_ptr<GamePacket> packet) {
     auto bytes = packet->serialize();
     auto result = sock.write(bytes.data(), bytes.size());
-
-    // logD("{} of {} ({:.02f}%) bytes sent", result.value(), packet->getSize(), (result.value() / packet->getSize()) * 100.f);
+    
+    if(result.value() < packet->getSize()) {
+        logD("Packet lost! {} of {} ({:.02f}%) bytes sent", result.value(), packet->getSize(), (result.value() / packet->getSize()) * 100.f);
+        return false;
+    }
 
     return result.is_ok();
 }

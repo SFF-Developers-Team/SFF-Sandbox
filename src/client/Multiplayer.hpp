@@ -22,7 +22,7 @@ public:
     ~Multiplayer();
 
     bool connect(std::string const& host, in_port_t port);
-    void update();
+    void onTick();
 
     bool send(std::shared_ptr<GamePacket> packet);
     std::shared_ptr<GamePacket> read();
