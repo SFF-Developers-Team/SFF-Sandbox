@@ -1,8 +1,11 @@
-#include <World.hpp>
+#include <world.hpp>
+#include <player.hpp>
 #include <iostream>
 #include <Sprite.hpp>
 #include <cmath>
 #include "Debug.hpp"
+#include <WorldGenFlat.hpp>
+#include <WorldGenNormal.hpp>
 
 World::World(int width, int height) : m_width(width), m_height(height) {
     m_blocks.reserve(width * height);
@@ -11,30 +14,9 @@ World::World(int width, int height) : m_width(width), m_height(height) {
 }
 
 void World::generate() {
-    for (int x = 0; x < m_width; x++) {
-        for(int y = 0; y < m_height; y++){
-            int index = x * m_height + y;
+    WorldGenNormal generator = this;
 
-            m_blocks[index] = nullptr;
-
-            int grassLevel = (int)(m_height * 2 / 3);
-
-            if(y == grassLevel) {
-                m_blocks[index] = new Block(Block::BlockType::GRASS);
-                continue;
-            }
-
-            if(y > grassLevel && y < grassLevel + 5) {
-                m_blocks[index] = new Block(Block::BlockType::DIRT);
-                continue;
-            }
-
-            if(y >= grassLevel + 5) {
-                m_blocks[index] = new Block(Block::BlockType::STONE);
-                continue;
-            }
-        }
-    }
+    generator.generateWorld();
 }
 
 void World::update(Vector2 playerPosition, int renderDistance) {
@@ -64,6 +46,8 @@ void World::draw(bool debug) {
             if(!block) continue;
 
             auto sprite = block->getSprite();
+
+            if (!sprite) continue;
 
             DrawTexturePro(
                 sprite->getTexture(), 
@@ -103,11 +87,33 @@ bool World::isBlockAccesible(int x, int y) {
 void World::placeBlock(int x, int y, enum Block::BlockType id) {
     int index = x * m_height + y;
 
-    if (m_blocks[index] != nullptr) delete m_blocks[index];
+    if (m_blocks[index] == nullptr){
     m_blocks[index] = new Block(id);
+    }
 }
 void World::destroyBlock(int x, int y) {
     int index = x * m_height + y;
 
-    if (m_blocks[index] != nullptr) delete m_blocks[index];
+    if(m_blocks[index] != nullptr) {
+        delete m_blocks[index];
+        m_blocks[index] = nullptr;
+    } 
+}
+// Rectangle getTargetBlock() {
+//     CheckCollisionPointRec(cursorInWorld,hitbox);
+//     return;
+// }
+Block *World::getBlock(int x, int y) {
+    for (Block *block : m_blocks) {
+        auto pos = block->getPosition();
+        if (pos[0] == x && pos[1] == y) return block;
+    }
+
+    return nullptr;
+
+    // if (x > m_width || y < 0 || x < 0 || y > m_height) return nullptr;
+
+    // int index = x * m_height + y;
+
+    // return m_blocks[index];
 }

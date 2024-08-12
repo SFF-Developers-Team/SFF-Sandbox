@@ -1,7 +1,7 @@
 #include <GamePacket.hpp>
 #include <SerializedObject.hpp>
 #include <GenericTools.hpp>
-
+#include <world.hpp>
 GamePacket::GamePacket(std::vector<SerializedObject *> objects) {
     _objects = objects;
     _shouldEncode = true;
@@ -59,7 +59,7 @@ void GamePacket::performDecode() {
                 break;
             }
             case 1: {
-                Player *_obj = new Player();
+                Player *_obj = new Player(m_world);
                 
                 _obj->decodeObject(object_data);
                 _objects.push_back(_obj);

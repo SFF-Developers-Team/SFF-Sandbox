@@ -1,6 +1,6 @@
 #pragma once
 #include <raylib.h>
-#include <World.hpp>
+#include <world.hpp>
 #include <player.hpp>
 
 class Game {

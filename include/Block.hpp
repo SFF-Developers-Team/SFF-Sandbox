@@ -3,6 +3,7 @@
 #include "Sprite.hpp"
 #include <memory>
 #include <SerializedObject.hpp>
+#include <array>
 
 #define BLOCK_SIZE_PIXELS 32
 
@@ -33,4 +34,6 @@ public:
     // multiplayer stuff
     SObject encodeObject() override;
     int decodeObject(SObject &s) override;
+
+    std::array<int, 2> getPosition();
 };

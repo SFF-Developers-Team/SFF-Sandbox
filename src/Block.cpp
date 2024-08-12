@@ -54,3 +54,7 @@ int Block::decodeObject(SObject &s) {
 
     return s.size();
 }
+
+std::array<int, 2> Block::getPosition() {
+    return {m_x, m_y};
+}
