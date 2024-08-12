@@ -37,7 +37,10 @@ public:
     void updateCamera();
     void updateAnimation();
 
+    void moveCameraRelative(float x, float y);
+
     bool isChunkInView(Chunk* chunk);
+    bool isBlockInView(Block* block);
     bool canDestroyBlock(Vec2i targetBlockPos, uint8_t layer);
     bool canPlaceBlock(Vec2i targetBlockPos, uint8_t layer);
 

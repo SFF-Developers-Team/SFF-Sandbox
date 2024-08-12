@@ -23,7 +23,27 @@ Player::~Player() {
 }
 
 void Player::updateCamera() {
-    this->m_camera.target = {m_hitbox.x + m_hitbox.width / 2, m_hitbox.y - m_hitbox.height / 2};
+    auto targetX = m_hitbox.x + m_hitbox.width / 2; 
+    auto targetY = m_hitbox.y - m_hitbox.height / 2;
+
+    // float distX = targetX - m_camera.target.x;
+    // float distY = targetY - m_camera.target.y;
+
+    // logD("distX {} distY {}", distX, distY);
+
+    // if(distX > 0.001f || distX < -0.001f) {
+    //     distX *= (0.15f / distX);
+    //     if(m_camera.target.x > targetX) m_camera.target.x -= distX;
+    //     if(m_camera.target.x < targetX) m_camera.target.x += distX;
+    // }
+
+    // if(distY > 0.001f || distY < -0.001f) {
+    //     distY *= (0.15f / distY);
+    //     if(m_camera.target.y > targetY) m_camera.target.y -= distY;
+    //     if(m_camera.target.y < targetY) m_camera.target.y += distY;
+    // }
+    m_camera.target.x = targetX;
+    m_camera.target.y = targetY;
 
     Debug::addString("Camera target: [{:0f}, {:0f}]", this->m_camera.target.x, this->m_camera.target.y);
     Debug::addString("Camera zoom: {:02f}", this->m_camera.zoom);
@@ -120,7 +140,7 @@ bool Player::canPlaceBlock(Vec2i pos, uint8_t layer) {
 
 void Player::updateControls() {
     auto targetBlockPos = getTargetBlock(false);
-    auto gravitation = (!m_fly) ? 0.1f : 0.0f;
+    auto gravitation = (!m_fly) ? 0.02f : 0.0f;
     auto isAltLayer = IsKeyDown(KEY_LEFT_ALT);
     auto forward = 0.0f;
     auto mp = Game::get()->getMultiplayer();
@@ -150,7 +170,7 @@ void Player::updateControls() {
     }
 
     if((IsKeyDown(KEY_W) || IsKeyDown(KEY_UP) || IsKeyDown(KEY_SPACE)) && (m_onGround || m_fly)) {
-        m_speedY = ((!m_fly) ? -0.6f : -0.25f);
+        m_speedY = ((!m_fly) ? -0.3f : -0.25f);
     }
 
     if((IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)) && m_fly && !m_onGround) {
@@ -161,7 +181,7 @@ void Player::updateControls() {
         m_sneak = true;
     }
 
-    moveRelative(forward, (m_onGround ? (m_sneak ? 0.128f : 0.25f) : 0.225f));
+    moveRelative(forward, (m_onGround ? (m_sneak ? 0.05f : 0.12f) : 0.1f));
 
     m_speedY += gravitation;
 
@@ -226,6 +246,20 @@ void Player::update() {
 
     updateCamera();
     updateAnimation();
+}
+
+void Player::moveCameraRelative(float x, float y) {
+    float xa = m_camera.target.x - x;
+    float ya = m_camera.target.y - y;
+
+    auto dist = xa + ya;
+    if (dist >= .01f) {
+        dist = 0.5f / sqrtf(dist);
+        xa *= dist;
+        ya *= dist;
+        m_camera.target.x += xa;
+        m_camera.target.y += ya;
+    }
 }
 
 bool Player::isChunkInView(Chunk* chunk) {

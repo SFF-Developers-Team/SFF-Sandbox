@@ -12,6 +12,11 @@ struct Vec2 {
     inline Vec2<N> toType() const {
         return {static_cast<N>(x), static_cast<N>(y)};
     }
+
+    template <typename T2>
+    inline T2 to() const {
+        return T2 {x, y};
+    }
 };
 
 template <typename T>

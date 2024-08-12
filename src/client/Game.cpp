@@ -25,7 +25,7 @@ void Game::init(std::vector<std::string>& args) {
     m_username = (args.size() > 0 ? args[0] : std::string("Player").append(std::to_string(rand()))); 
     m_multiplayer = args.size() > 1;
     m_blocksMap = new TileMap("assets/blocks.png", Vector2 {16, 16});
-    m_timer = new Timer(20);
+    m_timer = new Timer(60);
     m_world = new World(256, 128);
     m_player = new Player(m_world);
     m_particleManager = new ParticleManager(m_world);

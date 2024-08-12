@@ -10,7 +10,7 @@
 using namespace std::chrono;
 
 #if defined(_WIN32)
-  #define WOULDBLOCK WSAWOULDBLOCK
+  #define WOULDBLOCK WSAEWOULDBLOCK
 #elif defined(__linux__)
   #define WOULDBLOCK EWOULDBLOCK
 #else

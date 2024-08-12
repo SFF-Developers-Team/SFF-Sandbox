@@ -23,7 +23,7 @@ void RenderManager::renderWorld() {
 
         // Selected block
         if(playerTarget.x > 0 && playerTarget.y > 0) {
-            DrawRectangleLinesEx({(float)playerTarget.x, (float)playerTarget.y, 1.0f, 1.0f}, 1.0f, WHITE);
+            DrawRectangleLinesEx({(float)playerTarget.x, (float)playerTarget.y, 1.0f, 1.0f}, 0.025f, WHITE);
         }
 
         if(Debug::m_debug) {

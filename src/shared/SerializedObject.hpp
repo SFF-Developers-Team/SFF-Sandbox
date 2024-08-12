@@ -147,7 +147,7 @@ public:
         }
 
         char* str = new char[m_offset - start];
-        strncpy(str, (const char*)&m_bytes[start], m_offset - start);
+        std::strncpy(str, (const char*)&m_bytes[start], m_offset - start);
 
         return str;
     }
