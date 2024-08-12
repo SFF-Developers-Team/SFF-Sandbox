@@ -23,27 +23,14 @@ Player::~Player() {
 }
 
 void Player::updateCamera() {
-    auto targetX = m_hitbox.x + m_hitbox.width / 2; 
-    auto targetY = m_hitbox.y - m_hitbox.height / 2;
-
-    // float distX = targetX - m_camera.target.x;
-    // float distY = targetY - m_camera.target.y;
-
-    // logD("distX {} distY {}", distX, distY);
-
-    // if(distX > 0.001f || distX < -0.001f) {
-    //     distX *= (0.15f / distX);
-    //     if(m_camera.target.x > targetX) m_camera.target.x -= distX;
-    //     if(m_camera.target.x < targetX) m_camera.target.x += distX;
-    // }
-
-    // if(distY > 0.001f || distY < -0.001f) {
-    //     distY *= (0.15f / distY);
-    //     if(m_camera.target.y > targetY) m_camera.target.y -= distY;
-    //     if(m_camera.target.y < targetY) m_camera.target.y += distY;
-    // }
-    m_camera.target.x = targetX;
-    m_camera.target.y = targetY;
+    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0) {
+        m_camera.zoom -= 1.0f;
+    }
+    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) {
+        m_camera.zoom += 1.0f;
+    }
+    
+    this->m_camera.target = {m_hitbox.x + m_hitbox.width / 2, m_hitbox.y - m_hitbox.height / 2};
 
     Debug::addString("Camera target: [{:0f}, {:0f}]", this->m_camera.target.x, this->m_camera.target.y);
     Debug::addString("Camera zoom: {:02f}", this->m_camera.zoom);
@@ -235,12 +222,18 @@ void Player::onTick() {
 }
 
 void Player::update() {
+    wheel = GetMouseWheelMove();
     for(int i = 0; i < 6; i++) {
         if(IsKeyDown(KEY_ONE + i)) {
             m_selectedBlock = (Block::BlockType)(i + 1);
         }
     }
-
+    if (!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
+        if((int)m_selectedBlock >= 6) {
+            m_selectedBlock = (Block::BlockType)((int)(m_selectedBlock) - 6);
+        }
+        m_selectedBlock = (Block::BlockType)((int)(m_selectedBlock) + 1);
+    }
     if(IsKeyPressed(KEY_R)) resetPosition();
     if(IsKeyPressed(KEY_F)) m_fly = !m_fly;
 

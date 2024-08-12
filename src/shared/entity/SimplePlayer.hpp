@@ -45,7 +45,7 @@ public:
     ByteVector& serialize();
     int deserialize(ByteVector& bytes);
 
-    static size_t const getSizeBytes();
+    static std::size_t const getSizeBytes();
 
     void setUsername(std::string const& username) { m_username = username; }
     void setAnimCurrentFrame(uint8_t frame) { m_animCurrentFrame = frame; }
