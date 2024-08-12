@@ -23,18 +23,12 @@ Player::~Player() {
 }
 
 void Player::updateCamera() {
-    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0) {
-        m_camera.zoom -= 1.0f;
-    }
-    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) {
-        m_camera.zoom += 1.0f;
-    }
-    
-    this->m_camera.target = {m_hitbox.x + m_hitbox.width / 2, m_hitbox.y - m_hitbox.height / 2};
+    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0) m_camera.zoom -= 1.0f;
+    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) m_camera.zoom += 1.0f;
 
-    Debug::addString("Camera target: [{:0f}, {:0f}]", this->m_camera.target.x, this->m_camera.target.y);
-    Debug::addString("Camera zoom: {:02f}", this->m_camera.zoom);
-    Debug::addString("Camera rotation: {:02f}", this->m_camera.rotation);
+
+    this->m_camera.target = {m_hitbox.x + m_hitbox.width / 2, m_hitbox.y - m_hitbox.height / 2};
+    m_camera.zoom = std::clamp(m_camera.zoom, 5.f, 90.f);
 }
 
 void Player::updateAnimation() {

@@ -15,6 +15,7 @@ void Game::init(std::vector<std::string>& args) {
     setlocale(LOCALE_ALL, "ru");
     SetConsoleOutputCP(CP_UTF8);
 #endif
+    SetConfigFlags(FLAG_VSYNC_HINT);
     InitWindow(m_screenWidth, m_screenHeight, "SFF Sandbox");
     SetTargetFPS(60);
     SetWindowState(FLAG_WINDOW_RESIZABLE);
