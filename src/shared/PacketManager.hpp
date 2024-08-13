@@ -4,6 +4,7 @@
 #include <platform.hpp>
 #include <sockpp/connector.h>
 #include <sockpp/acceptor.h>
+#include <memory>
 
 #if defined(_WIN32)
     #define ERRWOULDBLOCK WSAEWOULDBLOCK
@@ -20,8 +21,8 @@ private:
     std::vector<uint8_t> m_writeBuf;
     std::vector<uint8_t> m_readBuf;
 
-    size_t m_writeOffset = 0;
-    size_t m_readOffset = 0;
+    std::size_t m_writeOffset = 0;
+    std::size_t m_readOffset = 0;
 
 public:
     PacketManager(size_t bufSize) : m_readBuf(bufSize) {}
