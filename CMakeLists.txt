@@ -5,7 +5,8 @@ project(SFFSandbox-server)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
-set(SOCKPP_BUILD_EXAMPLES ON)
+set(SOCKPP_BUILD_STATIC ON)
+set(SOCKPP_BUILD_SHARED OFF)
 
 set(SHARED_HEADERS 
     "libs/perlin-noise"
@@ -43,8 +44,8 @@ add_subdirectory(libs/sockpp)
 add_subdirectory(libs/raylib)
 add_subdirectory(libs/GitHash)
 
-target_link_libraries(SFFSandbox raylib sockpp ${GITHASH_LIBRARIES})
-target_link_libraries(SFFSandbox-server sockpp ${GITHASH_LIBRARIES})
+target_link_libraries(SFFSandbox raylib sockpp-static ${GITHASH_LIBRARIES})
+target_link_libraries(SFFSandbox-server sockpp-static ${GITHASH_LIBRARIES})
 
 target_include_directories(SFFSandbox PRIVATE
     ${SHARED_HEADERS}

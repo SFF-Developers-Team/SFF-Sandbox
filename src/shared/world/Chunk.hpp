@@ -53,4 +53,6 @@ public:
 
     ByteVector& serialize();
     int deserialize(ByteVector& bytes);
+
+    uint32_t getBlockCount();
 };

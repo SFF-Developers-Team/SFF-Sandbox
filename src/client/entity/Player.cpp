@@ -172,8 +172,8 @@ void Player::updateControls() {
     m_speedY *= 0.98f;
 
     if (m_onGround) {
-        m_speedX *= 0.8f;
-        m_speedY *= 0.8f;
+        m_speedX *= 0.7f;
+        m_speedY *= 0.7f;
     }
 
     if(m_fly) {

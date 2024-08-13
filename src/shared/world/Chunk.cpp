@@ -155,3 +155,13 @@ int Chunk::deserialize(ByteVector& bytes) {
 
     return m_offset;
 }
+
+uint32_t Chunk::getBlockCount() {
+    uint32_t ret = 0;
+
+    for(auto& block : m_blocks) {
+        if(block && block->getType() != Block::BlockType::AIR) ret++;
+    }
+
+    return ret;
+}

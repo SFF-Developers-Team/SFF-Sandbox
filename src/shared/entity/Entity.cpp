@@ -21,6 +21,7 @@ void Entity::turn(Direction dir) {
 }
 
 void Entity::onTick() {
+    // Store previous position
     m_prevX = m_hitbox.x;
     m_prevY = m_hitbox.y;
 }
@@ -30,11 +31,13 @@ void Entity::move(float x, float y) {
     auto prevY = y;
     auto hitboxes = m_world->getHitboxes(m_hitbox.expand(x, y));
 
+    // Check for X collision
     for (auto& hitbox : hitboxes) {
         x = hitbox.clipXCollide(m_hitbox, x);
     }
     m_hitbox.move(x, 0.0f);
 
+    // Check for Y collision
     for (auto& hitbox : hitboxes) {
         y = hitbox.clipYCollide(m_hitbox, y);
     }
