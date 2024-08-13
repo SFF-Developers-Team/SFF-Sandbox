@@ -3,6 +3,7 @@
 #include <memory>
 #include <map>
 #include <sockpp/tcp_acceptor.h>
+#include <PacketManager.hpp>
 #include <SimplePlayer.hpp>
 #include <GamePacket.hpp>
 #include <toml.hpp>
@@ -12,6 +13,7 @@ class World;
 
 class Server {
 private:
+    PacketManager* m_pacman;
     sockpp::tcp_acceptor m_acceptor;
     toml::v3::table config;
 
@@ -38,12 +40,6 @@ public:
     void addToQueueAll(std::shared_ptr<GamePacket> packet);
     void addToQueue(PlayerID id, std::shared_ptr<GamePacket> packet);
     void addToQueueExcept(PlayerID id, std::shared_ptr<GamePacket> packet);
-
-    std::shared_ptr<GamePacket> read(sockpp::tcp_socket& sock, ByteVector& buf);
-    std::shared_ptr<GamePacket> read(sockpp::tcp_socket& sock, size_t n);
-    std::shared_ptr<GamePacket> read(sockpp::tcp_socket& sock);
-
-    bool send(sockpp::tcp_socket& sock, std::shared_ptr<GamePacket> packet);
 
     PlayerID joinPlayer(std::string const& username);
     void disconnectPlayer(PlayerID id);

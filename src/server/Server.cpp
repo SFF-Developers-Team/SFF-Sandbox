@@ -47,6 +47,8 @@ void Server::init() {
         exit(1);
     }
 
+    m_pacman = new PacketManager(MP_BUF_SIZE);
+
     logD("Server listening *:{}", m_acceptor.address().port());
 
     m_world = new World(256, 128);
@@ -89,6 +91,8 @@ void Server::loop() {
 void Server::destroy() {
     logD("Saving world...");
     Server::get()->getWorld()->save();
+    
+    delete m_pacman;
     std::exit(0);
 }
 
@@ -107,21 +111,21 @@ void Server::sessionThread(sockpp::tcp_socket sock) {
     ByteVector buf(MP_BUF_SIZE);
     PlayerID playerId = 0;
 
-    auto iden = read(sock, 512);
+    auto iden = m_pacman->recv(sock);
     if(iden->getBytes<SerializedObject::Header>() != SerializedObject::Header::IDENTIFICATION) {
-        send(sock, CREATE_PACKET(SerializedObject::Header::SERVER_ERROR, "First packet should be identification!"));
+        m_pacman->send(sock, CREATE_PACKET(SerializedObject::Header::SERVER_ERROR, "First packet should be identification!"));
         return;
     }
 
     auto username = iden->getBytes<std::string>();
 
     if(m_world->isUsernameAlreadyTaken(username)) {
-        send(sock, CREATE_PACKET(SerializedObject::Header::SERVER_ERROR, "Username already taken!"));
+        m_pacman->send(sock, CREATE_PACKET(SerializedObject::Header::SERVER_ERROR, "Username already taken!"));
         return;
     }
 
     playerId = joinPlayer(username);
-    send(sock, CREATE_PACKET(SerializedObject::Header::IDENTIFICATION, playerId));
+    m_pacman->send(sock, CREATE_PACKET(SerializedObject::Header::IDENTIFICATION, playerId));
 
     m_clientQueue.insert(std::make_pair(playerId, std::vector<std::shared_ptr<GamePacket>>()));
     sock.set_non_blocking();
@@ -146,10 +150,10 @@ void Server::sessionThread(sockpp::tcp_socket sock) {
 
     bool canSendNext = true;
 
-    do {
+    while(true) {
         for(uint32_t i = 0; i < m_timer->getTicks(); i++) {
-            auto packet = read(sock, buf);
-            if (!packet) break;
+            auto packet = m_pacman->recv(sock);
+            if (!packet) continue;
 
             canSendNext = true;
 
@@ -219,12 +223,12 @@ void Server::sessionThread(sockpp::tcp_socket sock) {
 
             if(queue.size() > 0 && canSendNext) {
                 // logD("{} Queue size: {}", playerId, queue.size());
-                if(send(sock, *queue.begin())) { 
+                if(m_pacman->send(sock, *queue.begin())) { 
                     queue.erase(queue.begin());
                 }
             }
         }
-    } while(true);
+    }
 }
 
 void Server::addToQueueAll(std::shared_ptr<GamePacket> packet) {
