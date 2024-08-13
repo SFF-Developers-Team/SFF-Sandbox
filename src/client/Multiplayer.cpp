@@ -6,7 +6,6 @@
 #include <thread>
 #include <Debug.hpp>
 #include <sockpp/platform.h>
-
 using namespace std::chrono;
 
 #if defined(_WIN32)

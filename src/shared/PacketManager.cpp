@@ -1,7 +1,7 @@
 #include <PacketManager.hpp>
 #include <platform.hpp>
-
-PacketManager::PacketManager(size_t bufSize) : m_readBuf(bufSize) {}
+#include <cstring>
+PacketManager::PacketManager(std::size_t bufSize) : m_readBuf(bufSize) {}
 
 template<typename Socket>
 bool PacketManager::send(Socket& sock, std::shared_ptr<GamePacket> packet) { 
