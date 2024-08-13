@@ -23,7 +23,7 @@ public:
         LOAD_PLAYER, UNLOAD_PLAYER, PLAYERS,
         BLOCK_PLACE, BLOCK_DESTROY,
 
-        SERVER_ERROR,
+        NETWORK_ERROR,
         NULL_PACKET = 0xFF
     };
 
@@ -147,7 +147,7 @@ public:
         }
 
         char* str = new char[m_offset - start];
-        strncpy(str, (const char*)&m_bytes[start], m_offset - start);
+        std::strncpy(str, (const char*)&m_bytes[start], m_offset - start);
 
         return str;
     }

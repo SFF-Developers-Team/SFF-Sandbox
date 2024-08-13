@@ -35,7 +35,7 @@ public:
     void setBlock(int x, int y, uint8_t layer, std::unique_ptr<Block> block);
     Block* getBlock(int x, int y, uint8_t layer);
 
-    void unloadChunk(int position);
+    void unloadChunk(Chunk* chunk);
     void setChunk(Chunk* chunk);
     Chunk* getChunk(int position);
     Rectf getBlockHitbox(int x, int y);

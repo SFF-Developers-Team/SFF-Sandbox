@@ -123,7 +123,7 @@ ByteVector& Chunk::serialize() {
 int Chunk::deserialize(ByteVector& bytes) {
     SerializedObject::deserialize(bytes);
 
-    m_position = getBytes<int>();
+    m_position = getBytes<ChunkPosition>();
     unsigned short blockCount = getBytes<unsigned short>();
     unsigned char blockSize = getBytes<unsigned char>();
 

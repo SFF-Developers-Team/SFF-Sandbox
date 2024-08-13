@@ -113,14 +113,14 @@ void Server::sessionThread(sockpp::tcp_socket sock) {
 
     auto iden = m_pacman->recv(sock);
     if(iden->getBytes<SerializedObject::Header>() != SerializedObject::Header::IDENTIFICATION) {
-        m_pacman->send(sock, CREATE_PACKET(SerializedObject::Header::SERVER_ERROR, "First packet should be identification!"));
+        m_pacman->send(sock, CREATE_PACKET(SerializedObject::Header::NETWORK_ERROR, "First packet should be identification!"));
         return;
     }
 
     auto username = iden->getBytes<std::string>();
 
     if(m_world->isUsernameAlreadyTaken(username)) {
-        m_pacman->send(sock, CREATE_PACKET(SerializedObject::Header::SERVER_ERROR, "Username already taken!"));
+        m_pacman->send(sock, CREATE_PACKET(SerializedObject::Header::NETWORK_ERROR, "Username already taken!"));
         return;
     }
 
@@ -152,10 +152,18 @@ void Server::sessionThread(sockpp::tcp_socket sock) {
 
     while(true) {
         for(uint32_t i = 0; i < m_timer->getTicks(); i++) {
+            if(queue.size() > 0 && canSendNext) {
+                // logD("{} Queue size: {}", playerId, queue.size());
+                if(m_pacman->send(sock, *queue.begin())) { 
+                    queue.erase(queue.begin());
+                }
+            }
+            
             auto packet = m_pacman->recv(sock);
-            if (!packet) continue;
-
-            canSendNext = true;
+            if (!packet) {
+                canSendNext = false;
+                continue;
+            }
 
             switch(packet->getBytes<SerializedObject::Header>()) {
                 case SerializedObject::Header::PLAYER: {
@@ -192,7 +200,11 @@ void Server::sessionThread(sockpp::tcp_socket sock) {
                     auto position = packet->getBytes<ChunkPosition>();
                     auto chunk = m_world->getChunk(position);
 
-                    if(chunk) addToQueue(playerId, CREATE_PACKET(chunk->serialize()));
+                    if(chunk) {
+                        addToQueue(playerId, CREATE_PACKET(chunk->serialize()));
+                        logD("Sent chunk {} to player {} ({} bytes)", chunk->getPosition(), playerId, chunk->serialize().size());
+                    }
+                    
                     break;
                 }
 
@@ -210,23 +222,14 @@ void Server::sessionThread(sockpp::tcp_socket sock) {
                     break;
                 }
 
+                case SerializedObject::Header::NETWORK_ERROR:
                 case SerializedObject::Header::DISCONNECT: {
                     disconnectPlayer(playerId);
                     return;
                 }
-
-                case SerializedObject::Header::NULL_PACKET: {
-                    canSendNext = false;
-                    break;
-                }
             }
 
-            if(queue.size() > 0 && canSendNext) {
-                // logD("{} Queue size: {}", playerId, queue.size());
-                if(m_pacman->send(sock, *queue.begin())) { 
-                    queue.erase(queue.begin());
-                }
-            }
+            canSendNext = true;
         }
     }
 }
@@ -245,37 +248,6 @@ void Server::addToQueueExcept(PlayerID id, std::shared_ptr<GamePacket> packet) {
     for(auto& [playerID, client] : m_clientQueue) {
         if(playerID != id) client.push_back(packet);
     }
-}
-
-std::shared_ptr<GamePacket> Server::read(sockpp::tcp_socket& sock, ByteVector& buf) {
-    auto result = sock.read(buf.data(), buf.size());
-    
-    if(result.error().value() == WOULDBLOCK) {
-        return CREATE_PACKET(SerializedObject::Header::NULL_PACKET); 
-    }
-
-    return (result.is_ok() ? CREATE_PACKET(buf) : CREATE_PACKET(SerializedObject::DISCONNECT));
-}
-
-std::shared_ptr<GamePacket> Server::read(sockpp::tcp_socket& sock, size_t n) {
-    auto buf = ByteVector(n);
-    return read(sock, buf);
-}
-
-std::shared_ptr<GamePacket> Server::read(sockpp::tcp_socket& sock) {
-    return read(sock, MP_BUF_SIZE);
-}
-
-bool Server::send(sockpp::tcp_socket& sock, std::shared_ptr<GamePacket> packet) {
-    auto bytes = packet->serialize();
-    auto result = sock.write(bytes.data(), bytes.size());
-    
-    if(result.value() < packet->getSize()) {
-        logD("Packet lost! {} of {} ({:.02f}%) bytes sent", result.value(), packet->getSize(), (result.value() / packet->getSize()) * 100.f);
-        return false;
-    }
-
-    return result.is_ok();
 }
 
 PlayerID Server::joinPlayer(std::string const& username) {

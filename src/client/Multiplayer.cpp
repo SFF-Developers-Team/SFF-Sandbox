@@ -47,8 +47,8 @@ bool Multiplayer::connect(std::string const& host, in_port_t port) {
     m_connector.set_non_blocking();
 
     auto header = response->getBytes<SerializedObject::Header>();
-    if(header == SerializedObject::Header::SERVER_ERROR) {
-        logE("SERVER ERROR {}", packet->getBytes<std::string>());
+    if(header == SerializedObject::Header::NETWORK_ERROR) {
+        logE("SERVER ERROR {}", response->getBytes<std::string>());
         std::exit(1);
     }
 
@@ -100,7 +100,7 @@ void Multiplayer::onTick() {
     if(!packet) return;
 
     switch (packet->getBytes<SerializedObject::Header>()) {
-        case SerializedObject::Header::SERVER_ERROR: {
+        case SerializedObject::Header::NETWORK_ERROR: {
             logE("SERVER ERROR {}", packet->getBytes<std::string>());
             std::exit(1);
             break;
@@ -192,9 +192,9 @@ void Multiplayer::onTick() {
 
         case SerializedObject::Header::CHUNK: {
             auto chunk = new Chunk(world);
-            chunk->deserialize(buf);
+            chunk->deserialize(packet->serialize());
 
-            logD("Chunk {}", chunk->getPosition());
+            logD("Chunk {} ({} bytes)", chunk->getPosition(), packet->serialize().size());
 
             world->setChunk(chunk);
             break;

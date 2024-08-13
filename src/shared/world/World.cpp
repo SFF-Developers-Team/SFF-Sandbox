@@ -35,13 +35,9 @@ bool World::isBlockClosed(int x, int y, uint8_t l) {
     return getBlock(x - 1, y, l) && getBlock(x + 1, y, l) && getBlock(x, y - 1, l) && getBlock(x, y + 1, l);
 }
 
-void World::unloadChunk(int position) {
-    for(auto i = m_chunks.begin(); i != m_chunks.end(); i++) {
-        if((*i)->getPosition() == position) {
-            delete *i;
-            m_chunks.erase(i);
-        }
-    }
+void World::unloadChunk(Chunk* chunk) {
+    m_chunks.erase(std::find(m_chunks.begin(), m_chunks.end(), chunk));
+    delete chunk;
 }
 
 Chunk* World::getChunk(int position) {
@@ -54,9 +50,7 @@ Chunk* World::getChunk(int position) {
 
 void World::setChunk(Chunk* chunk) {
     auto worldChunk = getChunk(chunk->getPosition());
-    if(worldChunk) {
-        unloadChunk(chunk->getPosition());
-    }
+    if(worldChunk) unloadChunk(worldChunk);
 
     m_chunks.push_back(chunk);
 }

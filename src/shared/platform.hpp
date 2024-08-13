@@ -1,5 +1,3 @@
 #pragma once
-#ifdef _WIN32
-    #define EWOULDBLOCK WSAEWOULDBLOCK
-    #define EALREADY WSAEALREADY
-#endif
+
+#define _CRT_SECURE_NO_WARNINGS
