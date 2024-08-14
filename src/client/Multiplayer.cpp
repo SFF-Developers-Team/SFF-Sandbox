@@ -112,7 +112,7 @@ void Multiplayer::onTick() {
             auto username = packet->getBytes<std::string>("undefined");
             
             if(!player) {
-                player = new SimplePlayer(world);
+                player = std::make_shared<SimplePlayer>(world);
                 world->addPlayer(id, player);
             }
 
@@ -141,11 +141,11 @@ void Multiplayer::onTick() {
                 auto id = playerPacket->getBytes<PlayerID>(0);
                 if(!id) continue;
 
-                // logD("PlayerID: {}", id);
+                // logD("Update player id {}", id);
 
                 auto player = world->getPlayer(id);
                 if(!player) {
-                    player = new SimplePlayer(world);
+                    player = std::make_shared<SimplePlayer>(world);
                     world->addPlayer(id, player);
                 }
 
@@ -167,7 +167,7 @@ void Multiplayer::onTick() {
 
             auto otherPlayer = world->getPlayer(id);
             if(!otherPlayer) {
-                otherPlayer = new SimplePlayer(world);
+                otherPlayer = std::make_shared<SimplePlayer>(world);
                 world->addPlayer(id, otherPlayer);
             }
 

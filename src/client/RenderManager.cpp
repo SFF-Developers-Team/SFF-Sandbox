@@ -6,7 +6,7 @@
 #include <Game.hpp>
 #include <Types.hpp>
 
-RenderManager::RenderManager(World* world, Player* player) : m_world(world), m_player(player) {
+RenderManager::RenderManager(World* world, std::shared_ptr<Player> player) : m_world(world), m_player(player) {
     m_texture = LoadTexture("assets/player.png");
 }
 
@@ -82,7 +82,7 @@ void RenderManager::renderEntity(Entity* entity) {
     DrawTexturePro(m_texture, {0, 0, (float)m_texture.width, (float)m_texture.height}, entity->getHitbox().getRect().to<Rectangle>(), {0, 0}, 0.0f, WHITE);
 }
 
-void RenderManager::renderSimplePlayer(SimplePlayer* player) {
+void RenderManager::renderSimplePlayer(std::shared_ptr<SimplePlayer> player) {
     if(Debug::m_debug) {
         for(auto& hitbox : m_world->getHitboxes(player->getHitbox())) {
             DrawRectangleLinesEx(hitbox.getRect().to<Rectangle>(), 0.05f, RED);

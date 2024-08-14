@@ -1,5 +1,6 @@
 #pragma once
 #include <raylib.h>
+#include <memory>
 
 class World;
 class Player;
@@ -9,15 +10,15 @@ class SimplePlayer;
 
 class RenderManager {
 private:
+    std::shared_ptr<Player> m_player; 
     World* m_world;
-    Player* m_player;
     Texture2D m_texture; // Временно
 
 public:
-    RenderManager(World* world, Player* player);
+    RenderManager(World* world, std::shared_ptr<Player> player);
 
     void renderWorld();
     void renderChunk(Chunk* chunk);
     void renderEntity(Entity* entity);
-    void renderSimplePlayer(SimplePlayer* player);
+    void renderSimplePlayer(std::shared_ptr<SimplePlayer> player);
 };

@@ -17,7 +17,7 @@ class WorldGen;
 class World : public SerializedObject {
 private:
     std::vector<Chunk*> m_chunks;
-    std::map<PlayerID, SimplePlayer*> m_players;
+    std::map<PlayerID, std::shared_ptr<SimplePlayer>> m_players;
     WorldGen* m_WorldGen;
 
     uint32_t m_width;
@@ -51,9 +51,9 @@ public:
     ByteVector& serialize();
     int deserialize(ByteVector& bytes);
 
-    void addPlayer(PlayerID id, SimplePlayer* player);
-    PlayerID addPlayer(SimplePlayer* player);
-    SimplePlayer* getPlayer(PlayerID id);
+    void addPlayer(PlayerID id, std::shared_ptr<SimplePlayer> player);
+    PlayerID addPlayer(std::shared_ptr<SimplePlayer> player);
+    std::shared_ptr<SimplePlayer> getPlayer(PlayerID id);
     void unloadPlayer(PlayerID id);
     bool isUsernameAlreadyTaken(std::string const& username);
     bool isOutOfBound(int x, int y, uint8_t layer);

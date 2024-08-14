@@ -180,19 +180,20 @@ std::vector<Hitbox> World::getHitboxes(Hitbox entityHitbox) {
     return ret;
 }
 
-void World::addPlayer(PlayerID id, SimplePlayer* player) {
+void World::addPlayer(PlayerID id, std::shared_ptr<SimplePlayer> player) {
     m_players.insert(std::make_pair(id, player));
     player->setID(id);
+    logD("Added player with id {}", player->getID());
 }
 
-PlayerID World::addPlayer(SimplePlayer* player) {
+PlayerID World::addPlayer(std::shared_ptr<SimplePlayer> player) {
     addPlayer(m_lastPlayerID, player);
     auto ret = m_lastPlayerID;
     m_lastPlayerID++;
     return ret;
 }
 
-SimplePlayer* World::getPlayer(PlayerID id) {
+std::shared_ptr<SimplePlayer> World::getPlayer(PlayerID id) {
     if(!m_players.count(id)) {
         return nullptr;
     }

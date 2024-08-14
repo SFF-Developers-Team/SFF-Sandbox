@@ -32,8 +32,10 @@ private:
 public:
     PacketManager(Socket& sock, size_t bufSize) : m_sock(sock), m_readBuf(bufSize) {}
 
-    bool send(std::shared_ptr<GamePacket> packet) { 
+    bool send(std::shared_ptr<GamePacket> packet) {
         if(!m_writeOffset) {
+            if(!packet) return false;
+            
             auto bytes = packet->serialize();
             uint16_t packetSize = bytes.size();
             m_writeBuf.resize(packetSize + 2);
@@ -44,7 +46,7 @@ public:
         auto res = m_sock.write(m_writeBuf.data() + m_writeOffset, m_writeBuf.size() - m_writeOffset);
         m_writeOffset += (res.value() > 0 ? res.value() : 0);
 
-        if(res.error().value() == ERRWOULDBLOCK) {
+        if(res.error().value() == ERRWOULDBLOCK || m_writeOffset < m_writeBuf.size()) {
             return false;
         }
 

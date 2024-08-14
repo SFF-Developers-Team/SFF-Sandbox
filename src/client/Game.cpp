@@ -27,8 +27,8 @@ void Game::init(std::vector<std::string>& args) {
     m_blocksMap = new TileMap("assets/blocks.png", Vector2 {16, 16});
     m_timer = new Timer(60);
     m_world = new World(256, 128);
-    m_player = new Player(m_world);
-    m_particleManager = new ParticleManager(m_world);
+    m_player = std::make_shared<Player>(m_world);
+    // m_particleManager = new ParticleManager(m_world, m_player);
     m_renderManager = new RenderManager(m_world, m_player);
     m_multiplayerManager = new Multiplayer();
 
@@ -37,7 +37,7 @@ void Game::init(std::vector<std::string>& args) {
             m_world->generate(new WorldGenNormal(m_world));
         }
 
-        m_world->addPlayer(0, m_player);
+        m_world->addPlayer(1, m_player);
     }
 
     while (!WindowShouldClose()) {
@@ -74,7 +74,7 @@ void Game::render() {
 
         BeginMode2D(m_player->getCamera());
             m_renderManager->renderWorld();
-            m_particleManager->render();
+            // m_particleManager->render();
         EndMode2D();
 
         // Selected block

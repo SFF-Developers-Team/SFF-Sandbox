@@ -42,9 +42,9 @@ std::vector<uint8_t>& Block::serialize() {
 int Block::deserialize(std::vector<uint8_t>& bytes) {
     SerializedObject::deserialize(bytes);
 
-    m_type = getBytes<BlockType>();
-    m_x = getBytes<int>();
-    m_y = getBytes<int>();
+    m_type = getBytes<BlockType>(BlockType::AIR);
+    m_x = getBytes<int>(-1);
+    m_y = getBytes<int>(-1);
     m_layer = getBytes<unsigned char>(1);
 
     return m_offset;

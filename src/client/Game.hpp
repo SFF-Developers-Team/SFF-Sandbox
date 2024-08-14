@@ -17,7 +17,7 @@ private:
     std::string m_username;
     
     World* m_world;
-    Player* m_player;
+    std::shared_ptr<Player> m_player;
     ParticleManager* m_particleManager;
     RenderManager* m_renderManager;
     TileMap* m_blocksMap;

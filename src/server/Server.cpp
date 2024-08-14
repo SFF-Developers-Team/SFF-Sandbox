@@ -148,8 +148,8 @@ void Server::sessionThread(sockpp::tcp_socket sock) {
                     if(queue.empty()) {
                         auto players = CREATE_PACKET(SerializedObject::PLAYERS, (uint32_t)(m_world->getPlayers().size() - 1));
 
-                        for(auto [id, player] : m_world->getPlayers()) {
-                            if(id == playerId) continue;
+                        for(auto& [id, player] : m_world->getPlayers()) {
+                            if(id == playerId || !player) continue;
                             players->addBytes(player->serialize());
                         }
                         
@@ -188,7 +188,7 @@ void Server::sessionThread(sockpp::tcp_socket sock) {
                     auto id = packet->getBytes<PlayerID>();
                     logD("LOAD PLAYER {}", id);
                     if(!m_world->getPlayer(id)) {
-                        addToQueue(playerId, CREATE_PACKET(SerializedObject::LOAD_PLAYER, 0));
+                        addToQueue(playerId, CREATE_PACKET(SerializedObject::UNLOAD_PLAYER, id));
                         break;
                     }
 
@@ -231,7 +231,7 @@ void Server::addToQueueExcept(PlayerID id, std::shared_ptr<GamePacket> packet) {
 }
 
 PlayerID Server::joinPlayer(std::string const& username) {
-    auto playerId = m_world->addPlayer(new SimplePlayer(m_world));
+    auto playerId = m_world->addPlayer(std::make_unique<SimplePlayer>(m_world));
     m_world->getPlayer(playerId)->setUsername(username);
     logD("{} ({}) joined the game", username, playerId);
 
