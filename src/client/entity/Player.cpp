@@ -136,7 +136,7 @@ void Player::updateControls() {
 
     if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && canPlaceBlock(targetBlockPos, !isAltLayer)) {
         if(m_onGround) setAnimation(PLAYER_HIT);
-        m_world->placeBlock(targetBlockPos.x, targetBlockPos.y, !IsKeyDown(KEY_LEFT_ALT), m_selectedBlock);
+        m_world->placeBlock(targetBlockPos.x, targetBlockPos.y, !isAltLayer, m_selectedBlock);
         if(Game::get()->isMultiplayer()) mp->onBlockChanged(targetBlockPos, !isAltLayer);
     }
 
