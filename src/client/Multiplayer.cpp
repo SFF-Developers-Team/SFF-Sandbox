@@ -131,9 +131,14 @@ void Multiplayer::onTick() {
 
         case SerializedObject::Header::PLAYERS: {
             auto count = packet->getBytes<uint32_t>(0);
-            // logD("Players count {}", count);
+            if(packet->getSize() > 5 + SimplePlayer::getSizeBytes() * count) {
+                logD("STRANGE PACKET {} BYTES ", packet->getSize());
+                for(auto i = 0; i < packet->getSize() - 5; i++) std::cout << std::hex << std::setfill('0') << std::setw(2) << (int)packet->getBytes<uint8_t>() << " ";
+                std::cout << std::endl;
+            }
+            
 
-            for(auto i = 0; i < count; i++) {
+            while(count-- > 0) {
                 auto bytes = packet->getBytes(SimplePlayer::getSizeBytes());
                 auto playerPacket = CREATE_PACKET(bytes);
                 

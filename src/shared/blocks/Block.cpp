@@ -1,5 +1,6 @@
 #include <Block.hpp>
 #include <SerializedObject.hpp>
+
 Block::Block(BlockType type) : m_type(type) {
     m_header = Header::BLOCK;
 }
@@ -29,6 +30,7 @@ void Block::setPosition(int x, int y, uint8_t layer) {
 }
 
 std::vector<uint8_t>& Block::serialize() {
+    std::lock_guard<std::mutex> guard(m_mutex);
     SerializedObject::serialize();
 
     addBytes(m_type);
@@ -40,6 +42,7 @@ std::vector<uint8_t>& Block::serialize() {
 }
 
 int Block::deserialize(std::vector<uint8_t>& bytes) {
+    std::lock_guard<std::mutex> guard(m_mutex);
     SerializedObject::deserialize(bytes);
 
     m_type = getBytes<BlockType>(BlockType::AIR);

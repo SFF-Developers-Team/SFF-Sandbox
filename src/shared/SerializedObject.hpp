@@ -5,6 +5,8 @@
 #include <Logger.hpp>
 #include <string.h>
 #include <platform.hpp>
+#include <mutex>
+
 using ByteVector = std::vector<uint8_t>;
 
 class SerializedObject {
@@ -31,6 +33,8 @@ protected:
     ByteVector m_bytes;
     std::size_t m_offset = 0;
     Header m_header;
+
+    std::mutex m_mutex;
 
 public:
     inline ByteVector& serialize() {

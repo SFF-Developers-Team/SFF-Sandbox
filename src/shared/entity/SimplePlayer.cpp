@@ -4,9 +4,6 @@
 #include <Chunk.hpp>
 #include <Entity.hpp>
 
-#define WALK_SPEED 15
-#define JUMP_SPEED 20
-
 SimplePlayer::SimplePlayer(World* world) : Entity::Entity(world) {
     m_header = Header::PLAYER;
 }
@@ -51,6 +48,7 @@ uint8_t SimplePlayer::animationClamp(uint8_t value, uint8_t min, uint8_t max) {
 
 
 ByteVector& SimplePlayer::serialize() {
+    std::lock_guard<std::mutex> guard(m_mutex);
     SerializedObject::serialize();
 
     addBytes(m_id);
@@ -63,6 +61,7 @@ ByteVector& SimplePlayer::serialize() {
 }
 
 int SimplePlayer::deserialize(ByteVector& bytes) {
+    std::lock_guard<std::mutex> guard(m_mutex);
     SerializedObject::deserialize(bytes);
 
     m_id = getBytes<PlayerID>(0);
@@ -74,9 +73,6 @@ int SimplePlayer::deserialize(ByteVector& bytes) {
     return m_offset;
 }
 
-// std::size_t const SimplePlayer::getSize() {
-//     return sizeof(Header) + sizeof(PlayerID) + (sizeof(float) * 2) + (sizeof(uint8_t) * 2);
-// }
 std::size_t const SimplePlayer::getSizeBytes() {
     return sizeof(Header) + sizeof(PlayerID) + sizeof(float) + sizeof(float) + sizeof(Entity::Direction) + sizeof(uint8_t);
 }

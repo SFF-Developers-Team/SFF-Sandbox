@@ -206,6 +206,7 @@ void Server::sessionThread(sockpp::tcp_socket sock) {
             }
 
             if(queue.size() > 0 && canSendNext) {
+                logD("queue player id {} size {}", playerId, queue.size());
                 if(pacman->send(*queue.begin())) { 
                     queue.erase(queue.begin());
                 }
