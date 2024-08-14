@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(SFFSandbox)
-project(аSFFSandbox-server)
+project(SFFSandbox-server)
 
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW) 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
