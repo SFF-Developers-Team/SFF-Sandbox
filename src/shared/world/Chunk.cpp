@@ -95,15 +95,11 @@ void Chunk::generate() {
 
 ByteVector& Chunk::serialize() {
     SerializedObject::serialize();
-    unsigned short blockCount = 0;
-
-    for(int i = 0; i < m_blocks.capacity(); i++) {
-        if(m_blocks[i] && m_blocks[i]->getType() != Block::BlockType::AIR) blockCount++;
-    }
+    uint16_t blockCount = countBlocks();
 
     addBytes(m_position);
     addBytes(blockCount);
-    addBytes((unsigned char)Block::getSize());
+    addBytes((uint8_t)Block::getSize());
 
     for(int x = 0; x < CHUNK_SIZE; x++) {
         for(int y = 0; y < m_world->getHeight(); y++) {
@@ -124,8 +120,9 @@ int Chunk::deserialize(ByteVector& bytes) {
     SerializedObject::deserialize(bytes);
 
     m_position = getBytes<ChunkPosition>();
-    unsigned short blockCount = getBytes<unsigned short>();
-    unsigned char blockSize = getBytes<unsigned char>();
+    auto blockCount = getBytes<uint16_t>();
+    auto blockSize = getBytes<uint8_t>();
+    logD("chunk {} block count: {}, block size: {}", m_position, blockCount, blockSize);
 
     if(!blockCount) {
         return m_offset;
@@ -137,8 +134,6 @@ int Chunk::deserialize(ByteVector& bytes) {
             setBlock(x, y, 1, Block::BlockType::AIR);
         }
     }
-
-    logD("chunk {} block count: {}, block size: {}", m_position, blockCount, blockSize);
 
     for(int i = 0; i < blockCount; i++) {
         auto blockBytes = getBytes((size_t)blockSize);
@@ -156,11 +151,11 @@ int Chunk::deserialize(ByteVector& bytes) {
     return m_offset;
 }
 
-uint32_t Chunk::getBlockCount() {
-    uint32_t ret = 0;
+uint16_t Chunk::countBlocks() {
+    uint16_t ret = 0;
 
-    for(auto& block : m_blocks) {
-        if(block && block->getType() != Block::BlockType::AIR) ret++;
+    for(auto i = 0; i < m_blocks.capacity(); i++) {
+        if(m_blocks[i] && m_blocks[i]->getType() != Block::BlockType::AIR) ret++;
     }
 
     return ret;

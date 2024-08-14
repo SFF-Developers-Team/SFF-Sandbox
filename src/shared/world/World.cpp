@@ -182,6 +182,7 @@ std::vector<Hitbox> World::getHitboxes(Hitbox entityHitbox) {
 
 void World::addPlayer(PlayerID id, SimplePlayer* player) {
     m_players.insert(std::make_pair(id, player));
+    player->setID(id);
 }
 
 PlayerID World::addPlayer(SimplePlayer* player) {

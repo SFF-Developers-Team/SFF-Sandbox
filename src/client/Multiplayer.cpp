@@ -27,7 +27,7 @@ bool Multiplayer::connect(std::string const& host, in_port_t port) {
         return false;
     }
 
-    m_pacman = new PacketManager(MP_BUF_SIZE);
+    m_pacman = new PacketManager(m_connector, MP_BUF_SIZE);
 
     auto game = Game::get();
     auto myUsername = game->getUsername();
@@ -36,11 +36,9 @@ bool Multiplayer::connect(std::string const& host, in_port_t port) {
     auto packet = std::make_shared<GamePacket>(SerializedObject::Header::IDENTIFICATION);
     packet->addBytes(myUsername);
 
-    while(!m_pacman->send(m_connector, packet));
+    m_pacman->send(packet);
 
-    auto response = m_pacman->recv(m_connector);
-    while(response == nullptr) response = m_pacman->recv(m_connector);
-    
+    auto response = m_pacman->recv();
     if(!response->getSize()) return false;
 
     m_connector.set_non_blocking();
@@ -54,6 +52,8 @@ bool Multiplayer::connect(std::string const& host, in_port_t port) {
     auto id = response->getBytes<PlayerID>(0);
     player->setID(id);
     game->getWorld()->addPlayer(id, player);
+
+    logD("My playerID {}", id);
 
     for(int i = 0; i < Game::get()->getWorld()->getWidth() / CHUNK_WIDTH; i++) {
         addToQueue(CREATE_PACKET(SerializedObject::LOAD_CHUNK, i));
@@ -78,9 +78,7 @@ void Multiplayer::onTick() {
     static ByteVector buf(MP_BUF_SIZE);
     auto game = Game::get();
     auto world = game->getWorld();
-    auto me = game->getPlayer(); // Player
-
-    Debug::addString("Queue size: {}", m_packetQueue.size());
+    auto me = game->getPlayer();
 
     if(m_packetQueue.empty()) {
         addToQueue(CREATE_PACKET(me->serialize()));
@@ -88,14 +86,14 @@ void Multiplayer::onTick() {
     }
 
     if(m_packetQueue.size() > 0 && m_canSendNext) {
-        if(m_pacman->send(m_connector, *m_packetQueue.begin())) {
+        if(m_pacman->send(*m_packetQueue.begin())) {
             m_packetQueue.erase(m_packetQueue.begin());
             m_canSendNext = false;
         }
     }
 
 
-    auto packet = m_pacman->recv(m_connector);
+    auto packet = m_pacman->recv();
     if(!packet) return;
 
     switch (packet->getBytes<SerializedObject::Header>()) {
@@ -132,7 +130,7 @@ void Multiplayer::onTick() {
         }
 
         case SerializedObject::Header::PLAYERS: {
-            auto count = packet->getBytes<size_t>(0);
+            auto count = packet->getBytes<uint32_t>(0);
             // logD("Players count {}", count);
 
             for(auto i = 0; i < count; i++) {

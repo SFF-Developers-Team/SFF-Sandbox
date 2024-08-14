@@ -47,8 +47,6 @@ void Server::init() {
         exit(1);
     }
 
-    m_pacman = new PacketManager(MP_BUF_SIZE);
-
     logD("Server listening *:{}", m_acceptor.address().port());
 
     m_world = new World(256, 128);
@@ -91,8 +89,7 @@ void Server::loop() {
 void Server::destroy() {
     logD("Saving world...");
     Server::get()->getWorld()->save();
-    
-    delete m_pacman;
+
     std::exit(0);
 }
 
@@ -111,55 +108,35 @@ void Server::sessionThread(sockpp::tcp_socket sock) {
     ByteVector buf(MP_BUF_SIZE);
     PlayerID playerId = 0;
 
-    auto iden = m_pacman->recv(sock);
+    auto pacman = std::make_unique<PacketManager<sockpp::tcp_socket>>(sock, MP_BUF_SIZE);
+
+    auto iden = pacman->recv();
     if(iden->getBytes<SerializedObject::Header>() != SerializedObject::Header::IDENTIFICATION) {
-        m_pacman->send(sock, CREATE_PACKET(SerializedObject::Header::NETWORK_ERROR, "First packet should be identification!"));
+        pacman->send(CREATE_PACKET(SerializedObject::Header::NETWORK_ERROR, "First packet should be identification!"));
         return;
     }
 
     auto username = iden->getBytes<std::string>();
 
     if(m_world->isUsernameAlreadyTaken(username)) {
-        m_pacman->send(sock, CREATE_PACKET(SerializedObject::Header::NETWORK_ERROR, "Username already taken!"));
+        pacman->send(CREATE_PACKET(SerializedObject::Header::NETWORK_ERROR, "Username already taken!"));
         return;
     }
 
     playerId = joinPlayer(username);
-    m_pacman->send(sock, CREATE_PACKET(SerializedObject::Header::IDENTIFICATION, playerId));
+    pacman->send(CREATE_PACKET(SerializedObject::Header::IDENTIFICATION, playerId));
 
     m_clientQueue.insert(std::make_pair(playerId, std::vector<std::shared_ptr<GamePacket>>()));
     sock.set_non_blocking();
 
     auto& queue = m_clientQueue[playerId];
-
-    // for(auto& [id, player] : m_world->getPlayers()) {
-    //     if(id == playerId) continue;
-
-    //     auto packet = CREATE_PACKET(SerializedObject::LOAD_PLAYER, id);
-    //     packet->addBytes(player->getUsername());
-    //     addToQueue(playerId, packet);
-    // }
-
-    // logD("Sent all players to player");
-
-    // for(auto& chunk : m_world->getChunks()) {
-    //     addToQueue(playerId, CREATE_PACKET(chunk->serialize()));
-    // }
-
-    // logD("Sent all chunks to player (queue size: {})", queue.size());
-
     bool canSendNext = true;
 
     while(true) {
         for(uint32_t i = 0; i < m_timer->getTicks(); i++) {
-            if(queue.size() > 0 && canSendNext) {
-                // logD("{} Queue size: {}", playerId, queue.size());
-                if(m_pacman->send(sock, *queue.begin())) { 
-                    queue.erase(queue.begin());
-                }
-            }
-            
-            auto packet = m_pacman->recv(sock);
+            canSendNext = true;
+
+            auto packet = pacman->recv();
             if (!packet) {
                 canSendNext = false;
                 continue;
@@ -169,10 +146,9 @@ void Server::sessionThread(sockpp::tcp_socket sock) {
                 case SerializedObject::Header::PLAYER: {
                     m_world->getPlayer(playerId)->deserialize(packet->serialize());
                     if(queue.empty()) {
-                        auto players = CREATE_PACKET(SerializedObject::PLAYERS, m_world->getPlayers().size() - 1);
+                        auto players = CREATE_PACKET(SerializedObject::PLAYERS, (uint32_t)(m_world->getPlayers().size() - 1));
 
                         for(auto [id, player] : m_world->getPlayers()) {
-                            player->setID(id);
                             if(id == playerId) continue;
                             players->addBytes(player->serialize());
                         }
@@ -202,7 +178,7 @@ void Server::sessionThread(sockpp::tcp_socket sock) {
 
                     if(chunk) {
                         addToQueue(playerId, CREATE_PACKET(chunk->serialize()));
-                        logD("Sent chunk {} to player {} ({} bytes)", chunk->getPosition(), playerId, chunk->serialize().size());
+                        logD("Sent chunk {} to player {}", chunk->getPosition(), playerId);
                     }
                     
                     break;
@@ -210,7 +186,7 @@ void Server::sessionThread(sockpp::tcp_socket sock) {
 
                 case SerializedObject::Header::LOAD_PLAYER: {
                     auto id = packet->getBytes<PlayerID>();
-                    // logD("LOAD PLAYER {}", id);
+                    logD("LOAD PLAYER {}", id);
                     if(!m_world->getPlayer(id)) {
                         addToQueue(playerId, CREATE_PACKET(SerializedObject::LOAD_PLAYER, 0));
                         break;
@@ -229,7 +205,11 @@ void Server::sessionThread(sockpp::tcp_socket sock) {
                 }
             }
 
-            canSendNext = true;
+            if(queue.size() > 0 && canSendNext) {
+                if(pacman->send(*queue.begin())) { 
+                    queue.erase(queue.begin());
+                }
+            }
         }
     }
 }

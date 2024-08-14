@@ -16,31 +16,40 @@
     #error "Unknown platform"
 #endif
 
+
+template<typename Socket>
 class PacketManager {
 private:
+    Socket& m_sock;
+    
     std::vector<uint8_t> m_writeBuf;
     std::vector<uint8_t> m_readBuf;
 
     std::size_t m_writeOffset = 0;
     std::size_t m_readOffset = 0;
+    std::size_t m_readPacketSize = 0;
 
 public:
-    PacketManager(size_t bufSize) : m_readBuf(bufSize) {}
-    
-    template<typename Socket>
-    bool send(Socket& sock, std::shared_ptr<GamePacket> packet) { 
+    PacketManager(Socket& sock, size_t bufSize) : m_sock(sock), m_readBuf(bufSize) {}
+
+    bool send(std::shared_ptr<GamePacket> packet) { 
         if(!m_writeOffset) {
             auto bytes = packet->serialize();
-            m_writeBuf.resize(bytes.size());
-            std::memcpy(m_writeBuf.data(), bytes.data(), bytes.size());
+            uint16_t packetSize = bytes.size();
+            m_writeBuf.resize(packetSize + 2);
+            std::memcpy(m_writeBuf.data(), &packetSize, 2);
+            std::memcpy(m_writeBuf.data() + 2, bytes.data(), packetSize);
         }
         
-        auto res = sock.write(m_writeBuf.data() + m_writeOffset, m_writeBuf.size() - m_writeOffset);
+        auto res = m_sock.write(m_writeBuf.data() + m_writeOffset, m_writeBuf.size() - m_writeOffset);
+        m_writeOffset += (res.value() > 0 ? res.value() : 0);
 
-        m_writeOffset += res.value();
-
-        if(m_writeOffset < m_writeBuf.size()) {
+        if(res.error().value() == ERRWOULDBLOCK) {
             return false;
+        }
+
+        if(res.is_error()) {
+            logE("SEND ERROR {} ({})", res.error_message(), res.error().value());
         }
 
         m_writeBuf.clear();
@@ -49,12 +58,14 @@ public:
         return true;
     }
     
-    template<typename Socket>
-    std::shared_ptr<GamePacket> recv(Socket& sock) {
-        auto res = sock.read(m_readBuf.data() + m_readOffset, m_readBuf.size() - m_readOffset);
-        m_readOffset += res.value();
 
-        if(res.error().value() == ERRALREADY || res.error().value() == ERRWOULDBLOCK) {
+    std::shared_ptr<GamePacket> recv() {
+        auto res = m_sock.read(m_readBuf.data() + m_readOffset, m_readBuf.size() - m_readOffset);
+        m_readOffset += (res.value() > 0 ? res.value() : 0);
+        
+        if(m_readOffset >= 2) m_readPacketSize = *(uint16_t*)(m_readBuf.data());
+
+        if(res.error().value() == ERRWOULDBLOCK || (m_readPacketSize > 0 && m_readOffset < m_readPacketSize + 2)) {
             return nullptr;
         }
 
@@ -62,10 +73,10 @@ public:
             return CREATE_PACKET(SerializedObject::NETWORK_ERROR, res.error_message());
         }
 
-        auto bytes = ByteVector(m_readOffset);
-        std::memcpy(bytes.data(), m_readBuf.data(), m_readOffset);
+        auto bytes = ByteVector(m_readBuf.begin() + 2, m_readBuf.begin() + m_readOffset);
 
         m_readOffset = 0;
+        m_readPacketSize = 0;
 
         return CREATE_PACKET(bytes);
     }

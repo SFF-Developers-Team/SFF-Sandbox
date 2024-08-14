@@ -78,5 +78,5 @@ int SimplePlayer::deserialize(ByteVector& bytes) {
 //     return sizeof(Header) + sizeof(PlayerID) + (sizeof(float) * 2) + (sizeof(uint8_t) * 2);
 // }
 std::size_t const SimplePlayer::getSizeBytes() {
-    return sizeof(PlayerID) + sizeof(float) + sizeof(float) + sizeof(Entity::Direction) + sizeof(uint8_t);
+    return sizeof(Header) + sizeof(PlayerID) + sizeof(float) + sizeof(float) + sizeof(Entity::Direction) + sizeof(uint8_t);
 }

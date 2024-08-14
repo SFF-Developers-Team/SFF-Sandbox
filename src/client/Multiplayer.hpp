@@ -13,7 +13,7 @@
 
 class Multiplayer {
 private:
-    PacketManager* m_pacman;
+    PacketManager<sockpp::tcp_connector>* m_pacman;
     sockpp::tcp_connector m_connector;
     std::vector<std::shared_ptr<GamePacket>> m_packetQueue;
 

@@ -13,7 +13,6 @@ class World;
 
 class Server {
 private:
-    PacketManager* m_pacman;
     sockpp::tcp_acceptor m_acceptor;
     toml::v3::table config;
 
