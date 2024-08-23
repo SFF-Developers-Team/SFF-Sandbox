@@ -32,6 +32,7 @@ file(GLOB CLIENT_SOURCES
     "src/client/*.cpp"
     "src/client/entity/*.cpp"
     "src/client/particle/*.cpp"
+    "src/client/ui/*.cpp"
 )
 
 file(GLOB SERVER_SOURCES

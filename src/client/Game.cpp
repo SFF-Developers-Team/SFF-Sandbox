@@ -31,6 +31,11 @@ void Game::init(std::vector<std::string>& args) {
     // m_particleManager = new ParticleManager(m_world, m_player);
     m_renderManager = new RenderManager(m_world, m_player);
     m_multiplayerManager = new Multiplayer();
+    m_gameMenu = std::make_shared<sandbox_ui::InitialMenu>();
+    m_uiRenderer = std::make_shared<sandbox_ui::NodeRenderer>();
+
+    m_uiRenderer->setScaling(8);
+    m_uiRenderer->addChild(m_gameMenu);
 
     if(!m_multiplayer || !m_multiplayerManager->connect(args[1], (args.size() > 2 ? atoi(args[2].c_str()) : 7777))) {
         if(!m_world->load()) {
@@ -72,13 +77,15 @@ void Game::render() {
     BeginDrawing();
         ClearBackground(SKYBLUE);
 
-        BeginMode2D(m_player->getCamera());
-            m_renderManager->renderWorld();
-            // m_particleManager->render();
-        EndMode2D();
+        // BeginMode2D(m_player->getCamera());
+        //     m_renderManager->renderWorld();
+        //     // m_particleManager->render();
+        // EndMode2D();
 
-        // Selected block
-        m_blocksMap->drawTilePro((uint16_t)m_player->getSelectedBlock() - 1, {m_screenWidth - 42.f, 10.f, 32.f, 32.f}, WHITE);
+        // // Selected block
+        // m_blocksMap->drawTilePro((uint16_t)m_player->getSelectedBlock() - 1, {m_screenWidth - 42.f, 10.f, 32.f, 32.f}, WHITE);
+
+        m_uiRenderer->render();
 
         if(Debug::m_debug){
             Debug::draw();
@@ -95,11 +102,11 @@ void Game::render() {
 void Game::update() {
     m_timer->advanceTime();
 
-    for (uint32_t i = 0; i < m_timer->getTicks(); i++) {
-        m_world->onTick();
-    }
+    // for (uint32_t i = 0; i < m_timer->getTicks(); i++) {
+    //     m_world->onTick();
+    // }
 
-    m_player->update();
+    // m_player->update();
 
     if(IsKeyPressed(KEY_F3)) {
         Debug::m_debug = !Debug::m_debug;
