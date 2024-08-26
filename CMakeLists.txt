@@ -20,7 +20,7 @@ set(SHARED_HEADERS
     "src/shared/"
 )
 
-file(GLOB SHARED_SOURCES 
+file(GLOB SHARED_SOURCES CONFIGURE_DEPENDS
     "src/shared/blocks/*.cpp"
     "src/shared/entity/*.cpp"
     "src/shared/world/gen/*.cpp"
@@ -28,14 +28,14 @@ file(GLOB SHARED_SOURCES
     "src/shared/*.cpp"
 )
 
-file(GLOB CLIENT_SOURCES
+file(GLOB CLIENT_SOURCES CONFIGURE_DEPENDS
     "src/client/*.cpp"
     "src/client/entity/*.cpp"
     "src/client/particle/*.cpp"
     "src/client/ui/*.cpp"
 )
 
-file(GLOB SERVER_SOURCES
+file(GLOB SERVER_SOURCES CONFIGURE_DEPENDS
     "src/server/*.cpp"
 )
 

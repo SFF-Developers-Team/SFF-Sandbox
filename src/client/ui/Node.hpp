@@ -17,6 +17,13 @@ namespace sandbox_ui {
 		float m_size = 1.f;
 		Color m_color = WHITE;
 
+		Pos m_renderingOffset = {};
+
+		int m_order = 0;
+
+		bool m_visible = true;
+		bool m_limitRendering = false;
+
 		NodeRenderer* m_currentRenderer = nullptr;
 	public:
 		Node();
@@ -25,20 +32,40 @@ namespace sandbox_ui {
 		virtual void draw();
 
 		Pos getPosition();
-		void setPosition(Pos pos);
+		virtual void setPosition(Pos pos);
 
-		void setID(const std::string& id);
+		virtual void setID(const std::string& id);
 		std::string getID();
 
 		void setRenderer(NodeRenderer* renderer);
 		NodeRenderer* getRenderer();
 
 		float getScale();
-        void setSize(float sz);
+        virtual void setScale(float sz);
 
 		Color getColor();
-        void setColor(Color col);
+        virtual void setColor(Color col);
 
 		Node::Rect getRectangle();
+
+		virtual void setZOrder(int zOrder);
+		int getZOrder();
+
+		bool isVisible();
+		virtual void setVisible(bool flag);
+
+		Pos getGlobalPosition();
+
+		virtual void limitRenderToRect(bool flag);
+		bool renderingLimited();
+
+		Pos getRenderOffset();
+		virtual void setRenderOffset(Pos offset);
+
+		virtual void setSize(float width, float height);
+		virtual void setSize(Pos sz);
+
+		virtual void setWidth(float width);
+		virtual void setHeight(float height);
 	};
 }

@@ -1,21 +1,5 @@
 #include "Rectangle.hpp"
 
-void sandbox_ui::Rectangle::setSize(float width, float height) {
-    m_nodeRect.width = width;
-    m_nodeRect.height = height;
-}
-void sandbox_ui::Rectangle::setSize(Pos sz) {
-    m_nodeRect.width = sz.x;
-    m_nodeRect.height = sz.y;
-}
-
-void sandbox_ui::Rectangle::setWidth(float width) {
-    m_nodeRect.width = width;
-}
-void sandbox_ui::Rectangle::setHeight(float height) {
-    m_nodeRect.height = height;
-}
-
 void sandbox_ui::Rectangle::draw() {
     auto rect = getRenderableRectangle();
 
@@ -49,4 +33,10 @@ sandbox_ui::Node::Rect sandbox_ui::Rectangle::getRenderableRectangle() {
     rect1.height *= getScale();
 
     return rect1;
+}
+
+sandbox_ui::Rectangle::Rectangle() {}
+sandbox_ui::Rectangle::Rectangle(Node::Rect r) {
+    setPosition({ r.x, r.y });
+    setSize({ r.width, r.height });
 }

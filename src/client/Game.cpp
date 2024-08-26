@@ -9,6 +9,7 @@
 #include <WorldGenNormal.hpp>
 #include <GamePacket.hpp>
 #include <GitHash.hpp>
+#include <ui/CallbackNode.hpp>
 
 void Game::init(std::vector<std::string>& args) {
 #ifdef _WIN32
@@ -17,7 +18,7 @@ void Game::init(std::vector<std::string>& args) {
 #endif
     SetConfigFlags(FLAG_VSYNC_HINT);
     InitWindow(m_screenWidth, m_screenHeight, "SFF Sandbox");
-    SetTargetFPS(60);
+    SetTargetFPS(GetMonitorRefreshRate(0));
 
 
     sockpp::initialize();
@@ -36,6 +37,43 @@ void Game::init(std::vector<std::string>& args) {
 
     m_uiRenderer->setScaling(8);
     m_uiRenderer->addChild(m_gameMenu);
+
+    m_player->disableInput(true);
+    m_player->unlinkCameraX(true);
+
+    auto cn = std::make_shared<sandbox_ui::CallbackNode>();
+    cn->setDrawCallback([this](auto node) {
+        auto cam = m_player->getCamera();
+        auto old_cam = cam;
+
+        m_gameMenu->m_worldCam.y = cam.target.y + 4;
+        m_gameMenu->m_worldCam.x += GetFrameTime() * 1.5f;
+
+        auto container = m_gameMenu->getNodeContainer();
+        float mscale = container->getScaling();
+
+        container->setScaling(1.f / 4.f);
+
+        auto m = m_gameMenu->getNodeContainer()->getMappedPosition(m_gameMenu->m_worldCam);
+
+        cam.target.x = m.x;
+        cam.target.y = m_gameMenu->m_worldCam.y;
+
+        // printf("cam.target.x=%f\n", m.x);
+
+        m_player->setCamera(cam);
+
+        BeginMode2D(cam);
+
+        m_renderManager->renderWorld();
+
+        EndMode2D();
+
+        m_player->setCamera(old_cam);
+        container->setScaling(mscale);
+    });
+
+    m_gameMenu->getNodeContainer()->addChild(cn, -1);
 
     if(!m_multiplayer || !m_multiplayerManager->connect(args[1], (args.size() > 2 ? atoi(args[2].c_str()) : 7777))) {
         if(!m_world->load()) {
@@ -102,11 +140,11 @@ void Game::render() {
 void Game::update() {
     m_timer->advanceTime();
 
-    // for (uint32_t i = 0; i < m_timer->getTicks(); i++) {
-    //     m_world->onTick();
-    // }
+    for (uint32_t i = 0; i < m_timer->getTicks(); i++) {
+        m_world->onTick();
+    }
 
-    // m_player->update();
+    m_player->update();
 
     if(IsKeyPressed(KEY_F3)) {
         Debug::m_debug = !Debug::m_debug;

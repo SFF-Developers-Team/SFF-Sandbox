@@ -8,6 +8,11 @@ namespace sandbox_ui {
     protected:
         std::string m_str;
         Font m_font;
+
+        float m_baseTextSize = 20.f;
+        float m_spacing = 1.f;
+
+        void updateTextSize();
     public:
         Text(const std::string &str);
     
@@ -15,5 +20,11 @@ namespace sandbox_ui {
         void setString(const std::string &str);
 
         void draw() override;
+
+        void setFont(Font fnt);
+        void setBaseTextSize(float sz);
+        void setCharSpacing(float sp);
+
+        void setScale(float sz) override;
     };
 }

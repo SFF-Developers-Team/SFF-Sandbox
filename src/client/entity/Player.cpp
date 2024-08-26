@@ -23,11 +23,21 @@ Player::~Player() {
 }
 
 void Player::updateCamera() {
-    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0) m_camera.zoom -= 1.0f;
-    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) m_camera.zoom += 1.0f;
+    if (!inputDisabled()) {
+        if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0) m_camera.zoom -= 1.0f;
+        if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) m_camera.zoom += 1.0f;
+    }
 
+    Vector2 new_target = this->m_camera.target;
 
-    this->m_camera.target = {m_hitbox.x + m_hitbox.width / 2, m_hitbox.y - m_hitbox.height / 2};
+    if (!m_unlinkCamX) {
+        new_target.x = m_hitbox.x + m_hitbox.width / 2;
+    }
+    if (!m_unlinkCamY) {
+        new_target.y = m_hitbox.y - m_hitbox.height / 2;
+    }
+
+    this->m_camera.target = new_target;
     m_camera.zoom = std::clamp(m_camera.zoom, 5.f, 90.f);
 }
 
@@ -128,38 +138,40 @@ void Player::updateControls() {
 
     m_sneak = false;
 
-    if(IsMouseButtonDown(MOUSE_LEFT_BUTTON) && canDestroyBlock(targetBlockPos, !isAltLayer)) {
-        m_world->destroyBlock(targetBlockPos.x, targetBlockPos.y, !isAltLayer);
-        if(m_onGround) setAnimation(PLAYER_HIT);
-        if(Game::get()->isMultiplayer()) mp->onBlockChanged(targetBlockPos, !isAltLayer);
-    }
+    if (!inputDisabled()) {
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && canDestroyBlock(targetBlockPos, !isAltLayer)) {
+            m_world->destroyBlock(targetBlockPos.x, targetBlockPos.y, !isAltLayer);
+            if (m_onGround) setAnimation(PLAYER_HIT);
+            if (Game::get()->isMultiplayer()) mp->onBlockChanged(targetBlockPos, !isAltLayer);
+        }
 
-    if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && canPlaceBlock(targetBlockPos, !isAltLayer)) {
-        if(m_onGround) setAnimation(PLAYER_HIT);
-        m_world->placeBlock(targetBlockPos.x, targetBlockPos.y, !isAltLayer, m_selectedBlock);
-        if(Game::get()->isMultiplayer()) mp->onBlockChanged(targetBlockPos, !isAltLayer);
-    }
+        if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && canPlaceBlock(targetBlockPos, !isAltLayer)) {
+            if (m_onGround) setAnimation(PLAYER_HIT);
+            m_world->placeBlock(targetBlockPos.x, targetBlockPos.y, !isAltLayer, m_selectedBlock);
+            if (Game::get()->isMultiplayer()) mp->onBlockChanged(targetBlockPos, !isAltLayer);
+        }
 
-    if(IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
-        m_direction = RIGHT;
-        forward++;
-    }
+        if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
+            m_direction = RIGHT;
+            forward++;
+        }
 
-    if(IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
-        m_direction = LEFT;
-        forward--;
-    }
+        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
+            m_direction = LEFT;
+            forward--;
+        }
 
-    if((IsKeyDown(KEY_W) || IsKeyDown(KEY_UP) || IsKeyDown(KEY_SPACE)) && (m_onGround || m_fly)) {
-        m_speedY = ((!m_fly) ? -0.3f : -0.25f);
-    }
+        if ((IsKeyDown(KEY_W) || IsKeyDown(KEY_UP) || IsKeyDown(KEY_SPACE)) && (m_onGround || m_fly)) {
+            m_speedY = ((!m_fly) ? -0.3f : -0.25f);
+        }
 
-    if((IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)) && m_fly && !m_onGround) {
-        m_speedY = 0.25f;
-    }
+        if ((IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)) && m_fly && !m_onGround) {
+            m_speedY = 0.25f;
+        }
 
-    if((IsKeyDown(KEY_S) || IsKeyDown(KEY_LEFT_SHIFT)) && !m_fly && m_onGround) {
-        m_sneak = true;
+        if ((IsKeyDown(KEY_S) || IsKeyDown(KEY_LEFT_SHIFT)) && !m_fly && m_onGround) {
+            m_sneak = true;
+        }
     }
 
     moveRelative(forward, (m_onGround ? (m_sneak ? 0.05f : 0.12f) : 0.1f));
@@ -216,22 +228,24 @@ void Player::onTick() {
 }
 
 void Player::update() {
-    wheel = GetMouseWheelMove();
-    for(int i = 0; i < 6; i++) {
-        if(IsKeyDown(KEY_ONE + i)) {
-            m_selectedBlock = (Block::BlockType)(i + 1);
+    if (!inputDisabled()) {
+        wheel = GetMouseWheelMove();
+        for (int i = 0; i < 6; i++) {
+            if (IsKeyDown(KEY_ONE + i)) {
+                m_selectedBlock = (Block::BlockType)(i + 1);
+            }
         }
-    }
-    
-    if(!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
-        m_selectedBlock = (Block::BlockType)((int)(m_selectedBlock) + (wheel > 0 ? -1 : 1));
 
-        if(m_selectedBlock > Block::BlockType::WOOL) m_selectedBlock = Block::BlockType::GRASS;
-        if(m_selectedBlock < Block::BlockType::GRASS) m_selectedBlock = Block::BlockType::WOOL;
-    }
+        if (!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
+            m_selectedBlock = (Block::BlockType)((int)(m_selectedBlock)+(wheel > 0 ? -1 : 1));
 
-    if(IsKeyPressed(KEY_R)) resetPosition();
-    if(IsKeyPressed(KEY_F)) m_fly = !m_fly;
+            if (m_selectedBlock > Block::BlockType::WOOL) m_selectedBlock = Block::BlockType::GRASS;
+            if (m_selectedBlock < Block::BlockType::GRASS) m_selectedBlock = Block::BlockType::WOOL;
+        }
+
+        if (IsKeyPressed(KEY_R)) resetPosition();
+        if (IsKeyPressed(KEY_F)) m_fly = !m_fly;
+    }
 
     updateCamera();
     updateAnimation();
@@ -266,4 +280,18 @@ bool Player::isBlockInView(Block* block) {
     auto max = convertToCameraPos({(float)GetScreenWidth(), (float)GetScreenHeight()});
 
     return (pos.x + 1.0f >= min.x && pos.x <= max.x) && (pos.y + 1.0f >= min.y && pos.y <= max.y); 
+}
+
+bool Player::inputDisabled() {
+    return m_inputDisabled;
+}
+void Player::disableInput(bool flag) {
+    m_inputDisabled = flag;
+}
+
+void Player::unlinkCameraX(bool flag) {
+    m_unlinkCamX = flag;
+}
+void Player::unlinkCameraY(bool flag) {
+    m_unlinkCamY = flag;
 }

@@ -17,22 +17,28 @@ namespace sandbox_ui {
 		Vector2 m_posOffset = { 0, 0 };
 		std::vector<Object> m_nodes = {};
 
-		int m_scaling = 8;
+		float m_scaling = 8;
 	public:
 		NodeRenderer() {}
 
 		void setPosition(Vector2 pos);
-		void addChild(Object node);
+		void addChild(Object node, int zOrder = 0);
+		void addChild(std::vector<Object> nodes, int zOrder = 0);
+
+		Vector2 getPosition();
 
 		std::optional<Object> getChildById(const std::string& id);
 
 		void render();
 		
-		void setScaling(int scaling);
-		int getScaling();
+		void setScaling(float scaling);
+		float getScaling();
 
 		Vector2 getMappedPosition(Vector2 pos);
 		
 		std::vector<Object> &getChildren();
+		std::vector<Object> getRenderableChildren();
+
+		void sortAllChildren();
 	};
 }

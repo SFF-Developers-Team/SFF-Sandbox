@@ -13,11 +13,8 @@ namespace sandbox_ui {
         Mode m_rectMode = Mode::Filled;
         float m_thickness = 1.f;
     public:
-        void setSize(float width, float height);
-        void setSize(Pos sz);
-
-        void setWidth(float width);
-        void setHeight(float height);
+        Rectangle();
+        Rectangle(Node::Rect r);
 
         Node::Rect getRenderableRectangle();
 
