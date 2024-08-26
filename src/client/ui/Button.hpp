@@ -3,6 +3,7 @@
 #include "Node.hpp"
 #include "ContainerizedNode.hpp"
 #include <functional>
+#include <array>
 
 namespace sandbox_ui {
 	class Button : public Node, public ContainerizedNode {
@@ -24,6 +25,8 @@ namespace sandbox_ui {
 		void setColorToRects(Node::Color customColor);
 		Node::Color increaseColBrightness(Node::Color c, unsigned char v);
 		Node::Color invertColor(Node::Color c);
+
+		bool m_fontNotModified = true;
 	public:
 		Button(const std::string& text, Node::Pos buttonSize, float scale = 1.f);
 
@@ -34,5 +37,7 @@ namespace sandbox_ui {
 		void setClickCallback(Callback callback);
 
 		void setColor(Node::Color col) override;
+
+		~Button();
 	};
 }

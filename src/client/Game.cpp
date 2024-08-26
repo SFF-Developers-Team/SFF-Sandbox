@@ -52,7 +52,7 @@ void Game::init(std::vector<std::string>& args) {
         auto container = m_gameMenu->getNodeContainer();
         float mscale = container->getScaling();
 
-        container->setScaling(1.f / 4.f);
+        container->setScaling(1.f / 5.f);
 
         auto m = m_gameMenu->getNodeContainer()->getMappedPosition(m_gameMenu->m_worldCam);
 

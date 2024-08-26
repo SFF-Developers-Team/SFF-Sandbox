@@ -117,7 +117,7 @@ void sandbox_ui::Button::draw() {
 
 	float padding = m_nodeContainer->getScaling();
 
-	BeginScissorMode(m_nodeRect.x, m_nodeRect.y, m_nodeRect.width + padding, m_nodeRect.height + padding);
+	BeginScissorMode(m_nodeRect.x - padding, m_nodeRect.y - padding, m_nodeRect.width + (padding * 2.f), m_nodeRect.height + (padding * 2.f));
 
 	m_nodeContainer->render();
 
@@ -129,6 +129,10 @@ void sandbox_ui::Button::draw() {
 }
 
 void sandbox_ui::Button::setFont(Font fnt) {
+	if (m_fontNotModified) {
+		UnloadFont(m_font);
+	}
+
 	m_font = fnt;
 	auto btn_text_nd = m_nodeContainer->getChildById("text");
 
@@ -140,6 +144,8 @@ void sandbox_ui::Button::setFont(Font fnt) {
 		m_textWidth = btn_text->getRectangle().width;
 		m_alignedTextPos = m_textWidth / 2.f;
 	}
+	
+	m_fontNotModified = false;
 }
 void sandbox_ui::Button::setClickCallback(Callback callback) {
 	m_clickCallback = callback;
@@ -204,4 +210,10 @@ void sandbox_ui::Button::setColor(Node::Color col) {
 	Node::setColor(col);
 
 	setColorToRects();
+}
+
+sandbox_ui::Button::~Button() {
+	if (m_fontNotModified) {
+		UnloadFont(m_font);
+	}
 }

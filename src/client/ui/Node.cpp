@@ -103,3 +103,13 @@ void sandbox_ui::Node::setWidth(float width) {
 void sandbox_ui::Node::setHeight(float height) {
 	m_nodeRect.height = height;
 }
+
+void sandbox_ui::Node::unscheduleUpdate() {
+	m_updateRequired = false;
+}
+void sandbox_ui::Node::scheduleUpdate() {
+	m_updateRequired = true;
+}
+bool sandbox_ui::Node::updateRequired() {
+	return m_updateRequired;
+}

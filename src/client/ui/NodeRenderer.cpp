@@ -22,10 +22,18 @@ void sandbox_ui::NodeRenderer::render() {
 		new_pos.x += m_posOffset.x + offset.x;
 		new_pos.y += m_posOffset.y + offset.y;
 
-		obj->setPosition(getMappedPosition(new_pos));
+		Vector2 pos_mapped;
+		if (m_individualScalings.count(obj->getID())) {
+			pos_mapped = getMappedPosition(new_pos, m_individualScalings[obj->getID()]);
+		}
+		else {
+			pos_mapped = getMappedPosition(new_pos);
+		}
+
+		obj->setPosition(pos_mapped);
 		obj->setRenderer(this);
 
-		obj->update();
+		if (obj->updateRequired()) obj->update();
 		if (obj->isVisible()) {
 			auto rect = obj->getRectangle();
 			bool rl = obj->renderingLimited();
@@ -52,10 +60,14 @@ std::optional<sandbox_ui::NodeRenderer::Object> sandbox_ui::NodeRenderer::getChi
 }
 
 Vector2 sandbox_ui::NodeRenderer::getMappedPosition(Vector2 pos) {
-	float x = pos.x / m_scaling;
-	float y = pos.y / m_scaling;
+	return getMappedPosition(pos, m_scaling);
+}
 
-	return { std::floor(x) * m_scaling, std::floor(y) * m_scaling };
+Vector2 sandbox_ui::NodeRenderer::getMappedPosition(Vector2 pos, float scaling) {
+	float x = pos.x / scaling;
+	float y = pos.y / scaling;
+
+	return { std::floor(x) * scaling, std::floor(y) * scaling };
 }
 
 void sandbox_ui::NodeRenderer::setScaling(float scaling) {
@@ -97,4 +109,10 @@ void sandbox_ui::NodeRenderer::addChild(std::vector<Object> nodes, int zOrder) {
 	for (Object obj : nodes) {
 		addChild(obj, zOrder);
 	}
+}
+
+void sandbox_ui::NodeRenderer::setScalingForObject(const std::string& id, float scaling) {
+	if (id.empty()) return;
+
+	m_individualScalings[id] = scaling;
 }

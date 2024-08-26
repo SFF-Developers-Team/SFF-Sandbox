@@ -4,6 +4,7 @@
 #include "Rectangle.hpp"
 #include "CallbackNode.hpp"
 #include "Button.hpp"
+#include "Sprite.hpp"
 #include <cmath>
 
 void sandbox_ui::InitialMenu::draw() {
@@ -38,14 +39,6 @@ sandbox_ui::InitialMenu::InitialMenu(){
 
 	float spacing = 20.f;
 
-	auto buttons = buildButtons({
-		{"SINGLEPLAYER", nullptr},
-		{"MULTIPLAYER", nullptr},
-		{"OPTIONS", nullptr},
-	}, { 100, 100 });
-
-	m_nodeContainer->addChild(buttons, 10);
-
 	auto gradNode = std::make_shared<CallbackNode>();
 	gradNode->setDrawCallback([this](CallbackNode* nd) {
 		auto rect = nd->getRectangle();
@@ -65,21 +58,40 @@ sandbox_ui::InitialMenu::InitialMenu(){
 	gradNode->setSize({ gradRect.width, gradRect.height });
 
 	m_nodeContainer->addChild(gradNode, 1);
+
+	auto sff_icon = std::make_shared<sandbox_ui::Sprite>("assets/sff2.png");
+	sff_icon->setScale(1.5f);
+	sff_icon->setPosition({ 100.f, 100.f });
+
+	m_nodeContainer->addChild(sff_icon, 10);
+
+	auto buttons = buildButtons({
+		{"SINGLEPLAYER", nullptr},
+		{"MULTIPLAYER", nullptr},
+		{"OPTIONS", nullptr},
+		{"CREDITS", nullptr}
+	}, { 100, sff_icon->getPosition().y + sff_icon->getRectangle().height + 50.f });
+
+	float btn_width = buttons[0]->getRectangle().width;
+	float alignX = (btn_width - sff_icon->getRectangle().width) / 2.f;
+
+	sff_icon->setPosition({ 100.f + alignX, 100.f });
+	sff_icon->setID("sff-icon");
+
+	m_nodeContainer->addChild(buttons, 10);
+
+	m_nodeContainer->setScalingForObject("sff-icon", 3);
 }
 
 void sandbox_ui::InitialMenu::update() {
 	m_timeTest += (double)GetFrameTime();
 
-	auto textTest = m_nodeContainer->getChildById("text-test");
-	if (textTest.has_value()) {
-		textTest.value()->setPosition(GetMousePosition());
-	}
+	auto sffIcon = m_nodeContainer->getChildById("sff-icon");
+	if (sffIcon.has_value()) {
+		auto pos = sffIcon.value()->getPosition();
+		pos.y = 100.f + ((float)sin(m_timeTest) * 30);
 
-	auto rectTest = m_nodeContainer->getChildById("rect-test");
-	if (rectTest.has_value()) {
-		auto pos = rectTest.value()->getPosition();
-
-		rectTest.value()->setPosition({pos.x, 100 * (float)sin(m_timeTest * 4.f) + 200});
+		sffIcon.value()->setPosition(pos);
 	}
 }
 

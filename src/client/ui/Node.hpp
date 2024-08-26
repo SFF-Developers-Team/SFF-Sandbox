@@ -25,6 +25,8 @@ namespace sandbox_ui {
 		bool m_limitRendering = false;
 
 		NodeRenderer* m_currentRenderer = nullptr;
+
+		bool m_updateRequired = true;
 	public:
 		Node();
 
@@ -67,5 +69,9 @@ namespace sandbox_ui {
 
 		virtual void setWidth(float width);
 		virtual void setHeight(float height);
+
+		void unscheduleUpdate();
+		void scheduleUpdate();
+		bool updateRequired();
 	};
 }

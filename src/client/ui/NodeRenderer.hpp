@@ -5,6 +5,7 @@
 #include <optional>
 #include <raylib.h>
 #include <string>
+#include <map>
 
 namespace sandbox_ui {
 	class Node;
@@ -18,6 +19,8 @@ namespace sandbox_ui {
 		std::vector<Object> m_nodes = {};
 
 		float m_scaling = 8;
+
+		std::map<std::string, float> m_individualScalings = {};
 	public:
 		NodeRenderer() {}
 
@@ -35,10 +38,13 @@ namespace sandbox_ui {
 		float getScaling();
 
 		Vector2 getMappedPosition(Vector2 pos);
+		Vector2 getMappedPosition(Vector2 pos, float scaling);
 		
 		std::vector<Object> &getChildren();
 		std::vector<Object> getRenderableChildren();
 
 		void sortAllChildren();
+
+		void setScalingForObject(const std::string &id, float scaling);
 	};
 }
