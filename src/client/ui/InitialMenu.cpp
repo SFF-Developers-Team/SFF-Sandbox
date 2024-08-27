@@ -144,4 +144,11 @@ void sandbox_ui::InitialMenu::saveTest() {
 void sandbox_ui::InitialMenu::onCreditsClick() {
 	auto tomlTest = std::make_shared<TomlNode>("assets/ui_credits.toml");
 	m_nodeContainer->addChild(tomlTest, 11);
+
+	Vector2 pos1 = {
+		m_nodeRect.width - tomlTest->getRectangle().width - 80,
+		(m_nodeRect.height - tomlTest->getRectangle().height) / 2.f
+	};
+
+	tomlTest->setPosition(pos1);
 }

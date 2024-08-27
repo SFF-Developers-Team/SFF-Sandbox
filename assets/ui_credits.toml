@@ -3,10 +3,20 @@ size = [500, 300]
 
 [base-rect]
 object_type = "Rectangle"
-size = [500, 300]
-color = [12, 12, 12]
+size = [200, 100]
+col = [255, 255, 255, 255]
+aligned_x = true
+aligned_y = true
+z_order = 1
 
 [base-rect-1]
 object_type = "Rectangle"
 size = [500, 300]
-color = [12, 12, 12]
+col = [255, 0, 0, 128]
+
+[txt]
+object_type = "Text"
+label = "Text"
+aligned_x = true
+aligned_y = true
+z_order = 2

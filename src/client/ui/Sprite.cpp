@@ -38,6 +38,8 @@ sandbox_ui::Sprite::~Sprite() {
 }
 
 void sandbox_ui::Sprite::draw() {
+	updateRect();
+
 	auto txt = getBaseTexture();
 	Rectangle source = { 0, 0, (float)txt.width, (float)txt.height };
 

@@ -13,6 +13,9 @@ namespace sandbox_ui {
         float m_spacing = 1.f;
 
         void updateTextSize();
+
+        Node::Color m_shadowColor = {0,0,0,0};
+        bool m_shadow = false;
     public:
         Text(const std::string &str);
     
@@ -26,5 +29,7 @@ namespace sandbox_ui {
         void setCharSpacing(float sp);
 
         void setScale(float sz) override;
+        
+        void enableShadow(bool flag, Node::Color col);
     };
 }

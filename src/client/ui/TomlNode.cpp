@@ -42,22 +42,37 @@ sandbox_ui::TomlNode::TomlNode(const std::string &filepath) {
         if (objectType == "Node") {
             created_obj = std::make_shared<Node>();
         } else if (objectType == "Rectangle") {
-            created_obj = std::make_shared<sandbox_ui::Rectangle>();
+            auto rect_obj = std::make_shared<sandbox_ui::Rectangle>();
+
+            bool solid = v[toml::path("solid")].value_or(true);
+            float thickness = v[toml::path("thickness")].value_or(1.f);
+
+            if (!solid) {
+                rect_obj->setMode(rect_obj->Outlined);
+                rect_obj->setThickness(thickness);
+            }
+
+            created_obj = rect_obj;
         } else if (objectType == "Text") {
             std::string label = v[toml::path("label")].value_or("no label provided");
             std::string font = v[toml::path("font")].value_or("");
             
             auto text_obj = std::make_shared<sandbox_ui::Text>(label);
-            if (!font.empty()) {
-                float textSize = v[toml::path("text_size")].value_or(20.f);
-                float spacing = v[toml::path("spacing")].value_or(1.f);
+            
+            float textSize = v[toml::path("font_size")].value_or(20.f);
+            float spacing = v[toml::path("spacing")].value_or(1.f);
+            
+            text_obj->setBaseTextSize(textSize);
+            text_obj->setCharSpacing(spacing);
 
+            if (!font.empty()) {
                 Font fnt = LoadFontEx(font.c_str(), textSize, nullptr, 0);
                 
                 text_obj->setFont(fnt);
-                text_obj->setBaseTextSize(textSize);
-                text_obj->setCharSpacing(spacing);
             }
+
+            bool shadowEnabled = v[toml::path("shadow_enabled")].value_or(false);
+            text_obj->enableShadow(shadowEnabled, BLACK);
 
             created_obj = text_obj;
 
@@ -75,7 +90,7 @@ sandbox_ui::TomlNode::TomlNode(const std::string &filepath) {
             auto btn_obj = std::make_shared<sandbox_ui::Button>(label, obj_size, scale);
             
             if (!font.empty()) {
-                float textSize = v[toml::path("text_size")].value_or(20.f);
+                float textSize = v[toml::path("font_size")].value_or(20.f);
                 Font fnt = LoadFontEx(font.c_str(), textSize, nullptr, 0);
 
                 btn_obj->setFont(fnt);
@@ -95,15 +110,19 @@ sandbox_ui::TomlNode::TomlNode(const std::string &filepath) {
                 (float)v[toml::path("pos")][0].value_or(0.f),
                 (float)v[toml::path("pos")][1].value_or(0.f)
             };
-            Color obj_color = {
-                (unsigned char)v[toml::path("col")][0].value_or(0x00),
-                (unsigned char)v[toml::path("col")][1].value_or(0x00),
-                (unsigned char)v[toml::path("col")][2].value_or(0x00),
-                (unsigned char)v[toml::path("col")][3].value_or(0xFF)
-            };
+
+            if (v[toml::path("col")].is_array()) {
+                Color obj_color = {
+                    (unsigned char)v[toml::path("col")][0].value_or(0x00),
+                    (unsigned char)v[toml::path("col")][1].value_or(0x00),
+                    (unsigned char)v[toml::path("col")][2].value_or(0x00),
+                    (unsigned char)v[toml::path("col")][3].value_or(0xFF)
+                };
+
+                created_obj->setColor(obj_color);
+            }
 
             created_obj->setPosition(obj_pos);
-            created_obj->setColor(obj_color);
 
             bool aligned[2] = {
                 v[toml::path("aligned_x")].value_or(false),

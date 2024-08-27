@@ -202,7 +202,7 @@ sandbox_ui::Node::Color sandbox_ui::Button::invertColor(sandbox_ui::Node::Color 
 
 	n.r = ~c.r;
 	n.g = ~c.g;
-	n.b - ~c.b;
+	n.b = ~c.b;
 
 	return n;
 }
