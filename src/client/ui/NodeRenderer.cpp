@@ -1,5 +1,6 @@
 #include "NodeRenderer.hpp"
 #include "Node.hpp"
+#include "ContainerizedNode.hpp"
 #include <cmath>
 
 void sandbox_ui::NodeRenderer::setPosition(Vector2 pos) {
@@ -121,4 +122,19 @@ void sandbox_ui::NodeRenderer::setScalingForObject(const std::string& id, float 
 	if (id.empty()) return;
 
 	m_individualScalings[id] = scaling;
+}
+
+sandbox_ui::Node *sandbox_ui::NodeRenderer::getParent() {
+	return m_parent;
+}
+void sandbox_ui::NodeRenderer::setParent(sandbox_ui::Node *nd) {
+	if (nd == nullptr) {
+		m_parent = nd;
+
+		return;
+	}
+
+	if (auto c = dynamic_cast<ContainerizedNode *>(nd)) {
+		m_parent = nd;
+	}
 }

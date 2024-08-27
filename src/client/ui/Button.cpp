@@ -120,6 +120,7 @@ void sandbox_ui::Button::draw() {
 
 	BeginScissorMode(m_nodeRect.x - padding, m_nodeRect.y - padding, m_nodeRect.width + (padding * 2.f), m_nodeRect.height + (padding * 2.f));
 
+	m_nodeContainer->setParent(this);
 	m_nodeContainer->render();
 
 	EndScissorMode();

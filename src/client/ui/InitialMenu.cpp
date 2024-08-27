@@ -20,6 +20,7 @@ void sandbox_ui::InitialMenu::draw() {
 
 	m_nodeContainer->setPosition(getPosition());
 	m_nodeContainer->setScaling(m_currentRenderer->getScaling());
+	m_nodeContainer->setParent(this);
 
 	m_nodeContainer->render();
 }

@@ -21,6 +21,8 @@ namespace sandbox_ui {
 		float m_scaling = 8;
 
 		std::map<std::string, float> m_individualScalings = {};
+
+		Node *m_parent = nullptr;
 	public:
 		NodeRenderer() {}
 
@@ -46,5 +48,8 @@ namespace sandbox_ui {
 		void sortAllChildren();
 
 		void setScalingForObject(const std::string &id, float scaling);
+	
+		Node *getParent();
+		void setParent(Node *nd);
 	};
 }
