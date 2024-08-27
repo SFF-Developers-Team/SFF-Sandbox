@@ -72,6 +72,8 @@ void Game::init(std::vector<std::string>& args) {
         m_player->setCamera(old_cam);
         container->setScaling(mscale);
     });
+    cn->setSize((float)m_screenWidth, (float)m_screenHeight);
+    cn->setID("game-viewpoint");
 
     m_gameMenu->getNodeContainer()->addChild(cn, -1);
 

@@ -5,6 +5,7 @@
 #include "CallbackNode.hpp"
 #include "Button.hpp"
 #include "Sprite.hpp"
+#include "TomlNode.hpp"
 #include <cmath>
 
 void sandbox_ui::InitialMenu::draw() {
@@ -34,6 +35,7 @@ sandbox_ui::InitialMenu::InitialMenu(){
 
 	auto rect2 = std::make_shared<sandbox_ui::Rectangle>(m_nodeRect);
 	rect2->setColor(bg1);
+	rect2->setID("background");
 
 	m_nodeContainer->addChild(rect2, 0);
 
@@ -51,6 +53,7 @@ sandbox_ui::InitialMenu::InitialMenu(){
 		
 		DrawRectangleGradientH(rect.x, rect.y, rect.width, rect.height, c1, c2);
 	});
+	gradNode->setID("gradient");
 
 	auto gradRect = m_nodeRect;
 	gradRect.width /= 1.5f;
@@ -69,7 +72,7 @@ sandbox_ui::InitialMenu::InitialMenu(){
 		{"SINGLEPLAYER", nullptr},
 		{"MULTIPLAYER", nullptr},
 		{"OPTIONS", nullptr},
-		{"CREDITS", nullptr}
+		{"CREDITS", [this](auto btn) {this->onCreditsClick();}}
 	}, { 100, sff_icon->getPosition().y + sff_icon->getRectangle().height + 50.f });
 
 	float btn_width = buttons[0]->getRectangle().width;
@@ -81,6 +84,8 @@ sandbox_ui::InitialMenu::InitialMenu(){
 	m_nodeContainer->addChild(buttons, 10);
 
 	m_nodeContainer->setScalingForObject("sff-icon", 3);
+
+	setID("InitialMenu");
 }
 
 void sandbox_ui::InitialMenu::update() {
@@ -92,6 +97,10 @@ void sandbox_ui::InitialMenu::update() {
 		pos.y = 100.f + ((float)sin(m_timeTest) * 30);
 
 		sffIcon.value()->setPosition(pos);
+	}
+
+	if (IsKeyPressed(KEY_F1)) {
+		saveTest();
 	}
 }
 
@@ -106,6 +115,7 @@ std::vector<std::shared_ptr<sandbox_ui::Node>> sandbox_ui::InitialMenu::buildBut
 		auto btn = std::make_shared<sandbox_ui::Button>(k, Vector2{ 300.f, 40.f });
 		btn->setPosition(posTarget);
 		btn->setClickCallback(v);
+		btn->setID("btn-" + k);
 
 		posTarget.y += spacing + btn->getRectangle().height;
 	
@@ -113,4 +123,25 @@ std::vector<std::shared_ptr<sandbox_ui::Node>> sandbox_ui::InitialMenu::buildBut
 	}
 
 	return result;
+}
+
+void sandbox_ui::InitialMenu::saveTest() {
+	sandbox_ui::Sprite *spr = new sandbox_ui::Sprite(this);
+	spr->updateTexture();
+	spr->save("test.png");
+
+	delete spr;
+
+	for (auto obj : m_nodeContainer->getRenderableChildren()) {
+		spr =  new sandbox_ui::Sprite(obj.get());
+		spr->updateTexture();
+		spr->save("obj-" + obj.get()->getID() + ".png");
+	
+		delete spr;
+	}
+}
+
+void sandbox_ui::InitialMenu::onCreditsClick() {
+	auto tomlTest = std::make_shared<TomlNode>("assets/ui_credits.toml");
+	m_nodeContainer->addChild(tomlTest, 11);
 }

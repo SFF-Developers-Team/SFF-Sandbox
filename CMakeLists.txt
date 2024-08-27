@@ -18,6 +18,8 @@ set(SHARED_HEADERS
     "src/shared/world/gen/"
     "src/shared/world/"
     "src/shared/"
+
+    "libs/toml/"
 )
 
 file(GLOB SHARED_SOURCES CONFIGURE_DEPENDS
@@ -60,7 +62,6 @@ target_include_directories(SFFSandbox PRIVATE
 
 target_include_directories(SFFSandbox-server PRIVATE
     ${SHARED_HEADERS}
-    "libs/toml/"
     "src/server/world/gen"
     "src/server/world"
     "src/server/"

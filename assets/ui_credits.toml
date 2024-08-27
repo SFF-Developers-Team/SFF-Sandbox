@@ -1,0 +1,12 @@
+[root]
+size = [500, 300]
+
+[base-rect]
+object_type = "Rectangle"
+size = [500, 300]
+color = [12, 12, 12]
+
+[base-rect-1]
+object_type = "Rectangle"
+size = [500, 300]
+color = [12, 12, 12]

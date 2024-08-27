@@ -4,6 +4,7 @@
 #include "NodeRenderer.hpp"
 #include <iostream>
 #include <algorithm>
+#include <cmath>
 
 sandbox_ui::Button::Button(const std::string& text, sandbox_ui::Node::Pos sz, float scale) {
 	sz.x *= scale;
@@ -103,7 +104,7 @@ void sandbox_ui::Button::draw() {
 		float limit = m_nodeContainer->getScaling() * 2.f;
 		float area_unshown = (m_textWidth - m_nodeRect.width) + limit;
 
-		m_textPosTrig = (float)sin(m_time) * (area_unshown) / 2.f;
+		m_textPosTrig = (float)std::sin(m_time) * (area_unshown) / 2.f;
 
 		if (btn_text.has_value()) {
 			auto new_pos = old_pos;

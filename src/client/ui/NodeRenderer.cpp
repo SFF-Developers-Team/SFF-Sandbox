@@ -15,6 +15,12 @@ void sandbox_ui::NodeRenderer::addChild(Object node, int zOrder) {
 
 void sandbox_ui::NodeRenderer::render() {
 	for (Object obj : m_nodes) {
+		if (obj == nullptr) {
+			// TraceLog(LOG_WARNING, "NodeRenderer::render: obj == nullptr");
+
+			continue;
+		}
+
 		Vector2 old_pos = obj->getPosition();
 		Vector2 new_pos = old_pos;
 		Vector2 offset = obj->getRenderOffset();
