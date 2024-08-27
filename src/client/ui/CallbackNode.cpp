@@ -16,5 +16,5 @@ void sandbox_ui::CallbackNode::setDrawCallback(Callback callbackDraw) {
 	m_callbackDraw = callbackDraw;
 }
 void sandbox_ui::CallbackNode::setUpdateCallback(Callback callbackUpdate) {
-	m_callbackUpdate = m_callbackUpdate;
+	m_callbackUpdate = callbackUpdate;
 }

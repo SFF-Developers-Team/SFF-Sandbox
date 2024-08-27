@@ -28,5 +28,7 @@ namespace sandbox_ui {
         bool collides(sandbox_ui::Rectangle *ui_rect);
         bool collides(Pos point);
         bool collides(Node::Rect rl_rect);
+
+        void modifyParam(const std::string &param, double value) override;
     };
 }

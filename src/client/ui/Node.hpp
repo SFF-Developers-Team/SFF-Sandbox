@@ -2,6 +2,10 @@
 
 #include <raylib.h>
 #include <string>
+#include <memory>
+#include <vector>
+
+#include "NodeAction.hpp"
 
 namespace sandbox_ui {
 	class NodeRenderer;
@@ -11,6 +15,8 @@ namespace sandbox_ui {
 		using Rect = ::Rectangle;
 		using Color = Color;
 		using Pos = Vector2;
+
+		using ModType = float*;
 	protected:
 		Rect m_nodeRect = {};
 		std::string m_id = "";
@@ -27,6 +33,10 @@ namespace sandbox_ui {
 		NodeRenderer* m_currentRenderer = nullptr;
 
 		bool m_updateRequired = true;
+
+		std::vector<std::shared_ptr<NodeAction>> m_actions;
+
+		bool m_shouldDestroy = false;
 	public:
 		Node();
 
@@ -35,6 +45,12 @@ namespace sandbox_ui {
 
 		Pos getPosition();
 		virtual void setPosition(Pos pos);
+
+		virtual void setPositionX(float x);
+		virtual void setPositionY(float x);
+
+		float getPositionX();
+		float getPositionY();
 
 		virtual void setID(const std::string& id);
 		std::string getID();
@@ -70,8 +86,19 @@ namespace sandbox_ui {
 		virtual void setWidth(float width);
 		virtual void setHeight(float height);
 
+		float getWidth();
+		float getHeight();
+
 		void unscheduleUpdate();
 		void scheduleUpdate();
 		bool updateRequired();
+
+		void updateActions();
+		void runAction(NodeAction act);
+
+		virtual void modifyParam(const std::string &param, double value);
+	
+		void release();
+		bool shouldRelease();
 	};
 }

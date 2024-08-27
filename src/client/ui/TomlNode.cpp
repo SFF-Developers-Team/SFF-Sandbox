@@ -159,5 +159,5 @@ void sandbox_ui::TomlNode::draw() {
     m_nodeContainer->render();
 }
 void sandbox_ui::TomlNode::update() {
-
+    m_nodeContainer->setParent(this);
 }

@@ -47,8 +47,9 @@ add_executable(SFFSandbox-server ${SHARED_SOURCES} ${SERVER_SOURCES})
 add_subdirectory(libs/sockpp)
 add_subdirectory(libs/raylib)
 add_subdirectory(libs/GitHash)
+add_subdirectory(libs/ext_anims)
 
-target_link_libraries(SFFSandbox raylib sockpp-static ${GITHASH_LIBRARIES})
+target_link_libraries(SFFSandbox raylib sockpp-static ${GITHASH_LIBRARIES} nt5animation)
 target_link_libraries(SFFSandbox-server sockpp-static ${GITHASH_LIBRARIES})
 
 target_include_directories(SFFSandbox PRIVATE
@@ -58,6 +59,7 @@ target_include_directories(SFFSandbox PRIVATE
     "src/client/world/gen"
     "src/client/world"
     "src/client/"
+    "libs/ext_anims/include"
 )
 
 target_include_directories(SFFSandbox-server PRIVATE

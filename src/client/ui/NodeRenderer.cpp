@@ -15,12 +15,23 @@ void sandbox_ui::NodeRenderer::addChild(Object node, int zOrder) {
 }
 
 void sandbox_ui::NodeRenderer::render() {
-	for (Object obj : m_nodes) {
+	for (unsigned int i = 0; i < m_nodes.size(); i++) {
+		auto obj = m_nodes[i];
+
 		if (obj == nullptr) {
 			// TraceLog(LOG_WARNING, "NodeRenderer::render: obj == nullptr");
 
 			continue;
 		}
+
+		if (obj->shouldRelease()) {
+			m_nodes.erase(m_nodes.begin() + i);
+			i--;
+
+			continue;
+		}
+
+		obj->updateActions();
 
 		Vector2 old_pos = obj->getPosition();
 		Vector2 new_pos = old_pos;

@@ -15,7 +15,7 @@ sandbox_ui::Button::Button(const std::string& text, sandbox_ui::Node::Pos sz, fl
 
 	m_font = LoadFont("assets/04B_08__.ttf");
 
-	m_nodeContainer->setScaling(6.f * scale);
+	m_nodeContainer->setScaling(4.f * scale);
 
 	auto base_rect = std::make_shared<sandbox_ui::Rectangle>(m_nodeRect);
 	base_rect->setID("base-rect-1");
@@ -55,8 +55,12 @@ sandbox_ui::Button::Button(const std::string& text, sandbox_ui::Node::Pos sz, fl
 }
 
 void sandbox_ui::Button::update() {
+	m_nodeContainer->setParent(this);
+
+	if (!isVisible()) return;
+
 	Vector2 mpos = GetMousePosition();
-	Vector2 btnPos = getGlobalPosition();
+	Vector2 btnPos = getPosition();
 
 	sandbox_ui::Node::Rect r = getRectangle();
 	r.x = btnPos.x;
@@ -120,7 +124,6 @@ void sandbox_ui::Button::draw() {
 
 	BeginScissorMode(m_nodeRect.x - padding, m_nodeRect.y - padding, m_nodeRect.width + (padding * 2.f), m_nodeRect.height + (padding * 2.f));
 
-	m_nodeContainer->setParent(this);
 	m_nodeContainer->render();
 
 	EndScissorMode();
@@ -128,6 +131,14 @@ void sandbox_ui::Button::draw() {
 	if (btn_text.has_value()) {
 		btn_text.value()->setPosition(old_pos);
 	}
+
+	// Node::Rect r;
+	// Vector2 v = getGlobalPosition();
+	// r.x = v.x;
+	// r.y = v.y;
+	// r.width = 10;
+	// r.height = 10;
+	// DrawRectanglePro(r, Vector2{0.f, 0.f}, 0.f, RED);
 }
 
 void sandbox_ui::Button::setFont(Font fnt) {

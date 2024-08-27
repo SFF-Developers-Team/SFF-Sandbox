@@ -57,7 +57,7 @@ Hitbox Hitbox::expand(float x, float y) {
 
     if (x < 0.f) {
         newh.x += x;
-        newh.width += abs(x);
+        newh.width += std::abs(x);
     }
 
     if (x > 0.f) {
@@ -66,7 +66,7 @@ Hitbox Hitbox::expand(float x, float y) {
 
     if (y < 0.f) {
         newh.y += y;
-        newh.height += abs(y);
+        newh.height += std::abs(y);
     }
 
     if (y > 0.f) {

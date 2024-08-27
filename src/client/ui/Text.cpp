@@ -63,3 +63,15 @@ void sandbox_ui::Text::enableShadow(bool flag, Node::Color col) {
     m_shadow = flag;
     m_shadowColor = col;
 }
+
+void sandbox_ui::Text::modifyParam(const std::string &param, double value) {
+    if (param == "font.size") {
+        setBaseTextSize(value);
+        return;
+    } else if (param == "font.spacing") {
+        setCharSpacing(value);
+        return;
+    }
+
+    return Node::modifyParam(param, value);
+}

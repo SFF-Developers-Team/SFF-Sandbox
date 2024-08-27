@@ -31,5 +31,7 @@ namespace sandbox_ui {
         void setScale(float sz) override;
         
         void enableShadow(bool flag, Node::Color col);
+
+        void modifyParam(const std::string &param, double value) override;
     };
 }

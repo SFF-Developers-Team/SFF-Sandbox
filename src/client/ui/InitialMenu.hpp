@@ -19,6 +19,8 @@ namespace sandbox_ui {
 		void saveTest();
 
 		void onCreditsClick();
+
+		std::shared_ptr<Node> m_currentCard = nullptr;
 	public:
 		Vector2 m_worldCam = {};
 

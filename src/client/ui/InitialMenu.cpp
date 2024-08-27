@@ -20,7 +20,6 @@ void sandbox_ui::InitialMenu::draw() {
 
 	m_nodeContainer->setPosition(getPosition());
 	m_nodeContainer->setScaling(m_currentRenderer->getScaling());
-	m_nodeContainer->setParent(this);
 
 	m_nodeContainer->render();
 }
@@ -90,7 +89,9 @@ sandbox_ui::InitialMenu::InitialMenu(){
 }
 
 void sandbox_ui::InitialMenu::update() {
-	m_timeTest += (double)GetFrameTime();
+	double delta = GetFrameTime();
+
+	m_timeTest += delta;
 
 	auto sffIcon = m_nodeContainer->getChildById("sff-icon");
 	if (sffIcon.has_value()) {
@@ -103,9 +104,16 @@ void sandbox_ui::InitialMenu::update() {
 	if (IsKeyPressed(KEY_F1)) {
 		saveTest();
 	}
+
+	// auto creditsCard = m_nodeContainer->getChildById("credits-card");
+	// if (creditsCard.has_value()) {
+	// 	creditsCard.value()->setPosition(GetMousePosition());
+	// }
 }
 
 std::vector<std::shared_ptr<sandbox_ui::Node>> sandbox_ui::InitialMenu::buildButtons(const std::unordered_map<std::string, std::function<void(Button*)>>& btnMapping, Node::Pos basePos) {
+	m_nodeContainer->setParent(this);
+	
 	Vector2 posTarget = basePos;
 
 	float spacing = 20.f;
@@ -146,10 +154,87 @@ void sandbox_ui::InitialMenu::onCreditsClick() {
 	auto tomlTest = std::make_shared<TomlNode>("assets/ui_credits.toml");
 	m_nodeContainer->addChild(tomlTest, 11);
 
+	tomlTest->setID("credits-card");
+
 	Vector2 pos1 = {
 		m_nodeRect.width - tomlTest->getRectangle().width - 80,
 		(m_nodeRect.height - tomlTest->getRectangle().height) / 2.f
 	};
 
+	float y = pos1.y;
+	pos1.y = m_nodeRect.height;
+
+	NodeAction act;
+	act.createKeyframe(0.3f, y - pos1.y, renderer_tweak_type::TOOutBack);
+	act.setParameterToModify("pos.y");
+
+	act.setStartingValue(pos1.y);
+
 	tomlTest->setPosition(pos1);
+	tomlTest->runAction(act);
+
+	if (m_currentCard != nullptr) {
+		auto card = m_currentCard;
+
+		NodeAction act2;
+		act2.createKeyframe(1.f, -m_currentCard->getHeight() - m_currentCard->getPositionY(), renderer_tweak_type::TOInBack);
+		act2.setStartingValue(m_currentCard->getPositionY());
+		act2.setParameterToModify("pos.y");
+		act2.setOnComplete([this, card](auto action) {
+			printf("--------- RELEASING! ---------\n");
+
+			card->release();
+		});
+
+		auto col = m_currentCard->getColor();
+
+		std::vector<NodeRenderer::Object> nodesToModify = {};
+		auto container = dynamic_cast<ContainerizedNode *>(m_currentCard.get());
+
+		if (container) {
+			auto nc = container->getNodeContainer();
+
+			nodesToModify.push_back(nc->getChildById("base-rect").value());
+			nodesToModify.push_back(nc->getChildById("line-rect").value());
+		}
+
+		double colTime = 0.5f;
+
+		{
+			NodeAction actc;
+			actc.createKeyframe(colTime, -col.r);
+			actc.setParameterToModify("col.r");
+			actc.setStartingValue(col.r);
+
+			for (auto obj : nodesToModify) {
+				obj->runAction(actc);
+			}
+		}
+
+		{
+			NodeAction actc;
+			actc.createKeyframe(colTime, -col.g);
+			actc.setParameterToModify("col.g");
+			actc.setStartingValue(col.g);
+
+			for (auto obj : nodesToModify) {
+				obj->runAction(actc);
+			}
+		}
+
+		{
+			NodeAction actc;
+			actc.createKeyframe(colTime, -col.b);
+			actc.setParameterToModify("col.b");
+			actc.setStartingValue(col.b);
+
+			for (auto obj : nodesToModify) {
+				obj->runAction(actc);
+			}
+		}
+
+		m_currentCard->runAction(act2);
+	}
+
+	m_currentCard = tomlTest;
 }

@@ -1,4 +1,5 @@
 #include "Rectangle.hpp"
+#include <map>
 
 void sandbox_ui::Rectangle::draw() {
     auto rect = getRenderableRectangle();
@@ -39,4 +40,14 @@ sandbox_ui::Rectangle::Rectangle() {}
 sandbox_ui::Rectangle::Rectangle(Node::Rect r) {
     setPosition({ r.x, r.y });
     setSize({ r.width, r.height });
+}
+
+void sandbox_ui::Rectangle::modifyParam(const std::string &param, double value) {
+    if (param == "thickness") {
+        m_thickness = (float)value;
+
+        return;
+    }
+
+    return Node::modifyParam(param, value);
 }
