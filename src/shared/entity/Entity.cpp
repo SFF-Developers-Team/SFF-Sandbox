@@ -73,7 +73,7 @@ ByteVector& Entity::serialize() {
     return m_bytes;
 }
 
-int Entity::deserialize(ByteVector& bytes) {
+size_t Entity::deserialize(ByteVector& bytes) {
     SerializedObject::deserialize(bytes);
 
     m_hitbox.x = getBytes<float>();

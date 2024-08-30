@@ -22,12 +22,10 @@ private:
     bool m_fly = false;
 
     PlayerID m_id = 0;
-    
-    float wheel;
+    uint8_t m_prevAnimFrame;
+    Entity::Direction m_prevDir;
 
-    Rectf m_lastHitbox;
-    uint8_t m_lastCurrentFrame;
-    char m_lastDirection;
+    float m_lastAnimFrameTime = 0.f;
 
 public:
     Player(World* world);

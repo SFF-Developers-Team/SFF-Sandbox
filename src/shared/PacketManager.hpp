@@ -33,14 +33,20 @@ public:
     PacketManager(Socket& sock, size_t bufSize) : m_sock(sock), m_readBuf(bufSize) {}
 
     bool send(std::shared_ptr<GamePacket> packet) {
+        // if(m_readOffset > 0) return false; // prevent sending while receiving
+
         if(!m_writeOffset) {
             if(!packet) return false;
             
             auto bytes = packet->serialize();
-            uint16_t packetSize = bytes.size();
-            m_writeBuf.resize(packetSize + 2);
-            std::memcpy(m_writeBuf.data(), &packetSize, 2);
-            std::memcpy(m_writeBuf.data() + 2, bytes.data(), packetSize);
+            uint32_t packetSize = bytes.size();
+
+            // logD("Sending packet size {} bytes", packetSize);
+
+            m_writeBuf.resize(packetSize + 4);
+            
+            std::memcpy(m_writeBuf.data(), &packetSize, 4);
+            std::memcpy(m_writeBuf.data() + 4, bytes.data(), packetSize);
         }
         
         auto res = m_sock.write(m_writeBuf.data() + m_writeOffset, m_writeBuf.size() - m_writeOffset);
@@ -59,15 +65,19 @@ public:
 
         return true;
     }
-    
 
     std::shared_ptr<GamePacket> recv() {
+        // if(m_writeOffset > 0) return nullptr; // prevent receiving while sending
+
         auto res = m_sock.read(m_readBuf.data() + m_readOffset, m_readBuf.size() - m_readOffset);
         m_readOffset += (res.value() > 0 ? res.value() : 0);
         
-        if(m_readOffset >= 2) m_readPacketSize = *(uint16_t*)(m_readBuf.data());
+        if(m_readOffset >= 4) {
+            m_readPacketSize = *(uint32_t*)(m_readBuf.data());
+            // logD("Receiving packet size {} bytes", m_readPacketSize);
+        }
 
-        if(res.error().value() == ERRWOULDBLOCK || (m_readPacketSize > 0 && m_readOffset < m_readPacketSize + 2)) {
+        if(res.error().value() == ERRWOULDBLOCK || (m_readPacketSize > 0 && m_readOffset < m_readPacketSize + 4)) {
             return nullptr;
         }
 
@@ -75,7 +85,7 @@ public:
             return CREATE_PACKET(SerializedObject::NETWORK_ERROR, res.error_message());
         }
 
-        auto bytes = ByteVector(m_readBuf.begin() + 2, m_readBuf.begin() + m_readOffset);
+        auto bytes = ByteVector(m_readBuf.begin() + 4, m_readBuf.begin() + m_readOffset);
 
         m_readOffset = 0;
         m_readPacketSize = 0;

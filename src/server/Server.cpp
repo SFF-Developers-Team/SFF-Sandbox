@@ -5,6 +5,7 @@
 #include <GamePacket.hpp>
 #include <defaultconfig.hpp>
 #include <Chunk.hpp>
+#include <Timer.hpp>
 #include <filesystem>
 #include <fstream>
 
@@ -99,135 +100,49 @@ void Server::onTick() {
 
     if(res) {
         sockpp::tcp_socket sock = res.release();
-        std::thread thread(&Server::sessionThread, this, std::move(sock));
+        std::thread thread(&Server::acceptThread, this, std::move(sock));
         thread.detach();
+    }
+
+    for(auto& client : m_clients) {
+        client->onTick();
     }
 }
 
-void Server::sessionThread(sockpp::tcp_socket sock) {
-    ByteVector buf(MP_BUF_SIZE);
-    PlayerID playerId = 0;
-
-    auto pacman = std::make_unique<PacketManager<sockpp::tcp_socket>>(sock, MP_BUF_SIZE);
-
-    auto iden = pacman->recv();
-    if(iden->getBytes<SerializedObject::Header>() != SerializedObject::Header::IDENTIFICATION) {
-        pacman->send(CREATE_PACKET(SerializedObject::Header::NETWORK_ERROR, "First packet should be identification!"));
+void Server::acceptThread(sockpp::tcp_socket sock) {
+    auto client = std::make_unique<Client>(std::move(sock));
+    if(client->accept()) {
+        m_clients.push_back(std::move(client));
         return;
     }
 
-    auto username = iden->getBytes<std::string>();
-
-    if(m_world->isUsernameAlreadyTaken(username)) {
-        pacman->send(CREATE_PACKET(SerializedObject::Header::NETWORK_ERROR, "Username already taken!"));
-        return;
-    }
-
-    playerId = joinPlayer(username);
-    pacman->send(CREATE_PACKET(SerializedObject::Header::IDENTIFICATION, playerId));
-
-    m_clientQueue.insert(std::make_pair(playerId, std::vector<std::shared_ptr<GamePacket>>()));
-    sock.set_non_blocking();
-
-    auto& queue = m_clientQueue[playerId];
-    bool canSendNext = true;
-
-    while(true) {
-        for(uint32_t i = 0; i < m_timer->getTicks(); i++) {
-            canSendNext = true;
-
-            auto packet = pacman->recv();
-            if (!packet) {
-                canSendNext = false;
-                continue;
-            }
-
-            switch(packet->getBytes<SerializedObject::Header>()) {
-                case SerializedObject::Header::PLAYER: {
-                    m_world->getPlayer(playerId)->deserialize(packet->serialize());
-                    if(queue.empty()) {
-                        auto players = CREATE_PACKET(SerializedObject::PLAYERS, (uint32_t)(m_world->getPlayers().size() - 1));
-
-                        for(auto& [id, player] : m_world->getPlayers()) {
-                            if(id == playerId || !player) continue;
-                            players->addBytes(player->serialize());
-                        }
-                        
-                        addToQueue(playerId, players);
-                    }
-                    break;
-                }
-                
-                case SerializedObject::Header::BLOCK: {
-                    auto block = std::make_unique<Block>(Block::BlockType::AIR);
-                    block->deserialize(packet->serialize());
-
-                    auto pos = block->getPosition();
-                    auto layer = block->getLayer();
-
-                    // logD("Block set {} {} {}", pos.x, pos.y, layer);
-
-                    addToQueueAll(CREATE_PACKET(block->serialize()));
-                    m_world->setBlock(pos.x, pos.y, layer, std::move(block));
-                    break;
-                }
-
-                case SerializedObject::Header::LOAD_CHUNK: {
-                    auto position = packet->getBytes<ChunkPosition>();
-                    auto chunk = m_world->getChunk(position);
-
-                    if(chunk) {
-                        addToQueue(playerId, CREATE_PACKET(chunk->serialize()));
-                        logD("Sent chunk {} to player {}", chunk->getPosition(), playerId);
-                    }
-                    
-                    break;
-                }
-
-                case SerializedObject::Header::LOAD_PLAYER: {
-                    auto id = packet->getBytes<PlayerID>();
-                    logD("LOAD PLAYER {}", id);
-                    if(!m_world->getPlayer(id)) {
-                        addToQueue(playerId, CREATE_PACKET(SerializedObject::UNLOAD_PLAYER, id));
-                        break;
-                    }
-
-                    auto playerInfo = CREATE_PACKET(SerializedObject::LOAD_PLAYER, id);
-                    playerInfo->addBytes(m_world->getPlayer(id)->getUsername());
-                    addToQueue(playerId, playerInfo);
-                    break;
-                }
-
-                case SerializedObject::Header::NETWORK_ERROR:
-                case SerializedObject::Header::DISCONNECT: {
-                    disconnectPlayer(playerId);
-                    return;
-                }
-            }
-
-            if(queue.size() > 0 && canSendNext) {
-                logD("queue player id {} size {}", playerId, queue.size());
-                if(pacman->send(*queue.begin())) { 
-                    queue.erase(queue.begin());
-                }
-            }
-        }
-    }
+    client.release();
 }
 
 void Server::addToQueueAll(std::shared_ptr<GamePacket> packet) {
-    for(auto& [_, client] : m_clientQueue) {
-        client.push_back(packet);
+    for(auto& client : m_clients) {
+        client->addToQueue(packet);
     }
 }
 
 void Server::addToQueue(PlayerID id, std::shared_ptr<GamePacket> packet) {
-    m_clientQueue[id].push_back(packet);
+    for(auto& client : m_clients) {
+        if(client->getPlayerID() == id) {
+            client->addToQueue(packet);
+            return;
+        }
+    }
 }
 
 void Server::addToQueueExcept(PlayerID id, std::shared_ptr<GamePacket> packet) {
-    for(auto& [playerID, client] : m_clientQueue) {
-        if(playerID != id) client.push_back(packet);
+    for(auto& client : m_clients) {
+        if(client->getPlayerID() != id) client->addToQueue(packet);
+    }
+}
+
+void Server::notifyAll(PlayerID id) {
+    for(auto& client : m_clients) {
+        if(client->getPlayerID() != id) client->notify(id);
     }
 }
 
@@ -247,6 +162,14 @@ PlayerID Server::joinPlayer(std::string const& username) {
 void Server::disconnectPlayer(PlayerID id) {
     logD("{} ({}) left the game", m_world->getPlayer(id)->getUsername(), id);
     addToQueueExcept(id, CREATE_PACKET(SerializedObject::Header::UNLOAD_PLAYER, id));
+    
     m_world->unloadPlayer(id);
-    m_clientQueue.erase(id);
+
+    for(auto i = m_clients.begin(); i != m_clients.end(); i++) {
+        if((*i)->getPlayerID() == id) {
+            (*i).release();
+            m_clients.erase(i);
+            return;
+        }
+    }
 }

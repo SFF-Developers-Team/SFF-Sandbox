@@ -23,52 +23,42 @@ Player::~Player() {
 }
 
 void Player::updateCamera() {
-    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0) m_camera.zoom -= 1.0f;
-    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) m_camera.zoom += 1.0f;
-
-
     this->m_camera.target = {m_hitbox.x + m_hitbox.width / 2, m_hitbox.y - m_hitbox.height / 2};
     m_camera.zoom = std::clamp(m_camera.zoom, 5.f, 90.f);
 }
 
 void Player::updateAnimation() {
-    if(GetTime() >= m_animLastFrameTime + (1.0f / m_animFps)) {
-        m_animLastFrameTime = GetTime();
-        m_animCurrentFrame++;
+    if(GetTime() >= m_lastAnimFrameTime + (1.0f / m_animFps)) {
+        m_lastAnimFrameTime = GetTime();
+        m_animFrame++;
 
         switch(m_animType) {
             case PLAYER_IDLE:
-                m_animCurrentFrame = 0;
+                m_animFrame = 0;
                 break;
             case PLAYER_MOVE:
-                m_animCurrentFrame = animationClamp(m_animCurrentFrame, 1, 5);
+                m_animFrame = animationClamp(m_animFrame, 1, 5);
                 break;
             case PLAYER_SNEAK:
-                m_animCurrentFrame = animationClamp(m_animCurrentFrame, 6, 7);
+                m_animFrame = animationClamp(m_animFrame, 6, 7);
                 break;
             case PLAYER_JUMP:
-                m_animCurrentFrame = 8;
+                m_animFrame = 8;
                 break;
             case PLAYER_HIT:
-                m_animCurrentFrame = animationClamp(m_animCurrentFrame, 9, 13);
+                m_animFrame = animationClamp(m_animFrame, 9, 13);
                 break;
             case PLAYER_HURT:
-                m_animCurrentFrame = 14;
+                m_animFrame = 14;
                 break;
             case PLAYER_SIT:
-                m_animCurrentFrame = 15;
+                m_animFrame = 15;
                 break;
             case PLAYER_CART:
-                m_animCurrentFrame = 16;
+                m_animFrame = 16;
                 break;
         }
     }
-    
-    Debug::addString("Animation frame: {}", m_animCurrentFrame);
-    Debug::addString("Animation FPS: {}", m_animFps);
-    Debug::addString("Animation type: {}", getAnimationName(m_animType));
-    Debug::addString("Animation last frame: {}", m_animLastFrameTime);
-    Debug::addString("GetTime(): {}", GetTime());
 }
 
 Vector2 Player::convertToCameraPos(Vector2 pos) {
@@ -85,9 +75,9 @@ Vec2i Player::getTargetBlock(bool onlyExist) {
     if (Vector2Distance(cur, {m_hitbox.x, m_hitbox.y}) <= 4 && 
         (!onlyExist || m_world->getBlock(targetBlock.x, targetBlock.y, IsKeyPressed(KEY_LEFT_ALT) ? 0 : 1) != nullptr)) {
         return targetBlock;
-    } else {
-        return Vec2i {-1, -1};
     }
+    
+    return Vec2i {-1, -1};
 }
 
 bool Player::canDestroyBlock(Vec2i pos, uint8_t layer) {
@@ -130,14 +120,14 @@ void Player::updateControls() {
 
     if(IsMouseButtonDown(MOUSE_LEFT_BUTTON) && canDestroyBlock(targetBlockPos, !isAltLayer)) {
         m_world->destroyBlock(targetBlockPos.x, targetBlockPos.y, !isAltLayer);
-        if(m_onGround) setAnimation(PLAYER_HIT);
         if(Game::get()->isMultiplayer()) mp->onBlockChanged(targetBlockPos, !isAltLayer);
+        if(m_onGround) setAnimation(PLAYER_HIT);
     }
 
     if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && canPlaceBlock(targetBlockPos, !isAltLayer)) {
-        if(m_onGround) setAnimation(PLAYER_HIT);
         m_world->placeBlock(targetBlockPos.x, targetBlockPos.y, !isAltLayer, m_selectedBlock);
         if(Game::get()->isMultiplayer()) mp->onBlockChanged(targetBlockPos, !isAltLayer);
+        if(m_onGround) setAnimation(PLAYER_HIT);
     }
 
     if(IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
@@ -183,12 +173,14 @@ void Player::updateControls() {
 
 void Player::onTick() {
     Entity::onTick();
+    m_prevAnimFrame = m_animFrame;
+    m_prevDir = m_direction;
     m_animFps = 10;
 
     updateControls();
 
     auto hitLimit = m_animLimits.at(PLAYER_HIT);
-    if(m_animCurrentFrame < hitLimit.first || m_animCurrentFrame >= hitLimit.second) {
+    if(m_animFrame < hitLimit.first || m_animFrame >= hitLimit.second) {
         setAnimation(PLAYER_IDLE);
     }
 
@@ -206,23 +198,23 @@ void Player::onTick() {
         setAnimation(PLAYER_JUMP);
     }
 
-    
-
-    Debug::addString("Player position: [{:0f}, {:0f}]", this->m_hitbox.x, this->m_hitbox.y);
-    Debug::addString("Player speed: [{:0f}, {:0f}]", this->m_speedX, this->m_speedY);
-    Debug::addString("Fly: {}", m_fly);
-    Debug::addString("OnGround: {}", m_onGround);
-    Debug::addString("My playerID: {}", m_id);
+    auto mp = Game::get()->getMultiplayer();
+    if(m_prevX != m_hitbox.x || m_prevY != m_hitbox.y || m_prevAnimFrame != m_animFrame || m_prevDir != m_direction) {
+        mp->addToQueue(std::shared_ptr<SimplePlayer>(this));
+    }
 }
 
 void Player::update() {
-    wheel = GetMouseWheelMove();
+    auto wheel = GetMouseWheelMove();
     for(int i = 0; i < 6; i++) {
         if(IsKeyDown(KEY_ONE + i)) {
             m_selectedBlock = (Block::BlockType)(i + 1);
         }
     }
     
+    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0) m_camera.zoom -= 1.0f;
+    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) m_camera.zoom += 1.0f;
+
     if(!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
         m_selectedBlock = (Block::BlockType)((int)(m_selectedBlock) + (wheel > 0 ? -1 : 1));
 

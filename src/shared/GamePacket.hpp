@@ -1,7 +1,7 @@
 #pragma once
 #include <SerializedObject.hpp>
 
-#define MP_BUF_SIZE (1024 * 64) // 64kb
+#define MP_BUF_SIZE (1024 * 512) // 512kb
 #define CREATE_PACKET std::make_shared<GamePacket>
 
 class GamePacket : public SerializedObject {
@@ -25,11 +25,8 @@ public:
         addBytes(header);
     }
 
-    ByteVector& serialize() {
-        return m_bytes;
-    }
-
-    auto getSize() {
-        return m_bytes.size();
-    }
+    ByteVector& serialize() override { return m_bytes; }
+    
+    auto resetOffset() { m_offset = 0; }
+    auto getSize() { return m_bytes.size(); }
 };

@@ -116,7 +116,7 @@ ByteVector& Chunk::serialize() {
     return m_bytes;
 }
 
-int Chunk::deserialize(ByteVector& bytes) {
+size_t Chunk::deserialize(ByteVector& bytes) {
     SerializedObject::deserialize(bytes);
 
     m_position = getBytes<ChunkPosition>();
