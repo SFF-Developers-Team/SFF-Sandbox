@@ -24,6 +24,8 @@ Player::~Player() {
 
 void Player::updateCamera() {
     if (!inputDisabled()) {
+        auto wheel = GetMouseWheelMove();
+
         if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0) m_camera.zoom -= 1.0f;
         if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) m_camera.zoom += 1.0f;
     }
@@ -215,42 +217,42 @@ void Player::onTick() {
     }
 
     auto mp = Game::get()->getMultiplayer();
-    if(m_prevX != m_hitbox.x || m_prevY != m_hitbox.y || m_prevAnimFrame != m_animFrame || m_prevDir != m_direction) {
+    if (Game::get()->isMultiplayer() && (m_prevX != m_hitbox.x || m_prevY != m_hitbox.y || m_prevAnimFrame != m_animFrame || m_prevDir != m_direction)) {
         mp->addToQueue(std::shared_ptr<SimplePlayer>(this));
     }
 }
 
 void Player::update() {
 	if (!inputDisabled()) {
-    auto wheel = GetMouseWheelMove();
-    for(int i = 0; i < 6; i++) {
-        if(IsKeyDown(KEY_ONE + i)) {
-            m_selectedBlock = (Block::BlockType)(i + 1);
-        }
-    }
-    
-    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0) m_camera.zoom -= 1.0f;
-    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) m_camera.zoom += 1.0f;
-
-    if(!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
-        m_selectedBlock = (Block::BlockType)((int)(m_selectedBlock) + (wheel > 0 ? -1 : 1));
-        wheel = GetMouseWheelMove();
-        for (int i = 0; i < 6; i++) {
-            if (IsKeyDown(KEY_ONE + i)) {
+        auto wheel = GetMouseWheelMove();
+        for(int i = 0; i < 6; i++) {
+            if(IsKeyDown(KEY_ONE + i)) {
                 m_selectedBlock = (Block::BlockType)(i + 1);
             }
         }
+    
+        if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0) m_camera.zoom -= 1.0f;
+        if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) m_camera.zoom += 1.0f;
 
-        if (!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
-            m_selectedBlock = (Block::BlockType)((int)(m_selectedBlock)+(wheel > 0 ? -1 : 1));
+        if(!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
+            m_selectedBlock = (Block::BlockType)((int)(m_selectedBlock) + (wheel > 0 ? -1 : 1));
+            wheel = GetMouseWheelMove();
+            for (int i = 0; i < 6; i++) {
+                if (IsKeyDown(KEY_ONE + i)) {
+                    m_selectedBlock = (Block::BlockType)(i + 1);
+                }
+            }
 
-            if (m_selectedBlock > Block::BlockType::WOOL) m_selectedBlock = Block::BlockType::GRASS;
-            if (m_selectedBlock < Block::BlockType::GRASS) m_selectedBlock = Block::BlockType::WOOL;
+            if (!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
+                m_selectedBlock = (Block::BlockType)((int)(m_selectedBlock)+(wheel > 0 ? -1 : 1));
+
+                if (m_selectedBlock > Block::BlockType::WOOL) m_selectedBlock = Block::BlockType::GRASS;
+                if (m_selectedBlock < Block::BlockType::GRASS) m_selectedBlock = Block::BlockType::WOOL;
+            }
+
+            if (IsKeyPressed(KEY_R)) resetPosition();
+            if (IsKeyPressed(KEY_F)) m_fly = !m_fly;
         }
-
-        if (IsKeyPressed(KEY_R)) resetPosition();
-        if (IsKeyPressed(KEY_F)) m_fly = !m_fly;
-    }
 	}
 
     updateCamera();

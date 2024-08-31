@@ -2,6 +2,7 @@
 #include "NodeRenderer.hpp"
 #include "ContainerizedNode.hpp"
 #include <iostream>
+#include <algorithm>
 
 void sandbox_ui::Node::update() {}
 void sandbox_ui::Node::draw() {}
@@ -144,11 +145,13 @@ void sandbox_ui::Node::updateActions() {
 		}
 	}
 }
-void sandbox_ui::Node::runAction(sandbox_ui::NodeAction act) {
-	act.reset();
-	act.start();
+void sandbox_ui::Node::runAction(const sandbox_ui::NodeAction &act) {
+	auto act_copy = act;
 
-	m_actions.push_back(std::make_shared<NodeAction>(act));
+	act_copy.reset();
+	act_copy.start();
+
+	m_actions.push_back(std::make_shared<NodeAction>(act_copy));
 }
 
 void sandbox_ui::Node::modifyParam(const std::string &param, double value) {
@@ -185,9 +188,9 @@ void sandbox_ui::Node::setPositionX(float x) {
 
 	setPosition(pos);
 }
-void sandbox_ui::Node::setPositionY(float x) {
+void sandbox_ui::Node::setPositionY(float y) {
 	auto pos = getPosition();
-	pos.y = x;
+	pos.y = y;
 
 	setPosition(pos);
 }
@@ -211,4 +214,8 @@ void sandbox_ui::Node::release() {
 }
 bool sandbox_ui::Node::shouldRelease() {
 	return m_shouldDestroy;
+}
+
+float sandbox_ui::Node::getDpiScaling() {
+	return GetWindowScaleDPI().x;
 }

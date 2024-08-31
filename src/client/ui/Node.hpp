@@ -94,11 +94,13 @@ namespace sandbox_ui {
 		bool updateRequired();
 
 		void updateActions();
-		void runAction(NodeAction act);
+		void runAction(const NodeAction &act);
 
 		virtual void modifyParam(const std::string &param, double value);
 	
 		void release();
 		bool shouldRelease();
+
+		static float getDpiScaling();
 	};
 }

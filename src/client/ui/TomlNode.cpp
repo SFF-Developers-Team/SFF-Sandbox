@@ -13,8 +13,8 @@ sandbox_ui::TomlNode::TomlNode(const std::string &filepath) {
     auto node_config = toml::parse_file(filepath);
 
     Vector2 root_size = {
-        (float)node_config["root"]["size"][0].value_or(0),
-        (float)node_config["root"]["size"][1].value_or(0)
+        (float)node_config["root"]["size"][0].value_or(0) * getDpiScaling(),
+        (float)node_config["root"]["size"][1].value_or(0) * getDpiScaling()
     };
 
     float chScaling = (float)node_config["root"]["child_scaling"].value_or(8.f);
@@ -36,7 +36,7 @@ sandbox_ui::TomlNode::TomlNode(const std::string &filepath) {
             (float)v[toml::path("size")][1].value_or(0.f)
         };
 
-        float scale = v[toml::path("scale")].value_or(1.f);
+        float scale = v[toml::path("scale")].value_or(1.f) * getDpiScaling();
 
         std::shared_ptr<Node> created_obj = nullptr;
         if (objectType == "Node") {
@@ -45,7 +45,7 @@ sandbox_ui::TomlNode::TomlNode(const std::string &filepath) {
             auto rect_obj = std::make_shared<sandbox_ui::Rectangle>();
 
             bool solid = v[toml::path("solid")].value_or(true);
-            float thickness = v[toml::path("thickness")].value_or(1.f);
+            float thickness = v[toml::path("thickness")].value_or(1.f) * getDpiScaling();
 
             if (!solid) {
                 rect_obj->setMode(rect_obj->Outlined);
@@ -98,7 +98,7 @@ sandbox_ui::TomlNode::TomlNode(const std::string &filepath) {
             
             created_obj = btn_obj;
 
-            obj_size = Vector2{created_obj->getRectangle().width, created_obj->getRectangle().height};
+            obj_size = Vector2{created_obj->getRectangle().width / getDpiScaling(), created_obj->getRectangle().height / getDpiScaling()};
         }
 
         if (created_obj != nullptr) {
@@ -107,8 +107,8 @@ sandbox_ui::TomlNode::TomlNode(const std::string &filepath) {
             created_obj->setSize(obj_size);
 
             Vector2 obj_pos = {
-                (float)v[toml::path("pos")][0].value_or(0.f),
-                (float)v[toml::path("pos")][1].value_or(0.f)
+                (float)v[toml::path("pos")][0].value_or(0.f) * getDpiScaling(),
+                (float)v[toml::path("pos")][1].value_or(0.f) * getDpiScaling()
             };
 
             if (v[toml::path("col")].is_array()) {
@@ -129,7 +129,7 @@ sandbox_ui::TomlNode::TomlNode(const std::string &filepath) {
                 v[toml::path("aligned_y")].value_or(false),
             };
 
-            obj_size = Vector2{created_obj->getRectangle().width, created_obj->getRectangle().height};
+            obj_size = Vector2{created_obj->getRectangle().width * getDpiScaling(), created_obj->getRectangle().height * getDpiScaling()};
 
             float alX = 0.f;
             float alY = 0.f;
