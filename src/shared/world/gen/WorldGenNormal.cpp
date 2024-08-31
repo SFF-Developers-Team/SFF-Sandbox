@@ -4,24 +4,45 @@
 #include <stdlib.h>
 #include <WorldGenNormal.hpp>
 
-WorldGenNormal::WorldGenNormal(World* world) : WorldGen(world), m_perlinNoise(1) {}
+WorldGenNormal::WorldGenNormal(World* world, uint64_t seed) : WorldGen(world, seed), m_perlinNoise(seed) {
+    srand(seed);
+}
 
-WorldGenNormal::~WorldGenNormal() {}
+std::shared_ptr<Chunk> WorldGenNormal::generateChunk(int32_t position) {
+    auto ret = std::make_shared<Chunk>(m_world, position);
+    for(auto x = 0u; x < CHUNK_SIZE; x++) {
+        for(auto y = 0u; y < m_world->getHeight(); y++) {
+            for(auto z = 0u; z < LAYERS; z++) {
+                if(y == m_world->getHeight() - 1) {
+                    ret->setBlock(x, y, z, Block::Type::BEDROCK);
+                    continue;
+                }
+                
+                auto grassLevel = static_cast<int32_t>(m_world->getHeight() * m_perlinNoise.noise2D_01((position * CHUNK_SIZE + x) * 0.01f, z * 0.01f));
+                auto stoneLevel = grassLevel + 4 + rand() % 3;
 
-std::unique_ptr<Block> WorldGenNormal::generateBlock(int x, int y, uint8_t layer) {
-    Block::BlockType type = Block::BlockType::AIR;
-    int grassLevel = m_world->getHeight() * m_perlinNoise.noise2D_01(x * 0.01f, layer * 0.01f);
+                if(y >= grassLevel + 10 && z == 1 && round(m_perlinNoise.noise2D_01((position * CHUNK_SIZE + x) * 0.2f, y * 0.2f)) == 1) {
+                    ret->setBlock(x, y, z, Block::Type::AIR);
+                    continue;
+                }
 
-    if(y == m_world->getHeight() - 1) return std::make_unique<Block>(Block::BlockType::BEDROCK, x, y, layer);
-    if(y >= grassLevel + 10 && layer == 1 && round(m_perlinNoise.noise2D_01(x * 0.2f, y * 0.2f)) == 1) return std::make_unique<Block>(Block::BlockType::AIR, x, y, layer);;
+                if(y == grassLevel) {
+                    ret->setBlock(x, y, z, Block::Type::GRASS);
+                    continue;
+                }
 
-    if(y == grassLevel) {
-        type = Block::BlockType::GRASS;
-    } else if(y > grassLevel && y < grassLevel + 5) {
-        type = Block::BlockType::DIRT;
-    } else if(y >= grassLevel + 5) {
-        type = Block::BlockType::STONE;
+                if(y > grassLevel && y < stoneLevel) {
+                    ret->setBlock(x, y, z, Block::Type::DIRT);
+                    continue;
+                }
+
+                if(y >= stoneLevel) {
+                    ret->setBlock(x, y, z, Block::Type::STONE);
+                    continue;
+                }
+            }
+        }
     }
 
-    return std::make_unique<Block>(type, x, y, layer);
+    return ret;
 }

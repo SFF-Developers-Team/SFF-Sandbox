@@ -55,7 +55,7 @@ void Server::init() {
 
     if(!m_world->load()) {
         logD("Generating world...");
-        m_world->generate(new WorldGenNormal(m_world));
+        m_world->generate(std::make_shared<WorldGenNormal>(m_world, 1));
     }
 
     std::thread inpthr(&Server::inputThread, this);

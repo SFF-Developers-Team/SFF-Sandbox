@@ -7,8 +7,6 @@ private:
     siv::PerlinNoise m_perlinNoise;
 
 public:
-    WorldGenNormal(World* world);
-    ~WorldGenNormal();
-
-    virtual std::unique_ptr<Block> generateBlock(int x, int y, uint8_t layer) override;
+    WorldGenNormal(World* world, uint64_t seed);
+    virtual std::shared_ptr<Chunk> generateChunk(int32_t position) override;
 };

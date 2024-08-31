@@ -13,7 +13,7 @@ class World;
 
 class Chunk : public SerializedObject {
 private:
-    std::vector<std::unique_ptr<Block>> m_blocks;
+    std::vector<std::shared_ptr<Block>> m_blocks;
     World* m_world;
     ChunkPosition m_position;
 
@@ -26,13 +26,13 @@ public:
         return m_position;
     }
 
-    void setBlock(int x, int y, uint8_t layer, Block::BlockType type);
-    void setBlock(int x, int y, uint8_t layer, std::unique_ptr<Block> block);
-    void setBlock(Vec2i pos, uint8_t layer, std::unique_ptr<Block> block);
-    void setBlock(Vec2i pos, uint8_t layer, Block::BlockType type);
+    void setBlock(int x, int y, uint8_t layer, Block::Type type);
+    void setBlock(int x, int y, uint8_t layer, std::shared_ptr<Block> block);
+    void setBlock(Vec2i pos, uint8_t layer, std::shared_ptr<Block> block);
+    void setBlock(Vec2i pos, uint8_t layer, Block::Type type);
 
-    Block* getBlock(int x, int y, uint8_t layer);
-    Block* getBlock(Vec2i pos, uint8_t layer);
+    std::shared_ptr<Block> getBlock(int x, int y, uint8_t layer);
+    std::shared_ptr<Block> getBlock(Vec2i pos, uint8_t layer);
 
     int getHeight();
     int getIndex(int x, int y, uint8_t layer);
@@ -48,7 +48,6 @@ public:
     bool isOutOfBound(int x, int y, uint8_t layer);
     bool isOutOfBound(Vec2i pos, uint8_t layer);
 
-    void generate();
     void draw();
 
     ByteVector& serialize() override;

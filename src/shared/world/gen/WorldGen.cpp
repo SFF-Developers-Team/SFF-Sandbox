@@ -3,6 +3,4 @@
 #include <stdio.h>
 #include <World.hpp>
 
-WorldGen::WorldGen(World* world) {
-    m_world = world;
-}
+WorldGen::WorldGen(World* world, uint64_t seed) : m_world(world), m_seed(seed) {}

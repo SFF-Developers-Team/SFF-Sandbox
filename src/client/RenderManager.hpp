@@ -18,7 +18,7 @@ public:
     RenderManager(World* world, std::shared_ptr<Player> player);
 
     void renderWorld();
-    void renderChunk(Chunk* chunk);
+    void renderChunk(std::shared_ptr<Chunk> chunk);
     void renderEntity(Entity* entity);
     void renderSimplePlayer(std::shared_ptr<SimplePlayer> player);
 };

@@ -3,7 +3,6 @@
 #include <filesystem>
 #include <World.hpp>
 #include <Logger.hpp>
-#include <WorldGenFlat.hpp>
 #include <WorldGenNormal.hpp>
 #include <Chunk.hpp>
 #include <SimplePlayer.hpp>
@@ -14,14 +13,11 @@ World::World(int width, int height) : m_width(width), m_height(height) {
 
 World::~World() {}
 
-void World::generate(WorldGen* generator) {
-    m_WorldGen = generator;
+void World::generate(std::shared_ptr<WorldGen> generator) {
+    m_worldGen = generator;
 
     for(int x = 0; x < m_width / CHUNK_SIZE; x++) {
-        auto chunk = new Chunk(this, x);
-        chunk->generate();
-
-        m_chunks.push_back(chunk);
+        m_chunks.push_back(generator->generateChunk(x));
     }
 }
 
@@ -35,12 +31,11 @@ bool World::isBlockClosed(int x, int y, uint8_t l) {
     return getBlock(x - 1, y, l) && getBlock(x + 1, y, l) && getBlock(x, y - 1, l) && getBlock(x, y + 1, l);
 }
 
-void World::unloadChunk(Chunk* chunk) {
+void World::unloadChunk(std::shared_ptr<Chunk> chunk) {
     m_chunks.erase(std::find(m_chunks.begin(), m_chunks.end(), chunk));
-    delete chunk;
 }
 
-Chunk* World::getChunk(int position) {
+std::shared_ptr<Chunk> World::getChunk(int32_t position) {
     for(auto& chunk : m_chunks) {
         if(chunk->getPosition() == position) return chunk;
     }
@@ -48,37 +43,37 @@ Chunk* World::getChunk(int position) {
     return nullptr;
 }
 
-void World::setChunk(Chunk* chunk) {
+void World::setChunk(std::shared_ptr<Chunk> chunk) {
     auto worldChunk = getChunk(chunk->getPosition());
     if(worldChunk) unloadChunk(worldChunk);
 
     m_chunks.push_back(chunk);
 }
 
-void World::placeBlock(int x, int y, uint8_t layer, enum Block::BlockType id) {
+void World::placeBlock(int32_t x, int32_t y, uint8_t layer, enum Block::Type id) {
     auto block = getBlock(x, y, layer);
-    if(block && block->getType() == Block::BlockType::AIR) setBlock(x, y, layer, std::make_unique<Block>(id));
+    if(block && block->getType() == Block::Type::AIR) setBlock(x, y, layer, std::make_unique<Block>(id));
 }
 
-void World::destroyBlock(int x, int y, uint8_t layer) {
+void World::destroyBlock(int32_t x, int32_t y, uint8_t layer) {
     auto block = getBlock(x, y, layer);
-    if(!block || block->getType() == Block::BlockType::AIR) return;
+    if(!block || block->getType() == Block::Type::AIR) return;
 
-    setBlock(x, y, layer, std::make_unique<Block>(Block::BlockType::AIR));
+    setBlock(x, y, layer, std::make_unique<Block>(Block::Type::AIR));
 }
 
-Block* World::getBlock(int x, int y, uint8_t layer) {
+std::shared_ptr<Block> World::getBlock(int32_t x, int32_t y, uint8_t layer) {
     auto chunk = getChunk(x / CHUNK_WIDTH);
     if(!chunk) return nullptr;
 
     return chunk->getBlock(x % CHUNK_WIDTH, y, layer);
 }
 
-void World::setBlock(int x, int y, uint8_t layer, std::unique_ptr<Block> block) {    
+void World::setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block) {    
     auto chunk = getChunk(x / CHUNK_WIDTH);
     if(!chunk) return;
 
-    chunk->setBlock(x % 16, y, layer, std::move(block));
+    chunk->setBlock(x % 16, y, layer, block);
 }
 
 ByteVector& World::serialize() {
@@ -86,7 +81,7 @@ ByteVector& World::serialize() {
 
     addBytes(m_width);
     addBytes(m_height);
-    addBytes((unsigned int)m_chunks.size());
+    addBytes((uint32_t)m_chunks.size());
 
     logD("chunks count {}", m_chunks.size());
 
@@ -114,7 +109,7 @@ size_t World::deserialize(ByteVector& bytes) {
 
     for(int i = 0; i < chunkCount; i++) {
         int chunkSize = getBytes<unsigned int>();
-        auto chunk = new Chunk(this);
+        auto chunk = std::make_shared<Chunk>(this);
 
         ByteVector chunkBytes(m_bytes.begin() + m_offset, m_bytes.begin() + m_offset + chunkSize);
         m_offset += chunk->deserialize(chunkBytes);

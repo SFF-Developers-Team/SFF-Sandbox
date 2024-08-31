@@ -16,7 +16,7 @@ class Player : public SimplePlayer {
 private:
     Camera2D m_camera;
     Texture2D m_texture;
-    Block::BlockType m_selectedBlock = Block::BlockType::STONE;
+    Block::Type m_selectedBlock = Block::Type::STONE;
 
     bool m_sneak = false;
     bool m_fly = false;
@@ -39,8 +39,8 @@ public:
 
     void moveCameraRelative(float x, float y);
 
-    bool isChunkInView(Chunk* chunk);
-    bool isBlockInView(Block* block);
+    bool isChunkInView(std::shared_ptr<Chunk> chunk);
+    bool isBlockInView(std::shared_ptr<Block> block);
     bool canDestroyBlock(Vec2i targetBlockPos, uint8_t layer);
     bool canPlaceBlock(Vec2i targetBlockPos, uint8_t layer);
 

@@ -16,9 +16,9 @@ class WorldGen;
 
 class World : public SerializedObject {
 private:
-    std::vector<Chunk*> m_chunks;
+    std::vector<std::shared_ptr<Chunk>> m_chunks;
     std::map<PlayerID, std::shared_ptr<SimplePlayer>> m_players;
-    WorldGen* m_WorldGen;
+    std::shared_ptr<WorldGen> m_worldGen;
 
     uint32_t m_width;
     uint32_t m_height;
@@ -28,21 +28,21 @@ public:
     World(int width, int height);
     ~World();
 
-    void generate(WorldGen* generator);
+    void generate(std::shared_ptr<WorldGen> generator);
     void onTick();
     bool isBlockClosed(int x, int y, uint8_t layer);
 
-    void setBlock(int x, int y, uint8_t layer, std::unique_ptr<Block> block);
-    Block* getBlock(int x, int y, uint8_t layer);
+    void setBlock(int x, int y, uint8_t layer, std::shared_ptr<Block> block);
+    std::shared_ptr<Block> getBlock(int x, int y, uint8_t layer);
 
-    void unloadChunk(Chunk* chunk);
-    void setChunk(Chunk* chunk);
-    Chunk* getChunk(int position);
+    void unloadChunk(std::shared_ptr<Chunk> chunk);
+    void setChunk(std::shared_ptr<Chunk> chunk);
+    std::shared_ptr<Chunk> getChunk(int32_t position);
     Rectf getBlockHitbox(int x, int y);
 
     std::vector<Hitbox> getHitboxes(Hitbox entityHitbox);
 
-    void placeBlock(int x, int y, uint8_t layer, enum Block::BlockType id);
+    void placeBlock(int x, int y, uint8_t layer, enum Block::Type id);
     void destroyBlock(int x, int y, uint8_t layer);
 
     bool save();
@@ -60,7 +60,7 @@ public:
 
     auto getWidth() { return m_width; }
     auto getHeight() { return m_height; }
-    auto getGenerator() { return m_WorldGen; }
+    auto getGenerator() { return m_worldGen; }
     auto& getPlayers() { return m_players; }
     auto& getChunks() { return m_chunks; }
 };  

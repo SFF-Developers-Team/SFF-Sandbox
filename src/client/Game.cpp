@@ -34,7 +34,7 @@ void Game::init(std::vector<std::string>& args) {
 
     if(!m_multiplayer || !m_multiplayerManager->connect(args[1], (args.size() > 2 ? atoi(args[2].c_str()) : 7777))) {
         if(!m_world->load()) {
-            m_world->generate(new WorldGenNormal(m_world));
+            m_world->generate(std::make_shared<WorldGenNormal>(m_world, 1));
         }
 
         m_world->addPlayer(1, m_player);

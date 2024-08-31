@@ -48,7 +48,7 @@ void RenderManager::renderWorld() {
     Debug::addString("Player count: {}", m_world->getPlayers().size());
 }
 
-void RenderManager::renderChunk(Chunk* chunk) {
+void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk) {
     auto wh = m_world->getHeight();
     auto game = Game::get();
 
@@ -67,11 +67,11 @@ void RenderManager::renderChunk(Chunk* chunk) {
                 1.0f, 1.0f
             };
 
-            if((block0 && block0->getType() != Block::BlockType::AIR) && (block1 && block1->getType() == Block::BlockType::AIR)) {
+            if((block0 && block0->getType() != Block::Type::AIR) && (block1 && block1->getType() == Block::Type::AIR)) {
                 tilemap->drawTilePro((uint16_t)block0->getType() - 1, dest, ColorBrightness(WHITE, -0.25f));
             }
 
-            if(block1 && block1->getType() != Block::BlockType::AIR) {
+            if(block1 && block1->getType() != Block::Type::AIR) {
                 tilemap->drawTilePro((uint16_t)block1->getType() - 1, dest, WHITE);
             }
         }
