@@ -39,11 +39,29 @@ int Chunk::getIndex(int x, int y, uint8_t layer) {
 
 void Chunk::setBlock(int x, int y, uint8_t layer, std::unique_ptr<Block> block) {
     if(!block || isOutOfBound(x, y, layer)) return;
-    
-    if(m_blocks[getIndex(x, y, layer)]) m_blocks[getIndex(x, y, layer)].release();
+ 
+    size_t idx = getIndex(x, y, layer);
+    size_t vsz = m_blocks.size();
+
+    if (vsz > idx) {
+        if (m_blocks[idx]) {
+            m_blocks[idx].release();
+        }
+    }
+    else {
+        size_t required = idx + 1;
+        m_blocks.reserve(required);
+
+        required -= vsz;
+
+        for (int i = 0; i < required; i++) {
+            m_blocks.push_back(nullptr);
+        }
+    }
 
     block->setPosition(m_position * CHUNK_WIDTH + x, y, layer);
-    m_blocks[getIndex(x, y, layer)] = std::move(block);
+
+    m_blocks[idx] = std::move(block);
 }
 
 void Chunk::setBlock(Vec2i pos, uint8_t layer, std::unique_ptr<Block> block) {

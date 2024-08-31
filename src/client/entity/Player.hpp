@@ -27,6 +27,10 @@ private:
 
     float m_lastAnimFrameTime = 0.f;
 
+    bool m_inputDisabled = false;
+
+    bool m_unlinkCamX = false;
+    bool m_unlinkCamY = false;
 public:
     Player(World* world);
     ~Player();
@@ -47,8 +51,18 @@ public:
     Vector2 convertToCameraPos(Vector2 pos);
     Vec2i getTargetBlock(bool onlyExist = true);
 
+    bool inputDisabled();
+    void disableInput(bool flag);
+    
+    void unlinkCameraX(bool flag);
+    void unlinkCameraY(bool flag);
+
     auto getCamera() {
         return m_camera;
+    }
+
+    void setCamera(Camera2D cam) {
+        m_camera = cam;
     }
 
     auto getSelectedBlock() {

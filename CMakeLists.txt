@@ -18,9 +18,11 @@ set(SHARED_HEADERS
     "src/shared/world/gen/"
     "src/shared/world/"
     "src/shared/"
+
+    "libs/toml/"
 )
 
-file(GLOB SHARED_SOURCES 
+file(GLOB SHARED_SOURCES CONFIGURE_DEPENDS
     "src/shared/blocks/*.cpp"
     "src/shared/entity/*.cpp"
     "src/shared/world/gen/*.cpp"
@@ -28,13 +30,14 @@ file(GLOB SHARED_SOURCES
     "src/shared/*.cpp"
 )
 
-file(GLOB CLIENT_SOURCES
+file(GLOB CLIENT_SOURCES CONFIGURE_DEPENDS
     "src/client/*.cpp"
     "src/client/entity/*.cpp"
     "src/client/particle/*.cpp"
+    "src/client/ui/*.cpp"
 )
 
-file(GLOB SERVER_SOURCES
+file(GLOB SERVER_SOURCES CONFIGURE_DEPENDS
     "src/server/*.cpp"
 )
 
@@ -44,8 +47,9 @@ add_executable(SFFSandbox-server ${SHARED_SOURCES} ${SERVER_SOURCES})
 add_subdirectory(libs/sockpp)
 add_subdirectory(libs/raylib)
 add_subdirectory(libs/GitHash)
+add_subdirectory(libs/ext_anims)
 
-target_link_libraries(SFFSandbox raylib sockpp-static ${GITHASH_LIBRARIES})
+target_link_libraries(SFFSandbox raylib sockpp-static ${GITHASH_LIBRARIES} nt5animation)
 target_link_libraries(SFFSandbox-server sockpp-static ${GITHASH_LIBRARIES})
 
 target_include_directories(SFFSandbox PRIVATE
@@ -55,11 +59,11 @@ target_include_directories(SFFSandbox PRIVATE
     "src/client/world/gen"
     "src/client/world"
     "src/client/"
+    "libs/ext_anims/include"
 )
 
 target_include_directories(SFFSandbox-server PRIVATE
     ${SHARED_HEADERS}
-    "libs/toml/"
     "src/server/world/gen"
     "src/server/world"
     "src/server/"
