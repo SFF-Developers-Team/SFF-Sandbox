@@ -174,7 +174,7 @@ void sandbox_ui::Node::modifyParam(const std::string &param, double value) {
 		col.b = (unsigned char)std::clamp((int)value, 0, 255);
 		setColor(col);
 	} else if (param == "col.a") {
-		col.r = (unsigned char)std::clamp((int)value, 0, 255);
+		col.a = (unsigned char)std::clamp((int)value, 0, 255);
 		setColor(col);
 	}
 }

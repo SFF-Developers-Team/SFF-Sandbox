@@ -71,7 +71,7 @@ sandbox_ui::InitialMenu::InitialMenu(){
 	auto buttons = buildButtons({
 		{"SINGLEPLAYER", nullptr},
 		{"MULTIPLAYER", nullptr},
-		{"OPTIONS", nullptr},
+		{"OPTIONS", [this](auto btn) {this->onOptionsClick();}},
 		{"CREDITS", [this](auto btn) {this->onCreditsClick();}}
 	}, { 100, sff_icon->getPosition().y + sff_icon->getRectangle().height + 50.f });
 
@@ -111,7 +111,7 @@ void sandbox_ui::InitialMenu::update() {
 	// }
 }
 
-std::vector<std::shared_ptr<sandbox_ui::Node>> sandbox_ui::InitialMenu::buildButtons(const std::unordered_map<std::string, std::function<void(Button*)>>& btnMapping, Node::Pos basePos) {
+std::vector<std::shared_ptr<sandbox_ui::Node>> sandbox_ui::InitialMenu::buildButtons(const std::vector<std::pair<std::string, std::function<void(Button*)>>>& btnMapping, Node::Pos basePos) {
 	m_nodeContainer->setParent(this);
 	
 	Vector2 posTarget = basePos;
@@ -152,9 +152,71 @@ void sandbox_ui::InitialMenu::saveTest() {
 
 void sandbox_ui::InitialMenu::onCreditsClick() {
 	auto tomlTest = std::make_shared<TomlNode>("assets/ui_credits.toml");
-	m_nodeContainer->addChild(tomlTest, 11);
+	tomlTest->setID("credits-card-" + std::to_string(rand()));
+	m_nodeContainer->addChild(tomlTest);
 
-	tomlTest->setID("credits-card");
+	switchCards();
+	m_currentCard = tomlTest;
+	setupCardAppear();
+
+	m_nodeContainer->sortAllChildren();
+}
+
+void sandbox_ui::InitialMenu::onOptionsClick() {
+	auto tomlTest = std::make_shared<TomlNode>("assets/ui_options.toml");
+	tomlTest->setID("options-card-" + std::to_string(rand()));
+	m_nodeContainer->addChild(tomlTest);
+
+	switchCards();
+	m_currentCard = tomlTest;
+	setupCardAppear();
+
+	m_nodeContainer->sortAllChildren();
+}
+
+void sandbox_ui::InitialMenu::switchCards() {
+	if (m_currentCard != nullptr) {
+		auto card = m_currentCard;
+
+		NodeAction act2;
+		act2.createKeyframe(1.f, -m_currentCard->getHeight() - m_currentCard->getPositionY(), renderer_tweak_type::TOInBack);
+		act2.setStartingValue(m_currentCard->getPositionY());
+		act2.setParameterToModify("pos.y");
+		act2.setOnComplete([this, card](auto action) {
+			card->release();
+		});
+
+		auto col = m_currentCard->getColor();
+
+		std::vector<NodeRenderer::Object> nodesToModify = {};
+		auto container = dynamic_cast<ContainerizedNode *>(m_currentCard.get());
+
+		if (container) {
+			auto nc = container->getNodeContainer();
+
+			nodesToModify.push_back(nc->getChildById("base-rect").value());
+			nodesToModify.push_back(nc->getChildById("line-rect-shadow").value());
+		}
+
+		double colTime = 0.5f;
+
+		{
+			NodeAction actc;
+			actc.createKeyframe(colTime, -col.a);
+			actc.setParameterToModify("col.a");
+			actc.setStartingValue(col.a);
+
+			for (auto obj : nodesToModify) {
+				obj->runAction(actc);
+			}
+		}
+
+		m_currentCard->runAction(act2);
+		m_currentCard->setZOrder(99);
+	}
+}
+void sandbox_ui::InitialMenu::setupCardAppear() {
+	auto tomlTest = m_currentCard;
 
 	Vector2 pos1 = {
 		m_nodeRect.width - tomlTest->getRectangle().width - 80,
@@ -172,69 +234,5 @@ void sandbox_ui::InitialMenu::onCreditsClick() {
 
 	tomlTest->setPosition(pos1);
 	tomlTest->runAction(act);
-
-	if (m_currentCard != nullptr) {
-		auto card = m_currentCard;
-
-		NodeAction act2;
-		act2.createKeyframe(1.f, -m_currentCard->getHeight() - m_currentCard->getPositionY(), renderer_tweak_type::TOInBack);
-		act2.setStartingValue(m_currentCard->getPositionY());
-		act2.setParameterToModify("pos.y");
-		act2.setOnComplete([this, card](auto action) {
-			printf("--------- RELEASING! ---------\n");
-
-			card->release();
-		});
-
-		auto col = m_currentCard->getColor();
-
-		std::vector<NodeRenderer::Object> nodesToModify = {};
-		auto container = dynamic_cast<ContainerizedNode *>(m_currentCard.get());
-
-		if (container) {
-			auto nc = container->getNodeContainer();
-
-			nodesToModify.push_back(nc->getChildById("base-rect").value());
-			nodesToModify.push_back(nc->getChildById("line-rect").value());
-		}
-
-		double colTime = 0.5f;
-
-		{
-			NodeAction actc;
-			actc.createKeyframe(colTime, -col.r);
-			actc.setParameterToModify("col.r");
-			actc.setStartingValue(col.r);
-
-			for (auto obj : nodesToModify) {
-				obj->runAction(actc);
-			}
-		}
-
-		{
-			NodeAction actc;
-			actc.createKeyframe(colTime, -col.g);
-			actc.setParameterToModify("col.g");
-			actc.setStartingValue(col.g);
-
-			for (auto obj : nodesToModify) {
-				obj->runAction(actc);
-			}
-		}
-
-		{
-			NodeAction actc;
-			actc.createKeyframe(colTime, -col.b);
-			actc.setParameterToModify("col.b");
-			actc.setStartingValue(col.b);
-
-			for (auto obj : nodesToModify) {
-				obj->runAction(actc);
-			}
-		}
-
-		m_currentCard->runAction(act2);
-	}
-
-	m_currentCard = tomlTest;
+	tomlTest->setZOrder(100);
 }
