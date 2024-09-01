@@ -5,7 +5,7 @@
 
 class Block : public SerializedObject {
 public:
-    enum class BlockType : unsigned char {
+    enum class Type : unsigned char {
         AIR = 0,
         GRASS,
         DIRT,
@@ -16,17 +16,17 @@ public:
         BEDROCK
     };
 protected:
-    BlockType m_type;
+    Type m_type;
     int m_x;
     int m_y;
     uint8_t m_layer;
     
 public:
-    Block(BlockType type);
-    Block(BlockType type, int x, int y, uint8_t layer);
+    Block(Type type);
+    Block(Type type, int x, int y, uint8_t layer);
 
     static std::size_t const getSize();
-    BlockType const getType();
+    Type const getType();
     Vec2i const getPosition();
     uint8_t const getLayer();
     Rectf getHitbox();
@@ -34,7 +34,7 @@ public:
     virtual void update();
 
     void setPosition(int x, int y, uint8_t layer);
-    void setType(BlockType type) { m_type = type; }
+    void setType(Type type) { m_type = type; }
 
     ByteVector& serialize() override;
     size_t deserialize(ByteVector& bytes) override;

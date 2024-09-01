@@ -1,15 +1,15 @@
 #include <Block.hpp>
 #include <SerializedObject.hpp>
 
-Block::Block(BlockType type) : m_type(type) {
+Block::Block(Type type) : m_type(type) {
     m_header = Header::BLOCK;
 }
 
-Block::Block(BlockType type, int x, int y, uint8_t layer) : m_type(type), m_x(x), m_y(y), m_layer(layer) {
+Block::Block(Type type, int x, int y, uint8_t layer) : m_type(type), m_x(x), m_y(y), m_layer(layer) {
     m_header = Header::BLOCK;
 }
 
-Block::BlockType const Block::getType() {
+Block::Type const Block::getType() {
     return m_type;
 }
 
@@ -45,7 +45,7 @@ size_t Block::deserialize(std::vector<uint8_t>& bytes) {
     std::lock_guard<std::mutex> guard(m_mutex);
     SerializedObject::deserialize(bytes);
 
-    m_type = getBytes<BlockType>(BlockType::AIR);
+    m_type = getBytes<Type>(Type::AIR);
     m_x = getBytes<int32_t>(-1);
     m_y = getBytes<int32_t>(-1);
     m_layer = getBytes<uint8_t>(1);
@@ -54,10 +54,10 @@ size_t Block::deserialize(std::vector<uint8_t>& bytes) {
 }
 
 std::size_t const Block::getSize() {
-    return sizeof(Header) + sizeof(BlockType) + sizeof(int32_t) + sizeof(int32_t) + sizeof(uint8_t);
+    return sizeof(Header) + sizeof(Type) + sizeof(int32_t) + sizeof(int32_t) + sizeof(uint8_t);
 }
 
 Rectf Block::getHitbox() {
-    if(m_layer == 0 || m_type == BlockType::AIR) return Rectf {0.0f, 0.0f, 0.0f, 0.0f};
+    if(m_layer == 0 || m_type == Type::AIR) return Rectf {0.0f, 0.0f, 0.0f, 0.0f};
     return Rectf {(float)m_x, (float)m_y, 1.0f, 1.0f};
 }

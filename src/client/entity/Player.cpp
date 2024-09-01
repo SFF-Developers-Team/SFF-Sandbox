@@ -86,7 +86,7 @@ Vector2 Player::convertToCameraPos(Vector2 pos) {
 
 Vec2i Player::getTargetBlock(bool onlyExist) {
     auto cur = convertToCameraPos(GetMousePosition());
-    auto targetBlock = Vec2i {(int)(cur.x), (int)(cur.y)};
+    auto targetBlock = Vec2i {(int)floorf(cur.x), (int)floorf(cur.y),};
 
     if (Vector2Distance(cur, {m_hitbox.x, m_hitbox.y}) <= 4 && 
         (!onlyExist || m_world->getBlock(targetBlock.x, targetBlock.y, IsKeyPressed(KEY_LEFT_ALT) ? 0 : 1) != nullptr)) {
@@ -102,31 +102,38 @@ bool Player::canDestroyBlock(Vec2i pos, uint8_t layer) {
     auto block = m_world->getBlock(pos.x, pos.y, layer);
     if(!block) return false;
 
-    Block::BlockType type = block->getType();
+    Block::Type type = block->getType();
     
-    return type != Block::BlockType::AIR; //type != Block::BlockType::BEDROCK &&
+    return type != Block::Type::BEDROCK && type != Block::Type::AIR;
 }
 
 bool Player::canPlaceBlock(Vec2i pos, uint8_t layer) {
     if(m_world->isOutOfBound(pos.x, pos.y, layer)) return false;
 
     auto block = m_world->getBlock(pos.x, pos.y, layer);
-    if(!block) {
-        m_world->setBlock(pos.x, pos.y, layer, std::make_unique<Block>(Block::BlockType::AIR));
+    auto closedByOtherBlocks = m_world->getBlock(pos.x - 1, pos.y, layer)->getType() == Block::Type::AIR &&
+        m_world->getBlock(pos.x + 1, pos.y, layer)->getType() == Block::Type::AIR &&
+        m_world->getBlock(pos.x, pos.y - 1, layer)->getType() == Block::Type::AIR &&
+        m_world->getBlock(pos.x, pos.y + 1, layer)->getType() == Block::Type::AIR && 
+        m_world->getBlock(pos.x, pos.y, !layer)->getType() == Block::Type::AIR;
+
+    if (!block) {
+        m_world->setBlock(pos.x, pos.y, layer, std::make_unique<Block>(Block::Type::AIR));
     }
 
-    if(layer == 1 && CheckCollisionRecs(m_hitbox.getRect().to<Rectangle>(), {(float)pos.x, (float)pos.y, 1.0f, 1.0f})) return false;
-    if (m_world->getBlock(pos.x - 1, pos.y, layer)->getType() == Block::BlockType::AIR &&
-        m_world->getBlock(pos.x + 1, pos.y, layer)->getType() == Block::BlockType::AIR &&
-        m_world->getBlock(pos.x, pos.y - 1, layer)->getType() == Block::BlockType::AIR &&
-        m_world->getBlock(pos.x, pos.y + 1, layer)->getType() == Block::BlockType::AIR && 
-        m_world->getBlock(pos.x, pos.y, !layer)->getType() == Block::BlockType::AIR
-    ) return false;
-    return m_world->getBlock(pos.x, pos.y, layer)->getType() == Block::BlockType::AIR;
+    if (layer == 1 && CheckCollisionRecs(m_hitbox.getRect().to<Rectangle>(), {(float)pos.x, (float)pos.y, 1.0f, 1.0f})) {
+        return false;
+    }
+
+    if (closedByOtherBlocks) {
+        return false;
+    }
+
+    return m_world->getBlock(pos.x, pos.y, layer)->getType() == Block::Type::AIR;
 }
 
 void Player::updateControls() {
-    auto targetBlockPos = getTargetBlock(false);
+    auto target = getTargetBlock(false);
     auto gravitation = (!m_fly) ? 0.02f : 0.0f;
     auto isAltLayer = IsKeyDown(KEY_LEFT_ALT);
     auto forward = 0.0f;
@@ -135,16 +142,29 @@ void Player::updateControls() {
     m_sneak = false;
 
     if (!inputDisabled()) {
-        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && canDestroyBlock(targetBlockPos, !isAltLayer)) {
-            m_world->destroyBlock(targetBlockPos.x, targetBlockPos.y, !isAltLayer);
-            if (m_onGround) setAnimation(PLAYER_HIT);
-            if (Game::get()->isMultiplayer()) mp->onBlockChanged(targetBlockPos, !isAltLayer);
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && canDestroyBlock(target, !isAltLayer)) {
+            logD("looking into {} {} block", target.x, target.y);
+            m_world->destroyBlock(target.x, target.y, !isAltLayer);
+
+            if (m_onGround) {
+                setAnimation(PLAYER_HIT);
+            }
+
+            if (Game::get()->isMultiplayer()) {
+                mp->addToQueue(m_world->getBlock(target.x, target.y, !isAltLayer));
+            }
         }
 
-        if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && canPlaceBlock(targetBlockPos, !isAltLayer)) {
-            if (m_onGround) setAnimation(PLAYER_HIT);
-            m_world->placeBlock(targetBlockPos.x, targetBlockPos.y, !isAltLayer, m_selectedBlock);
-            if (Game::get()->isMultiplayer()) mp->onBlockChanged(targetBlockPos, !isAltLayer);
+        if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && canPlaceBlock(target, !isAltLayer)) {
+            m_world->placeBlock(target.x, target.y, !isAltLayer, m_selectedBlock);
+
+            if (m_onGround) {
+                setAnimation(PLAYER_HIT);
+            }
+
+            if (Game::get()->isMultiplayer()) {
+                mp->addToQueue(m_world->getBlock(target.x, target.y, !isAltLayer));
+            }
         }
 
         if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
@@ -217,6 +237,19 @@ void Player::onTick() {
     }
 
     auto mp = Game::get()->getMultiplayer();
+
+    if(!Game::get()->isMultiplayer()) {
+        auto minX = m_world->convertXtoChunkPosition(m_hitbox.x) - 2;
+        auto maxX = m_world->convertXtoChunkPosition(m_hitbox.x) + 2;
+
+        for(auto x = minX; x < maxX; x++) {
+            if(!m_world->getChunk(x)) {
+                auto chunk = m_world->getGenerator()->generateChunk(x);
+                m_world->addChunk(chunk);
+            }
+        }
+    }
+
     if (Game::get()->isMultiplayer() && (m_prevX != m_hitbox.x || m_prevY != m_hitbox.y || m_prevAnimFrame != m_animFrame || m_prevDir != m_direction)) {
         mp->addToQueue(std::shared_ptr<SimplePlayer>(this));
     }
@@ -227,32 +260,32 @@ void Player::update() {
         auto wheel = GetMouseWheelMove();
         for(int i = 0; i < 6; i++) {
             if(IsKeyDown(KEY_ONE + i)) {
-                m_selectedBlock = (Block::BlockType)(i + 1);
+                m_selectedBlock = (Block::Type)(i + 1);
             }
         }
-    
+        
         if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0) m_camera.zoom -= 1.0f;
         if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) m_camera.zoom += 1.0f;
 
         if(!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
-            m_selectedBlock = (Block::BlockType)((int)(m_selectedBlock) + (wheel > 0 ? -1 : 1));
+            m_selectedBlock = (Block::Type)((int)(m_selectedBlock) + (wheel > 0 ? -1 : 1));
             wheel = GetMouseWheelMove();
             for (int i = 0; i < 6; i++) {
                 if (IsKeyDown(KEY_ONE + i)) {
-                    m_selectedBlock = (Block::BlockType)(i + 1);
+                    m_selectedBlock = (Block::Type)(i + 1);
                 }
             }
 
             if (!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
-                m_selectedBlock = (Block::BlockType)((int)(m_selectedBlock)+(wheel > 0 ? -1 : 1));
+                m_selectedBlock = (Block::Type)((int)(m_selectedBlock) + (wheel > 0 ? -1 : 1));
 
-                if (m_selectedBlock > Block::BlockType::WOOL) m_selectedBlock = Block::BlockType::GRASS;
-                if (m_selectedBlock < Block::BlockType::GRASS) m_selectedBlock = Block::BlockType::WOOL;
+                if (m_selectedBlock > Block::Type::WOOL) m_selectedBlock = Block::Type::GRASS;
+                if (m_selectedBlock < Block::Type::GRASS) m_selectedBlock = Block::Type::WOOL;
             }
-
-            if (IsKeyPressed(KEY_R)) resetPosition();
-            if (IsKeyPressed(KEY_F)) m_fly = !m_fly;
         }
+
+        if (IsKeyPressed(KEY_R)) resetPosition();
+        if (IsKeyPressed(KEY_F)) m_fly = !m_fly;
 	}
 
     updateCamera();
@@ -273,7 +306,7 @@ void Player::moveCameraRelative(float x, float y) {
     }
 }
 
-bool Player::isChunkInView(Chunk* chunk) {
+bool Player::isChunkInView(std::shared_ptr<Chunk> chunk) {
     auto minPos = chunk->getPosition() * CHUNK_WIDTH;
     auto maxPos = minPos + CHUNK_WIDTH;
     auto min = convertToCameraPos({0, 0});
@@ -282,7 +315,11 @@ bool Player::isChunkInView(Chunk* chunk) {
     return (minPos >= min.x && minPos <= max.x) || (maxPos >= min.x && maxPos <= max.x); 
 }
 
-bool Player::isBlockInView(Block* block) {
+bool Player::isBlockInView(std::shared_ptr<Block> block) {
+    if(!block) {
+        return false;
+    }
+
     auto pos = block->getPosition();
     auto min = convertToCameraPos({0, 0});
     auto max = convertToCameraPos({(float)GetScreenWidth(), (float)GetScreenHeight()});

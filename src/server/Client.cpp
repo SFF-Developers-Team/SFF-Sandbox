@@ -104,7 +104,7 @@ void Client::onTick() {
         }
         
         case SerializedObject::Header::BLOCK: {
-            auto block = std::make_unique<Block>(Block::BlockType::AIR);
+            auto block = std::make_unique<Block>(Block::Type::AIR);
             block->deserialize(packet->serialize());
 
             auto pos = block->getPosition();

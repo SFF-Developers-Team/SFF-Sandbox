@@ -19,6 +19,7 @@ namespace sandbox_ui {
 		void saveTest();
 
 		void onCreditsClick();
+		void onSingleClick();
 		void onOptionsClick();
 
 		void switchCards();

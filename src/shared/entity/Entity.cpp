@@ -59,7 +59,7 @@ void Entity::moveRelative(float x, float speed) {
 }
 
 void Entity::resetPosition() {
-    m_hitbox.x = rand() % m_world->getWidth();
+    m_hitbox.x = 0.0f;
     m_hitbox.y = -3.0f;
 }
 

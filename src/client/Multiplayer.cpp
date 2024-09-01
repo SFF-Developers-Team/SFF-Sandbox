@@ -180,7 +180,7 @@ void Multiplayer::onTick() {
         }
 
         case Header::BLOCK: {
-            auto block = std::make_unique<Block>(Block::BlockType::AIR);
+            auto block = std::make_unique<Block>(Block::Type::AIR);
             block->deserialize(packet->serialize());
             auto pos = block->getPosition();
             auto layer = block->getLayer();
@@ -191,12 +191,12 @@ void Multiplayer::onTick() {
         }
 
         case Header::CHUNK: {
-            auto chunk = new Chunk(world);
+            auto chunk = std::make_shared<Chunk>(world);
             chunk->deserialize(packet->serialize());
 
             logD("Chunk {} ({} bytes)", chunk->getPosition(), packet->serialize().size());
 
-            world->setChunk(chunk);
+            world->addChunk(chunk);
             break;
         }
 
@@ -206,9 +206,9 @@ void Multiplayer::onTick() {
             while(chunksCount-- > 0) {
                 auto chunkSize = packet->getBytes<uint16_t>();
                 auto chunkBytes = packet->getBytes((size_t)chunkSize);
-                auto chunk = new Chunk(world);
+                auto chunk = std::make_shared<Chunk>(world);
                 chunk->deserialize(chunkBytes);
-                world->setChunk(chunk);
+                world->addChunk(chunk);
             }
 
             m_worldLoaded = true;

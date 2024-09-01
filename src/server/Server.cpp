@@ -50,12 +50,13 @@ void Server::init() {
 
     logD("Server listening *:{}", m_acceptor.address().port());
 
-    m_world = new World(256, 128);
+    m_world = new World(256, 128, "world");
     m_timer = new Timer(60);
 
     if(!m_world->load()) {
         logD("Generating world...");
-        m_world->generate(new WorldGenNormal(m_world));
+        m_world->setGenerator(std::make_shared<WorldGenNormal>(m_world, 1));
+        m_world->generate();
     }
 
     std::thread inpthr(&Server::inputThread, this);
