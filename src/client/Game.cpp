@@ -20,6 +20,8 @@ void Game::init(std::vector<std::string>& args) {
     InitWindow(m_screenWidth, m_screenHeight, "SFF Sandbox");
     SetTargetFPS(GetMonitorRefreshRate(0));
 
+    SetWindowSize(m_screenWidth * sandbox_ui::Node::getDpiScaling(), m_screenHeight * sandbox_ui::Node::getDpiScaling());
+  
     sockpp::initialize();
 
     m_username = (args.size() > 0 ? args[0] : std::string("Player").append(std::to_string(rand()))); 

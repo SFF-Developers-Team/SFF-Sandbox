@@ -9,8 +9,8 @@
 namespace sandbox_ui {
     class NodeAction {
     public:
-        using Backend = struct renderer_animation;
-        using KBackend = struct renderer_keyframe;
+        using Backend = struct ::renderer_animation;
+        using KBackend = struct ::renderer_keyframe;
 
         using Callback = std::function<void(NodeAction*)>;
     protected:

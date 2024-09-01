@@ -14,12 +14,16 @@ namespace sandbox_ui {
 	private:
 		double m_timeTest = 0.f;
 
-		std::vector<std::shared_ptr<Node>> buildButtons(const std::unordered_map<std::string, std::function<void(Button*)>> &btnMapping, Node::Pos basePos);
+		std::vector<std::shared_ptr<Node>> buildButtons(const std::vector<std::pair<std::string, std::function<void(Button*)>>> &btnMapping, Node::Pos basePos);
 	
 		void saveTest();
 
 		void onCreditsClick();
 		void onSingleClick();
+		void onOptionsClick();
+
+		void switchCards();
+		void setupCardAppear();
 
 		std::shared_ptr<Node> m_currentCard = nullptr;
 	public:

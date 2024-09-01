@@ -120,9 +120,13 @@ void sandbox_ui::Button::draw() {
 		}
 	}
 
+	auto rect = getRectangle();
 	float padding = m_nodeContainer->getScaling();
 
-	BeginScissorMode(m_nodeRect.x - padding, m_nodeRect.y - padding, m_nodeRect.width + (padding * 2.f), m_nodeRect.height + (padding * 2.f));
+	rect.width *= getScale();
+	rect.height *= getScale();
+
+	BeginScissorMode(rect.x - padding, rect.y - padding, rect.width + (padding * 2.f), rect.height + (padding * 2.f));
 
 	m_nodeContainer->render();
 

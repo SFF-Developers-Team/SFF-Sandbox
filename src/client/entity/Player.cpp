@@ -250,7 +250,7 @@ void Player::onTick() {
         }
     }
 
-    if(Game::get()->isMultiplayer() && (m_prevX != m_hitbox.x || m_prevY != m_hitbox.y || m_prevAnimFrame != m_animFrame || m_prevDir != m_direction)) {
+    if (Game::get()->isMultiplayer() && (m_prevX != m_hitbox.x || m_prevY != m_hitbox.y || m_prevAnimFrame != m_animFrame || m_prevDir != m_direction)) {
         mp->addToQueue(std::shared_ptr<SimplePlayer>(this));
     }
 }
