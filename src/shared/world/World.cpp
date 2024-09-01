@@ -7,17 +7,21 @@
 #include <Chunk.hpp>
 #include <SimplePlayer.hpp>
 
-World::World(int width, int height) : m_width(width), m_height(height) {
+World::World(uint32_t width, uint32_t height, std::string const& worldName) 
+    : m_width(width), m_height(height), m_worldName(worldName) {
     m_header = WORLD;
 }
 
+World::World(std::string const& worldName) : World(0, 128, worldName) {}
+
 World::~World() {}
 
-void World::generate(std::shared_ptr<WorldGen> generator) {
-    m_worldGen = generator;
-
-    for(int x = 0; x < m_width / CHUNK_SIZE; x++) {
-        m_chunks.push_back(generator->generateChunk(x));
+void World::generate() {
+    if(m_worldGen) {
+        for(int32_t x = static_cast<int32_t>(m_width > 0 ? -(m_width / CHUNK_WIDTH) / 2 : -3); x < static_cast<int32_t>(m_width > 0 ? (m_width / CHUNK_WIDTH) / 2 : 3); x++) {
+            logD("gen chunk {}", x);
+            m_chunks.insert(std::make_pair(x, m_worldGen->generateChunk(x)));
+        }
     }
 }
 
@@ -32,48 +36,67 @@ bool World::isBlockClosed(int x, int y, uint8_t l) {
 }
 
 void World::unloadChunk(std::shared_ptr<Chunk> chunk) {
-    m_chunks.erase(std::find(m_chunks.begin(), m_chunks.end(), chunk));
+    if(chunk) {
+        unloadChunk(chunk->getPosition());
+    }
 }
 
-std::shared_ptr<Chunk> World::getChunk(int32_t position) {
-    for(auto& chunk : m_chunks) {
-        if(chunk->getPosition() == position) return chunk;
+void World::unloadChunk(ChunkPosition pos) {
+    if(m_chunks.contains(pos)) {
+        m_chunks.erase(pos);
+    }
+}
+
+std::shared_ptr<Chunk> World::getChunk(ChunkPosition position) {
+    if(m_chunks.contains(position)) {
+        return m_chunks[position];
     }
 
     return nullptr;
 }
 
-void World::setChunk(std::shared_ptr<Chunk> chunk) {
-    auto worldChunk = getChunk(chunk->getPosition());
-    if(worldChunk) unloadChunk(worldChunk);
+void World::addChunk(std::shared_ptr<Chunk> chunk) {
+    if(!chunk) {
+        return;
+    }
 
-    m_chunks.push_back(chunk);
+    if(m_chunks.contains(chunk->getPosition())) {
+        m_chunks.erase(chunk->getPosition());
+    }
+
+    m_chunks.insert(std::make_pair(chunk->getPosition(), chunk));
 }
 
 void World::placeBlock(int32_t x, int32_t y, uint8_t layer, enum Block::Type id) {
     auto block = getBlock(x, y, layer);
-    if(block && block->getType() == Block::Type::AIR) setBlock(x, y, layer, std::make_unique<Block>(id));
+    if(block && block->getType() == Block::Type::AIR) {
+        setBlock(x, y, layer, std::make_unique<Block>(id));
+    }
 }
 
 void World::destroyBlock(int32_t x, int32_t y, uint8_t layer) {
+    logD("destroy {} {} block", x, y);
     auto block = getBlock(x, y, layer);
-    if(!block || block->getType() == Block::Type::AIR) return;
 
-    setBlock(x, y, layer, std::make_unique<Block>(Block::Type::AIR));
+    if(block && block->getType() != Block::Type::AIR) {
+        setBlock(x, y, layer, std::make_unique<Block>(Block::Type::AIR));
+    }
 }
 
 std::shared_ptr<Block> World::getBlock(int32_t x, int32_t y, uint8_t layer) {
-    auto chunk = getChunk(x / CHUNK_WIDTH);
-    if(!chunk) return nullptr;
-
+    if(isOutOfBound(x, y, layer)) {
+        return nullptr;
+    }
+    
+    auto chunk = getChunk(convertXtoChunkPosition(x));
     return chunk->getBlock(x % CHUNK_WIDTH, y, layer);
 }
 
-void World::setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block) {    
-    auto chunk = getChunk(x / CHUNK_WIDTH);
-    if(!chunk) return;
-
-    chunk->setBlock(x % 16, y, layer, block);
+void World::setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block) {
+    if(!isOutOfBound(x, y, layer)) {
+        auto chunk = getChunk(convertXtoChunkPosition(x));
+        chunk->setBlock(x % CHUNK_WIDTH, y, layer, block);
+    }
 }
 
 ByteVector& World::serialize() {
@@ -81,11 +104,13 @@ ByteVector& World::serialize() {
 
     addBytes(m_width);
     addBytes(m_height);
+    addBytes(m_worldGen->getType());
+    addBytes(m_worldGen->getSeed());
     addBytes((uint32_t)m_chunks.size());
 
     logD("chunks count {}", m_chunks.size());
 
-    for(auto chunk : m_chunks) {
+    for(auto [pos, chunk] : m_chunks) {
         if(chunk) {
             auto chunkBytes = chunk->serialize();
 
@@ -103,7 +128,16 @@ size_t World::deserialize(ByteVector& bytes) {
 
     m_width = getBytes<int>();
     m_height = getBytes<int>();
-    int chunkCount = getBytes<unsigned int>();
+    auto generatorType = getBytes<WorldGen::Type>();
+    auto seed = getBytes<int64_t>();
+    auto chunkCount = getBytes<unsigned int>();
+
+    switch(generatorType) {
+        default:
+        case WorldGen::Type::NORMAL: {
+            m_worldGen = std::make_shared<WorldGenNormal>(this, seed);
+        }
+    }
 
     logD("Begin deserializing chunks");
 
@@ -114,7 +148,7 @@ size_t World::deserialize(ByteVector& bytes) {
         ByteVector chunkBytes(m_bytes.begin() + m_offset, m_bytes.begin() + m_offset + chunkSize);
         m_offset += chunk->deserialize(chunkBytes);
 
-        m_chunks.push_back(chunk);
+        addChunk(chunk);
     }
 
     logD("End deserializing chunks");
@@ -157,18 +191,19 @@ std::vector<Hitbox> World::getHitboxes(Hitbox entityHitbox) {
     int minY = entityHitbox.y - 1;
     int maxY = ceil(entityHitbox.y + entityHitbox.height);
 
-
-
     std::vector<Hitbox> ret;
 
     for(int x = minX; x <= maxX; x++) {
         for(int y = minY; y <= maxY; y++) {
             auto block = getBlock(x, y, 1);
-            if(!block) continue;
-            
-            auto hitbox = getBlockHitbox(x, y);
-            if(hitbox.width == 0.0f || hitbox.height == 0.0f) continue;
-            ret.push_back(hitbox);
+
+            if (block) {
+                auto hitbox = block->getHitbox();
+
+                if(hitbox.width != 0.0f && hitbox.height != 0.0f) {
+                    ret.push_back(hitbox);
+                }
+            }
         }
     }
 
@@ -218,5 +253,13 @@ Rectf World::getBlockHitbox(int x, int y) {
 }
 
 bool World::isOutOfBound(int x, int y, uint8_t layer) {
-    return (x < 0 || x > getWidth() || y < 0 || y >= getHeight() || layer < 0 || layer > LAYERS - 1);
+    if(m_width > 0 && (x < 0 || x > getWidth())) {
+        return true;
+    }
+
+    if(!m_chunks.contains(convertXtoChunkPosition(x))) {
+        return true;
+    }
+    
+    return (y < 0 || y >= getHeight() || layer < 0 || layer > LAYERS - 1);
 }

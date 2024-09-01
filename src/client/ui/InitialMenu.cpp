@@ -7,6 +7,7 @@
 #include "Sprite.hpp"
 #include "TomlNode.hpp"
 #include <cmath>
+#include <Game.hpp>
 
 void sandbox_ui::InitialMenu::draw() {
 	Node::draw();
@@ -69,11 +70,11 @@ sandbox_ui::InitialMenu::InitialMenu(){
 	m_nodeContainer->addChild(sff_icon, 10);
 
 	auto buttons = buildButtons({
-		{"SINGLEPLAYER", nullptr},
+		{"SINGLEPLAYER", [this](auto btn) {this->onSingleClick();}},
 		{"MULTIPLAYER", nullptr},
 		{"OPTIONS", nullptr},
 		{"CREDITS", [this](auto btn) {this->onCreditsClick();}}
-	}, { 100, sff_icon->getPosition().y + sff_icon->getRectangle().height + 50.f });
+	}, {100, sff_icon->getPosition().y + sff_icon->getRectangle().height + 50.f});
 
 	float btn_width = buttons[0]->getRectangle().width;
 	float alignX = (btn_width - sff_icon->getRectangle().width) / 2.f;
@@ -237,4 +238,12 @@ void sandbox_ui::InitialMenu::onCreditsClick() {
 	}
 
 	m_currentCard = tomlTest;
+}
+
+void sandbox_ui::InitialMenu::onSingleClick() {
+	auto game = Game::get();
+	game->setInPlayScene(true);
+	game->getPlayer()->disableInput(false);
+	game->getPlayer()->unlinkCameraX(false);
+	game->getPlayer()->unlinkCameraY(false);
 }

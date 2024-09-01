@@ -20,14 +20,13 @@ void Game::init(std::vector<std::string>& args) {
     InitWindow(m_screenWidth, m_screenHeight, "SFF Sandbox");
     SetTargetFPS(GetMonitorRefreshRate(0));
 
-
     sockpp::initialize();
 
     m_username = (args.size() > 0 ? args[0] : std::string("Player").append(std::to_string(rand()))); 
     m_multiplayer = args.size() > 1;
     m_blocksMap = new TileMap("assets/blocks.png", Vector2 {16, 16});
     m_timer = new Timer(60);
-    m_world = new World(256, 128);
+    m_world = new World("world1");
     m_player = std::make_shared<Player>(m_world);
     // m_particleManager = new ParticleManager(m_world, m_player);
     m_renderManager = new RenderManager(m_world, m_player);
@@ -47,7 +46,7 @@ void Game::init(std::vector<std::string>& args) {
         auto old_cam = cam;
 
         m_gameMenu->m_worldCam.y = cam.target.y + 4;
-        m_gameMenu->m_worldCam.x += GetFrameTime() * 1.5f;
+        m_gameMenu->m_worldCam.x += 0.001f;
 
         auto container = m_gameMenu->getNodeContainer();
         float mscale = container->getScaling();
@@ -79,7 +78,8 @@ void Game::init(std::vector<std::string>& args) {
 
     if(!m_multiplayer || !m_multiplayerManager->connect(args[1], (args.size() > 2 ? atoi(args[2].c_str()) : 7777))) {
         if(!m_world->load()) {
-            m_world->generate(std::make_shared<WorldGenNormal>(m_world, 1));
+            m_world->setGenerator(std::make_shared<WorldGenNormal>(m_world, 1));
+            m_world->generate();
         }
 
         m_world->addPlayer(1, m_player);
@@ -125,7 +125,14 @@ void Game::render() {
         // // Selected block
         // m_blocksMap->drawTilePro((uint16_t)m_player->getSelectedBlock() - 1, {m_screenWidth - 42.f, 10.f, 32.f, 32.f}, WHITE);
 
-        m_uiRenderer->render();
+        if(m_inPlayScene) {
+            BeginMode2D(m_player->getCamera());
+                m_renderManager->renderWorld();
+            EndMode2D();
+            m_blocksMap->drawTilePro((uint16_t)m_player->getSelectedBlock() - 1, {m_screenWidth - 42.f, 10.f, 32.f, 32.f}, WHITE);
+        } else {
+            m_uiRenderer->render();
+        }
 
         if(Debug::m_debug){
             Debug::draw();

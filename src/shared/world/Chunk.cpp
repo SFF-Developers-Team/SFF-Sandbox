@@ -7,7 +7,7 @@ Chunk::Chunk(World* world, int32_t pos) : m_world(world), m_position(pos) {
     m_header = Header::CHUNK;
     m_blocks.resize(CHUNK_WIDTH * world->getHeight() * LAYERS);
 
-    for (int x = 0; x < CHUNK_SIZE; x++) {
+    for (int x = 0; x < CHUNK_WIDTH; x++) {
         for(int y = 0; y < world->getHeight(); y++) {
             setBlock(x, y, 0, Block::Type::AIR);
             setBlock(x, y, 1, Block::Type::AIR);
@@ -19,7 +19,7 @@ Chunk::Chunk(World* world) : m_world(world) {
     m_header = Header::CHUNK;
     m_blocks.resize(CHUNK_WIDTH * world->getHeight() * LAYERS);
 
-    for (int x = 0; x < CHUNK_SIZE; x++) {
+    for (int x = 0; x < CHUNK_WIDTH; x++) {
         for(int y = 0; y < world->getHeight(); y++) {
             setBlock(x, y, 0, Block::Type::AIR);
             setBlock(x, y, 1, Block::Type::AIR);
@@ -30,18 +30,18 @@ Chunk::Chunk(World* world) : m_world(world) {
 Chunk::~Chunk() {}
 
 bool Chunk::isOutOfBound(int x, int y, uint8_t layer) {
-    return (x < 0 || x > CHUNK_WIDTH || y < 0 || y >= m_world->getHeight() || layer < 0 || layer > LAYERS - 1);
+    return (x < (x < 0 ? -CHUNK_WIDTH : 0) || x > ( x > 0 ? CHUNK_WIDTH : 0) || y < 0 || y >= m_world->getHeight() || layer < 0 || layer > LAYERS - 1);
 }
 
 int Chunk::getIndex(int x, int y, uint8_t layer) {
-    return (layer * CHUNK_WIDTH * m_world->getHeight()) + (y * CHUNK_WIDTH) + x;
+    return (layer * CHUNK_WIDTH * m_world->getHeight()) + (y * CHUNK_WIDTH) + abs(x);
 }
 
 void Chunk::setBlock(int x, int y, uint8_t layer, std::shared_ptr<Block> block) {
-    if(!block || isOutOfBound(x, y, layer)) return;
-
-    block->setPosition(m_position * CHUNK_WIDTH + x, y, layer);
-    m_blocks[getIndex(x, y, layer)] = block;
+    if(block && !isOutOfBound(x, y, layer)) {
+        block->setPosition(m_position * CHUNK_WIDTH + x, y, layer);
+        m_blocks[getIndex((x < 0 ? CHUNK_WIDTH + x : x), y, layer)] = block;
+    }
 }
 
 void Chunk::setBlock(Vec2i pos, uint8_t layer, std::shared_ptr<Block> block) {
@@ -57,9 +57,11 @@ void Chunk::setBlock(Vec2i pos, uint8_t layer, Block::Type type) {
 }
 
 std::shared_ptr<Block> Chunk::getBlock(int x, int y, uint8_t layer) {
-    if(isOutOfBound(x, y, layer)) return nullptr;
+    if(isOutOfBound(x, y, layer)) {
+        return nullptr;
+    }
 
-    return m_blocks[getIndex(x, y, layer)];
+    return m_blocks[getIndex((x < 0 ? CHUNK_WIDTH + x : x), y, layer)];
 }
 
 std::shared_ptr<Block> Chunk::getBlock(Vec2i pos, uint8_t layer) {
@@ -89,7 +91,7 @@ ByteVector& Chunk::serialize() {
     addBytes(blockCount);
     addBytes((uint8_t)Block::getSize());
 
-    for(int x = 0; x < CHUNK_SIZE; x++) {
+    for(int x = 0; x < CHUNK_WIDTH; x++) {
         for(int y = 0; y < m_world->getHeight(); y++) {
             for(int layer = 0; layer < LAYERS; layer++) {
                 auto block = getBlock(x, y, layer);
@@ -116,7 +118,7 @@ size_t Chunk::deserialize(ByteVector& bytes) {
         return m_offset;
     }
 
-    for (int x = 0; x < CHUNK_SIZE; x++) {
+    for (int x = 0; x < CHUNK_WIDTH; x++) {
         for(int y = 0; y < m_world->getHeight(); y++) {
             setBlock(x, y, 0, Block::Type::AIR);
             setBlock(x, y, 1, Block::Type::AIR);

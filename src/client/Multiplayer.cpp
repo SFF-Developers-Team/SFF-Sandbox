@@ -196,7 +196,7 @@ void Multiplayer::onTick() {
 
             logD("Chunk {} ({} bytes)", chunk->getPosition(), packet->serialize().size());
 
-            world->setChunk(chunk);
+            world->addChunk(chunk);
             break;
         }
 
@@ -208,7 +208,7 @@ void Multiplayer::onTick() {
                 auto chunkBytes = packet->getBytes((size_t)chunkSize);
                 auto chunk = std::make_shared<Chunk>(world);
                 chunk->deserialize(chunkBytes);
-                world->setChunk(chunk);
+                world->addChunk(chunk);
             }
 
             m_worldLoaded = true;

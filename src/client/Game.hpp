@@ -17,6 +17,7 @@ private:
     const int m_screenHeight = 720;
     uint8_t m_renderDistance = 3;
     bool m_multiplayer = false;
+    bool m_inPlayScene = false;
     std::string m_username;
     
     World* m_world;
@@ -42,6 +43,7 @@ public:
     void update();
 
     void drawCrosshair(Vector2 pos);
+    void setInPlayScene(bool flag) { m_inPlayScene = flag; }
 
     auto getScreenWidth() { return m_screenWidth; }
     auto getScreenHeight() { return m_screenHeight; }

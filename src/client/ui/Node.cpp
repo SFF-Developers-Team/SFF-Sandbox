@@ -2,6 +2,7 @@
 #include "NodeRenderer.hpp"
 #include "ContainerizedNode.hpp"
 #include <iostream>
+#include <algorithm>
 
 void sandbox_ui::Node::update() {}
 void sandbox_ui::Node::draw() {}

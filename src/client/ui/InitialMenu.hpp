@@ -19,6 +19,7 @@ namespace sandbox_ui {
 		void saveTest();
 
 		void onCreditsClick();
+		void onSingleClick();
 
 		std::shared_ptr<Node> m_currentCard = nullptr;
 	public:

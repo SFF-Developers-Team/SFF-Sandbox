@@ -13,7 +13,7 @@ RenderManager::RenderManager(World* world, std::shared_ptr<Player> player) : m_w
 void RenderManager::renderWorld() {
     int chunksDrawn = 0;
 
-    for (auto& chunk : m_world->getChunks()) {
+    for (auto& [pos, chunk] : m_world->getChunks()) {
         if(m_player->isChunkInView(chunk)) {
             renderChunk(chunk);
             chunksDrawn++;
@@ -22,19 +22,17 @@ void RenderManager::renderWorld() {
         auto playerTarget = m_player->getTargetBlock();
 
         // Selected block
-        if(playerTarget.x > 0 && playerTarget.y > 0) {
-            DrawRectangleLinesEx({(float)playerTarget.x, (float)playerTarget.y, 1.0f, 1.0f}, 0.025f, WHITE);
-        }
+        DrawRectangleLinesEx({(float)playerTarget.x, (float)playerTarget.y, 1.0f, 1.0f}, 0.025f, WHITE);
 
         if(Debug::m_debug) {
             DrawLineV(
-                {(float)chunk->getPosition() * CHUNK_SIZE, 0}, 
-                {(float)chunk->getPosition() * CHUNK_SIZE, (float)m_world->getHeight()}, YELLOW
+                {(float)pos * CHUNK_WIDTH, 0}, 
+                {(float)pos * CHUNK_WIDTH, (float)m_world->getHeight()}, YELLOW
             );
 
             DrawLineV(
-                {(float)chunk->getPosition() * (CHUNK_SIZE * 2), 0}, 
-                {(float)chunk->getPosition() * (CHUNK_SIZE * 2), (float)m_world->getHeight()}, YELLOW
+                {(float)pos * CHUNK_WIDTH + CHUNK_WIDTH, 0}, 
+                {(float)pos * CHUNK_WIDTH + CHUNK_WIDTH, (float)m_world->getHeight()}, YELLOW
             );
         }
     }
@@ -52,7 +50,7 @@ void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk) {
     auto wh = m_world->getHeight();
     auto game = Game::get();
 
-    for (int x = 0; x < CHUNK_SIZE; x++) {
+    for (int x = 0; x < CHUNK_WIDTH; x++) {
         for(int y = 0; y < wh; y++) {
             auto block0 = chunk->getBlock(x, y, 0);
             auto block1 = chunk->getBlock(x, y, 1);
@@ -62,7 +60,7 @@ void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk) {
             auto tilemap = Game::get()->getBlocksTileMap();
             auto dest = Rectangle {
                 // To support lightweight chunk format
-                (chunk->getPosition() > 0 && x < CHUNK_SIZE ? (float)chunk->getPosition() * CHUNK_SIZE + x : x), 
+                ((chunk->getPosition() > 0 || chunk->getPosition() < 0) && x < CHUNK_WIDTH ? (float)chunk->getPosition() * CHUNK_WIDTH + x : x), 
                 (float)y, 
                 1.0f, 1.0f
             };
@@ -108,6 +106,5 @@ void RenderManager::renderSimplePlayer(std::shared_ptr<SimplePlayer> player) {
 
     if(Debug::m_debug) {
         DrawRectangleLinesEx(hitbox.getRect().to<Rectangle>(), 0.025f, GREEN);
-        DrawRectangleLinesEx(hitbox.expand(player->getSpeed().x, player->getSpeed().y).getRect().to<Rectangle>(), 0.05f, ORANGE);
     }
 }
