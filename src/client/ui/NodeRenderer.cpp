@@ -78,7 +78,7 @@ std::optional<sandbox_ui::NodeRenderer::Object> sandbox_ui::NodeRenderer::getChi
 }
 
 Vector2 sandbox_ui::NodeRenderer::getMappedPosition(Vector2 pos) {
-	return getMappedPosition(pos, m_scaling);
+	return getMappedPosition(pos, getScaling());
 }
 
 Vector2 sandbox_ui::NodeRenderer::getMappedPosition(Vector2 pos, float scaling) {

@@ -15,10 +15,8 @@ class Multiplayer {
 private:
     PacketManager<sockpp::tcp_connector>* m_pacman;
     sockpp::tcp_connector m_connector;
-    std::vector<std::shared_ptr<GamePacket>> m_packetQueue;
-
-    bool m_canSendNext = true;
-    bool m_shouldSendPlayer = true;
+    std::vector<std::shared_ptr<SerializedObject>> m_queue;
+    bool m_worldLoaded = false;
 
 public:
     ~Multiplayer();
@@ -26,7 +24,6 @@ public:
     bool connect(std::string const& host, in_port_t port);
     void onTick();
 
-    void addToQueue(std::shared_ptr<GamePacket> packet);
+    void addToQueue(std::shared_ptr<SerializedObject> classObj);
     void onBlockChanged(Vec2i pos, uint8_t layer);
-    bool shouldSendPlayer() { return m_shouldSendPlayer; }
 };

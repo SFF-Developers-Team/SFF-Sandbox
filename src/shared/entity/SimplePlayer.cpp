@@ -37,7 +37,7 @@ void SimplePlayer::setAnimation(AnimationType type) {
 
     if(m_animLimits.count(type)) {
         auto limit = m_animLimits.at(type);
-        m_animCurrentFrame = animationClamp(m_animCurrentFrame, limit.first, limit.second);
+        m_animFrame = animationClamp(m_animFrame, limit.first, limit.second);
     }
 }
 
@@ -46,7 +46,6 @@ uint8_t SimplePlayer::animationClamp(uint8_t value, uint8_t min, uint8_t max) {
     return value;
 }
 
-
 ByteVector& SimplePlayer::serialize() {
     std::lock_guard<std::mutex> guard(m_mutex);
     SerializedObject::serialize();
@@ -54,13 +53,13 @@ ByteVector& SimplePlayer::serialize() {
     addBytes(m_id);
     addBytes(m_hitbox.x);
     addBytes(m_hitbox.y);
-    addBytes(m_animCurrentFrame);
+    addBytes(m_animFrame);
     addBytes(m_direction);
 
     return m_bytes;
 }
 
-int SimplePlayer::deserialize(ByteVector& bytes) {
+size_t SimplePlayer::deserialize(ByteVector& bytes) {
     std::lock_guard<std::mutex> guard(m_mutex);
     SerializedObject::deserialize(bytes);
 
@@ -68,7 +67,7 @@ int SimplePlayer::deserialize(ByteVector& bytes) {
     m_hitbox.x = getBytes<float>(0.0f);
     m_hitbox.y = getBytes<float>(0.0f);
     m_direction = getBytes<Direction>(Direction::LEFT);
-    m_animCurrentFrame = getBytes<uint8_t>(0);
+    m_animFrame = getBytes<uint8_t>(0);
 
     return m_offset;
 }

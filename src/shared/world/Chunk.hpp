@@ -51,8 +51,8 @@ public:
     void generate();
     void draw();
 
-    ByteVector& serialize();
-    int deserialize(ByteVector& bytes);
+    ByteVector& serialize() override;
+    size_t deserialize(ByteVector& bytes) override;
 
     uint16_t countBlocks();
 };

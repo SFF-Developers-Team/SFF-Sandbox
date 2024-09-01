@@ -102,7 +102,7 @@ ByteVector& World::serialize() {
     return m_bytes;
 }
 
-int World::deserialize(ByteVector& bytes) {
+size_t World::deserialize(ByteVector& bytes) {
     SerializedObject::deserialize(bytes);
     m_chunks.clear();
 
@@ -180,14 +180,16 @@ std::vector<Hitbox> World::getHitboxes(Hitbox entityHitbox) {
     return ret;
 }
 
-void World::addPlayer(PlayerID id, std::shared_ptr<SimplePlayer> player) {
+void World::addPlayer(PlayerID id, std::shared_ptr<SimplePlayer> player, std::string const username) {
     m_players.insert(std::make_pair(id, player));
     player->setID(id);
+    player->setUsername(username);
+    
     logD("Added player with id {}", player->getID());
 }
 
-PlayerID World::addPlayer(std::shared_ptr<SimplePlayer> player) {
-    addPlayer(m_lastPlayerID, player);
+PlayerID World::addPlayer(std::shared_ptr<SimplePlayer> player, std::string const username) {
+    addPlayer(m_lastPlayerID, player, username);
     auto ret = m_lastPlayerID;
     m_lastPlayerID++;
     return ret;

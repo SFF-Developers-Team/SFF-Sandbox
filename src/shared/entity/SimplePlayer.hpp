@@ -26,9 +26,7 @@ public:
 protected:
     AnimationType m_animType = PLAYER_IDLE;
     uint8_t m_animFps = 10;
-    uint8_t m_animCurrentFrame = 0;
-    float m_animLastFrameTime = 0.0f;
-    float m_lastActionTime = 0.0f;
+    uint8_t m_animFrame = 0;
 
     // multiplayer features
     PlayerID m_id;
@@ -42,16 +40,16 @@ public:
     void setAnimation(AnimationType type);
     static const char* getAnimationName(AnimationType type);
 
-    ByteVector& serialize();
-    int deserialize(ByteVector& bytes);
+    ByteVector& serialize() override;
+    size_t deserialize(ByteVector& bytes) override;
 
     static std::size_t const getSizeBytes();
 
     void setUsername(std::string const& username) { m_username = username; }
-    void setAnimCurrentFrame(uint8_t frame) { m_animCurrentFrame = frame; }
+    void setAnimCurrentFrame(uint8_t frame) { m_animFrame = frame; }
     void setID(PlayerID id) { m_id = id; }
 
-    auto getAnimCurrentFrame() { return m_animCurrentFrame; }
+    auto getAnimCurrentFrame() { return m_animFrame; }
     auto getUsername() { return m_username; }
     auto getID() { return m_id; }
 };

@@ -7,19 +7,21 @@
 #include <SimplePlayer.hpp>
 #include <GamePacket.hpp>
 #include <toml.hpp>
-#include <Timer.hpp>
+#include <Client.hpp>
 
 class World;
+class Timer;
 
 class Server {
 private:
     sockpp::tcp_acceptor m_acceptor;
     toml::v3::table config;
+    std::mutex m_acceptLock;
 
     World* m_world;
     Timer* m_timer;
 
-    std::map<PlayerID, std::vector<std::shared_ptr<GamePacket>>> m_clientQueue;
+    std::vector<std::unique_ptr<Client>> m_clients;
 
 public:
     static Server* get() {
@@ -30,7 +32,7 @@ public:
     void destroy();
 
     void onTick();
-    void sessionThread(sockpp::tcp_socket sock);
+    void acceptThread(sockpp::tcp_socket sock);
     void inputThread();
 
     void init();
@@ -40,11 +42,11 @@ public:
     void addToQueue(PlayerID id, std::shared_ptr<GamePacket> packet);
     void addToQueueExcept(PlayerID id, std::shared_ptr<GamePacket> packet);
 
+    void notifyAll(PlayerID id);
+
     PlayerID joinPlayer(std::string const& username);
     void disconnectPlayer(PlayerID id);
-    void closeSocket(sockpp::tcp_socket sock);
 
     auto getWorld() { return m_world; }
+    auto& getAcceptLock() { return m_acceptLock; }
 };
-
-void destroy();

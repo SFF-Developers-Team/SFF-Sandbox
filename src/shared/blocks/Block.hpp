@@ -16,7 +16,6 @@ public:
         BEDROCK
     };
 protected:
-    static inline std::size_t m_size = 0;
     BlockType m_type;
     int m_x;
     int m_y;
@@ -26,10 +25,10 @@ public:
     Block(BlockType type);
     Block(BlockType type, int x, int y, uint8_t layer);
 
-    BlockType getType() const;
-    Vec2i getPosition() const;
-    uint8_t getLayer() const;
     static std::size_t const getSize();
+    BlockType const getType();
+    Vec2i const getPosition();
+    uint8_t const getLayer();
     Rectf getHitbox();
 
     virtual void update();
@@ -37,6 +36,6 @@ public:
     void setPosition(int x, int y, uint8_t layer);
     void setType(BlockType type) { m_type = type; }
 
-    ByteVector& serialize();
-    int deserialize(ByteVector& bytes);
+    ByteVector& serialize() override;
+    size_t deserialize(ByteVector& bytes) override;
 };

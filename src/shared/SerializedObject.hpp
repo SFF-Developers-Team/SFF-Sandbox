@@ -25,7 +25,7 @@ public:
         LOAD_PLAYER, UNLOAD_PLAYER, PLAYERS,
         BLOCK_PLACE, BLOCK_DESTROY,
 
-        NETWORK_ERROR,
+        NETWORK_ERROR, OK,
         NULL_PACKET = 0xFF
     };
 
@@ -37,14 +37,14 @@ protected:
     std::mutex m_mutex;
 
 public:
-    inline ByteVector& serialize() {
+    inline virtual ByteVector& serialize() {
         m_bytes.clear();
         addBytes(m_header);
 
         return m_bytes;
     }
 
-    inline int deserialize(ByteVector& bytes) {
+    inline virtual size_t deserialize(ByteVector& bytes) {
         m_bytes = bytes;
         m_offset = 0;
 

@@ -9,15 +9,15 @@ Block::Block(BlockType type, int x, int y, uint8_t layer) : m_type(type), m_x(x)
     m_header = Header::BLOCK;
 }
 
-Block::BlockType Block::getType() const {
+Block::BlockType const Block::getType() {
     return m_type;
 }
 
-Vec2i Block::getPosition() const {
+Vec2i const Block::getPosition() {
     return Vec2i {m_x, m_y};
 }
 
-uint8_t Block::getLayer() const {
+uint8_t const Block::getLayer() {
     return m_layer;
 }
 
@@ -41,30 +41,20 @@ std::vector<uint8_t>& Block::serialize() {
     return m_bytes;
 }
 
-int Block::deserialize(std::vector<uint8_t>& bytes) {
+size_t Block::deserialize(std::vector<uint8_t>& bytes) {
     std::lock_guard<std::mutex> guard(m_mutex);
     SerializedObject::deserialize(bytes);
 
     m_type = getBytes<BlockType>(BlockType::AIR);
-    m_x = getBytes<int>(-1);
-    m_y = getBytes<int>(-1);
-    m_layer = getBytes<unsigned char>(1);
+    m_x = getBytes<int32_t>(-1);
+    m_y = getBytes<int32_t>(-1);
+    m_layer = getBytes<uint8_t>(1);
 
     return m_offset;
 }
 
 std::size_t const Block::getSize() {
-    if(!m_size) {
-        // Testing block size
-        auto block = new Block(Block::BlockType::AIR);
-        auto bytes = block->serialize();
-        
-        m_size = bytes.size();
-        
-        delete block;
-    }
-
-    return m_size;
+    return sizeof(Header) + sizeof(BlockType) + sizeof(int32_t) + sizeof(int32_t) + sizeof(uint8_t);
 }
 
 Rectf Block::getHitbox() {

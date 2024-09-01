@@ -48,11 +48,11 @@ public:
     bool save();
     bool load();
 
-    ByteVector& serialize();
-    int deserialize(ByteVector& bytes);
+    ByteVector& serialize() override;
+    size_t deserialize(ByteVector& bytes) override;
 
-    void addPlayer(PlayerID id, std::shared_ptr<SimplePlayer> player);
-    PlayerID addPlayer(std::shared_ptr<SimplePlayer> player);
+    void addPlayer(PlayerID id, std::shared_ptr<SimplePlayer> player, std::string const username = "");
+    PlayerID addPlayer(std::shared_ptr<SimplePlayer> player, std::string const username = "");
     std::shared_ptr<SimplePlayer> getPlayer(PlayerID id);
     void unloadPlayer(PlayerID id);
     bool isUsernameAlreadyTaken(std::string const& username);
