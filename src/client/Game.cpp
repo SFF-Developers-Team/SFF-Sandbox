@@ -93,7 +93,7 @@ void Game::init(std::vector<std::string>& args) {
     }
 
     if(!m_multiplayer) {
-        m_world->save();
+        // m_world->save();
     }
 
     CloseWindow();
@@ -119,19 +119,11 @@ void Game::render() {
     BeginDrawing();
         ClearBackground(SKYBLUE);
 
-        // BeginMode2D(m_player->getCamera());
-        //     m_renderManager->renderWorld();
-        //     // m_particleManager->render();
-        // EndMode2D();
-
-        // // Selected block
-        // m_blocksMap->drawTilePro((uint16_t)m_player->getSelectedBlock() - 1, {m_screenWidth - 42.f, 10.f, 32.f, 32.f}, WHITE);
-
         if(m_inPlayScene) {
             BeginMode2D(m_player->getCamera());
                 m_renderManager->renderWorld();
             EndMode2D();
-            m_blocksMap->drawTilePro((uint16_t)m_player->getSelectedBlock() - 1, {m_screenWidth - 42.f, 10.f, 32.f, 32.f}, WHITE);
+            m_renderManager->renderSelectedBlock(m_screenWidth - 42.f, 10.f, m_player->getSelectedBlock());
         } else {
             m_uiRenderer->render();
         }

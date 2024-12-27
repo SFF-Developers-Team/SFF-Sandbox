@@ -6,10 +6,13 @@
 #include <WorldGenNormal.hpp>
 #include <Chunk.hpp>
 #include <SimplePlayer.hpp>
+#include <ColoredBlock.hpp>
 
 World::World(uint32_t width, uint32_t height, std::string const& worldName) 
     : m_width(width), m_height(height), m_worldName(worldName) {
     m_header = WORLD;
+
+    m_blockSizes.insert(std::make_pair(Block::Type::SOLID, Block::getSize()));
 }
 
 World::World(std::string const& worldName) : World(0, 128, worldName) {}
@@ -67,10 +70,11 @@ void World::addChunk(std::shared_ptr<Chunk> chunk) {
     m_chunks.insert(std::make_pair(chunk->getPosition(), chunk));
 }
 
-void World::placeBlock(int32_t x, int32_t y, uint8_t layer, enum Block::Type id) {
+void World::placeBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> newBlock) {
     auto block = getBlock(x, y, layer);
-    if(block && block->getType() == Block::Type::AIR) {
-        setBlock(x, y, layer, std::make_unique<Block>(id));
+
+    if(block && block->getID() == Block::ID::AIR) {
+        setBlock(x, y, layer, newBlock);
     }
 }
 
@@ -78,8 +82,8 @@ void World::destroyBlock(int32_t x, int32_t y, uint8_t layer) {
     logD("destroy {} {} block", x, y);
     auto block = getBlock(x, y, layer);
 
-    if(block && block->getType() != Block::Type::AIR) {
-        setBlock(x, y, layer, std::make_unique<Block>(Block::Type::AIR));
+    if(block && block->getID() != Block::ID::AIR) {
+        setBlock(x, y, layer, std::make_unique<Block>(Block::ID::AIR));
     }
 }
 
@@ -102,10 +106,15 @@ void World::setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block>
 ByteVector& World::serialize() {
     SerializedObject::serialize();
 
+    addBytes(WORLD_VERSION);
     addBytes(m_width);
     addBytes(m_height);
     addBytes(m_worldGen->getType());
     addBytes(m_worldGen->getSeed());
+
+    // World version 1
+    addBytes(Block::getSize());
+
     addBytes((uint32_t)m_chunks.size());
 
     logD("chunks count {}", m_chunks.size());
@@ -126,10 +135,23 @@ size_t World::deserialize(ByteVector& bytes) {
     SerializedObject::deserialize(bytes);
     m_chunks.clear();
 
-    m_width = getBytes<int>();
-    m_height = getBytes<int>();
+    auto worldVer = getBytes<uint32_t>();
+
+    if(worldVer > WORLD_VERSION) {
+        logE("Unsupported world version!");
+        return m_offset;
+    }
+
+    m_width = getBytes<uint32_t>();
+    m_height = getBytes<uint32_t>();
+
     auto generatorType = getBytes<WorldGen::Type>();
     auto seed = getBytes<int64_t>();
+
+    // World version 1
+    m_blockSizes[Block::Type::SOLID]   = getBytes<std::size_t>();
+    m_blockSizes[Block::Type::COLORED] = getBytes<std::size_t>();
+
     auto chunkCount = getBytes<unsigned int>();
 
     switch(generatorType) {
@@ -138,8 +160,6 @@ size_t World::deserialize(ByteVector& bytes) {
             m_worldGen = std::make_shared<WorldGenNormal>(this, seed);
         }
     }
-
-    logD("Begin deserializing chunks");
 
     for(int i = 0; i < chunkCount; i++) {
         int chunkSize = getBytes<unsigned int>();
@@ -150,8 +170,6 @@ size_t World::deserialize(ByteVector& bytes) {
 
         addChunk(chunk);
     }
-
-    logD("End deserializing chunks");
 
     return m_offset;
 }
@@ -262,4 +280,12 @@ bool World::isOutOfBound(int x, int y, uint8_t layer) {
     }
     
     return (y < 0 || y >= getHeight() || layer < 0 || layer > LAYERS - 1);
+}
+
+std::size_t World::getSizeForType(Block::Type type) {
+    if(m_blockSizes.contains(type)) {
+        return m_blockSizes[type];
+    }
+
+    return m_blockSizes[Block::Type::SOLID];
 }

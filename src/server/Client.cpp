@@ -104,10 +104,10 @@ void Client::onTick() {
         }
         
         case SerializedObject::Header::BLOCK: {
-            auto block = std::make_unique<Block>(Block::Type::AIR);
+            auto block = std::make_unique<Block>(Block::ID::AIR);
             block->deserialize(packet->serialize());
 
-            auto pos = block->getPosition();
+            auto pos = block->getPos();
             auto layer = block->getLayer();
 
             logD("Set block [{}, {}, {}]", pos.x, pos.y, layer);

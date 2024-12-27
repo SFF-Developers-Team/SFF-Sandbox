@@ -15,7 +15,7 @@ std::shared_ptr<Chunk> WorldGenNormal::generateChunk(int32_t position) {
         for(auto y = 0u; y < m_world->getHeight(); y++) {
             for(auto z = 0u; z < LAYERS; z++) {
                 if(y == m_world->getHeight() - 1) {
-                    ret->setBlock(x, y, z, Block::Type::BEDROCK);
+                    ret->setBlock(x, y, z, Block::ID::BEDROCK);
                     continue;
                 }
                 
@@ -23,22 +23,22 @@ std::shared_ptr<Chunk> WorldGenNormal::generateChunk(int32_t position) {
                 auto stoneLevel = grassLevel + 4 + rand() % 3;
 
                 if(y >= grassLevel + 10 && z == 1 && round(m_perlinNoise.noise2D_01(fabs(INT_MAX / 2 + position * CHUNK_WIDTH + x) * 0.2f, y * 0.2f)) == 1) {
-                    ret->setBlock(x, y, z, Block::Type::AIR);
+                    ret->setBlock(x, y, z, Block::ID::AIR);
                     continue;
                 }
 
                 if(y == grassLevel) {
-                    ret->setBlock(x, y, z, Block::Type::GRASS);
+                    ret->setBlock(x, y, z, Block::ID::GRASS);
                     continue;
                 }
 
                 if(y > grassLevel && y < stoneLevel) {
-                    ret->setBlock(x, y, z, Block::Type::DIRT);
+                    ret->setBlock(x, y, z, Block::ID::DIRT);
                     continue;
                 }
 
                 if(y >= stoneLevel) {
-                    ret->setBlock(x, y, z, Block::Type::STONE);
+                    ret->setBlock(x, y, z, Block::ID::STONE);
                     continue;
                 }
             }

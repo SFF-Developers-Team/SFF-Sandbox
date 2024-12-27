@@ -9,8 +9,8 @@ Chunk::Chunk(World* world, int32_t pos) : m_world(world), m_position(pos) {
 
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for(int y = 0; y < world->getHeight(); y++) {
-            setBlock(x, y, 0, Block::Type::AIR);
-            setBlock(x, y, 1, Block::Type::AIR);
+            setBlock(x, y, 0, Block::ID::AIR);
+            setBlock(x, y, 1, Block::ID::AIR);
         }
     }
 }
@@ -21,8 +21,8 @@ Chunk::Chunk(World* world) : m_world(world) {
 
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for(int y = 0; y < world->getHeight(); y++) {
-            setBlock(x, y, 0, Block::Type::AIR);
-            setBlock(x, y, 1, Block::Type::AIR);
+            setBlock(x, y, 0, Block::ID::AIR);
+            setBlock(x, y, 1, Block::ID::AIR);
         }
     }
 }
@@ -39,7 +39,7 @@ int Chunk::getIndex(int x, int y, uint8_t layer) {
 
 void Chunk::setBlock(int x, int y, uint8_t layer, std::shared_ptr<Block> block) {
     if(block && !isOutOfBound(x, y, layer)) {
-        block->setPosition(m_position * CHUNK_WIDTH + x, y, layer);
+        block->setPos(m_position * CHUNK_WIDTH + x, y, layer);
         m_blocks[getIndex((x < 0 ? CHUNK_WIDTH + x : x), y, layer)] = block;
     }
 }
@@ -48,11 +48,11 @@ void Chunk::setBlock(Vec2i pos, uint8_t layer, std::shared_ptr<Block> block) {
     setBlock(pos.x, pos.y, layer, block);
 }
 
-void Chunk::setBlock(int x, int y, uint8_t layer, Block::Type type) {
+void Chunk::setBlock(int x, int y, uint8_t layer, Block::ID type) {
     setBlock(x, y, layer, std::make_shared<Block>(type));
 }
 
-void Chunk::setBlock(Vec2i pos, uint8_t layer, Block::Type type) {
+void Chunk::setBlock(Vec2i pos, uint8_t layer, Block::ID type) {
     setBlock(pos.x, pos.y, layer, type);
 }
 
@@ -89,14 +89,13 @@ ByteVector& Chunk::serialize() {
 
     addBytes(m_position);
     addBytes(blockCount);
-    addBytes((uint8_t)Block::getSize());
 
     for(int x = 0; x < CHUNK_WIDTH; x++) {
         for(int y = 0; y < m_world->getHeight(); y++) {
             for(int layer = 0; layer < LAYERS; layer++) {
                 auto block = getBlock(x, y, layer);
 
-                if(block && block->getType() != Block::Type::AIR) {
+                if(block && block->getID() != Block::ID::AIR) {
                     addBytes(block->serialize());
                 }
             }
@@ -110,9 +109,9 @@ size_t Chunk::deserialize(ByteVector& bytes) {
     SerializedObject::deserialize(bytes);
 
     m_position = getBytes<ChunkPosition>();
+
     auto blockCount = getBytes<uint16_t>();
-    auto blockSize = getBytes<uint8_t>();
-    logD("chunk {} block count: {}, block size: {}", m_position, blockCount, blockSize);
+    logD("chunk {} block count: {}", m_position, blockCount);
 
     if(!blockCount) {
         return m_offset;
@@ -120,22 +119,28 @@ size_t Chunk::deserialize(ByteVector& bytes) {
 
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for(int y = 0; y < m_world->getHeight(); y++) {
-            setBlock(x, y, 0, Block::Type::AIR);
-            setBlock(x, y, 1, Block::Type::AIR);
+            setBlock(x, y, 0, Block::ID::AIR);
+            setBlock(x, y, 1, Block::ID::AIR);
         }
     }
 
     for(int i = 0; i < blockCount; i++) {
-        auto blockBytes = getBytes((size_t)blockSize);
-        auto block = std::make_unique<Block>(Block::Type::AIR);
-        block->deserialize(blockBytes);
+        auto header = getBytes<Header>(true);
+        if(header == Header::BLOCK) {
+            auto id = getBytes<Block::ID>(true);
+            auto type = Block::getTypeByID(id);
 
-        auto pos = block->getPosition();
-        auto layer = block->getLayer();
+            auto blockBytes = getBytes(m_world->getSizeForType(type));
+            auto block = std::make_shared<Block>(id);
+            block->deserialize(blockBytes);
 
-        pos.x -= m_position * CHUNK_WIDTH;
+            auto pos = block->getPos();
+            auto layer = block->getLayer();
 
-        setBlock(pos, layer, std::move(block));
+            pos.x -= m_position * CHUNK_WIDTH;
+
+            setBlock(pos, layer, block);
+        }
     }
 
     return m_offset;
@@ -145,7 +150,7 @@ uint16_t Chunk::countBlocks() {
     uint16_t ret = 0;
 
     for(auto i = 0; i < m_blocks.capacity(); i++) {
-        if(m_blocks[i] && m_blocks[i]->getType() != Block::Type::AIR) ret++;
+        if(m_blocks[i] && m_blocks[i]->getID() != Block::ID::AIR) ret++;
     }
 
     return ret;

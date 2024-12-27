@@ -5,6 +5,7 @@
 #include <Game.hpp>
 #include <Chunk.hpp>
 #include <Logger.hpp>
+#include <WoolBlock.hpp>
 
 #define WALK_SPEED 10
 
@@ -14,6 +15,15 @@ Player::Player(World* world) : SimplePlayer::SimplePlayer(world) {
     m_camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
     m_camera.zoom = 50.0f;
     m_camera.rotation = 0.0f;
+
+    m_inventory.push_back(std::make_shared<Block>(Block::ID::GRASS));
+    m_inventory.push_back(std::make_shared<Block>(Block::ID::DIRT));
+    m_inventory.push_back(std::make_shared<Block>(Block::ID::STONE));
+    m_inventory.push_back(std::make_shared<Block>(Block::ID::COBLESTONE));
+    m_inventory.push_back(std::make_shared<Block>(Block::ID::PLANKS));
+    for(auto i = 0u; i < 13; i++) {
+        m_inventory.push_back(std::make_shared<WoolBlock>(i));
+    }
 
     updateCamera();
 }
@@ -102,23 +112,23 @@ bool Player::canDestroyBlock(Vec2i pos, uint8_t layer) {
     auto block = m_world->getBlock(pos.x, pos.y, layer);
     if(!block) return false;
 
-    Block::Type type = block->getType();
+    Block::ID type = block->getID();
     
-    return type != Block::Type::BEDROCK && type != Block::Type::AIR;
+    return type != Block::ID::BEDROCK && type != Block::ID::AIR;
 }
 
 bool Player::canPlaceBlock(Vec2i pos, uint8_t layer) {
     if(m_world->isOutOfBound(pos.x, pos.y, layer)) return false;
 
     auto block = m_world->getBlock(pos.x, pos.y, layer);
-    auto closedByOtherBlocks = m_world->getBlock(pos.x - 1, pos.y, layer)->getType() == Block::Type::AIR &&
-        m_world->getBlock(pos.x + 1, pos.y, layer)->getType() == Block::Type::AIR &&
-        m_world->getBlock(pos.x, pos.y - 1, layer)->getType() == Block::Type::AIR &&
-        m_world->getBlock(pos.x, pos.y + 1, layer)->getType() == Block::Type::AIR && 
-        m_world->getBlock(pos.x, pos.y, !layer)->getType() == Block::Type::AIR;
+    auto closedByOtherBlocks = m_world->getBlock(pos.x - 1, pos.y, layer)->getID() == Block::ID::AIR &&
+        m_world->getBlock(pos.x + 1, pos.y, layer)->getID() == Block::ID::AIR &&
+        m_world->getBlock(pos.x, pos.y - 1, layer)->getID() == Block::ID::AIR &&
+        m_world->getBlock(pos.x, pos.y + 1, layer)->getID() == Block::ID::AIR && 
+        m_world->getBlock(pos.x, pos.y, !layer)->getID() == Block::ID::AIR;
 
     if (!block) {
-        m_world->setBlock(pos.x, pos.y, layer, std::make_unique<Block>(Block::Type::AIR));
+        m_world->setBlock(pos.x, pos.y, layer, std::make_unique<Block>(Block::ID::AIR));
     }
 
     if (layer == 1 && CheckCollisionRecs(m_hitbox.getRect().to<Rectangle>(), {(float)pos.x, (float)pos.y, 1.0f, 1.0f})) {
@@ -129,7 +139,7 @@ bool Player::canPlaceBlock(Vec2i pos, uint8_t layer) {
         return false;
     }
 
-    return m_world->getBlock(pos.x, pos.y, layer)->getType() == Block::Type::AIR;
+    return m_world->getBlock(pos.x, pos.y, layer)->getID() == Block::ID::AIR;
 }
 
 void Player::updateControls() {
@@ -156,7 +166,8 @@ void Player::updateControls() {
         }
 
         if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && canPlaceBlock(target, !isAltLayer)) {
-            m_world->placeBlock(target.x, target.y, !isAltLayer, m_selectedBlock);
+            auto block = m_inventory[m_selectedBlock];
+            m_world->placeBlock(target.x, target.y, !isAltLayer, std::make_shared<Block>(block->getID(), block->getSubID(), target.x, target.y, !isAltLayer));
 
             if (m_onGround) {
                 setAnimation(PLAYER_HIT);
@@ -260,7 +271,7 @@ void Player::update() {
         auto wheel = GetMouseWheelMove();
         for(int i = 0; i < 6; i++) {
             if(IsKeyDown(KEY_ONE + i)) {
-                m_selectedBlock = (Block::Type)(i + 1);
+                m_selectedBlock = (Block::ID)(i + 1);
             }
         }
         
@@ -268,19 +279,14 @@ void Player::update() {
         if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) m_camera.zoom += 1.0f;
 
         if(!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
-            m_selectedBlock = (Block::Type)((int)(m_selectedBlock) + (wheel > 0 ? -1 : 1));
+            m_selectedBlock = (Block::ID)((int)(m_selectedBlock) + (wheel > 0 ? -1 : 1));
             wheel = GetMouseWheelMove();
-            for (int i = 0; i < 6; i++) {
-                if (IsKeyDown(KEY_ONE + i)) {
-                    m_selectedBlock = (Block::Type)(i + 1);
-                }
-            }
 
             if (!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
-                m_selectedBlock = (Block::Type)((int)(m_selectedBlock) + (wheel > 0 ? -1 : 1));
+                m_selectedBlock += (wheel > 0 ? -1 : 1);
 
-                if (m_selectedBlock > Block::Type::WOOL) m_selectedBlock = Block::Type::GRASS;
-                if (m_selectedBlock < Block::Type::GRASS) m_selectedBlock = Block::Type::WOOL;
+                if (m_selectedBlock > m_inventory.size()) m_selectedBlock = 0;
+                if (m_selectedBlock < 0) m_selectedBlock = m_inventory.size();
             }
         }
 
@@ -320,7 +326,7 @@ bool Player::isBlockInView(std::shared_ptr<Block> block) {
         return false;
     }
 
-    auto pos = block->getPosition();
+    auto pos = block->getPos();
     auto min = convertToCameraPos({0, 0});
     auto max = convertToCameraPos({(float)GetScreenWidth(), (float)GetScreenHeight()});
 

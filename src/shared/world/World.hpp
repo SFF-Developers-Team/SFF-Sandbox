@@ -16,6 +16,7 @@ class World : public SerializedObject {
 private:
     std::map<ChunkPosition, std::shared_ptr<Chunk>> m_chunks;
     std::map<PlayerID, std::shared_ptr<SimplePlayer>> m_players;
+    std::map<Block::Type, std::size_t> m_blockSizes;
     std::shared_ptr<WorldGen> m_worldGen;
     std::string m_worldName;
 
@@ -24,6 +25,8 @@ private:
     PlayerID m_lastPlayerID = 1;
 
 public:
+    const uint32_t WORLD_VERSION = 1;
+
     World(uint32_t width, uint32_t height, std::string const& worldName);
     World(std::string const& worldName);
     ~World();
@@ -31,12 +34,12 @@ public:
     void generate();
     void onTick();
 
-    void placeBlock(int x, int y, uint8_t layer, enum Block::Type id);
-    void destroyBlock(int x, int y, uint8_t layer);
-    Rectf getBlockHitbox(int x, int y);
-    bool isBlockClosed(int x, int y, uint8_t layer);
-    void setBlock(int x, int y, uint8_t layer, std::shared_ptr<Block> block);
-    std::shared_ptr<Block> getBlock(int x, int y, uint8_t layer);
+    void placeBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block);
+    void destroyBlock(int32_t x, int32_t y, uint8_t layer);
+    Rectf getBlockHitbox(int32_t x, int32_t y);
+    bool isBlockClosed(int32_t x, int32_t y, uint8_t layer);
+    void setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block);
+    std::shared_ptr<Block> getBlock(int32_t x, int32_t y, uint8_t layer);
 
     void unloadChunk(std::shared_ptr<Chunk> chunk);
     void unloadChunk(ChunkPosition pos);
@@ -44,6 +47,8 @@ public:
     std::shared_ptr<Chunk> getChunk(int32_t position);
 
     std::vector<Hitbox> getHitboxes(Hitbox entityHitbox);
+
+    std::size_t getSizeForType(Block::Type type);
 
     bool save();
     bool load();
@@ -56,7 +61,7 @@ public:
     std::shared_ptr<SimplePlayer> getPlayer(PlayerID id);
     void unloadPlayer(PlayerID id);
     bool isUsernameAlreadyTaken(std::string const& username);
-    bool isOutOfBound(int x, int y, uint8_t layer);
+    bool isOutOfBound(int32_t x, int32_t y, uint8_t layer);
 
     inline ChunkPosition convertXtoChunkPosition(int32_t x) { return floorf(static_cast<float>(x) / CHUNK_WIDTH); }
 

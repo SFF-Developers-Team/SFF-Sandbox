@@ -70,7 +70,7 @@ void Multiplayer::addToQueue(std::shared_ptr<SerializedObject> classObj) {
 void Multiplayer::onBlockChanged(Vec2i pos, uint8_t layer) {
     auto block = Game::get()->getWorld()->getBlock(pos.x, pos.y, layer);
     if(block) {
-        logD("block changed {}", (int)block->getType());
+        logD("block changed {}", (int)block->getID());
         addToQueue(std::shared_ptr<Block>(block));
     }
 }
@@ -180,9 +180,9 @@ void Multiplayer::onTick() {
         }
 
         case Header::BLOCK: {
-            auto block = std::make_unique<Block>(Block::Type::AIR);
+            auto block = std::make_unique<Block>(Block::ID::AIR);
             block->deserialize(packet->serialize());
-            auto pos = block->getPosition();
+            auto pos = block->getPos();
             auto layer = block->getLayer();
 
             world->setBlock(pos.x, pos.y, layer, std::move(block));

@@ -84,15 +84,17 @@ public:
         }
     }
 
-    ByteVector getBytes(std::size_t count) {
+    ByteVector getBytes(std::size_t count, bool ignoreOffset = false) {
         auto ret = ByteVector(m_bytes.begin() + m_offset, m_bytes.begin() + m_offset + count);
-        m_offset += count;
+        if(!ignoreOffset) {
+            m_offset += count;
+        }
         
         return ret;
     }
 
     template<typename T>
-    T getBytes() {
+    T getBytes(bool ignoreOffset = false) {
         size_t sz = sizeof(T);
         T t = T();
 
@@ -100,58 +102,74 @@ public:
 
         auto data = m_bytes.data();
         t = *(T*)&data[m_offset];
-        m_offset += sz;
+
+        if(!ignoreOffset) {
+            m_offset += sz;
+        }
 
         return t;
     }
 
     template<>
-    std::string getBytes<std::string>() {
-        return getBytes<std::string>("undefined");
+    std::string getBytes<std::string>(bool ignoreOffset) {
+        return getBytes<std::string>("undefined", ignoreOffset);
     }
 
     template<>
-    const char* getBytes<const char*>() {
-        return getBytes<const char*>("undefined");
+    const char* getBytes<const char*>(bool ignoreOffset) {
+        return getBytes<const char*>("undefined", ignoreOffset);
     }
 
     template<typename T>
-    T getBytes(T defaultVal) {
+    T getBytes(T defaultVal, bool ignoreOffset = false) {
         size_t sz = sizeof(T);
         T t(defaultVal);
         
         if (m_offset + sz > m_bytes.size()) return t;
 
         t = *(T*)&m_bytes[m_offset];
-        m_offset += sz;
+
+        if(!ignoreOffset) {
+            m_offset += sz;
+        }
 
         return t;
     }
 
     template<>
-    std::string getBytes<std::string>(std::string defaultVal) {
+    std::string getBytes<std::string>(std::string defaultVal, bool ignoreOffset) {
         auto start = m_offset;
+        auto offset = m_offset;
 
-        while(m_bytes[m_offset] != 0x00) {
-            if(m_offset + 1 > m_bytes.size()) return defaultVal;
-            m_offset++;
+        while(m_bytes[offset] != 0x00) {
+            if(offset + 1 > m_bytes.size()) return defaultVal;
+            offset++;
         }
 
-        return std::string(m_bytes.begin() + start, m_bytes.begin() + m_offset);
+        if(!ignoreOffset) {
+            m_offset += offset - start; 
+        }
+
+        return std::string(m_bytes.begin() + start, m_bytes.begin() + offset);
     }
 
     template<>
-    const char* getBytes<const char*>(const char* defaultVal) {
+    const char* getBytes<const char*>(const char* defaultVal, bool ignoreOffset) {
         auto start = m_offset;
+        auto offset = m_offset;
 
         // measuring size
-        while(m_bytes[m_offset] != 0x00) {
-            if(m_offset + 1 > m_bytes.size()) return defaultVal;
-            m_offset++;
+        while(m_bytes[offset] != 0x00) {
+            if(offset + 1 > m_bytes.size()) return defaultVal;
+            offset++;
         }
 
-        char* str = new char[m_offset - start];
-        std::copy(&m_bytes[start], &m_bytes[m_offset], str);
+        if(!ignoreOffset) {
+            m_offset += offset - start; 
+        }
+
+        char* str = new char[offset - start];
+        std::copy(&m_bytes[start], &m_bytes[offset], str);
 
         return str;
     }

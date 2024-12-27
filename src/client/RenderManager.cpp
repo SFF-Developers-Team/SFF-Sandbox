@@ -5,6 +5,7 @@
 #include <Chunk.hpp>
 #include <Game.hpp>
 #include <Types.hpp>
+#include <ColoredBlock.hpp>
 
 RenderManager::RenderManager(World* world, std::shared_ptr<Player> player) : m_world(world), m_player(player) {
     m_texture = LoadTexture("assets/player.png");
@@ -58,22 +59,42 @@ void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk) {
             // Пока что все блоки у нас одинакового размера
             if(!game->getPlayer()->isBlockInView(block0)) continue;
             auto tilemap = Game::get()->getBlocksTileMap();
-            auto dest = Rectangle {
-                // To support lightweight chunk format
-                ((chunk->getPosition() > 0 || chunk->getPosition() < 0) && x < CHUNK_WIDTH ? (float)chunk->getPosition() * CHUNK_WIDTH + x : x), 
-                (float)y, 
-                1.0f, 1.0f
-            };
+            auto blockX = ((chunk->getPosition() > 0 || chunk->getPosition() < 0) && x < CHUNK_WIDTH ? (float)chunk->getPosition() * CHUNK_WIDTH + x : x);
 
-            if((block0 && block0->getType() != Block::Type::AIR) && (block1 && block1->getType() == Block::Type::AIR)) {
-                tilemap->drawTilePro((uint16_t)block0->getType() - 1, dest, ColorBrightness(WHITE, -0.25f));
+            if((block0 && block0->getID() != Block::ID::AIR) && (block1 && block1->getID() == Block::ID::AIR)) {
+                renderBlock(blockX, y, block0);
             }
 
-            if(block1 && block1->getType() != Block::Type::AIR) {
-                tilemap->drawTilePro((uint16_t)block1->getType() - 1, dest, WHITE);
+            if(block1 && block1->getID() != Block::ID::AIR) {
+                renderBlock(blockX, y, block1);
             }
         }
     }
+}
+
+void RenderManager::renderBlock(float x, float y, std::shared_ptr<Block> block) {
+    if(!block || block->getID() == Block::ID::AIR) {
+        return;
+    }
+
+    auto tilemap = Game::get()->getBlocksTileMap();
+    auto color = (block->getType() == Block::Type::COLORED ? std::dynamic_pointer_cast<ColoredBlock>(block)->getColor().to<Color>() : WHITE);
+    auto dest = Rectangle {x, y, 1.0f, 1.0f};
+    
+    tilemap->drawTilePro((uint16_t)block->getID() - 1, dest, ColorBrightness(color, (block->getLayer() == 0 ? -0.25f : 1.0f)));
+}
+
+void RenderManager::renderSelectedBlock(float x, float y, std::shared_ptr<Block> block) {
+    if(!block || block->getID() == Block::ID::AIR) {
+        return;
+    }
+
+    auto tilemap = Game::get()->getBlocksTileMap();
+    auto color = (block->getType() == Block::Type::COLORED ? std::dynamic_pointer_cast<ColoredBlock>(block)->getColor().to<Color>() : WHITE);
+    color.a = 255;
+    auto dest = Rectangle {x, y, 32.0f, 32.0f};
+    
+    tilemap->drawTilePro((uint16_t)block->getID() - 1, dest, color);
 }
 
 void RenderManager::renderEntity(Entity* entity) {

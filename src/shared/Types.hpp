@@ -43,8 +43,70 @@ struct Rect {
     }
 };
 
+template <typename T>
+struct Col3 {
+    static_assert(std::is_arithmetic_v<T>, "Unsupported type for Col3");
+
+    T r;
+    T g;
+    T b;
+
+    Col3<T> operator+(const Col3<T>& other) { return {static_cast<T>(r + other.r), static_cast<T>(g + other.g), static_cast<T>(b + other.b)}; }
+    Col3<T> operator-(const Col3<T>& other) { return {static_cast<T>(r - other.r), static_cast<T>(g - other.g), static_cast<T>(b - other.b)}; }
+    Col3<T> operator*(const Col3<T>& other) { return {static_cast<T>(r * other.r), static_cast<T>(g * other.g), static_cast<T>(b * other.b)}; }
+    Col3<T> operator/(const Col3<T>& other) { return {static_cast<T>(r / other.r), static_cast<T>(g / other.g), static_cast<T>(b / other.b)}; }
+    Col3<T> operator*(T other) { return {static_cast<T>(r * other), static_cast<T>(g * other), static_cast<T>(b * other)}; }
+    Col3<T> operator/(T other) { return {static_cast<T>(r / other), static_cast<T>(g / other), static_cast<T>(b / other)}; }
+    void operator+=(const Col3<T>& other) { *this = *this + other; }
+    void operator-=(const Col3<T>& other) { *this = *this - other; }
+    void operator*=(const Col3<T>& other) { *this = *this * other; }
+    void operator/=(const Col3<T>& other) { *this = *this / other; }
+    void operator*=(T other) { *this = *this * other; }
+    void operator/=(T other) { *this = *this / other; }
+
+    template <typename T2>
+    inline T2 to() const {
+        return T2 {r, g, b};
+    }
+};
+
+template <typename T>
+struct Col4 {
+    static_assert(std::is_arithmetic_v<T>, "Unsupported type for Col4");
+
+    T r;
+    T g;
+    T b;
+    T a;
+
+    Col4<T> operator+(const Col4<T>& other) { return {r + other.r, g + other.g, b + other.b, a + other.a}; }
+    Col4<T> operator-(const Col4<T>& other) { return {r - other.r, g - other.g, b - other.b, a - other.a}; }
+    Col4<T> operator*(const Col4<T>& other) { return {r * other.r, g * other.g, b * other.b, a * other.a}; }
+    Col4<T> operator/(const Col4<T>& other) { return {r / other.r, g / other.g, b / other.b, a / other.a}; }
+    Col4<T> operator*(T other) { return {r * other, g * other, b * other, a * other}; }
+    Col4<T> operator/(T other) { return {r / other, g / other, b / other, a / other}; }
+
+    void operator+=(const Col4<T>& other) { *this = *this + other; }
+    void operator-=(const Col4<T>& other) { *this = *this - other; }
+    void operator*=(const Col4<T>& other) { *this = *this * other; }
+    void operator/=(const Col4<T>& other) { *this = *this / other; }
+    void operator*=(T other) { *this = *this * other; }
+    void operator/=(T other) { *this = *this / other; }
+
+    template <typename T2>
+    inline T2 to() const {
+        return T2 {r, g, b, a};
+    }
+};
+
 using Vec2f = Vec2<float>;
 using Vec2i = Vec2<int>;
 
 using Rectf = Rect<float>;
 using Recti = Rect<int>;
+
+using Col3f = Col3<float>;
+using Col3u = Col3<unsigned char>;
+
+using Col4f = Col4<float>;
+using Col4u = Col4<unsigned char>;

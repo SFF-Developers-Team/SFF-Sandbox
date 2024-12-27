@@ -16,7 +16,8 @@ class Player : public SimplePlayer {
 private:
     Camera2D m_camera;
     Texture2D m_texture;
-    Block::Type m_selectedBlock = Block::Type::STONE;
+    std::vector<std::shared_ptr<Block>> m_inventory;
+    std::size_t m_selectedBlock = 0;
 
     bool m_sneak = false;
     bool m_fly = false;
@@ -57,23 +58,10 @@ public:
     void unlinkCameraX(bool flag);
     void unlinkCameraY(bool flag);
 
-    auto getCamera() {
-        return m_camera;
-    }
+    void setCamera(Camera2D cam) { m_camera = cam; }
+    void setID(PlayerID id) { m_id = id; }
 
-    void setCamera(Camera2D cam) {
-        m_camera = cam;
-    }
-
-    auto getSelectedBlock() {
-        return m_selectedBlock;
-    }
-
-    void setID(PlayerID id) {
-        m_id = id;
-    }
-
-    auto getID() {
-        return m_id;
-    }
+    auto getSelectedBlock() { return m_inventory[m_selectedBlock]; }
+    auto getCamera() { return m_camera; }
+    auto getID() { return m_id; }
 };

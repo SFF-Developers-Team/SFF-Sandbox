@@ -26,10 +26,10 @@ public:
         return m_position;
     }
 
-    void setBlock(int x, int y, uint8_t layer, Block::Type type);
+    void setBlock(int x, int y, uint8_t layer, Block::ID type);
     void setBlock(int x, int y, uint8_t layer, std::shared_ptr<Block> block);
     void setBlock(Vec2i pos, uint8_t layer, std::shared_ptr<Block> block);
-    void setBlock(Vec2i pos, uint8_t layer, Block::Type type);
+    void setBlock(Vec2i pos, uint8_t layer, Block::ID type);
 
     std::shared_ptr<Block> getBlock(int x, int y, uint8_t layer);
     std::shared_ptr<Block> getBlock(Vec2i pos, uint8_t layer);
