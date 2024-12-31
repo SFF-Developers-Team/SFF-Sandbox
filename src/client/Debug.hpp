@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <format>
+#include <memory>
 
 class Debug {
 private:

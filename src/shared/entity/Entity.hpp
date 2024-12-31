@@ -3,6 +3,7 @@
 #include <Types.hpp>
 #include <Hitbox.hpp>
 #include <SerializedObject.hpp>
+#include <memory>
 
 class World;
 

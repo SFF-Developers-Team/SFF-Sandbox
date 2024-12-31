@@ -8,6 +8,7 @@
 #include <Chunk.hpp>
 #include <SimplePlayer.hpp>
 #include <memory>
+#include <cmath>
 
 class Player;
 class WorldGen;
