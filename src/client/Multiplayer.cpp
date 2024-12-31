@@ -133,7 +133,7 @@ void Multiplayer::onTick() {
             }
             
             while(count-- > 0) {
-                auto bytes = packet->getBytes(SimplePlayer::getSizeBytes());
+                auto bytes = packet->getBytesN(SimplePlayer::getSizeBytes());
                 auto playerPacket = CREATE_PACKET(bytes);
                 
                 if(playerPacket->getBytes<SerializedObject::Header>() != SerializedObject::PLAYER) continue;
@@ -204,10 +204,10 @@ void Multiplayer::onTick() {
             auto chunksCount = packet->getBytes<uint8_t>();
 
             while(chunksCount-- > 0) {
-                auto chunkSize = packet->getBytes<uint16_t>();
-                auto chunkBytes = packet->getBytes((size_t)chunkSize);
+                auto csize = packet->getBytes<uint16_t>();
+                auto cbytes = packet->getBytesN(csize);
                 auto chunk = std::make_shared<Chunk>(world);
-                chunk->deserialize(chunkBytes);
+                chunk->deserialize(cbytes);
                 world->addChunk(chunk);
             }
 

@@ -1,5 +1,6 @@
 #include <Block.hpp>
 #include <SerializedObject.hpp>
+#include <assert.h>
 
 Block::Block(ID id, int32_t x, int32_t y, uint8_t layer) : m_id(id), m_x(x), m_y(y), m_layer(layer) {
     m_header = Header::BLOCK;
@@ -25,6 +26,21 @@ std::vector<uint8_t>& Block::serialize() {
     addBytes(m_x);
     addBytes(m_y);
     addBytes(m_layer);
+    addBytes<uint8_t>(0x20);
+    addBytes<uint16_t>(static_cast<uint16_t>(m_tags.size()));
+
+    for(auto& [key, value] : m_tags) {
+        addBytes<Block::TagID>(key);
+
+        switch(key) {
+            case COLOR:
+                addBytes<Col3u>(std::get<Col3u>(value));
+                break;
+            case GHOST:
+                addBytes<bool>(std::get<bool>(value));
+                break;
+        }
+    }
 
     return m_bytes;
 }
@@ -36,7 +52,28 @@ size_t Block::deserialize(std::vector<uint8_t>& bytes) {
     m_id = getBytes<ID>(ID::AIR);
     m_x = getBytes<int32_t>();
     m_y = getBytes<int32_t>();
-    m_layer = getBytes<uint8_t>(1);
+    m_layer = getBytes<uint8_t>();
+
+    if(getBytes<uint8_t>() == 0x20) {
+        auto tagsc = getBytes<uint16_t>();
+        if(tagsc > 0) {
+            logD("Tags count {}", tagsc);
+        }
+
+        for(int i = 0; i < tagsc; i++) {
+            TagID key = getBytes<Block::TagID>();
+
+            switch(key) {
+                case COLOR:
+                    m_tags[key] = getBytes<Col3u>({255, 255, 255});
+                    break;
+
+                case GHOST:
+                    m_tags[key] = getBytes<bool>();
+                    break;
+            }
+        }
+    }
 
     return m_offset;
 }

@@ -92,7 +92,9 @@ ByteVector& Chunk::serialize() {
                 auto block = getBlock(x, y, layer);
 
                 if(block && block->getID() != Block::ID::AIR) {
-                    addBytes(block->serialize());
+                    auto bytes = block->serialize();
+                    addBytes<uint16_t>(bytes.size());
+                    addBytes(bytes);
                 }
             }
         }
@@ -121,14 +123,14 @@ size_t Chunk::deserialize(ByteVector& bytes) {
     }
 
     for(int i = 0; i < blockCount; i++) {
-        auto header = getBytes<Header>(true);
+        auto bsize = getBytes<uint16_t>();
+        assert(("Null size block!", bsize > 0));
+        
+        auto header = getBytesI<Header>();
         if(header == Header::BLOCK) {
-            std::size_t size = getBytes<uint16_t>();
-            assert(("Null size block!", size > 0));
-
-            auto blockBytes = getBytes(size);
+            auto bbytes = getBytesN(bsize);
             auto block = std::make_shared<Block>();
-            block->deserialize(blockBytes);
+            block->deserialize(bbytes);
 
             auto pos = block->getPos();
             auto layer = block->getLayer();

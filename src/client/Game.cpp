@@ -98,7 +98,7 @@ void Game::init(std::vector<std::string>& args) {
     }
 
     if(!m_multiplayer) {
-        // m_world->save();
+        m_world->save();
     }
 
     CloseWindow();

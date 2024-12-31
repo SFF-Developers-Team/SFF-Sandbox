@@ -107,24 +107,23 @@ ByteVector& World::serialize() {
     SerializedObject::serialize();
 
     addBytes(WORLD_VERSION);
-    addBytes(m_width);
+    // addBytes(m_width);
     addBytes(m_height);
     addBytes(m_worldGen->getType());
     addBytes(m_worldGen->getSeed());
 
     // World version 1
     addBytes((uint32_t)m_chunks.size());
-
-    logD("chunks count {}", m_chunks.size());
-
     for(auto [pos, chunk] : m_chunks) {
         if(chunk) {
             auto chunkBytes = chunk->serialize();
 
-            addBytes((unsigned int)chunkBytes.size());
+            addBytes<uint32_t>(chunkBytes.size());
             addBytes(chunkBytes);
         }
     }
+
+    // World end
 
     return m_bytes;
 }
@@ -136,18 +135,15 @@ size_t World::deserialize(ByteVector& bytes) {
     auto worldVer = getBytes<uint32_t>();
 
     if(worldVer > WORLD_VERSION) {
-        logE("Unsupported world version!");
+        logE("Unsupported world version! (World version: {} | Supported: {})", worldVer, WORLD_VERSION);
         return m_offset;
     }
 
-    m_width = getBytes<uint32_t>();
+    // m_width = getBytes<uint32_t>();
     m_height = getBytes<uint32_t>();
 
     auto generatorType = getBytes<WorldGen::Type>();
     auto seed = getBytes<int64_t>();
-
-    // World version 1
-    auto chunkCount = getBytes<unsigned int>();
 
     switch(generatorType) {
         default:
@@ -156,15 +152,19 @@ size_t World::deserialize(ByteVector& bytes) {
         }
     }
 
+    // World version 1
+    auto chunkCount = getBytes<unsigned int>();
     for(int i = 0; i < chunkCount; i++) {
-        int chunkSize = getBytes<unsigned int>();
+        auto csize = getBytes<uint32_t>();
         auto chunk = std::make_shared<Chunk>(std::shared_ptr<World>(this));
+        auto cbytes = getBytesN(csize);
 
-        ByteVector chunkBytes(m_bytes.begin() + m_offset, m_bytes.begin() + m_offset + chunkSize);
-        m_offset += chunk->deserialize(chunkBytes);
+        chunk->deserialize(cbytes);
 
         addChunk(chunk);
     }
+
+    // World end
 
     return m_offset;
 }
