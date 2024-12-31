@@ -215,5 +215,9 @@ void Multiplayer::onTick() {
 
             break;
         }
+
+        default: {
+            return;
+        }
     }
 }

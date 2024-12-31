@@ -12,12 +12,12 @@ public:
     };
 
 protected:
-    World* m_world;
+    std::shared_ptr<World> m_world;
     int64_t m_seed = 0;
     Type m_type;
     
 public:
-    WorldGen(World* world, uint64_t seed);
+    WorldGen(std::shared_ptr<World> world, uint64_t seed);
 
     virtual std::shared_ptr<Chunk> generateChunk(int32_t position) = 0;
 

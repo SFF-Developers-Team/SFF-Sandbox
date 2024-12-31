@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <WorldGenNormal.hpp>
 
-WorldGenNormal::WorldGenNormal(World* world, uint64_t seed) : WorldGen(world, seed), m_perlinNoise(seed) {
+WorldGenNormal::WorldGenNormal(std::shared_ptr<World> world, uint64_t seed) : WorldGen(world, seed), m_perlinNoise(seed) {
     srand(seed);
     m_type = NORMAL;
 }

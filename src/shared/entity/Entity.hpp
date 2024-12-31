@@ -15,7 +15,7 @@ public:
 
 protected:
     Hitbox m_hitbox;
-    World* m_world;
+    std::shared_ptr<World> m_world;
 
     float m_prevX;
     float m_prevY;
@@ -28,10 +28,9 @@ protected:
     Direction m_direction;
 
     void resetPosition();
-    void moveRelative(float x, float speed);
 
 public:
-    Entity(World* world);
+    Entity(std::shared_ptr<World> world);
 
     virtual void onTick();
     void move(float x, float y);

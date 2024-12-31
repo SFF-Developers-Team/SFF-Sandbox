@@ -14,9 +14,8 @@ class WorldGen;
 
 class World : public SerializedObject {
 private:
-    std::map<ChunkPosition, std::shared_ptr<Chunk>> m_chunks;
+    std::map<ChunkPos, std::shared_ptr<Chunk>> m_chunks;
     std::map<PlayerID, std::shared_ptr<SimplePlayer>> m_players;
-    std::map<Block::Type, std::size_t> m_blockSizes;
     std::shared_ptr<WorldGen> m_worldGen;
     std::string m_worldName;
 
@@ -42,13 +41,11 @@ public:
     std::shared_ptr<Block> getBlock(int32_t x, int32_t y, uint8_t layer);
 
     void unloadChunk(std::shared_ptr<Chunk> chunk);
-    void unloadChunk(ChunkPosition pos);
+    void unloadChunk(ChunkPos pos);
     void addChunk(std::shared_ptr<Chunk> chunk);
     std::shared_ptr<Chunk> getChunk(int32_t position);
 
     std::vector<Hitbox> getHitboxes(Hitbox entityHitbox);
-
-    std::size_t getSizeForType(Block::Type type);
 
     bool save();
     bool load();
@@ -63,7 +60,7 @@ public:
     bool isUsernameAlreadyTaken(std::string const& username);
     bool isOutOfBound(int32_t x, int32_t y, uint8_t layer);
 
-    inline ChunkPosition convertXtoChunkPosition(int32_t x) { return floorf(static_cast<float>(x) / CHUNK_WIDTH); }
+    inline ChunkPos convertXtoChunkPosition(int32_t x) { return floorf(static_cast<float>(x) / CHUNK_WIDTH); }
 
     void setGenerator(std::shared_ptr<WorldGen> generator) { m_worldGen = generator; }
 

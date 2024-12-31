@@ -1,7 +1,7 @@
 #pragma once
 #include <SerializedObject.hpp>
 
-#define MP_BUF_SIZE (1024 * 512) // 512kb
+#define MP_BUF_SIZE (65344)
 #define CREATE_PACKET std::make_shared<GamePacket>
 
 class GamePacket : public SerializedObject {

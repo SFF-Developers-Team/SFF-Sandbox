@@ -119,7 +119,7 @@ void Client::onTick() {
         }
 
         case SerializedObject::Header::LOAD_CHUNK: {
-            auto position = packet->getBytes<ChunkPosition>();
+            auto position = packet->getBytes<ChunkPos>();
             auto chunk = srv->getWorld()->getChunk(position);
 
             if(chunk) {

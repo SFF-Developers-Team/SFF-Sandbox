@@ -2,8 +2,9 @@
 #include <World.hpp>
 #include <Logger.hpp>
 #include <Block.hpp>
+#include <assert.h>
 
-Chunk::Chunk(World* world, int32_t pos) : m_world(world), m_position(pos) {
+Chunk::Chunk(std::shared_ptr<World> world, ChunkPos pos) : m_world(world), m_position(pos) {
     m_header = Header::CHUNK;
     m_blocks.resize(CHUNK_WIDTH * world->getHeight() * LAYERS);
 
@@ -14,23 +15,16 @@ Chunk::Chunk(World* world, int32_t pos) : m_world(world), m_position(pos) {
         }
     }
 }
-
-Chunk::Chunk(World* world) : m_world(world) {
-    m_header = Header::CHUNK;
-    m_blocks.resize(CHUNK_WIDTH * world->getHeight() * LAYERS);
-
-    for (int x = 0; x < CHUNK_WIDTH; x++) {
-        for(int y = 0; y < world->getHeight(); y++) {
-            setBlock(x, y, 0, Block::ID::AIR);
-            setBlock(x, y, 1, Block::ID::AIR);
-        }
-    }
-}
-
-Chunk::~Chunk() {}
 
 bool Chunk::isOutOfBound(int x, int y, uint8_t layer) {
-    return (x < (x < 0 ? -CHUNK_WIDTH : 0) || x > ( x > 0 ? CHUNK_WIDTH : 0) || y < 0 || y >= m_world->getHeight() || layer < 0 || layer > LAYERS - 1);
+    bool result = (
+        x < (x < 0 ? -CHUNK_WIDTH : 0) || 
+        x > ( x > 0 ? CHUNK_WIDTH : 0) || 
+        y < 0 || y >= m_world->getHeight() || 
+        layer < 0 || layer > LAYERS - 1
+    );
+
+    return result;
 }
 
 int Chunk::getIndex(int x, int y, uint8_t layer) {
@@ -38,7 +32,9 @@ int Chunk::getIndex(int x, int y, uint8_t layer) {
 }
 
 void Chunk::setBlock(int x, int y, uint8_t layer, std::shared_ptr<Block> block) {
-    if(block && !isOutOfBound(x, y, layer)) {
+    assert(block != nullptr);
+
+    if(!isOutOfBound(x, y, layer)) {
         block->setPos(m_position * CHUNK_WIDTH + x, y, layer);
         m_blocks[getIndex((x < 0 ? CHUNK_WIDTH + x : x), y, layer)] = block;
     }
@@ -108,7 +104,7 @@ ByteVector& Chunk::serialize() {
 size_t Chunk::deserialize(ByteVector& bytes) {
     SerializedObject::deserialize(bytes);
 
-    m_position = getBytes<ChunkPosition>();
+    m_position = getBytes<ChunkPos>();
 
     auto blockCount = getBytes<uint16_t>();
     logD("chunk {} block count: {}", m_position, blockCount);
@@ -127,11 +123,11 @@ size_t Chunk::deserialize(ByteVector& bytes) {
     for(int i = 0; i < blockCount; i++) {
         auto header = getBytes<Header>(true);
         if(header == Header::BLOCK) {
-            auto id = getBytes<Block::ID>(true);
-            auto type = Block::getTypeByID(id);
+            std::size_t size = getBytes<uint16_t>();
+            assert(("Null size block!", size > 0));
 
-            auto blockBytes = getBytes(m_world->getSizeForType(type));
-            auto block = std::make_shared<Block>(id);
+            auto blockBytes = getBytes(size);
+            auto block = std::make_shared<Block>();
             block->deserialize(blockBytes);
 
             auto pos = block->getPos();

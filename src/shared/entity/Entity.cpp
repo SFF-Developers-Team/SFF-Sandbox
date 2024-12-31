@@ -2,7 +2,7 @@
 #include <Block.hpp>
 #include <World.hpp>
 
-Entity::Entity(World* world) : m_world(world), m_hitbox(0.0f, 0.0f, 0.8f, 1.65f) {
+Entity::Entity(std::shared_ptr<World> world) : m_world(world), m_hitbox(0.0f, 0.0f, 0.8f, 1.65f) {
     m_header = ENTITY;
 }
 
@@ -49,13 +49,6 @@ void Entity::move(float x, float y) {
     // Stop motion on collision
     if (prevX != x) m_speedX = 0.f;
     if (prevY != y) m_speedY = 0.f;
-}
-
-void Entity::moveRelative(float x, float speed) {
-    if(x < 0.01f && x > -0.01f) return;
-    float distance = speed / x;
-    x *= distance;
-    m_speedX = x * (m_direction == LEFT ? -1 : 1);
 }
 
 void Entity::resetPosition() {

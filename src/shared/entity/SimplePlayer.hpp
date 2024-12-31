@@ -33,8 +33,7 @@ protected:
     std::string m_username;
 
 public:
-    SimplePlayer(World* world);
-    ~SimplePlayer();
+    SimplePlayer(std::shared_ptr<World> world);
 
     uint8_t animationClamp(uint8_t value, uint8_t min, uint8_t max);
     void setAnimation(AnimationType type);

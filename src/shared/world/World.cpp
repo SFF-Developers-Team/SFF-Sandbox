@@ -6,13 +6,11 @@
 #include <WorldGenNormal.hpp>
 #include <Chunk.hpp>
 #include <SimplePlayer.hpp>
-#include <ColoredBlock.hpp>
+#include <assert.h>
 
 World::World(uint32_t width, uint32_t height, std::string const& worldName) 
     : m_width(width), m_height(height), m_worldName(worldName) {
     m_header = WORLD;
-
-    m_blockSizes.insert(std::make_pair(Block::Type::SOLID, Block::getSize()));
 }
 
 World::World(std::string const& worldName) : World(0, 128, worldName) {}
@@ -20,11 +18,13 @@ World::World(std::string const& worldName) : World(0, 128, worldName) {}
 World::~World() {}
 
 void World::generate() {
-    if(m_worldGen) {
-        for(int32_t x = static_cast<int32_t>(m_width > 0 ? -(m_width / CHUNK_WIDTH) / 2 : -3); x < static_cast<int32_t>(m_width > 0 ? (m_width / CHUNK_WIDTH) / 2 : 3); x++) {
-            logD("gen chunk {}", x);
-            m_chunks.insert(std::make_pair(x, m_worldGen->generateChunk(x)));
-        }
+    assert(("WorldGen isn't set!", m_worldGen != nullptr));
+    auto start = static_cast<int32_t>(m_width > 0 ? -(m_width / CHUNK_WIDTH) / 2 : -3);
+    auto end = static_cast<int32_t>(m_width > 0 ? (m_width / CHUNK_WIDTH) / 2 : 3);
+
+    for(auto x = start; x < end; x++) {
+        logD("gen chunk {}", x);
+        m_chunks.insert(std::make_pair(x, m_worldGen->generateChunk(x)));
     }
 }
 
@@ -44,13 +44,13 @@ void World::unloadChunk(std::shared_ptr<Chunk> chunk) {
     }
 }
 
-void World::unloadChunk(ChunkPosition pos) {
+void World::unloadChunk(ChunkPos pos) {
     if(m_chunks.contains(pos)) {
         m_chunks.erase(pos);
     }
 }
 
-std::shared_ptr<Chunk> World::getChunk(ChunkPosition position) {
+std::shared_ptr<Chunk> World::getChunk(ChunkPos position) {
     if(m_chunks.contains(position)) {
         return m_chunks[position];
     }
@@ -113,8 +113,6 @@ ByteVector& World::serialize() {
     addBytes(m_worldGen->getSeed());
 
     // World version 1
-    addBytes(Block::getSize());
-
     addBytes((uint32_t)m_chunks.size());
 
     logD("chunks count {}", m_chunks.size());
@@ -149,21 +147,18 @@ size_t World::deserialize(ByteVector& bytes) {
     auto seed = getBytes<int64_t>();
 
     // World version 1
-    m_blockSizes[Block::Type::SOLID]   = getBytes<std::size_t>();
-    m_blockSizes[Block::Type::COLORED] = getBytes<std::size_t>();
-
     auto chunkCount = getBytes<unsigned int>();
 
     switch(generatorType) {
         default:
         case WorldGen::Type::NORMAL: {
-            m_worldGen = std::make_shared<WorldGenNormal>(this, seed);
+            m_worldGen = std::make_shared<WorldGenNormal>(std::shared_ptr<World>(this), seed);
         }
     }
 
     for(int i = 0; i < chunkCount; i++) {
         int chunkSize = getBytes<unsigned int>();
-        auto chunk = std::make_shared<Chunk>(this);
+        auto chunk = std::make_shared<Chunk>(std::shared_ptr<World>(this));
 
         ByteVector chunkBytes(m_bytes.begin() + m_offset, m_bytes.begin() + m_offset + chunkSize);
         m_offset += chunk->deserialize(chunkBytes);
@@ -280,12 +275,4 @@ bool World::isOutOfBound(int x, int y, uint8_t layer) {
     }
     
     return (y < 0 || y >= getHeight() || layer < 0 || layer > LAYERS - 1);
-}
-
-std::size_t World::getSizeForType(Block::Type type) {
-    if(m_blockSizes.contains(type)) {
-        return m_blockSizes[type];
-    }
-
-    return m_blockSizes[Block::Type::SOLID];
 }

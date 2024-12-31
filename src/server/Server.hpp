@@ -18,8 +18,8 @@ private:
     toml::v3::table config;
     std::mutex m_acceptLock;
 
-    World* m_world;
-    Timer* m_timer;
+    std::shared_ptr<World> m_world;
+    std::shared_ptr<Timer> m_timer;
 
     std::vector<std::unique_ptr<Client>> m_clients;
 

@@ -4,17 +4,29 @@
 
 class Debug {
 private:
-    static inline std::vector<std::string> m_debugList;
+    std::vector<std::string> m_debugList;
+    bool m_visible = false;
 
 public:
-    static inline bool m_debug = false;
+    static auto get() {
+        static auto debug = std::make_shared<Debug>();
+        return debug;
+    }
 
-    static void draw();
+    void draw();
+    void setVisible(bool);
+    bool isVisible();
 
     template <typename... Args>
-    static void addString(std::format_string<Args...> s, Args&&... args) {
-        // if(m_debug) {
-        //     m_debugList.push_back(std::format(s, std::forward<Args>(args)...));
-        // }
+    int addString(std::format_string<Args...> s, Args&&... args) {
+        m_debugList.push_back(std::format(s, std::forward<Args>(args)...));
+        return m_debugList.size() - 1;
     }
+
+    template <typename... Args>
+    void updateString(int index, std::format_string<Args...> s, Args&&... args) {
+        m_debugList[index] = std::format(s, std::forward<Args>(args)...);
+    }
+
+    void removeString(int index);
 };

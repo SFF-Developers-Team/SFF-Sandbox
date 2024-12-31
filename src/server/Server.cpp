@@ -50,8 +50,8 @@ void Server::init() {
 
     logD("Server listening *:{}", m_acceptor.address().port());
 
-    m_world = new World(256, 128, "world");
-    m_timer = new Timer(60);
+    m_world = std::make_shared<World>(256, 128, "world");
+    m_timer = std::make_shared<Timer>(60);
 
     if(!m_world->load()) {
         logD("Generating world...");

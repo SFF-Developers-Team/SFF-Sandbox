@@ -4,11 +4,9 @@
 #include <Chunk.hpp>
 #include <Entity.hpp>
 
-SimplePlayer::SimplePlayer(World* world) : Entity::Entity(world) {
+SimplePlayer::SimplePlayer(std::shared_ptr<World> world) : Entity::Entity(world) {
     m_header = Header::PLAYER;
 }
-
-SimplePlayer::~SimplePlayer() {}
 
 // for debug
 const char* SimplePlayer::getAnimationName(AnimationType type) {

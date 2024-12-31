@@ -20,13 +20,13 @@ private:
     bool m_inPlayScene = false;
     std::string m_username;
     
-    World* m_world;
+    std::shared_ptr<World> m_world;
     std::shared_ptr<Player> m_player;
-    ParticleManager* m_particleManager;
-    RenderManager* m_renderManager;
-    TileMap* m_blocksMap;
-    Multiplayer* m_multiplayerManager;
-    Timer* m_timer;
+    std::shared_ptr<ParticleManager> m_particleManager;
+    std::shared_ptr<RenderManager> m_renderManager;
+    std::shared_ptr<TileMap> m_blocksMap;
+    std::shared_ptr<Multiplayer> m_multiplayerManager;
+    std::shared_ptr<Timer> m_timer;
 
     std::shared_ptr<sandbox_ui::InitialMenu> m_gameMenu;
     std::shared_ptr<sandbox_ui::NodeRenderer> m_uiRenderer;
@@ -35,8 +35,6 @@ public:
         static Game* game = new Game();
         return game;
     }
-
-    ~Game();
 
     void init(std::vector<std::string>& args);
     void render();

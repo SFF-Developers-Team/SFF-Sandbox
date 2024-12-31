@@ -10,6 +10,8 @@
 #include <GamePacket.hpp>
 #include <GitHash.hpp>
 #include <ui/CallbackNode.hpp>
+#include <TextureManager.hpp>
+#include <filesystem>
 
 void Game::init(std::vector<std::string>& args) {
 #ifdef _WIN32
@@ -26,15 +28,18 @@ void Game::init(std::vector<std::string>& args) {
 
     m_username = (args.size() > 0 ? args[0] : std::string("Player").append(std::to_string(rand()))); 
     m_multiplayer = args.size() > 1;
-    m_blocksMap = new TileMap("assets/blocks.png", Vector2 {16, 16});
-    m_timer = new Timer(60);
-    m_world = new World("world1");
+    m_blocksMap = std::make_shared<TileMap>("assets/blocks.png", Vector2 {16, 16});
+    m_timer = std::make_shared<Timer>(60);
+    m_world = std::make_shared<World>("world1");
     m_player = std::make_shared<Player>(m_world);
-    // m_particleManager = new ParticleManager(m_world, m_player);
-    m_renderManager = new RenderManager(m_world, m_player);
-    m_multiplayerManager = new Multiplayer();
+    // m_particleManager = std::make_shared<ParticleManager>(m_world, m_player);
+    m_renderManager = std::make_shared<RenderManager>(m_world, m_player);
+    m_multiplayerManager = std::make_shared<Multiplayer>();
     m_gameMenu = std::make_shared<sandbox_ui::InitialMenu>();
     m_uiRenderer = std::make_shared<sandbox_ui::NodeRenderer>();
+
+    auto tm = TextureManager::get();
+    tm->loadTexture(std::filesystem::path("assets/player.png"));
 
     m_uiRenderer->setScaling(8);
     m_uiRenderer->addChild(m_gameMenu);
@@ -99,15 +104,6 @@ void Game::init(std::vector<std::string>& args) {
     CloseWindow();
 }
 
-Game::~Game() {
-    delete m_world;
-    delete m_timer;
-    delete m_blocksMap;
-    delete m_particleManager;
-    delete m_renderManager;
-    delete m_multiplayerManager;
-}
-
 void Game::drawCrosshair(Vector2 pos) {
     const float thickness = 3.0f;
     const float size = 20.f;
@@ -123,17 +119,22 @@ void Game::render() {
             BeginMode2D(m_player->getCamera());
                 m_renderManager->renderWorld();
             EndMode2D();
-            m_renderManager->renderSelectedBlock(m_screenWidth - 42.f, 10.f, m_player->getSelectedBlock());
+            auto selectedBlock = m_player->getSelectedBlock();
+            if(selectedBlock) {
+                m_renderManager->renderSelectedBlock(m_screenWidth - 42.f, 10.f, selectedBlock);
+            }
         } else {
             m_uiRenderer->render();
         }
 
-        if(Debug::m_debug){
-            Debug::draw();
-        }
+        auto dbg = Debug::get();
 
-        DrawText(std::format("SFF Sandbox {}-dev", GitHash::shortSha1).c_str(), 5, 5, 20, WHITE);
-        DrawText(std::format("{} FPS", GetFPS()).c_str(), 5, 30, 20, WHITE);
+        if(dbg->isVisible()){
+            dbg->draw();
+        } else {
+            DrawText(std::format("SFF Sandbox {}-dev ({} {})", GitHash::shortSha1, __DATE__, __TIME__).c_str(), 5, 5, 20, WHITE);
+            DrawText(std::format("{} FPS", GetFPS()).c_str(), 5, 30, 20, WHITE);
+        }
 
         // auto cur = GetMousePosition();
         // drawCrosshair(cur);
@@ -150,7 +151,8 @@ void Game::update() {
     m_player->update();
 
     if(IsKeyPressed(KEY_F3)) {
-        Debug::m_debug = !Debug::m_debug;
+        auto dbg = Debug::get();
+        dbg->setVisible(!dbg->isVisible());
     }
 
     if(IsKeyPressed(KEY_F6)) {

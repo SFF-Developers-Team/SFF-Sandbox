@@ -17,6 +17,11 @@ struct Vec2 {
     inline T2 to() const {
         return T2 {x, y};
     }
+
+    template <typename T2>
+    inline float distance(T2 other) const {
+        return sqrtf((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y));
+    }
 };
 
 template <typename T>

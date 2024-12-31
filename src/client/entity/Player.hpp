@@ -17,7 +17,7 @@ private:
     Camera2D m_camera;
     Texture2D m_texture;
     std::vector<std::shared_ptr<Block>> m_inventory;
-    std::size_t m_selectedBlock = 0;
+    int8_t m_selectedBlock = 0;
 
     bool m_sneak = false;
     bool m_fly = false;
@@ -29,11 +29,10 @@ private:
     float m_lastAnimFrameTime = 0.f;
 
     bool m_inputDisabled = false;
-
     bool m_unlinkCamX = false;
     bool m_unlinkCamY = false;
 public:
-    Player(World* world);
+    Player(std::shared_ptr<World> world);
     ~Player();
     
     void onTick() override; 
@@ -42,15 +41,12 @@ public:
     void updateCamera();
     void updateAnimation();
 
-    void moveCameraRelative(float x, float y);
-
     bool isChunkInView(std::shared_ptr<Chunk> chunk);
     bool isBlockInView(std::shared_ptr<Block> block);
-    bool canDestroyBlock(Vec2i targetBlockPos, uint8_t layer);
-    bool canPlaceBlock(Vec2i targetBlockPos, uint8_t layer);
-
-    Vector2 convertToCameraPos(Vector2 pos);
-    Vec2i getTargetBlock(bool onlyExist = true);
+    bool canDestroyBlock(Vec2i target, uint8_t layer);
+    bool canPlaceBlock(Vec2i target, uint8_t layer);
+    bool canAccessBlock(Vec2i target, uint8_t layer);
+    Vec2i getTargetBlock();
 
     bool inputDisabled();
     void disableInput(bool flag);
@@ -61,7 +57,7 @@ public:
     void setCamera(Camera2D cam) { m_camera = cam; }
     void setID(PlayerID id) { m_id = id; }
 
-    auto getSelectedBlock() { return m_inventory[m_selectedBlock]; }
+    std::shared_ptr<Block> getSelectedBlock();
     auto getCamera() { return m_camera; }
     auto getID() { return m_id; }
 };
