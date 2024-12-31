@@ -300,7 +300,7 @@ void Player::update() {
 
         if(!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
             m_selectedBlock += (wheel > 0 ? -1 : 1);
-            if (m_selectedBlock > m_inventory.size()) m_selectedBlock = 0;
+            if (m_selectedBlock >= m_inventory.size()) m_selectedBlock = 0;
             if (m_selectedBlock < 0) m_selectedBlock = static_cast<uint8_t>(m_inventory.size()) - 1;
         }
 
