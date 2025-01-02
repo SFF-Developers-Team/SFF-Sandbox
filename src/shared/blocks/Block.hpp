@@ -50,8 +50,8 @@ public:
     template <typename T>
     T getTag(TagID key) { return std::get<T>(m_tags[key]); }
 
-    ByteVector& serialize() override;
-    size_t deserialize(ByteVector& bytes) override;
+    ByteVector serialize() override;
+    size_t deserialize(ByteVector const& bytes) override;
 
     auto const getID() { return m_id; }
     auto const getPos() { return Vec2i {m_x, m_y}; }

@@ -26,15 +26,12 @@ void Game::init(std::vector<std::string>& args) {
   
     sockpp::initialize();
 
-    m_username = (args.size() > 0 ? args[0] : std::string("Player").append(std::to_string(rand()))); 
-    m_multiplayer = args.size() > 1;
     m_blocksMap = std::make_shared<TileMap>("assets/blocks.png", Vector2 {16, 16});
     m_timer = std::make_shared<Timer>(60);
     m_world = std::make_shared<World>("world1");
     m_player = std::make_shared<Player>(m_world);
     // m_particleManager = std::make_shared<ParticleManager>(m_world, m_player);
     m_renderManager = std::make_shared<RenderManager>(m_world, m_player);
-    m_multiplayerManager = std::make_shared<Multiplayer>();
     m_gameMenu = std::make_shared<sandbox_ui::InitialMenu>();
     m_uiRenderer = std::make_shared<sandbox_ui::NodeRenderer>();
 
@@ -83,7 +80,22 @@ void Game::init(std::vector<std::string>& args) {
 
     m_gameMenu->getNodeContainer()->addChild(cn, -1);
 
-    if(!m_multiplayer || !m_multiplayerManager->connect(args[1], (args.size() > 2 ? atoi(args[2].c_str()) : 7777))) {
+    m_username = (args.size() > 0 ? args[0] : std::string("Player").append(std::to_string(rand()))); 
+    m_isMultiplayer = args.size() > 1;
+    if(m_isMultiplayer) {
+        logD("Starting multiplayer session...");
+        std::string address = args[1];
+        uint16_t port = 7777;
+        auto delimeter = address.find_first_of(':');
+        if(delimeter != std::string::npos) {
+            port = std::stoi(address.substr(delimeter, address.size() - delimeter));
+        }
+
+        SetWindowTitle(std::format("SFF Sandbox ({}) - {}:{}", m_username, address, port).c_str());
+        m_isMultiplayer = Multiplayer::get()->connect(address, port);
+    }
+    
+    if(!m_isMultiplayer) {
         if(!m_world->load()) {
             m_world->setGenerator(std::make_shared<WorldGenNormal>(m_world, 1));
             m_world->generate();
@@ -97,7 +109,7 @@ void Game::init(std::vector<std::string>& args) {
         this->render();
     }
 
-    if(!m_multiplayer) {
+    if(!m_isMultiplayer) {
         m_world->save();
     }
 
@@ -157,9 +169,5 @@ void Game::update() {
 
     if(IsKeyPressed(KEY_F6)) {
         m_world->save();
-    }
-
-    if(m_multiplayer) {
-        m_multiplayerManager->onTick();
     }
 }

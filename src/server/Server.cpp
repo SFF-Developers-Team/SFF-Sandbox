@@ -50,7 +50,7 @@ void Server::init() {
 
     logD("Server listening *:{}", m_acceptor.address().port());
 
-    m_world = std::make_shared<World>(256, 128, "world");
+    m_world = std::make_shared<World>(128, "world");
     m_timer = std::make_shared<Timer>(60);
 
     if(!m_world->load()) {
@@ -80,10 +80,23 @@ void Server::inputThread() {
 
 void Server::loop() {
     while(true) {
-        m_timer->advanceTime();
+        sockpp::inet_address peer;
+        auto res = m_acceptor.accept(&peer);
 
-        for(uint32_t i = 0; i < m_timer->getTicks(); i++) {
-            onTick();
+        if(res) {
+            sockpp::tcp_socket sock = res.release();
+            std::thread thread(&Server::acceptThread, this, std::move(sock));
+            thread.detach();
+        }
+
+        for(auto i = m_clients.begin(); i != m_clients.end(); i++) {
+            if(*i == nullptr) {
+                continue;
+            }
+
+            if((*i)->shouldDisconnect()) {
+                disconnectPlayer((*i)->getPlayerID());
+            }
         }
     }
 }
@@ -95,23 +108,9 @@ void Server::destroy() {
     std::exit(0);
 }
 
-void Server::onTick() {
-    sockpp::inet_address peer;
-    auto res = m_acceptor.accept(&peer);
-
-    if(res) {
-        sockpp::tcp_socket sock = res.release();
-        std::thread thread(&Server::acceptThread, this, std::move(sock));
-        thread.detach();
-    }
-
-    for(auto& client : m_clients) {
-        client->onTick();
-    }
-}
-
 void Server::acceptThread(sockpp::tcp_socket sock) {
     auto client = std::make_unique<Client>(std::move(sock));
+    
     if(client->accept()) {
         m_clients.push_back(std::move(client));
         return;
@@ -120,30 +119,23 @@ void Server::acceptThread(sockpp::tcp_socket sock) {
     client.release();
 }
 
-void Server::addToQueueAll(std::shared_ptr<GamePacket> packet) {
+void Server::addToQueueAll(std::shared_ptr<SerializedObject> packet) {
     for(auto& client : m_clients) {
         client->addToQueue(packet);
     }
 }
 
-void Server::addToQueue(PlayerID id, std::shared_ptr<GamePacket> packet) {
+void Server::addToQueue(PlayerID id, std::shared_ptr<SerializedObject> packet) {
     for(auto& client : m_clients) {
         if(client->getPlayerID() == id) {
             client->addToQueue(packet);
-            return;
         }
     }
 }
 
-void Server::addToQueueExcept(PlayerID id, std::shared_ptr<GamePacket> packet) {
+void Server::addToQueueExcept(PlayerID id, std::shared_ptr<SerializedObject> packet) {
     for(auto& client : m_clients) {
         if(client->getPlayerID() != id) client->addToQueue(packet);
-    }
-}
-
-void Server::notifyAll(PlayerID id) {
-    for(auto& client : m_clients) {
-        if(client->getPlayerID() != id) client->notify(id);
     }
 }
 
@@ -153,7 +145,7 @@ PlayerID Server::joinPlayer(std::string const& username) {
     logD("{} ({}) joined the game", username, playerId);
 
     auto packet = CREATE_PACKET(SerializedObject::Header::LOAD_PLAYER, playerId);
-    packet->addBytes(username);
+    packet->add(username);
 
     addToQueueExcept(playerId, packet);
 
@@ -168,9 +160,7 @@ void Server::disconnectPlayer(PlayerID id) {
 
     for(auto i = m_clients.begin(); i != m_clients.end(); i++) {
         if((*i)->getPlayerID() == id) {
-            (*i).release();
             m_clients.erase(i);
-            return;
         }
     }
 }

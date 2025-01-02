@@ -44,32 +44,27 @@ uint8_t SimplePlayer::animationClamp(uint8_t value, uint8_t min, uint8_t max) {
     return value;
 }
 
-ByteVector& SimplePlayer::serialize() {
-    std::lock_guard<std::mutex> guard(m_mutex);
+ByteVector SimplePlayer::serialize() {
     SerializedObject::serialize();
 
-    addBytes(m_id);
-    addBytes(m_hitbox.x);
-    addBytes(m_hitbox.y);
-    addBytes(m_animFrame);
-    addBytes(m_direction);
+    add(m_id);
+    add(m_hitbox.x);
+    add(m_hitbox.y);
+    add(m_animFrame);
+    add(m_direction);
 
-    return m_bytes;
+    return bytes();
 }
 
-size_t SimplePlayer::deserialize(ByteVector& bytes) {
-    std::lock_guard<std::mutex> guard(m_mutex);
+size_t SimplePlayer::deserialize(ByteVector const& bytes) {
+    std::lock_guard<std::mutex> guard(mutex);
     SerializedObject::deserialize(bytes);
 
-    m_id = getBytes<PlayerID>(0);
-    m_hitbox.x = getBytes<float>(0.0f);
-    m_hitbox.y = getBytes<float>(0.0f);
-    m_direction = getBytes<Direction>(Direction::LEFT);
-    m_animFrame = getBytes<uint8_t>(0);
+    m_id = get<PlayerID>(0);
+    m_hitbox.x = get<float>(0.0f);
+    m_hitbox.y = get<float>(0.0f);
+    m_direction = get<Direction>(Direction::LEFT);
+    m_animFrame = get<uint8_t>(0);
 
     return m_offset;
-}
-
-std::size_t const SimplePlayer::getSizeBytes() {
-    return sizeof(Header) + sizeof(PlayerID) + sizeof(float) + sizeof(float) + sizeof(Entity::Direction) + sizeof(uint8_t);
 }

@@ -36,8 +36,8 @@ public:
     virtual void onTick();
     void move(float x, float y);
 
-    ByteVector& serialize() override;
-    size_t deserialize(ByteVector& bytes) override;
+    ByteVector serialize() override;
+    size_t deserialize(ByteVector const& bytes) override;
 
     void setPosition(Vec2f pos);
     void setSize(Vec2f size);

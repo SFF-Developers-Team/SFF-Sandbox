@@ -79,12 +79,12 @@ bool Chunk::isBlockClosed(Vec2i pos, uint8_t layer) {
     return isBlockClosed(pos.x, pos.y, layer);
 }
 
-ByteVector& Chunk::serialize() {
+ByteVector Chunk::serialize() {
     SerializedObject::serialize();
     uint16_t blockCount = countBlocks();
 
-    addBytes(m_position);
-    addBytes(blockCount);
+    add(m_position);
+    add(blockCount);
 
     for(int x = 0; x < CHUNK_WIDTH; x++) {
         for(int y = 0; y < m_world->getHeight(); y++) {
@@ -93,22 +93,22 @@ ByteVector& Chunk::serialize() {
 
                 if(block && block->getID() != Block::ID::AIR) {
                     auto bytes = block->serialize();
-                    addBytes<uint16_t>(bytes.size());
-                    addBytes(bytes);
+                    add<uint16_t>(bytes.size());
+                    add(bytes);
                 }
             }
         }
     }
 
-    return m_bytes;
+    return bytes();
 }
 
-size_t Chunk::deserialize(ByteVector& bytes) {
+size_t Chunk::deserialize(ByteVector const& bytes) {
     SerializedObject::deserialize(bytes);
 
-    m_position = getBytes<ChunkPos>();
+    m_position = get<ChunkPos>();
 
-    auto blockCount = getBytes<uint16_t>();
+    auto blockCount = get<uint16_t>();
     logD("chunk {} block count: {}", m_position, blockCount);
 
     if(!blockCount) {
@@ -123,12 +123,12 @@ size_t Chunk::deserialize(ByteVector& bytes) {
     }
 
     for(int i = 0; i < blockCount; i++) {
-        auto bsize = getBytes<uint16_t>();
+        auto bsize = get<uint16_t>();
         assert(("Null size block!", bsize > 0));
         
-        auto header = getBytesI<Header>();
+        auto header = getI<Header>();
         if(header == Header::BLOCK) {
-            auto bbytes = getBytesN(bsize);
+            auto bbytes = getN(bsize);
             auto block = std::make_shared<Block>();
             block->deserialize(bbytes);
 

@@ -5,28 +5,43 @@
 #define CREATE_PACKET std::make_shared<GamePacket>
 
 class GamePacket : public SerializedObject {
+private:
+    using SerializedObject::deserialize;
+
 public:
+    GamePacket(Header header) { 
+        add(header); 
+
+        m_offset = 0;    
+    }
+
     template<typename... Args>
-    GamePacket(Header header, Args const&... arg) {
-        addBytes(header);
-        addBytes(arg...);
+    GamePacket(Header const header, Args const&... arg) : GamePacket(header) {
+        add(arg...);
+
+        m_offset = 0;
     }
 
-    GamePacket(Header header, ByteVector& bytes) {
-        addBytes(header);
-        addBytes(bytes);
+    template<typename... Args>
+    GamePacket(Args const&... arg) {
+        add(arg...);
+
+        m_offset = 0;
     }
 
-    GamePacket(ByteVector& bytes) {
-        addBytes(bytes);
+    ByteVector serialize() override {
+        return bytes();
     }
 
-    GamePacket(Header header) {
-        addBytes(header);
-    }
+    void print() {
+        std::string res;
+        for(int i = 0; i < size(); i++) { 
+            res.append(std::format("{:02X} ", data()[i]));
+        }
 
-    ByteVector& serialize() override { return m_bytes; }
+        logD("GamePacket: {}", res);
+    }
     
-    auto resetOffset() { m_offset = 0; }
-    auto getSize() { return m_bytes.size(); }
+    /// @brief Reset offset 
+    void reset() { m_offset = 0; }
 };

@@ -16,7 +16,7 @@ private:
     const int m_screenWidth = 1280;
     const int m_screenHeight = 720;
     uint8_t m_renderDistance = 3;
-    bool m_multiplayer = false;
+    bool m_isMultiplayer = false;
     bool m_inPlayScene = false;
     std::string m_username;
     
@@ -25,7 +25,6 @@ private:
     std::shared_ptr<ParticleManager> m_particleManager;
     std::shared_ptr<RenderManager> m_renderManager;
     std::shared_ptr<TileMap> m_blocksMap;
-    std::shared_ptr<Multiplayer> m_multiplayerManager;
     std::shared_ptr<Timer> m_timer;
 
     std::shared_ptr<sandbox_ui::InitialMenu> m_gameMenu;
@@ -51,6 +50,6 @@ public:
     auto getParticleManager() { return m_particleManager; }
     auto getUsername() { return m_username; }
     auto getPlayer() { return m_player; }
-    auto getMultiplayer() { return m_multiplayerManager; }
-    auto isMultiplayer() { return m_multiplayer; }
+    auto isMultiplayer() { return m_isMultiplayer; }
+    auto getTimer() { return m_timer; }
 };

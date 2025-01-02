@@ -5,25 +5,40 @@
     #define NOUSER
 #endif
 
-#include <PacketManager.hpp>
 #include <sockpp/tcp_connector.h>
 #include <GamePacket.hpp>
+#include <PacketManager.hpp>
 #include <Types.hpp>
 #include <memory>
+#include <map>
 
-class Multiplayer {
+class Multiplayer : private PacketManager<sockpp::tcp_connector> {
 private:
-    PacketManager<sockpp::tcp_connector>* m_pacman;
-    sockpp::tcp_connector m_connector;
-    std::vector<std::shared_ptr<SerializedObject>> m_queue;
-    bool m_worldLoaded = false;
+    bool m_connected = false;
 
 public:
-    ~Multiplayer();
+    using PacketManager::addToQueue;
+
+    static auto get() {
+        static auto inst = std::make_shared<Multiplayer>();
+        return inst;
+    }
+
+    Multiplayer();
 
     bool connect(std::string const& host, in_port_t port);
-    void onTick();
+    bool connected();
 
-    void addToQueue(std::shared_ptr<SerializedObject> classObj);
     void onBlockChanged(Vec2i pos, uint8_t layer);
+
+    void inThread();
+    void outThread();
+
+    void handle(GamePacket& packet) override;
+    void handleError(GamePacket& packet);
+    void handleChunk(GamePacket& packet);
+    void handleBlock(GamePacket& packet);
+    void handlePlayer(GamePacket& packet);
+    void handleLoadPlayer(GamePacket& packet);
+    void handleUnloadPlayer(GamePacket& packet);
 };

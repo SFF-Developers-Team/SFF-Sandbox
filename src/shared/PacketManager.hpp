@@ -1,95 +1,144 @@
 #pragma once
 #include <vector>
 #include <GamePacket.hpp>
-#include <platform.hpp>
 #include <sockpp/connector.h>
 #include <sockpp/acceptor.h>
 #include <memory>
+#include <map>
 
-#if defined(_WIN32)
-    #define ERRWOULDBLOCK WSAEWOULDBLOCK
-    #define ERRALREADY WSAEALREADY
-#elif defined(__linux__)
-    #define ERRWOULDBLOCK EWOULDBLOCK
-    #define ERRALREADY EALREADY
-#else
-    #error "Unknown platform"
-#endif
-
+using QueueID = uint32_t;
+using Header = SerializedObject::Header;
 
 template<typename Socket>
 class PacketManager {
 private:
-    Socket& m_sock;
-    
-    std::vector<uint8_t> m_writeBuf;
-    std::vector<uint8_t> m_readBuf;
+    size_t m_readBufSize;
 
-    std::size_t m_writeOffset = 0;
-    std::size_t m_readOffset = 0;
-    std::size_t m_readPacketSize = 0;
+protected:
+    std::map<QueueID, std::shared_ptr<SerializedObject>> m_queue;
+    QueueID m_lastId;
+    Socket m_sock;
 
 public:
-    PacketManager(Socket& sock, size_t bufSize) : m_sock(sock), m_readBuf(bufSize) {}
+    PacketManager(Socket sock = Socket(), size_t readBufSize = 1024 * 128) : 
+        m_sock(std::move(sock)), m_readBufSize(readBufSize), m_lastId(0) 
+    {
+        m_sock.read_timeout(std::chrono::seconds(20));
+        m_sock.set_non_blocking(false);
+    }
 
-    bool send(std::shared_ptr<GamePacket> packet) {
-        // if(m_readOffset > 0) return false; // prevent sending while receiving
+    ~PacketManager() {
+        m_sock.shutdown();
+    }
 
-        if(!m_writeOffset) {
-            if(!packet) return false;
-            
-            auto bytes = packet->serialize();
-            uint32_t packetSize = bytes.size();
+    bool send(GamePacket const& packet) {
+        int written = 0;
 
-            // logD("Sending packet size {} bytes", packetSize);
+        while(written < packet.size()) {
+            auto res = m_sock.write(packet.data() + written, packet.size() - written).value();
+            if(res < 0) return false;
 
-            m_writeBuf.resize(packetSize + 4);
-            
-            std::memcpy(m_writeBuf.data(), &packetSize, 4);
-            std::memcpy(m_writeBuf.data() + 4, bytes.data(), packetSize);
+            written += res;
         }
-        
-        auto res = m_sock.write(m_writeBuf.data() + m_writeOffset, m_writeBuf.size() - m_writeOffset);
-        m_writeOffset += (res.value() > 0 ? res.value() : 0);
-
-        if(res.error().value() == ERRWOULDBLOCK || m_writeOffset < m_writeBuf.size()) {
-            return false;
-        }
-
-        if(res.is_error()) {
-            logE("SEND ERROR {} ({})", res.error_message(), res.error().value());
-        }
-
-        m_writeBuf.clear();
-        m_writeOffset = 0;
 
         return true;
     }
 
-    std::shared_ptr<GamePacket> recv() {
-        // if(m_writeOffset > 0) return nullptr; // prevent receiving while sending
-
-        auto res = m_sock.read(m_readBuf.data() + m_readOffset, m_readBuf.size() - m_readOffset);
-        m_readOffset += (res.value() > 0 ? res.value() : 0);
+    GamePacket const recv() {
+        auto bytes = ByteVector(m_readBufSize);
+        auto read = m_sock.read(bytes.data(), bytes.size());
         
-        if(m_readOffset >= 4) {
-            m_readPacketSize = *(uint32_t*)(m_readBuf.data());
-            // logD("Receiving packet size {} bytes", m_readPacketSize);
+        if(read.value() > 0) {
+            bytes.resize(read.value());
+
+            return GamePacket(bytes);
+        }
+    
+        return GamePacket(Header::NETWORK_ERROR, read.error_message());
+    }
+
+    void addToQueue(std::shared_ptr<SerializedObject> classObj) {
+        auto it = std::find_if(m_queue.begin(), m_queue.end(),
+                            [&classObj](auto&& p) { return p.second == classObj; });
+                
+        if(it != m_queue.end()) return;
+
+        m_queue.insert(std::make_pair(m_lastId, classObj));
+        m_lastId++;
+    }
+
+    void sendQueue() {
+        if(m_queue.size() > 1) {
+            auto arr = CREATE_PACKET(Header::ARRAY, static_cast<uint16_t>(m_queue.size()));
+            for(auto& [_, q] : m_queue) {
+                if(q == nullptr) continue;
+
+                auto bytes = q->serialize();
+                arr->add<uint16_t>(bytes.size());
+                arr->add(bytes);
+            }
+
+            m_queue.clear();
+            addToQueue(arr);
         }
 
-        if(res.error().value() == ERRWOULDBLOCK || (m_readPacketSize > 0 && m_readOffset < m_readPacketSize + 4)) {
-            return nullptr;
+        if(!m_queue.empty()) {
+            auto beg = m_queue.begin();
+            auto pak = GamePacket(Header::PACKET, beg->first);
+            auto pak2 = GamePacket(beg->second->serialize());
+            auto hash = pak2.hash();
+            auto size = pak2.size();
+            pak.add<uint32_t>(hash);
+            pak.add<uint32_t>(size);
+            pak.add(pak2.bytes());
+
+            // logD("Sending packet size: {} | hash: {:X}", sz, hs);
+            send(pak);
         }
 
-        if(res.is_error()) {
-            return CREATE_PACKET(SerializedObject::NETWORK_ERROR, res.error_message());
+        m_queue.clear();
+    }
+
+    virtual void handle(GamePacket& packet) {
+        switch(packet.get<Header>()) {
+            case Header::PACKET: handlePacket(packet); break;
+            case Header::ARRAY: handleArray(packet); break;
+            case Header::OK: handleOk(packet); break;
+            default: break;
         }
 
-        auto bytes = ByteVector(m_readBuf.begin() + 4, m_readBuf.begin() + m_readOffset);
+        packet.reset();
+    }
 
-        m_readOffset = 0;
-        m_readPacketSize = 0;
+    void handleOk(GamePacket& packet) {
+        auto id = packet.get<QueueID>();
 
-        return CREATE_PACKET(bytes);
+        m_queue.erase(id);
+    }
+
+    void handleArray(GamePacket& packet) {
+        auto count = packet.get<uint16_t>();
+
+        while(count-- > 0) {
+            auto size = packet.get<uint16_t>();
+            auto bytes = packet.getN(size);
+            auto packet = GamePacket(bytes);
+            
+            handle(packet);
+        }
+    };
+
+    void handlePacket(GamePacket& packet) {
+        auto id = packet.get<QueueID>();
+        auto hash = packet.get<uint32_t>();
+        auto size = packet.get<uint32_t>();
+        auto pak = GamePacket(packet.getN(size));
+
+        // logD("Packet came size: {} | hash: {:X} | real size: {} | real hash: {:X}", size, hash, pak.size(), pak.hash());
+
+        if(pak.size() == size && pak.hash() == hash) {
+            handle(pak);
+            send(GamePacket(Header::OK, id));
+        }
     }
 };

@@ -18,58 +18,56 @@ void Block::setPos(int32_t x, int32_t y, uint8_t layer) {
     m_layer = layer;
 }
 
-std::vector<uint8_t>& Block::serialize() {
-    std::lock_guard<std::mutex> guard(m_mutex);
+ByteVector Block::serialize() {
     SerializedObject::serialize();
 
-    addBytes(m_id);
-    addBytes(m_x);
-    addBytes(m_y);
-    addBytes(m_layer);
-    addBytes<uint8_t>(0x20);
-    addBytes<uint16_t>(static_cast<uint16_t>(m_tags.size()));
+    add(m_id);
+    add(m_x);
+    add(m_y);
+    add(m_layer);
+    add<uint8_t>(0x20);
+    add<uint16_t>(static_cast<uint16_t>(m_tags.size()));
 
     for(auto& [key, value] : m_tags) {
-        addBytes<Block::TagID>(key);
+        add<Block::TagID>(key);
 
         switch(key) {
             case COLOR:
-                addBytes<Col3u>(std::get<Col3u>(value));
+                add<Col3u>(std::get<Col3u>(value));
                 break;
             case GHOST:
-                addBytes<bool>(std::get<bool>(value));
+                add<bool>(std::get<bool>(value));
                 break;
         }
     }
 
-    return m_bytes;
+    return bytes();
 }
 
-size_t Block::deserialize(std::vector<uint8_t>& bytes) {
-    std::lock_guard<std::mutex> guard(m_mutex);
+size_t Block::deserialize(ByteVector const& bytes) {
     SerializedObject::deserialize(bytes);
 
-    m_id = getBytes<ID>(ID::AIR);
-    m_x = getBytes<int32_t>();
-    m_y = getBytes<int32_t>();
-    m_layer = getBytes<uint8_t>();
+    m_id = get<ID>(ID::AIR);
+    m_x = get<int32_t>();
+    m_y = get<int32_t>();
+    m_layer = get<uint8_t>();
 
-    if(getBytes<uint8_t>() == 0x20) {
-        auto tagsc = getBytes<uint16_t>();
+    if(get<uint8_t>() == 0x20) {
+        auto tagsc = get<uint16_t>();
         if(tagsc > 0) {
             logD("Tags count {}", tagsc);
         }
 
         for(int i = 0; i < tagsc; i++) {
-            TagID key = getBytes<Block::TagID>();
+            TagID key = get<Block::TagID>();
 
             switch(key) {
                 case COLOR:
-                    m_tags[key] = getBytes<Col3u>({255, 255, 255});
+                    m_tags[key] = get<Col3u>({255, 255, 255});
                     break;
 
                 case GHOST:
-                    m_tags[key] = getBytes<bool>();
+                    m_tags[key] = get<bool>();
                     break;
             }
         }

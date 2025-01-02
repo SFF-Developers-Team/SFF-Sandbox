@@ -3,7 +3,6 @@
 #include <memory>
 #include <map>
 #include <sockpp/tcp_acceptor.h>
-#include <PacketManager.hpp>
 #include <SimplePlayer.hpp>
 #include <GamePacket.hpp>
 #include <toml.hpp>
@@ -38,15 +37,14 @@ public:
     void init();
     void loop();
 
-    void addToQueueAll(std::shared_ptr<GamePacket> packet);
-    void addToQueue(PlayerID id, std::shared_ptr<GamePacket> packet);
-    void addToQueueExcept(PlayerID id, std::shared_ptr<GamePacket> packet);
-
-    void notifyAll(PlayerID id);
+    void addToQueueAll(std::shared_ptr<SerializedObject> packet);
+    void addToQueue(PlayerID id, std::shared_ptr<SerializedObject> packet);
+    void addToQueueExcept(PlayerID id, std::shared_ptr<SerializedObject> packet);
 
     PlayerID joinPlayer(std::string const& username);
     void disconnectPlayer(PlayerID id);
 
     auto getWorld() { return m_world; }
+    auto getTimer() { return m_timer; }
     auto& getAcceptLock() { return m_acceptLock; }
 };

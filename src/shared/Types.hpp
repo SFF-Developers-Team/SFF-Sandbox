@@ -25,6 +25,27 @@ struct Vec2 {
 };
 
 template <typename T>
+struct Vec3 {
+    static_assert(std::is_arithmetic_v<T>, "Unsupported type for Vec3");
+
+    T x;
+    T y;
+    T z;
+
+    template <typename N>
+    inline Vec2<N> toType() const {
+        return {static_cast<N>(x), static_cast<N>(y), static_cast<N>(z)};
+    }
+
+    template <typename T2>
+    inline T2 to() const {
+        return T2 {x, y, z};
+    }
+
+    bool operator==(Vec3 const& other) { return (x == other.x && y == other.y && z == other.z); }
+};
+
+template <typename T>
 struct Rect {
     static_assert(std::is_arithmetic_v<T>, "Unsupported type for Rect");
 
@@ -106,6 +127,9 @@ struct Col4 {
 
 using Vec2f = Vec2<float>;
 using Vec2i = Vec2<int>;
+
+using Vec3f = Vec3<float>;
+using Vec3i = Vec3<int>;
 
 using Rectf = Rect<float>;
 using Recti = Rect<int>;

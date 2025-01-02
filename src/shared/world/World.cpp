@@ -8,14 +8,12 @@
 #include <SimplePlayer.hpp>
 #include <assert.h>
 
-World::World(uint32_t width, uint32_t height, std::string const& worldName) 
-    : m_width(width), m_height(height), m_worldName(worldName) {
+World::World(uint32_t height, std::string const& worldName) 
+    : m_height(height), m_worldName(worldName) {
     m_header = WORLD;
 }
 
-World::World(std::string const& worldName) : World(0, 128, worldName) {}
-
-World::~World() {}
+World::World(std::string const& worldName) : World(128, worldName) {}
 
 void World::generate() {
     assert(("WorldGen isn't set!", m_worldGen != nullptr));
@@ -79,7 +77,6 @@ void World::placeBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Bloc
 }
 
 void World::destroyBlock(int32_t x, int32_t y, uint8_t layer) {
-    logD("destroy {} {} block", x, y);
     auto block = getBlock(x, y, layer);
 
     if(block && block->getID() != Block::ID::AIR) {
@@ -103,47 +100,44 @@ void World::setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block>
     }
 }
 
-ByteVector& World::serialize() {
+ByteVector World::serialize() {
     SerializedObject::serialize();
 
-    addBytes(WORLD_VERSION);
-    // addBytes(m_width);
-    addBytes(m_height);
-    addBytes(m_worldGen->getType());
-    addBytes(m_worldGen->getSeed());
+    add(WORLD_VERSION);
+    add(m_height);
+    add(m_worldGen->getType());
+    add(m_worldGen->getSeed());
 
     // World version 1
-    addBytes((uint32_t)m_chunks.size());
-    for(auto [pos, chunk] : m_chunks) {
-        if(chunk) {
-            auto chunkBytes = chunk->serialize();
+    add((uint32_t)m_chunks.size());
+    for(auto [_, chunk] : m_chunks) {
+        if(!chunk) continue;
+        auto chunkBytes = chunk->serialize();
 
-            addBytes<uint32_t>(chunkBytes.size());
-            addBytes(chunkBytes);
-        }
+        add<uint32_t>(chunkBytes.size());
+        add(chunkBytes);
     }
 
     // World end
 
-    return m_bytes;
+    return bytes();
 }
 
-size_t World::deserialize(ByteVector& bytes) {
+size_t World::deserialize(ByteVector const& bytes) {
     SerializedObject::deserialize(bytes);
     m_chunks.clear();
-
-    auto worldVer = getBytes<uint32_t>();
+    
+    auto worldVer = get<uint32_t>();
 
     if(worldVer > WORLD_VERSION) {
         logE("Unsupported world version! (World version: {} | Supported: {})", worldVer, WORLD_VERSION);
         return m_offset;
     }
 
-    // m_width = getBytes<uint32_t>();
-    m_height = getBytes<uint32_t>();
+    m_height = get<uint32_t>();
 
-    auto generatorType = getBytes<WorldGen::Type>();
-    auto seed = getBytes<int64_t>();
+    auto generatorType = get<WorldGen::Type>();
+    auto seed = get<int64_t>();
 
     switch(generatorType) {
         default:
@@ -153,11 +147,11 @@ size_t World::deserialize(ByteVector& bytes) {
     }
 
     // World version 1
-    auto chunkCount = getBytes<unsigned int>();
+    auto chunkCount = get<unsigned int>();
     for(int i = 0; i < chunkCount; i++) {
-        auto csize = getBytes<uint32_t>();
+        auto csize = get<uint32_t>();
         auto chunk = std::make_shared<Chunk>(std::shared_ptr<World>(this));
-        auto cbytes = getBytesN(csize);
+        auto cbytes = getN(csize);
 
         chunk->deserialize(cbytes);
 

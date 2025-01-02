@@ -2,15 +2,14 @@
 #include <Debug.hpp>
 #include <Block.hpp>
 #include <World.hpp>
-#include <Game.hpp>
 #include <Chunk.hpp>
 #include <Logger.hpp>
 #include <Utils.hpp>
+#include <Multiplayer.hpp>
 #include <assert.h>
 
 Player::Player(std::shared_ptr<World> world) : SimplePlayer::SimplePlayer(world) {
     m_header = Header::PLAYER;
-    m_texture = LoadTexture("assets/player.png");
     m_camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
     m_camera.zoom = 50.0f;
     m_camera.rotation = 0.0f;
@@ -45,10 +44,6 @@ Player::Player(std::shared_ptr<World> world) : SimplePlayer::SimplePlayer(world)
     }
 
     updateCamera();
-}
-
-Player::~Player() {
-    UnloadTexture(m_texture);
 }
 
 void Player::updateCamera() {
@@ -167,7 +162,7 @@ void Player::updateControls() {
     auto gravitation = (!m_fly) ? 0.02f : 0.0f;
     auto layer = !IsKeyDown(KEY_LEFT_ALT);
     auto forward = 0.0f;
-    auto mp = Game::get()->getMultiplayer();
+    auto mp = Multiplayer::get();
 
     m_sneak = false;
 
@@ -180,8 +175,8 @@ void Player::updateControls() {
                     setAnimation(PLAYER_HIT);
                 }
 
-                if (Game::get()->isMultiplayer()) {
-                    mp->addToQueue(m_world->getBlock(target.x, target.y, layer));
+                if (mp->connected()) {
+                    mp->onBlockChanged({target.x, target.y}, layer);
                 }
             }
 
@@ -193,8 +188,8 @@ void Player::updateControls() {
                     setAnimation(PLAYER_HIT);
                 }
 
-                if (Game::get()->isMultiplayer()) {
-                    mp->addToQueue(m_world->getBlock(target.x, target.y, layer));
+                if (mp->connected()) {
+                    mp->onBlockChanged({target.x, target.y}, layer);
                 }
             }
         }
@@ -242,6 +237,7 @@ void Player::updateControls() {
 
 void Player::onTick() {
     Entity::onTick();
+    m_prevAnimType = m_animType;
     m_prevAnimFrame = m_animFrame;
     m_prevDir = m_direction;
     m_animFps = 10;
@@ -267,9 +263,9 @@ void Player::onTick() {
         setAnimation(PLAYER_JUMP);
     }
 
-    auto mp = Game::get()->getMultiplayer();
+    auto mp = Multiplayer::get();
 
-    if(!Game::get()->isMultiplayer()) {
+    if(!mp->connected()) {
         auto minX = m_world->convertXtoChunkPosition(m_hitbox.x) - 2;
         auto maxX = m_world->convertXtoChunkPosition(m_hitbox.x) + 2;
 
@@ -281,8 +277,16 @@ void Player::onTick() {
         }
     }
 
-    if (Game::get()->isMultiplayer() && (m_prevX != m_hitbox.x || m_prevY != m_hitbox.y || m_prevAnimFrame != m_animFrame || m_prevDir != m_direction)) {
-        mp->addToQueue(std::shared_ptr<SimplePlayer>(this));
+    bool shouldupd = (
+        m_prevX != m_hitbox.x || 
+        m_prevY != m_hitbox.y || 
+        m_prevAnimFrame != m_animFrame || 
+        m_prevAnimType != m_animType || 
+        m_prevDir != m_direction
+    );
+
+    if (mp->connected() && shouldupd) {
+        mp->addToQueue(std::shared_ptr<SimplePlayer>(m_world->getPlayer(m_id)));
     }
 }
 

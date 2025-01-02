@@ -31,6 +31,7 @@ protected:
     // multiplayer features
     PlayerID m_id;
     std::string m_username;
+    std::mutex mutex;
 
 public:
     SimplePlayer(std::shared_ptr<World> world);
@@ -39,10 +40,8 @@ public:
     void setAnimation(AnimationType type);
     static const char* getAnimationName(AnimationType type);
 
-    ByteVector& serialize() override;
-    size_t deserialize(ByteVector& bytes) override;
-
-    static std::size_t const getSizeBytes();
+    ByteVector serialize() override;
+    size_t deserialize(ByteVector const& bytes) override;
 
     void setUsername(std::string const& username) { m_username = username; }
     void setAnimCurrentFrame(uint8_t frame) { m_animFrame = frame; }

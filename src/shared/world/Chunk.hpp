@@ -48,8 +48,8 @@ public:
 
     void draw();
 
-    ByteVector& serialize() override;
-    size_t deserialize(ByteVector& bytes) override;
+    ByteVector serialize() override;
+    size_t deserialize(ByteVector const& bytes) override;
 
     uint16_t countBlocks();
 };

@@ -27,9 +27,8 @@ private:
 public:
     const uint32_t WORLD_VERSION = 1;
 
-    World(uint32_t width, uint32_t height, std::string const& worldName);
+    World(uint32_t height, std::string const& worldName);
     World(std::string const& worldName);
-    ~World();
 
     void generate();
     void onTick();
@@ -51,8 +50,8 @@ public:
     bool save();
     bool load();
 
-    ByteVector& serialize() override;
-    size_t deserialize(ByteVector& bytes) override;
+    ByteVector serialize() override;
+    size_t deserialize(ByteVector const& bytes) override;
 
     void addPlayer(PlayerID id, std::shared_ptr<SimplePlayer> player, std::string const username = "");
     PlayerID addPlayer(std::shared_ptr<SimplePlayer> player, std::string const username = "");

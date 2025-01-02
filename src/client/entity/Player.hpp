@@ -16,7 +16,6 @@ class Chunk;
 class Player : public SimplePlayer {
 private:
     Camera2D m_camera;
-    Texture2D m_texture;
     std::vector<std::shared_ptr<Block>> m_inventory;
     int8_t m_selectedBlock = 0;
 
@@ -24,6 +23,7 @@ private:
     bool m_fly = false;
 
     PlayerID m_id = 0;
+    AnimationType m_prevAnimType;
     uint8_t m_prevAnimFrame;
     Entity::Direction m_prevDir;
 
@@ -34,7 +34,6 @@ private:
     bool m_unlinkCamY = false;
 public:
     Player(std::shared_ptr<World> world);
-    ~Player();
     
     void onTick() override; 
     void update();
