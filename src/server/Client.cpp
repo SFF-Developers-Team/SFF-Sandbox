@@ -27,6 +27,11 @@ bool Client::accept() {
 
     auto username = identification.get<std::string>();
 
+    if(username.size() < 3) {
+        send(GamePacket(Header::NETWORK_ERROR, "Too short username!"));
+        return false;
+    }
+
     if(username.length() > 16) {
         logE("Failed to accept player (too long username)");
         send(GamePacket(Header::NETWORK_ERROR, "Too long username!"));

@@ -58,19 +58,15 @@ public:
     }
 
     template<>
-    void add<std::string const&>(std::string const& str) {
-        return add<const char*>(str.c_str());
+    void add<std::string>(std::string str) {
+        for(char c : str) push_back(c);
+        push_back('\0');
+        m_offset += str.size() + 1;
     }
 
     template<>
     void add<const char*>(const char* str) {
-        auto strl = strlen(str) + 1;
-        if(m_offset + strl > size()) {
-            resize(m_offset + strl);
-        }
-
-        std::copy(str, str + strl, &at(m_offset));
-        m_offset += strl;
+        return add<std::string>(str);
     }
 
     /// @brief Append other ByteVector to serialized object
@@ -122,7 +118,7 @@ public:
     }
 
     template<>
-    std::string const get<std::string const>(std::string const defaultVal) {
+    std::string get<std::string>(std::string defaultVal) {
         auto len = std::strlen((char*)data() + m_offset);
         
         if(m_offset + len > size()) return defaultVal;

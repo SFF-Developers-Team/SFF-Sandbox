@@ -54,9 +54,6 @@ size_t Block::deserialize(ByteVector const& bytes) {
 
     if(get<uint8_t>() == 0x20) {
         auto tagsc = get<uint16_t>();
-        if(tagsc > 0) {
-            logD("Tags count {}", tagsc);
-        }
 
         for(int i = 0; i < tagsc; i++) {
             TagID key = get<Block::TagID>();

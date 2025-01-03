@@ -113,7 +113,8 @@ public:
     void handleOk(GamePacket& packet) {
         auto id = packet.get<QueueID>();
 
-        m_queue.erase(id);
+        if(m_queue.contains(id))
+            m_queue.erase(id);
     }
 
     void handleArray(GamePacket& packet) {
