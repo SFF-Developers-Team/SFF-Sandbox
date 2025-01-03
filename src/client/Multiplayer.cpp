@@ -37,6 +37,7 @@ bool Multiplayer::connect(std::string const& host, in_port_t port) {
     }
 
     auto header = response.get<SerializedObject::Header>();
+    if(header == Header::NETWORK_ERROR) handleError(response);
     if(header != Header::IDENTIFICATION) return false;
 
     m_myPlayerId = response.get<PlayerID>(0);
@@ -106,7 +107,7 @@ void Multiplayer::handle(GamePacket& packet) {
 }
 
 void Multiplayer::handleError(GamePacket& packet) {
-    logE("Server error! {} | packet size: {}", packet.get<std::string>("unknown"), packet.size());
+    logE("Server error! {}", packet.get<std::string>("unknown"));
     std::exit(1);
 }
 

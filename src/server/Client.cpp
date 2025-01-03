@@ -93,6 +93,7 @@ void Client::handle(GamePacket& packet) {
 
     switch(packet.get<Header>()) {
         case Header::LOAD_PLAYER: handleLoadPlayer(packet); break;
+        case Header::NETWORK_ERROR: handleError(packet); break;
         case Header::PLAYER: handlePlayer(packet); break;
         case Header::BLOCK: handleBlock(packet); break;
         default: break;
@@ -136,4 +137,9 @@ void Client::handleBlock(GamePacket& packet) {
     
     logD("Player changed block {}, {}, {}", pos.x, pos.y, lay);
     srv->addToQueueExcept(m_id, block);
+}
+
+void Client::handleError(GamePacket& packet) {
+    m_lastError = packet.get<std::string>();
+    m_shouldDisconnect = true;
 }

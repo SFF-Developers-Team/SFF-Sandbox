@@ -89,13 +89,9 @@ void Server::loop() {
             thread.detach();
         }
 
-        for(auto i = m_clients.begin(); i != m_clients.end(); i++) {
-            if(*i == nullptr) {
-                continue;
-            }
-
-            if((*i)->shouldDisconnect()) {
-                disconnectPlayer((*i)->getPlayerID());
+        for(auto& client : m_clients) {
+            if(client->shouldDisconnect()) {
+                disconnectPlayer(client->getPlayerID());
             }
         }
     }
@@ -113,10 +109,7 @@ void Server::acceptThread(sockpp::tcp_socket sock) {
     
     if(client->accept()) {
         m_clients.push_back(std::move(client));
-        return;
     }
-
-    client.release();
 }
 
 void Server::addToQueueAll(std::shared_ptr<SerializedObject> packet) {
@@ -127,9 +120,7 @@ void Server::addToQueueAll(std::shared_ptr<SerializedObject> packet) {
 
 void Server::addToQueue(PlayerID id, std::shared_ptr<SerializedObject> packet) {
     for(auto& client : m_clients) {
-        if(client->getPlayerID() == id) {
-            client->addToQueue(packet);
-        }
+        if(client->getPlayerID() == id) client->addToQueue(packet);
     }
 }
 
@@ -152,15 +143,12 @@ PlayerID Server::joinPlayer(std::string const& username) {
     return playerId;
 }
 
-void Server::disconnectPlayer(PlayerID id) {
-    logD("{} ({}) left the game", m_world->getPlayer(id)->getUsername(), id);
-    addToQueueExcept(id, CREATE_PACKET(SerializedObject::Header::UNLOAD_PLAYER, id));
+void Server::disconnectPlayer(PlayerID id) {    
+    auto it = std::find_if(m_clients.begin(), m_clients.end(), [&](auto const& client) { return client->getPlayerID() == id; });
+    auto client = it->get();
+    logD("{} left the game ({})", m_world->getPlayer(id)->getUsername(), client->getLastError());
     
     m_world->unloadPlayer(id);
-
-    for(auto i = m_clients.begin(); i != m_clients.end(); i++) {
-        if((*i)->getPlayerID() == id) {
-            m_clients.erase(i);
-        }
-    }
+    m_clients.erase(it);
+    addToQueueExcept(id, CREATE_PACKET(SerializedObject::Header::UNLOAD_PLAYER, id));
 }
