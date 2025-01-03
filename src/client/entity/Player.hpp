@@ -55,10 +55,13 @@ public:
     void unlinkCameraX(bool flag);
     void unlinkCameraY(bool flag);
 
+    void setSelectedBlock(uint16_t block) { m_selectedBlock = block; }
     void setCamera(Camera2D cam) { m_camera = cam; }
     void setID(PlayerID id) { m_id = id; }
 
     std::shared_ptr<Block> getSelectedBlock();
+    
+    auto getInventory() { return m_inventory; }
     auto getCamera() { return m_camera; }
     auto getID() { return m_id; }
 };

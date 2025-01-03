@@ -303,7 +303,7 @@ void Player::update() {
             if (m_selectedBlock > m_inventory.size()) m_selectedBlock = 0;
             if (m_selectedBlock < 0) m_selectedBlock = static_cast<uint8_t>(m_inventory.size()) - 1;
         }
-
+        
         if (IsKeyPressed(KEY_R)) resetPosition();
         if (IsKeyPressed(KEY_F)) m_fly = !m_fly;
 	}

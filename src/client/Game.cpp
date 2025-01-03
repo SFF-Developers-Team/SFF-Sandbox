@@ -123,6 +123,31 @@ void Game::render() {
             if(selectedBlock) {
                 m_renderManager->renderSelectedBlock(m_screenWidth - 42.f, 10.f, selectedBlock);
             }
+            if(m_inInventory) { 
+                Rectangle BG = {(float)(GetScreenWidth() - 1050) / 2, (float)(GetScreenHeight() - 600) / 2, 1050, 600};
+                Rectangle m_currentBlock = {(float)BG.x + 20, BG.y + 50, 32, 32};
+                int m_blockCount = 0;
+
+                DrawRectangleRec(BG, {0, 0, 0, 155});
+                DrawText("Select Block", (BG.width - 30) / 2, BG.y, 30, RAYWHITE);
+                for(int i = 0; i < m_player->getInventory().size(); i++) {
+                    std::shared_ptr<Block> block = m_player->getInventory().at(i); 
+                    if(m_blockCount > 0) {
+                        m_currentBlock.x += 70;
+                    }
+                    m_blockCount++;
+
+                    if(m_currentBlock.x > BG.width + 100) {
+                        m_currentBlock.y += 60; 
+                        m_currentBlock.x = BG.x + 20;
+                    }
+                    if(CheckCollisionPointRec(GetMousePosition(), m_currentBlock) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                        m_player->setSelectedBlock(i);
+                        m_inInventory = 0;
+                    }
+                    m_renderManager->renderSelectedBlock(m_currentBlock.x, m_currentBlock.y, block);
+                }
+            }
         } else {
             m_uiRenderer->render();
         }
@@ -154,11 +179,14 @@ void Game::update() {
         auto dbg = Debug::get();
         dbg->setVisible(!dbg->isVisible());
     }
+    
+    if(IsKeyPressed(KEY_E)) {
+        m_inInventory = !m_inInventory;
+    }
 
     if(IsKeyPressed(KEY_F6)) {
         m_world->save();
     }
-
     if(m_multiplayer) {
         m_multiplayerManager->onTick();
     }

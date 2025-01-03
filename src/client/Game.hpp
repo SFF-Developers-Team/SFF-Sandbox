@@ -18,6 +18,7 @@ private:
     uint8_t m_renderDistance = 3;
     bool m_multiplayer = false;
     bool m_inPlayScene = false;
+    bool m_inInventory = false;
     std::string m_username;
     
     std::shared_ptr<World> m_world;
