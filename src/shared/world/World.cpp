@@ -9,7 +9,7 @@
 #include <assert.h>
 
 World::World(uint32_t height, std::string const& worldName) 
-    : m_height(height), m_worldName(worldName), m_version(WORLD_VERSION) {
+    : m_height(height), m_worldName(worldName), m_version(WORLDVER) {
     m_header = WORLD;
 }
 
@@ -17,8 +17,8 @@ World::World(std::string const& worldName) : World(128, worldName) {}
 
 void World::generate() {
     assert(("WorldGen isn't set!", m_worldGen != nullptr));
-    auto start = static_cast<int32_t>(m_width > 0 ? -(m_width / CHUNK_WIDTH) / 2 : -3);
-    auto end = static_cast<int32_t>(m_width > 0 ? (m_width / CHUNK_WIDTH) / 2 : 3);
+    int start = -3;
+    int end = 3;
 
     for(auto x = start; x < end; x++) {
         logD("gen chunk {}", x);
@@ -286,10 +286,6 @@ Rectf World::getBlockHitbox(int x, int y) {
 }
 
 bool World::isOutOfBound(int x, int y, uint8_t layer) {
-    if(m_width > 0 && (x < 0 || x > getWidth())) {
-        return true;
-    }
-
     if(!m_chunks.contains(convertXtoChunkPosition(x))) {
         return true;
     }

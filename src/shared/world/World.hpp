@@ -10,6 +10,8 @@
 #include <memory>
 #include <cmath>
 
+#define WORLDVER 2
+
 class Player;
 class WorldGen;
 
@@ -20,13 +22,12 @@ private:
     std::shared_ptr<WorldGen> m_worldGen;
     std::string m_worldName;
 
-    uint32_t m_width = 0;
     uint32_t m_height = 0;
     uint32_t m_version;
     PlayerID m_lastPlayerID = 1;
 
 public:
-    const uint32_t WORLD_VERSION = 2;
+    const uint32_t WORLD_VERSION = WORLDVER;
 
     World(uint32_t height, std::string const& worldName);
     World(std::string const& worldName);
@@ -64,8 +65,7 @@ public:
     inline ChunkPos convertXtoChunkPosition(int32_t x) { return floorf(static_cast<float>(x) / CHUNK_WIDTH); }
 
     void setGenerator(std::shared_ptr<WorldGen> generator) { m_worldGen = generator; }
-
-    auto getWidth() { return m_width; }
+    
     auto getHeight() { return m_height; }
     auto getGenerator() { return m_worldGen; }
     auto& getPlayers() { return m_players; }

@@ -11,11 +11,9 @@
 int cdi;
 
 RenderManager::RenderManager(std::shared_ptr<World> world, std::shared_ptr<Player> player) : m_world(world), m_player(player) {
-    // Debug::addString("World size: {}x{}", m_world->getWidth(), m_world->getHeight());
     // Debug::addString("Chunks drawn: {}", chunksDrawn);
     // Debug::addString("Player count: {}", m_world->getPlayers().size());
     auto dbg = Debug::get();
-    dbg->addString("World size: {}x{}", m_world->getWidth(), m_world->getHeight());
     cdi = dbg->addString("Chunks rendered: ");
 }
 
