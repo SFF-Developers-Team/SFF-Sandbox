@@ -61,7 +61,7 @@ public:
     }
 
     template<>
-    void addBytes<std::string>(std::string value) {
+    void addBytes<std::string const&>(std::string const& value) {
         for(char c : value) {
             m_bytes.push_back(c);
         }
