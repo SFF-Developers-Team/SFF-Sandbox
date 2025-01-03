@@ -11,10 +11,12 @@
 #include <Types.hpp>
 #include <memory>
 #include <map>
+#include <Player.hpp>
 
 class Multiplayer : private PacketManager<sockpp::tcp_connector> {
 private:
     bool m_connected = false;
+    PlayerID m_myPlayerId;
 
 public:
     using PacketManager::addToQueue;

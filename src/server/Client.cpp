@@ -48,16 +48,10 @@ bool Client::accept() {
     send(GamePacket(Header::IDENTIFICATION, m_id));
 
     uint16_t chunksCount = 3;
-    auto worldpak = GamePacket(Header::ARRAY, chunksCount);
-
+    
     while(chunksCount-- > 0) {
-        auto bytes = srv->getWorld()->getChunk(chunksCount)->serialize();
-        worldpak.add<uint16_t>(bytes.size());
-        worldpak.add(bytes);
+        addToQueue(srv->getWorld()->getChunk(chunksCount));
     }
-
-    logD("Sending world to player {}...", username);
-    send(worldpak);
 
     for(auto& [id, player] : srv->getWorld()->getPlayers()) {
         if(player->getID() == id) continue;

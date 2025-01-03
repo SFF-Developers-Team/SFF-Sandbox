@@ -39,20 +39,9 @@ bool Multiplayer::connect(std::string const& host, in_port_t port) {
     auto header = response.get<SerializedObject::Header>();
     if(header != Header::IDENTIFICATION) return false;
 
-    auto id = response.get<PlayerID>(0);
-    logD("Received PlayerID from server {}", id);
-    player->setID(id);
-    
-    logD("Loading world...");
-    auto worldpak = recv();
-    
-    if(worldpak.get<SerializedObject::Header>() != Header::ARRAY) return false;
-
-    handleArray(worldpak);
-    
-    logD("World loaded!");
-    
-    game->getWorld()->addPlayer(id, player);
+    m_myPlayerId = response.get<PlayerID>(0);
+    logD("Received PlayerID from server {}", m_myPlayerId);
+    player->setID(m_myPlayerId);
 
     m_connected = true;
 
@@ -187,6 +176,11 @@ void Multiplayer::handleChunk(GamePacket& packet) {
     logD("Received chunk {}", chunk->getPosition());
 
     world->addChunk(chunk);
+
+    if(world->getPlayer(m_myPlayerId) == nullptr) {
+        auto player = game->getPlayer();
+        world->addPlayer(m_myPlayerId, player);
+    }
 }
 
 void Multiplayer::handleBlock(GamePacket& packet) {
