@@ -50,7 +50,7 @@ size_t Block::deserialize(ByteVector const& bytes) {
     m_id = get<ID>(ID::AIR);
     m_x = get<int32_t>();
     m_y = get<int32_t>();
-    m_layer = get<uint8_t>();
+    m_layer = get<uint8_t>(1);
 
     if(get<uint8_t>() == 0x20) {
         auto tagsc = get<uint16_t>();

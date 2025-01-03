@@ -3,6 +3,7 @@
 #include <Logger.hpp>
 #include <Block.hpp>
 #include <assert.h>
+#include <zlib.h>
 
 Chunk::Chunk(std::shared_ptr<World> world, ChunkPos pos) : m_world(world), m_position(pos) {
     m_header = Header::CHUNK;
@@ -83,6 +84,8 @@ ByteVector Chunk::serialize() {
     SerializedObject::serialize();
     uint16_t blockCount = countBlocks();
 
+    SerializedObject obj;
+
     add(m_position);
     add(blockCount);
 
@@ -93,12 +96,28 @@ ByteVector Chunk::serialize() {
 
                 if(block && block->getID() != Block::ID::AIR) {
                     auto bytes = block->serialize();
-                    add<uint16_t>(bytes.size());
-                    add(bytes);
+                    obj.add<uint16_t>(bytes.size());
+                    obj.add(bytes);
                 }
             }
         }
     }
+
+    uLongf compressedSize = compressBound(obj.size());
+    ByteVector compressed(compressedSize);
+    auto res = compress(compressed.data(), &compressedSize, obj.data(), obj.size());
+
+    if(res != Z_OK) {
+        logE("Error while compressing chunk! {}", zError(res));
+        clear();
+
+        return bytes();
+    }
+
+    compressed.resize(compressedSize);
+
+    add(static_cast<uint32_t>(compressedSize));
+    add(compressed);
 
     return bytes();
 }
@@ -111,9 +130,40 @@ size_t Chunk::deserialize(ByteVector const& bytes) {
     auto blockCount = get<uint16_t>();
     logD("chunk {} block count: {}", m_position, blockCount);
 
-    if(!blockCount) {
-        return m_offset;
+    if(!blockCount) return m_offset;
+
+    auto wver = m_world->getVersion();
+    uint8_t blockSize = (!wver ? get<uint8_t>() : 0);
+
+    SerializedObject data;
+
+    // World version 0-1
+    if(wver <= 1) {
+        data.add(ByteVector(begin() + m_offset, end()));
+        data.reset();
     }
+
+    // World version 2
+    if(wver > 1) {
+        logD("Decompressing gzip chunk...");
+        auto size = get<uint32_t>();
+        auto compressed = getN(size);
+        uLongf decompressedSize = 1024 * 1024;
+    
+        data.resize(decompressedSize);
+
+        auto res = uncompress(data.data(), &decompressedSize, compressed.data(), compressed.size());
+
+        if(res != Z_OK) {
+            logE("Error while decompress! {}", zError(res));
+            return 0;
+        }
+
+        logD("Success!");
+        data.resize(decompressedSize);
+    }
+
+    logD("chunk data size {}", data.size());
 
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for(int y = 0; y < m_world->getHeight(); y++) {
@@ -122,13 +172,15 @@ size_t Chunk::deserialize(ByteVector const& bytes) {
         }
     }
 
+    // World version 1
     for(int i = 0; i < blockCount; i++) {
-        auto bsize = get<uint16_t>();
+        auto bsize = (blockSize > 0) ? blockSize : data.get<uint16_t>();
         assert(("Null size block!", bsize > 0));
         
-        auto header = getI<Header>();
+        auto header = data.getI<Header>();
+
         if(header == Header::BLOCK) {
-            auto bbytes = getN(bsize);
+            auto bbytes = data.getN(bsize);
             auto block = std::make_shared<Block>();
             block->deserialize(bbytes);
 

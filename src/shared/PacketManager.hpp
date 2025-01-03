@@ -20,7 +20,7 @@ protected:
     Socket m_sock;
 
 public:
-    PacketManager(Socket sock = Socket(), size_t readBufSize = 1024 * 128) : 
+    PacketManager(Socket sock = Socket(), size_t readBufSize = 1024 * 64) : 
         m_sock(std::move(sock)), m_readBufSize(readBufSize), m_lastId(0) 
     {
         m_sock.read_timeout(std::chrono::seconds(20));

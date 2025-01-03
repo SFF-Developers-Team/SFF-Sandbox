@@ -6,8 +6,11 @@ set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
-set(SOCKPP_BUILD_STATIC ON)
-set(SOCKPP_BUILD_SHARED OFF)
+set(BUILD_SHARED_LIBS OFF)
+set(SOCKPP_BUILD_STATIC ON CACHE BOOL "" FORCE)
+set(SOCKPP_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+set(ZLIB_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(RENAME_ZCONF OFF CACHE BOOL "" FORCE)
 
 set(SHARED_HEADERS 
     "libs/perlin-noise"
@@ -20,6 +23,7 @@ set(SHARED_HEADERS
     "src/shared/"
 
     "libs/toml/"
+    "libs/zlib/"
 )
 
 file(GLOB SHARED_SOURCES CONFIGURE_DEPENDS
@@ -48,9 +52,10 @@ add_subdirectory(libs/sockpp)
 add_subdirectory(libs/raylib)
 add_subdirectory(libs/GitHash)
 add_subdirectory(libs/ext_anims)
+add_subdirectory(libs/zlib)
 
-target_link_libraries(SFFSandbox raylib sockpp-static ${GITHASH_LIBRARIES} nt5animation)
-target_link_libraries(SFFSandbox-server sockpp-static ${GITHASH_LIBRARIES})
+target_link_libraries(SFFSandbox raylib sockpp-static ${GITHASH_LIBRARIES} nt5animation zlibstatic)
+target_link_libraries(SFFSandbox-server sockpp-static ${GITHASH_LIBRARIES} zlibstatic)
 
 target_include_directories(SFFSandbox PRIVATE
     ${SHARED_HEADERS}

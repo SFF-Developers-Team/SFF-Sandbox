@@ -22,10 +22,11 @@ private:
 
     uint32_t m_width = 0;
     uint32_t m_height = 0;
+    uint32_t m_version;
     PlayerID m_lastPlayerID = 1;
 
 public:
-    const uint32_t WORLD_VERSION = 1;
+    const uint32_t WORLD_VERSION = 2;
 
     World(uint32_t height, std::string const& worldName);
     World(std::string const& worldName);
@@ -69,4 +70,5 @@ public:
     auto getGenerator() { return m_worldGen; }
     auto& getPlayers() { return m_players; }
     auto& getChunks() { return m_chunks; }
+    auto getVersion() { return m_version; }
 };  

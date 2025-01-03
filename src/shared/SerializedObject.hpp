@@ -8,7 +8,7 @@
 
 using ByteVector = std::vector<uint8_t>;
 
-class SerializedObject : private ByteVector {
+class SerializedObject : public ByteVector {
 public:
     enum Header : uint8_t {
         // World headers (also uses in mp)
@@ -150,4 +150,7 @@ public:
 
         return seed;
     }
+    
+    /// @brief Reset offset 
+    void reset() { m_offset = 0; }
 };

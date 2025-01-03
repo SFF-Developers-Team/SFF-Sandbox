@@ -41,7 +41,4 @@ public:
 
         logD("GamePacket: {}", res);
     }
-    
-    /// @brief Reset offset 
-    void reset() { m_offset = 0; }
 };

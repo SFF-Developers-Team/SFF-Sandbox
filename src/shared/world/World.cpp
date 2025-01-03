@@ -9,7 +9,7 @@
 #include <assert.h>
 
 World::World(uint32_t height, std::string const& worldName) 
-    : m_height(height), m_worldName(worldName) {
+    : m_height(height), m_worldName(worldName), m_version(WORLD_VERSION) {
     m_header = WORLD;
 }
 
@@ -111,11 +111,19 @@ ByteVector World::serialize() {
     // World version 1
     add((uint32_t)m_chunks.size());
     for(auto [_, chunk] : m_chunks) {
-        if(!chunk) continue;
-        auto chunkBytes = chunk->serialize();
+        if(chunk != nullptr) {
+            auto cbytes = chunk->serialize();
 
-        add<uint32_t>(chunkBytes.size());
-        add(chunkBytes);
+            if(!cbytes.size()) {
+                logE("Failed to save chunk");
+                clear();
+
+                return bytes();
+            }
+
+            add<uint32_t>(cbytes.size());
+            add(cbytes);
+        }
     }
 
     // World end
@@ -126,33 +134,42 @@ ByteVector World::serialize() {
 size_t World::deserialize(ByteVector const& bytes) {
     SerializedObject::deserialize(bytes);
     m_chunks.clear();
-    
-    auto worldVer = get<uint32_t>();
 
-    if(worldVer > WORLD_VERSION) {
-        logE("Unsupported world version! (World version: {} | Supported: {})", worldVer, WORLD_VERSION);
-        return m_offset;
-    }
-
+    m_version = get<uint32_t>();
     m_height = get<uint32_t>();
 
-    auto generatorType = get<WorldGen::Type>();
-    auto seed = get<int64_t>();
+    bool oldVersion = (int)(m_version) == 256 && (int)(m_height) == 128;
 
-    switch(generatorType) {
-        default:
-        case WorldGen::Type::NORMAL: {
-            m_worldGen = std::make_shared<WorldGenNormal>(std::shared_ptr<World>(this), seed);
+    if(!oldVersion) {
+        if(m_version > WORLD_VERSION) {
+            logE("Unsupported world version! (World version: {} | Supported: {})", m_version, WORLD_VERSION);
+            return m_offset;
         }
+
+        auto generatorType = get<WorldGen::Type>();
+        auto seed = get<int64_t>();
+
+        switch(generatorType) {
+            default:
+            case WorldGen::Type::NORMAL: {
+                m_worldGen = std::make_shared<WorldGenNormal>(std::shared_ptr<World>(this), seed);
+            }
+        }
+    } else {
+        logE("Old world version detected.");
+        m_version = 0;
+        m_worldGen = std::make_shared<WorldGenNormal>(std::shared_ptr<World>(this), 0);
     }
 
+    logD("World version {}", m_version);
+
     // World version 1
-    auto chunkCount = get<unsigned int>();
-    for(int i = 0; i < chunkCount; i++) {
+    auto chunkCount = get<uint32_t>();
+    while(chunkCount-- > 0) {
         auto csize = get<uint32_t>();
-        auto chunk = std::make_shared<Chunk>(std::shared_ptr<World>(this));
         auto cbytes = getN(csize);
 
+        auto chunk = std::make_shared<Chunk>(std::shared_ptr<World>(this));
         chunk->deserialize(cbytes);
 
         addChunk(chunk);
@@ -165,12 +182,21 @@ size_t World::deserialize(ByteVector const& bytes) {
 
 bool World::save() {
     auto worldData = this->serialize();
-    
+
+    if(!worldData.size()) {
+        logE("Failed to save world");
+        return false;
+    }
+
     std::ofstream file("world.dat", std::ios::binary);
     
-    if(!file.is_open()) return false;
+    if(!file.is_open()) {
+        logE("Failed to open save file");
+        return false;
+    }
 
     file.write((const char*)worldData.data(), worldData.size());
+
     return true;
 }
 

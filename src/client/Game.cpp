@@ -109,7 +109,7 @@ void Game::init(std::vector<std::string>& args) {
         this->render();
     }
 
-    if(!m_isMultiplayer) {
+    if(!m_isMultiplayer && !IsKeyPressed(KEY_F1)) {
         m_world->save();
     }
 
@@ -169,5 +169,9 @@ void Game::update() {
 
     if(IsKeyPressed(KEY_F6)) {
         m_world->save();
+    }
+
+    if(IsKeyPressed(KEY_F1)) {
+        CloseWindow();
     }
 }
