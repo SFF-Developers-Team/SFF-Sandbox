@@ -7,3 +7,6 @@
 [submodule "libs/GitHash"]
 	path = libs/GitHash
 	url = https://github.com/Svalorzen/GitHash.git
+[submodule "libs/zlib"]
+	path = libs/zlib
+	url = https://github.com/madler/zlib
