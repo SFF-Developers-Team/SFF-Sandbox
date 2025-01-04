@@ -46,7 +46,8 @@ public:
     void pushScene(std::shared_ptr<Scene> scene);
     void drawCrosshair(Vector2 pos);
     void setRayGuiStyle();
-    
+    void setIsInPlayScene(bool is) { m_inPlayScene = is; }
+
     auto getScreenWidth() { return m_screenWidth; }
     auto getScreenHeight() { return m_screenHeight; }
     auto getRenderDistance() { return m_renderDistance; }

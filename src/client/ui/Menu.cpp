@@ -113,7 +113,14 @@ void MainScene::draw() {
 
         if (GuiButton((Rectangle){ (float)(GetScreenWidth() - 300) / 2, 300, 300, 40 }, "Play")) {
             auto game = Game::get();
+            if(!game->getWorld()->load()) { 
+                game->getWorld()->setGenerator(std::make_shared<WorldGenNormal>(game->getWorld(), 1));
+                game->getWorld()->generate();
+            }
 
+            game->getWorld()->addPlayer(1, game->getPlayer());
+            game->setIsInPlayScene(1);
+            
             game->pushScene(std::make_shared<PlayScene>());
         }      
         if (GuiButton((Rectangle){ (float)(GetScreenWidth() - 300) / 2, 360, 300, 40 }, "Multiplayer")) {

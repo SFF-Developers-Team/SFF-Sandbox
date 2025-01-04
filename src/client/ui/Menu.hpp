@@ -5,6 +5,7 @@
 #include <Debug.hpp>
 #include <Timer.hpp>
 #include <TileMap.hpp>
+#include <WorldGenNormal.hpp>
 #include <RenderManager.hpp>
 #include <string>
 #include <cmath>

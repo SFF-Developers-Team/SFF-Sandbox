@@ -77,14 +77,6 @@ void Game::init(std::vector<std::string>& args) {
         m_isMultiplayer = Multiplayer::get()->connect(address, port);
     }
     
-    // if(!m_isMultiplayer) {
-    //     if(!m_world->load()) {
-    //         m_world->setGenerator(std::make_shared<WorldGenNormal>(m_world, 1));
-    //         m_world->generate();
-    //     }
-
-    //     m_world->addPlayer(1, m_player);
-    // }
     Game::get()->pushScene(std::make_shared<MainScene>());
 
     while (!WindowShouldClose()) {
@@ -127,9 +119,10 @@ void Game::renderMenu() {
     BeginDrawing();
 
         ClearBackground((m_scene ? m_scene->getColor() : WHITE));   
-        
-        DrawTexture(tm->getTexture("sff.png"), (GetScreenWidth() - tm->getTexture("sff.png").width) / 2, pos, WHITE);
-        DrawText("Sandbox", (GetScreenWidth() - 35) / 2 - (tm->getTexture("sff.png").width - 35) / 2 - 5, pos + 35 + tm->getTexture("sff.png").width / 2, 35, RAYWHITE);
+        if(!m_inPlayScene) {
+            DrawTexture(tm->getTexture("sff.png"), (GetScreenWidth() - tm->getTexture("sff.png").width) / 2, pos, WHITE);
+            DrawText("Sandbox", (GetScreenWidth() - 35) / 2 - (tm->getTexture("sff.png").width - 35) / 2 - 5, pos + 35 + tm->getTexture("sff.png").width / 2, 35, RAYWHITE);
+        }
         if(m_scene != nullptr) m_scene->draw();
 
     EndDrawing();
