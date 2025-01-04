@@ -42,13 +42,13 @@ void World::unloadChunk(std::shared_ptr<Chunk> chunk) {
     }
 }
 
-void World::unloadChunk(ChunkPos pos) {
+void World::unloadChunk(Chunk::Position pos) {
     if(m_chunks.contains(pos)) {
         m_chunks.erase(pos);
     }
 }
 
-std::shared_ptr<Chunk> World::getChunk(ChunkPos position) {
+std::shared_ptr<Chunk> World::getChunk(Chunk::Position position) {
     if(m_chunks.contains(position)) {
         return m_chunks[position];
     }
@@ -57,15 +57,7 @@ std::shared_ptr<Chunk> World::getChunk(ChunkPos position) {
 }
 
 void World::addChunk(std::shared_ptr<Chunk> chunk) {
-    if(!chunk) {
-        return;
-    }
-
-    if(m_chunks.contains(chunk->getPosition())) {
-        m_chunks.erase(chunk->getPosition());
-    }
-
-    m_chunks.insert(std::make_pair(chunk->getPosition(), chunk));
+    m_chunks[chunk->getPosition()] = chunk;
 }
 
 void World::placeBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> newBlock) {

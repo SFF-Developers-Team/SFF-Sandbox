@@ -7,20 +7,21 @@
 #define CHUNK_WIDTH 16
 #define LAYERS 2
 
-using ChunkPos = int32_t;
-
 class World;
 
 class Chunk : public SerializedObject {
+public:
+    typedef int32_t Position;
+
 private:
     std::vector<std::shared_ptr<Block>> m_blocks;
     std::shared_ptr<World> m_world;
-    ChunkPos m_position;
+    Position m_position;
 
 public:
-    Chunk(std::shared_ptr<World> world, ChunkPos position = 0);
+    Chunk(std::shared_ptr<World> world, Position position = 0);
     
-    ChunkPos getPosition() {
+    Position getPosition() {
         return m_position;
     }
 

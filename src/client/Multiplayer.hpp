@@ -12,11 +12,13 @@
 #include <memory>
 #include <map>
 #include <Player.hpp>
+#include <Chunk.hpp>
 
 class Multiplayer : private PacketManager<sockpp::tcp_connector> {
 private:
     bool m_connected = false;
     PlayerID m_myPlayerId;
+    std::vector<Chunk::Position> m_chunkRequests;
 
 public:
     using PacketManager::addToQueue;
@@ -32,6 +34,7 @@ public:
     bool connected();
 
     void onBlockChanged(Vec2i pos, uint8_t layer);
+    void requestChunk(Chunk::Position pos);
 
     void inThread();
     void outThread();

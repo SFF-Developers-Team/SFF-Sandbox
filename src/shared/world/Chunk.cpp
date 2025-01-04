@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <zlib.h>
 
-Chunk::Chunk(std::shared_ptr<World> world, ChunkPos pos) : m_world(world), m_position(pos) {
+Chunk::Chunk(std::shared_ptr<World> world, Chunk::Position pos) : m_world(world), m_position(pos) {
     m_header = Header::CHUNK;
     m_blocks.resize(CHUNK_WIDTH * world->getHeight() * LAYERS);
 
@@ -125,7 +125,7 @@ ByteVector Chunk::serialize() {
 size_t Chunk::deserialize(ByteVector const& bytes) {
     SerializedObject::deserialize(bytes);
 
-    m_position = get<ChunkPos>();
+    m_position = get<Chunk::Position>();
 
     auto blockCount = get<uint16_t>();
     logD("chunk {} block count: {}", m_position, blockCount);

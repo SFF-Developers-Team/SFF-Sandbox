@@ -47,23 +47,14 @@ Player::Player(std::shared_ptr<World> world) : SimplePlayer::SimplePlayer(world)
 }
 
 void Player::updateCamera() {
-    if (!inputDisabled()) {
-        auto wheel = GetMouseWheelMove();
+    auto wheel = GetMouseWheelMove();
 
-        if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0) m_camera.zoom -= 1.0f;
-        if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) m_camera.zoom += 1.0f;
-    }
+    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0) m_camera.zoom -= 1.0f;
+    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) m_camera.zoom += 1.0f;
 
-    Vector2 new_target = this->m_camera.target;
+    this->m_camera.target.x = m_hitbox.x + m_hitbox.width / 2;
+    this->m_camera.target.y = m_hitbox.y - m_hitbox.height / 2;
 
-    if (!m_unlinkCamX) {
-        new_target.x = m_hitbox.x + m_hitbox.width / 2;
-    }
-    if (!m_unlinkCamY) {
-        new_target.y = m_hitbox.y - m_hitbox.height / 2;
-    }
-
-    this->m_camera.target = new_target;
     m_camera.zoom = std::clamp(m_camera.zoom, 5.f, 90.f);
 }
 
@@ -166,55 +157,53 @@ void Player::updateControls() {
 
     m_sneak = false;
 
-    if (!inputDisabled()) {
-        if(canAccessBlock(target, layer)) {
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && canDestroyBlock(target, layer)) {
-                m_world->destroyBlock(target.x, target.y, layer);
+    if(canAccessBlock(target, layer)) {
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && canDestroyBlock(target, layer)) {
+            m_world->destroyBlock(target.x, target.y, layer);
 
-                if (m_onGround) {
-                    setAnimation(PLAYER_HIT);
-                }
-
-                if (mp->connected()) {
-                    mp->onBlockChanged({target.x, target.y}, layer);
-                }
+            if (m_onGround) {
+                setAnimation(PLAYER_HIT);
             }
 
-            if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && canPlaceBlock(target, layer)) {
-                auto block = std::make_shared<Block>(*m_inventory[m_selectedBlock]);
-                m_world->placeBlock(target.x, target.y, layer, block);
-
-                if (m_onGround) {
-                    setAnimation(PLAYER_HIT);
-                }
-
-                if (mp->connected()) {
-                    mp->onBlockChanged({target.x, target.y}, layer);
-                }
+            if (mp->connected()) {
+                mp->onBlockChanged({target.x, target.y}, layer);
             }
         }
 
-        if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
-            m_direction = RIGHT;
-            forward++;
-        }
+        if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && canPlaceBlock(target, layer)) {
+            auto block = std::make_shared<Block>(*m_inventory[m_selectedBlock]);
+            m_world->placeBlock(target.x, target.y, layer, block);
 
-        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
-            m_direction = LEFT;
-            forward--;
-        }
+            if (m_onGround) {
+                setAnimation(PLAYER_HIT);
+            }
 
-        if ((IsKeyDown(KEY_W) || IsKeyDown(KEY_UP) || IsKeyDown(KEY_SPACE)) && (m_onGround || m_fly)) {
-            m_speedY = ((!m_fly) ? -0.3f : -0.25f);
+            if (mp->connected()) {
+                mp->onBlockChanged({target.x, target.y}, layer);
+            }
         }
+    }
 
-        if ((IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)) && m_fly && !m_onGround) {
-            m_speedY = 0.25f;
-        }
+    if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
+        m_direction = RIGHT;
+        forward++;
+    }
 
-        if ((IsKeyDown(KEY_S) || IsKeyDown(KEY_LEFT_SHIFT)) && !m_fly && m_onGround) {
-            m_sneak = true;
-        }
+    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
+        m_direction = LEFT;
+        forward--;
+    }
+
+    if ((IsKeyDown(KEY_W) || IsKeyDown(KEY_UP) || IsKeyDown(KEY_SPACE)) && (m_onGround || m_fly)) {
+        m_speedY = ((!m_fly) ? -0.3f : -0.25f);
+    }
+
+    if ((IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)) && m_fly && !m_onGround) {
+        m_speedY = 0.25f;
+    }
+
+    if ((IsKeyDown(KEY_S) || IsKeyDown(KEY_LEFT_SHIFT)) && !m_fly && m_onGround) {
+        m_sneak = true;
     }
 
     m_speedX += (m_onGround ? (m_sneak ? 0.0025f : 0.06f) : 0.02f) * forward;
@@ -265,17 +254,19 @@ void Player::onTick() {
 
     auto mp = Multiplayer::get();
 
-    if(!mp->connected()) {
-        auto minX = m_world->convertXtoChunkPosition(m_hitbox.x) - 2;
-        auto maxX = m_world->convertXtoChunkPosition(m_hitbox.x) + 2;
+    auto minX = m_world->convertXtoChunkPosition(m_hitbox.x) - 2;
+    auto maxX = m_world->convertXtoChunkPosition(m_hitbox.x) + 2;
 
-        for(auto x = minX; x < maxX; x++) {
-            if(!m_world->getChunk(x)) {
-                auto chunk = m_world->getGenerator()->generateChunk(x);
-                m_world->addChunk(chunk);
-            }
-        }
-    }
+    // for(auto x = minX; x < maxX; x++) {
+    //     if(m_world->getChunk(x)) continue;
+
+    //     if(mp->connected()) {
+    //         mp->requestChunk(x);
+    //     } else {
+    //         auto chunk = m_world->getGenerator()->generateChunk(x);
+    //         m_world->addChunk(chunk);
+    //     }
+    // }
 
     bool shouldupd = (
         m_prevX != m_hitbox.x || 
@@ -291,26 +282,24 @@ void Player::onTick() {
 }
 
 void Player::update() {
-	if (!inputDisabled()) {
-        auto wheel = GetMouseWheelMove();
-        for(int i = 0; i < 6; i++) {
-            if(IsKeyDown(KEY_ONE + i)) {
-                m_selectedBlock = (Block::ID)(i + 1);
-            }
+    for(int i = 0; i < 9; i++) {
+        if(IsKeyDown(KEY_ONE + i)) {
+            m_selectedBlock = (Block::ID)(i + 1);
         }
-        
-        if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0) m_camera.zoom -= 1.0f;
-        if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) m_camera.zoom += 1.0f;
+    }
 
-        if(!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
-            m_selectedBlock += (wheel > 0 ? -1 : 1);
-            if (m_selectedBlock >= m_inventory.size()) m_selectedBlock = 0;
-            if (m_selectedBlock < 0) m_selectedBlock = static_cast<uint8_t>(m_inventory.size()) - 1;
-        }
+    auto wheel = GetMouseWheelMove();
+    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0) m_camera.zoom -= 1.0f;
+    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) m_camera.zoom += 1.0f;
 
-        if (IsKeyPressed(KEY_R)) resetPosition();
-        if (IsKeyPressed(KEY_F)) m_fly = !m_fly;
-	}
+    if(!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
+        m_selectedBlock += (wheel > 0 ? -1 : 1);
+        if (m_selectedBlock >= m_inventory.size()) m_selectedBlock = 0;
+        if (m_selectedBlock < 0) m_selectedBlock = static_cast<uint8_t>(m_inventory.size()) - 1;
+    }
+
+    if (IsKeyPressed(KEY_R)) resetPosition();
+    if (IsKeyPressed(KEY_F)) m_fly = !m_fly;
 
     updateCamera();
     updateAnimation();
@@ -341,20 +330,6 @@ bool Player::isBlockInView(std::shared_ptr<Block> block) {
     }
 
     return false;
-}
-
-bool Player::inputDisabled() {
-    return m_inputDisabled;
-}
-void Player::disableInput(bool flag) {
-    m_inputDisabled = flag;
-}
-
-void Player::unlinkCameraX(bool flag) {
-    m_unlinkCamX = flag;
-}
-void Player::unlinkCameraY(bool flag) {
-    m_unlinkCamY = flag;
 }
 
 std::shared_ptr<Block> Player::getSelectedBlock() {

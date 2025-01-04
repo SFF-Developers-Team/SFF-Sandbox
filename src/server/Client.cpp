@@ -92,6 +92,7 @@ void Client::handle(GamePacket& packet) {
 
     switch(packet.get<Header>()) {
         case Header::LOAD_PLAYER: handleLoadPlayer(packet); break;
+        case Header::LOAD_CHUNK: handleLoadChunk(packet); break;
         case Header::NETWORK_ERROR: handleError(packet); break;
         case Header::PLAYER: handlePlayer(packet); break;
         case Header::BLOCK: handleBlock(packet); break;
@@ -136,6 +137,20 @@ void Client::handleBlock(GamePacket& packet) {
     
     logD("Player changed block {}, {}, {}", pos.x, pos.y, lay);
     srv->addToQueueExcept(m_id, block);
+}
+
+void Client::handleLoadChunk(GamePacket& packet) {
+    auto srv = Server::get();
+    auto world = srv->getWorld();
+    auto pos = packet.get<Chunk::Position>();
+    auto chunk = world->getChunk(pos);
+
+    if(chunk == nullptr) {
+        chunk = world->getGenerator()->generateChunk(pos);
+        world->addChunk(chunk);
+    }
+
+    return addToQueue(chunk);
 }
 
 void Client::handleError(GamePacket& packet) {
