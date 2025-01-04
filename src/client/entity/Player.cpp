@@ -269,12 +269,12 @@ void Player::onTick() {
         auto minX = m_world->convertXtoChunkPosition(m_hitbox.x) - 2;
         auto maxX = m_world->convertXtoChunkPosition(m_hitbox.x) + 2;
 
-        for(auto x = minX; x < maxX; x++) {
-            if(!m_world->getChunk(x)) {
-                auto chunk = m_world->getGenerator()->generateChunk(x);
-                m_world->addChunk(chunk);
-            }
-        }
+        // for(auto x = minX; x < maxX; x++) {
+        //     if(!m_world->getChunk(x)) {
+        //         auto chunk = m_world->getGenerator()->generateChunk(x);
+        //         m_world->addChunk(chunk);
+        //     }
+        // }
     }
 
     bool shouldupd = (

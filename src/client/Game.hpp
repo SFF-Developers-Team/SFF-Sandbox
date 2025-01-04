@@ -1,9 +1,13 @@
 #pragma once
+
 #include <raylib.h>
+#include "raygui.h"
 #include <World.hpp>
+#include <Menu.hpp>
 #include <Player.hpp>
 #include <TileMap.hpp>
 #include <Timer.hpp>
+#include <Scene.hpp>
 #include <ParticleManager.hpp>
 #include <RenderManager.hpp>
 #include <Multiplayer.hpp>
@@ -17,7 +21,8 @@ private:
     bool m_isMultiplayer = false;
     bool m_inPlayScene = false;
     std::string m_username;
-    
+        
+    std::shared_ptr<Scene> m_scene;
     std::shared_ptr<World> m_world;
     std::shared_ptr<Player> m_player;
     std::shared_ptr<ParticleManager> m_particleManager;
@@ -35,9 +40,14 @@ public:
     void render();
     void update();
 
+    void renderMenu();
+    void updateMenu();
+
+    void pushScene(std::shared_ptr<Scene> scene);
     void drawCrosshair(Vector2 pos);
     void setInPlayScene(bool flag) { m_inPlayScene = flag; }
-
+    void setRayGuiStyle();
+    
     auto getScreenWidth() { return m_screenWidth; }
     auto getScreenHeight() { return m_screenHeight; }
     auto getRenderDistance() { return m_renderDistance; }

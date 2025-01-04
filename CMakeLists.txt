@@ -22,6 +22,7 @@ set(SHARED_HEADERS
     "src/shared/world/"
     "src/shared/"
 
+    "libs/raygui/src"
     "libs/toml/"
     "libs/zlib/"
 )
@@ -60,6 +61,7 @@ target_link_libraries(SFFSandbox-server sockpp-static ${GITHASH_LIBRARIES} zlibs
 target_include_directories(SFFSandbox PRIVATE
     ${SHARED_HEADERS}
     "src/client/entity"
+    "src/client/ui"
     "src/client/particle"
     "src/client/world/gen"
     "src/client/world"

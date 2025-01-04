@@ -2,6 +2,7 @@
 #include <chrono>
 #include <memory>
 #include "Game.hpp"
+#include <Menu.hpp>
 #include <Debug.hpp>
 #include <Player.hpp>
 #include <Logger.hpp>
@@ -11,7 +12,22 @@
 #include <GitHash.hpp>
 #include <TextureManager.hpp>
 #include <filesystem>
-
+void Game::setRayGuiStyle() {
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
+    GuiSetStyle(0, 0, 0x292B56ff);
+    GuiSetStyle(0, 1, 0x1a1c47ff);  
+    GuiSetStyle(0, 2, 0xd8d8d8ff);
+    GuiSetStyle(0, 3, 0x383A65ff);
+    GuiSetStyle(0, 4, 0x292B56ff);
+    GuiSetStyle(0, 5, 0xd8d8d8ff);
+    GuiSetStyle(0, 6, 0x464770ff);
+    GuiSetStyle(0, 7, 0x292B56ff);
+    GuiSetStyle(0, 8, 0xd8d8d8ff);
+    GuiSetStyle(0, BORDER_WIDTH, 5);
+}
+void Game::pushScene(std::shared_ptr<Scene> scene) {
+    m_scene = scene;
+}
 void Game::init(std::vector<std::string>& args) {
 #ifdef _WIN32
     setlocale(LOCALE_ALL, "ru");
@@ -25,21 +41,24 @@ void Game::init(std::vector<std::string>& args) {
   
     sockpp::initialize();
 
-    m_blocksMap = std::make_shared<TileMap>("assets/blocks.png", Vector2 {16, 16});
-    m_timer = std::make_shared<Timer>(60);
-    m_world = std::make_shared<World>("world1");
-    m_player = std::make_shared<Player>(m_world);
-    // m_particleManager = std::make_shared<ParticleManager>(m_world, m_player);
-    m_renderManager = std::make_shared<RenderManager>(m_world, m_player);
 
     auto tm = TextureManager::get();
     tm->loadTexture(std::filesystem::path("assets/player.png"));
 
+    tm->loadTexture(std::filesystem::path("assets/sff.png"));
+
+    tm->loadTexture(std::filesystem::path("assets/kolyah35.png"));
+    tm->loadTexture(std::filesystem::path("assets/sergeymc9730.png"));
+    tm->loadTexture(std::filesystem::path("assets/invisedivine.png"));
+    tm->loadTexture(std::filesystem::path("assets/e2e4.png"));
+    tm->loadTexture(std::filesystem::path("assets/del.png"));
+    
+
     m_username = (args.size() > 0 ? args[0] : std::string("Player").append(std::to_string(rand()))); 
     m_isMultiplayer = args.size() > 1;
-
+    setRayGuiStyle();
     if(m_isMultiplayer) {
-        logD("Starting multiplayer session...");
+        logD("Starting multiplayer session...");    
         std::string address = args[1];
         uint16_t port = 7777;
         auto delimeter = address.find_first_of(':');
@@ -52,23 +71,24 @@ void Game::init(std::vector<std::string>& args) {
         m_isMultiplayer = Multiplayer::get()->connect(address, port);
     }
     
-    if(!m_isMultiplayer) {
-        if(!m_world->load()) {
-            m_world->setGenerator(std::make_shared<WorldGenNormal>(m_world, 1));
-            m_world->generate();
-        }
+    // if(!m_isMultiplayer) {
+    //     if(!m_world->load()) {
+    //         m_world->setGenerator(std::make_shared<WorldGenNormal>(m_world, 1));
+    //         m_world->generate();
+    //     }
 
-        m_world->addPlayer(1, m_player);
-    }
+    //     m_world->addPlayer(1, m_player);
+    // }
+    Game::get()->pushScene(std::make_shared<PlayScene>());
 
     while (!WindowShouldClose()) {
-        this->update();
-        this->render();
+        this->updateMenu();
+        this->renderMenu();
     }
 
-    if(!m_isMultiplayer && !IsKeyPressed(KEY_F1)) {
-        m_world->save();
-    }
+    // if(!m_isMultiplayer && !IsKeyPressed(KEY_F1)) {
+    //     m_world->save();
+    // }
 
     CloseWindow();
 }
@@ -81,52 +101,30 @@ void Game::drawCrosshair(Vector2 pos) {
 }
     
 void Game::render() {
-    BeginDrawing();
-        ClearBackground(SKYBLUE);
-
-            BeginMode2D(m_player->getCamera());
-                m_renderManager->renderWorld();
-            EndMode2D();
-
-            auto selectedBlock = m_player->getSelectedBlock();
-            
-            if(selectedBlock) {
-                m_renderManager->renderUIBlock(m_screenWidth - 42.f, 10.f, 32.f, 32.f, selectedBlock);
-            }
-
-        auto dbg = Debug::get();
-
-        if(dbg->isVisible()){
-            dbg->draw();
-        } else {
-            DrawText(std::format("SFF Sandbox {}-dev ({} {})", GitHash::shortSha1, __DATE__, __TIME__).c_str(), 5, 5, 20, WHITE);
-            DrawText(std::format("{} FPS", GetFPS()).c_str(), 5, 30, 20, WHITE);
-        }
-
         // auto cur = GetMousePosition();
         // drawCrosshair(cur);
-    EndDrawing();
 }
 
 void Game::update() {
-    m_timer->advanceTime();
+}
+void Game::updateMenu() {
+    if(m_scene != nullptr) m_scene->update();
+}
+void Game::renderMenu() {
+    auto tm = TextureManager::get();
 
-    for (uint32_t i = 0; i < m_timer->getTicks(); i++) {
-        m_world->onTick();
-    }
+    double delta = GetFrameTime();
+    double m_timeTest;
+    m_timeTest += delta;
+    float pos = 100.f + ((float)sin(m_timeTest) * 30);
 
-    m_player->update();
+    BeginDrawing();
 
-    if(IsKeyPressed(KEY_F3)) {
-        auto dbg = Debug::get();
-        dbg->setVisible(!dbg->isVisible());
-    }
+        ClearBackground((m_scene ? m_scene->getColor() : WHITE));   
+        
+        DrawTexture(tm->getTexture("sff.png"), (GetScreenWidth() - tm->getTexture("sff.png").width) / 2, pos, WHITE);
+        DrawText("Sandbox", (GetScreenWidth() - 35) / 2 - (tm->getTexture("sff.png").width - 35) / 2 - 5, pos + 35 + tm->getTexture("sff.png").width / 2, 35, RAYWHITE);
+        if(m_scene != nullptr) m_scene->draw();
 
-    if(IsKeyPressed(KEY_F6)) {
-        m_world->save();
-    }
-
-    if(IsKeyPressed(KEY_F1)) {
-        CloseWindow();
-    }
+    EndDrawing();
 }
