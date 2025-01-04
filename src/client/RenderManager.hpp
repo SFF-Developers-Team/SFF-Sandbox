@@ -21,7 +21,7 @@ public:
     void renderWorld();
     void renderChunk(std::shared_ptr<Chunk> chunk);
     void renderBlock(float x, float y, std::shared_ptr<Block> block);
-    void renderSelectedBlock(float x, float y, std::shared_ptr<Block> block);
+    void renderUIBlock(float x, float y, float width, float height, std::shared_ptr<Block> block);
     void renderEntity(std::string& textureKey, Entity* entity);
     void renderSimplePlayer(std::shared_ptr<SimplePlayer> player);
 };

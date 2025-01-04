@@ -95,13 +95,13 @@ void RenderManager::renderBlock(float x, float y, std::shared_ptr<Block> block) 
     tilemap->drawTilePro((uint16_t)block->getID() - 1, dest, ColorBrightness(col, (block->getLayer() == 0 ? -0.25f : 0.0f)));
 }
 
-void RenderManager::renderSelectedBlock(float x, float y, std::shared_ptr<Block> block) {
+void RenderManager::renderUIBlock(float x, float y, float width, float height, std::shared_ptr<Block> block) {
     if(!block || block->getID() == Block::ID::AIR) {
         return;
     }
 
     auto tilemap = Game::get()->getBlocksTileMap();
-    auto dest = Rectangle {x, y, 32.0f, 32.0f};
+    auto dest = Rectangle {x, y, width, height};
     Color col = (block->hasTag(Block::TagID::COLOR) ? block->getTag<Col3u>(Block::TagID::COLOR).to<Color>() : WHITE);
     col.a = 255;
 

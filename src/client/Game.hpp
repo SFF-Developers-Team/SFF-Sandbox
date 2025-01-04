@@ -7,8 +7,6 @@
 #include <ParticleManager.hpp>
 #include <RenderManager.hpp>
 #include <Multiplayer.hpp>
-#include <ui/InitialMenu.hpp>
-#include <ui/NodeRenderer.hpp>
 #include <memory>
 
 class Game {
@@ -26,9 +24,7 @@ private:
     std::shared_ptr<RenderManager> m_renderManager;
     std::shared_ptr<TileMap> m_blocksMap;
     std::shared_ptr<Timer> m_timer;
-
-    std::shared_ptr<sandbox_ui::InitialMenu> m_gameMenu;
-    std::shared_ptr<sandbox_ui::NodeRenderer> m_uiRenderer;
+    
 public:
     static Game* get() {
         static Game* game = new Game();
