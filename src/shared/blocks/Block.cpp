@@ -19,6 +19,7 @@ void Block::setPos(int32_t x, int32_t y, uint8_t layer) {
 }
 
 ByteVector Block::serialize() {
+    std::lock_guard<std::mutex> guard(m_mutex);
     SerializedObject::serialize();
 
     add(m_id);

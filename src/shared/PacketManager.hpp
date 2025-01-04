@@ -5,6 +5,7 @@
 #include <sockpp/acceptor.h>
 #include <memory>
 #include <map>
+#include <mutex>
 
 using QueueID = uint32_t;
 using Header = SerializedObject::Header;
@@ -12,19 +13,22 @@ using Header = SerializedObject::Header;
 template<typename Socket>
 class PacketManager {
 private:
-    size_t m_readBufSize;
+    int m_readBufSize;
 
 protected:
     std::map<QueueID, std::shared_ptr<SerializedObject>> m_queue;
     QueueID m_lastId;
     Socket m_sock;
+    std::mutex m_sendMutex;
 
 public:
-    PacketManager(Socket sock = Socket(), size_t readBufSize = 1024 * 64) : 
+    PacketManager(Socket sock = Socket(), int readBufSize = 1024 * 64) : 
         m_sock(std::move(sock)), m_readBufSize(readBufSize), m_lastId(0) 
     {
-        m_sock.read_timeout(std::chrono::seconds(3));
+        m_sock.read_timeout(std::chrono::seconds(10));
         m_sock.set_non_blocking(false);
+        m_sock.set_option(SOL_SOCKET, SO_RCVBUF, &m_readBufSize, sizeof(m_readBufSize));
+        m_sock.set_option(SOL_SOCKET, SO_SNDBUF, &m_readBufSize, sizeof(m_readBufSize));
     }
 
     ~PacketManager() {
@@ -32,17 +36,15 @@ public:
     }
 
     bool send(GamePacket const& packet) {
+        std::lock_guard lock(m_sendMutex);
         int written = 0;
-        // uint16_t size = packet.size();
-        // auto pak = GamePacket(size);
-        // pak.resize(size + 2);
-        // std::copy(packet.begin(), packet.end(), pak.data() + 2);
 
         while(written < packet.size()) {
-            auto res = m_sock.write(packet.data() + written, packet.size() - written).value();
-            if(res < 0) return false;
+            auto res = m_sock.write(packet.data(), packet.size()).value();
+            
+            if(res == -1) return false;
 
-            written += res;
+            written = res;
         }
 
         return true;
@@ -50,40 +52,15 @@ public:
 
     GamePacket const recv() {
         auto bytes = ByteVector(m_readBufSize);
-
-        auto read = m_sock.read(bytes.data(), bytes.size());
-        
-        if(read.value() > 0) {
-            bytes.resize(read.value());
+        auto res = m_sock.read(bytes.data(), bytes.size());
+    
+        if(res.value() > 0) {
+            bytes.resize(res.value());
 
             return GamePacket(bytes);
         }
-    
-        return GamePacket(Header::NETWORK_ERROR, read.error_message());
-        
-        // uint32_t read = 0;
-        // uint16_t size = 0;
 
-        // while(true) {
-        //     auto res = m_sock.read(bytes.data() + read, bytes.size() - read);
-        //     read += res.value();
-            
-        //     if(!size && read >= sizeof(uint16_t)) {
-        //         size = *(uint16_t*)bytes.data();
-        //         bytes.erase(bytes.begin(), bytes.begin() + 2);
-        //         read -= sizeof(uint16_t);
-        //     };
-
-        //     if(res.is_error() || res.value() < 0) {
-        //         return GamePacket(Header::NETWORK_ERROR, res.error_message());
-        //     }
-
-        //     if(read >= size && size > 0) {
-        //         bytes.resize(size);
-
-        //         return GamePacket(bytes);
-        //     }
-        // }
+        return GamePacket(Header::NETWORK_ERROR, res.error_message());   
     }
 
     void addToQueue(std::shared_ptr<SerializedObject> classObj) {
@@ -100,7 +77,7 @@ public:
         if(m_queue.size() > 1) {
             auto arr = CREATE_PACKET(Header::ARRAY, static_cast<uint16_t>(m_queue.size()));
             for(auto& [_, q] : m_queue) {
-                if(q == nullptr) continue;
+                if(q == nullptr || q->getI<Header>() == Header::ARRAY) continue;
 
                 auto bytes = q->serialize();
                 arr->add<uint16_t>(bytes.size());
@@ -111,10 +88,9 @@ public:
             addToQueue(arr);
         }
 
-        if(!m_queue.empty()) {
-            auto beg = m_queue.begin();
-            auto pak = GamePacket(Header::PACKET, beg->first);
-            auto pak2 = GamePacket(beg->second->serialize());
+        for(auto& [id, obj] : m_queue) {
+            auto pak = GamePacket(Header::PACKET, id);
+            auto pak2 = GamePacket(obj->serialize());
             auto hash = pak2.hash();
             auto size = pak2.size();
             pak.add<uint32_t>(hash);
@@ -165,8 +141,8 @@ public:
         logD("Packet came size: {} | hash: {:X} | real size: {} | real hash: {:X}", size, hash, pak.size(), pak.hash());
 
         if(pak.size() == size && pak.hash() == hash) {
+            while(!send(GamePacket(Header::OK, id)));
             handle(pak);
-            send(GamePacket(Header::OK, id));
         }
     }
 };

@@ -47,7 +47,7 @@ bool Client::accept() {
     m_id = srv->joinPlayer(username);
     send(GamePacket(Header::IDENTIFICATION, m_id));
 
-    uint16_t chunksCount = 3;
+    uint16_t chunksCount = 1;
     
     while(chunksCount-- > 0) {
         addToQueue(srv->getWorld()->getChunk(chunksCount));
@@ -55,7 +55,7 @@ bool Client::accept() {
 
     for(auto& [id, player] : srv->getWorld()->getPlayers()) {
         if(player->getID() == id) continue;
-        addToQueue(player);
+        addToQueue(CREATE_PACKET(Header::LOAD_PLAYER, id));
     }
 
     std::thread(&Client::inThread, this).detach();
@@ -82,9 +82,8 @@ void Client::outThread() {
     auto srv = Server::get();
 
     while(!m_shouldDisconnect) {
-        sendQueue();
-
         std::this_thread::sleep_for(std::chrono::milliseconds(17));
+        sendQueue();
     }
 }
 

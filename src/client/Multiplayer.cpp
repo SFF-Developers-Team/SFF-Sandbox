@@ -66,6 +66,7 @@ void Multiplayer::onBlockChanged(Vec2i pos, uint8_t layer) {
 
 void Multiplayer::inThread() {
     while(m_connected) {
+        // std::this_thread::sleep_for(std::chrono::milliseconds(8));
         auto read = recv();
         if(!read.get<Header>()) {
             m_connected = false;
@@ -81,7 +82,7 @@ void Multiplayer::inThread() {
 
 void Multiplayer::outThread() {
     while(m_connected) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(8));
+        std::this_thread::sleep_for(std::chrono::milliseconds(17));
         
         if(m_queue.empty()) {
             send(GamePacket(Header::KEEP_ALIVE));

@@ -31,6 +31,7 @@ protected:
     int32_t m_y;
     uint8_t m_layer;
     std::map<TagID, std::variant<Col3u, bool>> m_tags;
+    std::mutex m_mutex;
     
 public:
     Block(ID id = ID::AIR, int32_t x = 0, int32_t y = 0, uint8_t layer = 1);
