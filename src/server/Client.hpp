@@ -32,5 +32,6 @@ public:
     void handleBlock(GamePacket& packet);
     void handleError(GamePacket& packet);
     void handlePlayer(GamePacket& packet);
+    void handleLoadChunk(GamePacket& packet);
     void handleLoadPlayer(GamePacket& packet);
 };

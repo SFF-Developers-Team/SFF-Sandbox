@@ -9,6 +9,8 @@
 #include <Entity.hpp>
 #include <Block.hpp>
 #include <SimplePlayer.hpp>
+#include <GamePacket.hpp>
+#include <map>
 
 class World;
 class Chunk;
@@ -29,9 +31,7 @@ private:
 
     float m_lastAnimFrameTime = 0.f;
 
-    bool m_inputDisabled = false;
-    bool m_unlinkCamX = false;
-    bool m_unlinkCamY = false;
+    std::map<uint32_t, std::shared_ptr<GamePacket>> m_chunkLoadRequests;
 public:
     Player(std::shared_ptr<World> world);
     
@@ -47,12 +47,6 @@ public:
     bool canPlaceBlock(Vec2i target, uint8_t layer);
     bool canAccessBlock(Vec2i target, uint8_t layer);
     Vec2i getTargetBlock();
-
-    bool inputDisabled();
-    void disableInput(bool flag);
-    
-    void unlinkCameraX(bool flag);
-    void unlinkCameraY(bool flag);
 
     void setCamera(Camera2D cam) { m_camera = cam; }
     void setID(PlayerID id) { m_id = id; }

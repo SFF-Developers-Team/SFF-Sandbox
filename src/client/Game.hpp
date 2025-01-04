@@ -29,7 +29,7 @@ private:
     std::shared_ptr<RenderManager> m_renderManager;
     std::shared_ptr<TileMap> m_blocksMap;
     std::shared_ptr<Timer> m_timer;
-    
+
 public:
     static Game* get() {
         static Game* game = new Game();

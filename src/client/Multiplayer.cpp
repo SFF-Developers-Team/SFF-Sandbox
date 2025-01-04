@@ -64,6 +64,15 @@ void Multiplayer::onBlockChanged(Vec2i pos, uint8_t layer) {
     }
 }
 
+void Multiplayer::requestChunk(Chunk::Position pos) {
+    auto it = std::find(m_chunkRequests.begin(), m_chunkRequests.end(), pos);
+
+    if(it == m_chunkRequests.end()) {
+        m_chunkRequests.push_back(pos);
+        addToQueue(CREATE_PACKET(Header::LOAD_CHUNK, pos));
+    }
+}
+
 void Multiplayer::inThread() {
     while(m_connected) {
         // std::this_thread::sleep_for(std::chrono::milliseconds(8));
@@ -175,7 +184,10 @@ void Multiplayer::handleChunk(GamePacket& packet) {
     auto chunk = std::make_shared<Chunk>(world);
     chunk->deserialize(packet.bytes());
 
-    logD("Received chunk {}", chunk->getPosition());
+    auto it = std::find(m_chunkRequests.begin(), m_chunkRequests.end(), chunk->getPosition());
+    if(it != m_chunkRequests.end()) {
+        m_chunkRequests.erase(it);
+    }
 
     world->addChunk(chunk);
 

@@ -17,7 +17,7 @@ class WorldGen;
 
 class World : public SerializedObject {
 private:
-    std::map<ChunkPos, std::shared_ptr<Chunk>> m_chunks;
+    std::map<Chunk::Position, std::shared_ptr<Chunk>> m_chunks;
     std::map<PlayerID, std::shared_ptr<SimplePlayer>> m_players;
     std::shared_ptr<WorldGen> m_worldGen;
     std::string m_worldName;
@@ -43,7 +43,7 @@ public:
     std::shared_ptr<Block> getBlock(int32_t x, int32_t y, uint8_t layer);
 
     void unloadChunk(std::shared_ptr<Chunk> chunk);
-    void unloadChunk(ChunkPos pos);
+    void unloadChunk(Chunk::Position pos);
     void addChunk(std::shared_ptr<Chunk> chunk);
     std::shared_ptr<Chunk> getChunk(int32_t position);
 
@@ -62,7 +62,7 @@ public:
     bool isUsernameAlreadyTaken(std::string const& username);
     bool isOutOfBound(int32_t x, int32_t y, uint8_t layer);
 
-    inline ChunkPos convertXtoChunkPosition(int32_t x) { return floorf(static_cast<float>(x) / CHUNK_WIDTH); }
+    inline Chunk::Position convertXtoChunkPosition(int32_t x) { return floorf(static_cast<float>(x) / CHUNK_WIDTH); }
 
     void setGenerator(std::shared_ptr<WorldGen> generator) { m_worldGen = generator; }
     

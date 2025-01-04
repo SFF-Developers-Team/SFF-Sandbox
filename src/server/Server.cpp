@@ -3,7 +3,7 @@
 #include <World.hpp>
 #include <WorldGenNormal.hpp>
 #include <GamePacket.hpp>
-#include <defaultconfig.hpp>
+#include <DefaultConfig.hpp>
 #include <Chunk.hpp>
 #include <Timer.hpp>
 #include <filesystem>
@@ -90,7 +90,7 @@ void Server::loop() {
         }
 
         for(auto& client : m_clients) {
-            if(client->shouldDisconnect()) {
+            if(client && client->shouldDisconnect()) {
                 disconnectPlayer(client->getPlayerID());
             }
         }
