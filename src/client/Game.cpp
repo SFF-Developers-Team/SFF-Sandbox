@@ -79,7 +79,7 @@ void Game::init(std::vector<std::string>& args) {
 
     //     m_world->addPlayer(1, m_player);
     // }
-    Game::get()->pushScene(std::make_shared<PlayScene>());
+    Game::get()->pushScene(std::make_shared<MainScene>());
 
     while (!WindowShouldClose()) {
         this->updateMenu();
