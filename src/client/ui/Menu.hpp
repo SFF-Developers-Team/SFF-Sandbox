@@ -13,11 +13,6 @@
 
 class PlayScene : public Scene {
 private:
-    std::shared_ptr<World> m_world;
-    std::shared_ptr<Player> m_player;
-    std::shared_ptr<RenderManager> m_renderManager;
-    std::shared_ptr<TileMap> m_blocksMap;
-    std::shared_ptr<Timer> m_timer;
 
 public:
     PlayScene();

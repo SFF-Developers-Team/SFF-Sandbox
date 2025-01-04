@@ -45,13 +45,13 @@ public:
 
     void pushScene(std::shared_ptr<Scene> scene);
     void drawCrosshair(Vector2 pos);
-    void setInPlayScene(bool flag) { m_inPlayScene = flag; }
     void setRayGuiStyle();
     
     auto getScreenWidth() { return m_screenWidth; }
     auto getScreenHeight() { return m_screenHeight; }
     auto getRenderDistance() { return m_renderDistance; }
     auto getWorld() { return m_world; }
+    auto getRenderManager() { return m_renderManager; }
     auto getBlocksTileMap() { return m_blocksMap; }
     auto getParticleManager() { return m_particleManager; }
     auto getUsername() { return m_username; }

@@ -53,7 +53,13 @@ void Game::init(std::vector<std::string>& args) {
     tm->loadTexture(std::filesystem::path("assets/e2e4.png"));
     tm->loadTexture(std::filesystem::path("assets/del.png"));
     
-
+    m_blocksMap = std::make_shared<TileMap>("assets/blocks.png", Vector2 {16, 16});
+    m_timer = std::make_shared<Timer>(60);
+    m_world = std::make_shared<World>("world1");
+    m_player = std::make_shared<Player>(m_world);
+    // m_particleManager = std::make_shared<ParticleManager>(m_world, m_player);
+    m_renderManager = std::make_shared<RenderManager>(m_world, m_player);
+    
     m_username = (args.size() > 0 ? args[0] : std::string("Player").append(std::to_string(rand()))); 
     m_isMultiplayer = args.size() > 1;
     setRayGuiStyle();

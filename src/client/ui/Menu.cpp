@@ -1,27 +1,20 @@
 #include <Menu.hpp>
 #include <stdio.h>
 PlayScene::PlayScene() {
-    m_blocksMap = std::make_shared<TileMap>("assets/blocks.png", Vector2 {16, 16});
-    m_timer = std::make_shared<Timer>(60);
-    m_world = std::make_shared<World>("world1");
-    m_player = std::make_shared<Player>(m_world);
-    // m_particleManager = std::make_shared<ParticleManager>(m_world, m_player);
-    m_renderManager = std::make_shared<RenderManager>(m_world, m_player);
+
 }
 void PlayScene::draw() {
-
-    BeginMode2D(m_player->getCamera());
-        m_renderManager->renderWorld();
+    BeginMode2D(Game::get()->getPlayer()->getCamera());
+        Game::get()->getRenderManager()->renderWorld();
     EndMode2D();
 
-    auto selectedBlock = m_player->getSelectedBlock();
-        
+    auto selectedBlock = Game::get()->getPlayer()->getSelectedBlock();
+
     if(selectedBlock) {
-        m_renderManager->renderUIBlock(GetScreenWidth() - 42.f, 10.f, 32.f, 32.f, selectedBlock);
+        Game::get()->getRenderManager()->renderUIBlock(GetScreenWidth() - 42.f, 10.f, 32.f, 32.f, selectedBlock);
     }
 
     auto dbg = Debug::get();
-    m_blocksMap->drawTile(0, {0, 0}, RAYWHITE, 0);
     if(dbg->isVisible()){
         dbg->draw();
     } else {
@@ -30,13 +23,13 @@ void PlayScene::draw() {
     }
 }
 void PlayScene::update() {
-    m_timer->advanceTime();
+    Game::get()->getTimer()->advanceTime();
 
-    for (uint32_t i = 0; i < m_timer->getTicks(); i++) {
-        m_world->onTick();
+    for (uint32_t i = 0; i < Game::get()->getTimer()->getTicks(); i++) {
+        Game::get()->getWorld()->onTick();
     }
 
-    m_player->update();
+    Game::get()->getPlayer()->update();
 
     if(IsKeyPressed(KEY_F3)) {
         auto dbg = Debug::get();
@@ -44,7 +37,7 @@ void PlayScene::update() {
     }
 
     if(IsKeyPressed(KEY_F6)) {
-        m_world->save();
+        Game::get()->getWorld()->save();
     }
 
     if(IsKeyPressed(KEY_F1)) {
