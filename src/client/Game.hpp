@@ -3,6 +3,7 @@
 #include <world/World.hpp>
 #include <Multiplayer.hpp>
 #include <RenderManager.hpp>
+#include <SoundManager.hpp>
 #include <TileMap.hpp>
 #include <Timer.hpp>
 #include <memory>

@@ -54,9 +54,11 @@ void Game::init(std::vector<std::string>& args) {
     if (enet_initialize() != 0) {
         logE("An error occurred while initializing ENet.");
     }
+    InitAudioDevice();
 
-
+    auto sm = SoundManager::get();
     auto tm = TextureManager::get();
+
     tm->loadTexture("assets/player.png");
     tm->loadTexture("assets/sff.png");
     tm->loadTexture("assets/kolyah35.png");
@@ -68,10 +70,11 @@ void Game::init(std::vector<std::string>& args) {
     tm->loadTexture("assets/crosshair.png");
     tm->loadTexture("assets/selected.png");
     
+    sm->loadMusic("assets/menu.mp3");
+    
     m_blocksMap = std::make_shared<TileMap>("assets/blocks.png", Vector2 {16, 16});
 
     m_bgTex = LoadRenderTexture(m_bgwidth * 16, m_bgheight * 16);
-    menuPreRender();
     m_timer = std::make_shared<Timer>(60);
     m_world = std::make_shared<World>("world1");
     m_player = std::make_shared<Player>(m_world);
@@ -80,7 +83,8 @@ void Game::init(std::vector<std::string>& args) {
     m_isMultiplayer = args.size() > 1;
 
     setRayGuiStyle();
-    
+    menuPreRender();
+    PlayMusicStream(sm->getMusic("menu.mp3"));
     if(m_isMultiplayer) {
         logD("Starting multiplayer session...");    
         std::string address = args[1];
@@ -94,7 +98,7 @@ void Game::init(std::vector<std::string>& args) {
         SetWindowTitle(std::format("SFF Sandbox ({}) - {}:{}", m_username, address, port).c_str());
         m_isMultiplayer = Multiplayer::get()->connect(address, port);
 
-        // Временно
+        // Временно 
         if (!m_isMultiplayer)
             std::exit(1);
     }
@@ -122,6 +126,7 @@ void Game::init(std::vector<std::string>& args) {
     }
 
     CloseWindow();
+    CloseAudioDevice();
 }
 
 void Game::drawCrosshair(Vector2 pos) {
@@ -132,6 +137,12 @@ void Game::drawCrosshair(Vector2 pos) {
 }
 
 void Game::updateMenu() {
+    auto sm = SoundManager::get();
+
+    if(GetMusicTimePlayed(sm->getMusic("menu.mp3")) >= GetMusicTimeLength(sm->getMusic("menu.mp3"))) {
+        StopMusicStream(sm->getMusic("menu.mp3"));
+        PlayMusicStream(sm->getMusic("menu.mp3"));
+    }
     if(m_scene != nullptr) m_scene->update();
 }
 void Game::renderMenu() {
