@@ -1,6 +1,7 @@
 #pragma once
 #include <type_traits>
 #include <stdint.h>
+#include <math.h>
 template <typename T>
 struct Vec2 {
     static_assert(std::is_arithmetic_v<T>, "Unsupported type for Vec2");

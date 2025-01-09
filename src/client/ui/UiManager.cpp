@@ -3,6 +3,7 @@
 #include <ui/UiManager.hpp>
 #include <raygui.h>
 #include <string>
+#include <cmath>
 
 UiManager::UiManager() {}
 

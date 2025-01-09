@@ -16,6 +16,7 @@ set(ENET_STATIC ON CACHE BOOL "" FORCE)
 set(SHARED_HEADERS 
     "libs/perlin-noise/"
     "libs/toml/"
+    "libs/enet/include"
     "src/shared/"
 )
 
@@ -37,14 +38,14 @@ file(GLOB CLIENT_SOURCES CONFIGURE_DEPENDS
 file(GLOB SERVER_SOURCES CONFIGURE_DEPENDS
     "src/server/*.cpp"
 )
-
-add_executable(SFFSandbox ${SHARED_SOURCES} ${CLIENT_SOURCES})
-add_executable(SFFSandbox-server ${SHARED_SOURCES} ${SERVER_SOURCES})
-
 add_subdirectory(libs/raylib)
 add_subdirectory(libs/GitHash)
 add_subdirectory(libs/zlib)
 add_subdirectory(libs/enet)
+
+add_executable(SFFSandbox ${SHARED_SOURCES} ${CLIENT_SOURCES})
+add_executable(SFFSandbox-server ${SHARED_SOURCES} ${SERVER_SOURCES})
+
 
 target_link_libraries(SFFSandbox raylib enet_static ${GITHASH_LIBRARIES} zlibstatic)
 target_link_libraries(SFFSandbox-server enet_static ${GITHASH_LIBRARIES} zlibstatic)

@@ -1,4 +1,5 @@
 #include <TextureManager.hpp>
+#include <SoundManager.hpp>
 #include <entity/Player.hpp>
 #include <ui/MenuScene.hpp>
 #include <world/World.hpp>
@@ -28,14 +29,10 @@ void Game::pushScene(std::shared_ptr<Scene> scene) {
 void Game::init(std::vector<std::string>& args) {
     SetConfigFlags(FLAG_VSYNC_HINT);
     InitWindow(1280, 720, "SFF Sandbox");
+    InitAudioDevice();
+
     SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
 
-    SetWindowSize(m_screenWidth, m_screenHeight);
-
-    if (enet_initialize() != 0) {
-        logE("An error occurred while initializing ENet.");
-    }
-    InitAudioDevice();
 
     auto sm = SoundManager::get();
     auto tm = TextureManager::get();
@@ -54,9 +51,6 @@ void Game::init(std::vector<std::string>& args) {
     sm->loadMusic("assets/menu.mp3");
     
     m_blocksMap = std::make_shared<TileMap>("assets/blocks.png", Vector2 {16, 16});
-
-    m_bgTex = LoadRenderTexture(m_bgwidth * 16, m_bgheight * 16);
-    m_timer = std::make_shared<Timer>(60);
     m_world = std::make_shared<World>("world1");
     m_player = std::make_shared<Player>(m_world);
 
