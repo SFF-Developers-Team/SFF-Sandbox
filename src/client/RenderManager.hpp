@@ -1,7 +1,7 @@
 #pragma once
-#include <raylib.h>
 #include <memory>
 #include <string>
+#include <Types.hpp>
 
 class World;
 class Player;
@@ -11,17 +11,20 @@ class SimplePlayer;
 class Block;
 
 class RenderManager {
-private:
-    std::shared_ptr<Player> m_player; 
-    std::shared_ptr<World> m_world;
-
 public:
-    RenderManager(std::shared_ptr<World> world, std::shared_ptr<Player> player);
+    RenderManager();
 
-    void renderWorld();
-    void renderChunk(std::shared_ptr<Chunk> chunk);
-    void renderBlock(float x, float y, std::shared_ptr<Block> block);
+    static RenderManager* get() {
+        static auto rm = new RenderManager();
+        return rm;
+    }
+
+    void drawTexture(std::string const& key, Rectf dest, Col4u color = COL_WHITE, float rot = 0.f, Vec2f origin = {0, 0});
+
+    void renderWorld(std::shared_ptr<World> world, std::shared_ptr<Player> player);
+    void renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Player> player);
+    void renderBlock(float x, float y, std::shared_ptr<Block> block, uint8_t alpha = 255);
     void renderUIBlock(float x, float y, float width, float height, std::shared_ptr<Block> block);
-    void renderEntity(std::string& textureKey, Entity* entity);
+    void renderEntity(std::string& textureKey, std::shared_ptr<Entity> entity);
     void renderSimplePlayer(std::shared_ptr<SimplePlayer> player);
 };

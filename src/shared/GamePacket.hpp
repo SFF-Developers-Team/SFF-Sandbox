@@ -1,29 +1,41 @@
 #pragma once
 #include <SerializedObject.hpp>
+#include <enet.h>
 
-#define MP_BUF_SIZE (65344)
-#define CREATE_PACKET std::make_shared<GamePacket>
+#define CREATE_PACKET std::make_shared<Packet>
 
-class GamePacket : public SerializedObject {
+class Packet : public SerializedObject {
 private:
     using SerializedObject::deserialize;
 
 public:
-    GamePacket(Header header) { 
+    Packet() {}
+
+    Packet(ENetPacket* packet) {
+        resize(packet->dataLength);
+        std::copy(packet->data, packet->data + size(), data());
+    }
+
+    Packet(Header header) { 
         add(header); 
 
         m_offset = 0;    
     }
 
+    Packet(ByteVector const& bytes) {
+        add(bytes);
+        reset();
+    }
+
     template<typename... Args>
-    GamePacket(Header const header, Args const&... arg) : GamePacket(header) {
+    Packet(Header const header, Args const&... arg) : Packet(header) {
         add(arg...);
 
         m_offset = 0;
     }
 
     template<typename... Args>
-    GamePacket(Args const&... arg) {
+    Packet(Args const&... arg) {
         add(arg...);
 
         m_offset = 0;
@@ -41,4 +53,6 @@ public:
 
         logD("GamePacket: {}", res);
     }
+
+
 };

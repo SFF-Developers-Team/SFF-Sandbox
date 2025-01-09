@@ -51,4 +51,5 @@ public:
     auto getSize() { return Vec2f {m_hitbox.width, m_hitbox.height}; }
     auto willRemove() { return m_remove; }
     auto getSpeed() { return Vec2f {m_speedX, m_speedY}; }
+    auto getWorld() { return m_world; }
 };

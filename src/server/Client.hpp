@@ -1,37 +1,34 @@
 #pragma once
-#include <GamePacket.hpp>
-#include <queue>
-#include <memory>
-#include <string>
-#include <variant>
-#include <sockpp/tcp_socket.h>
-#include <SimplePlayer.hpp>
+#include <entity/SimplePlayer.hpp>
 #include <PacketManager.hpp>
+#include <GamePacket.hpp>
+#include <Types.hpp>
 
-class Client : public PacketManager<sockpp::tcp_socket> {
+#include <memory>
+
+class Client : public PacketManager {
 private:
-    std::string m_lastError;
     PlayerID m_id;
     bool m_loggedIn = false;
-    bool m_shouldDisconnect = false;
+    bool m_disconnect = false;
 
 public:
-    Client(sockpp::tcp_socket sock);
+    Client(ENetPeer* peer);
 
-    // Should be executed in separate thread!!
-    bool accept();
+    bool accept(Packet& packet);
+    void update();
+    void onPacketReceived(Packet& packet) override;
+    void disconnect(DisconnectReasonID reason);
 
-    void inThread();
-    void outThread();
+    void handle(Packet& packet) override;
+    void handleBlock(Packet& packet);
+    void handlePlayer(Packet& packet);
+    void handleLoadChunk(Packet& packet);
+    void handleLoadPlayer(Packet& packet);
+    void handleBlockPlace(Packet& packet);
+    void handleBlockDestroy(Packet& packet);
 
-    auto const shouldDisconnect() { return m_shouldDisconnect; }
-    auto const getPlayerID() { return m_id; }
-    auto const& getLastError() { return m_lastError; }
-
-    void handle(GamePacket& packet) override;
-    void handleBlock(GamePacket& packet);
-    void handleError(GamePacket& packet);
-    void handlePlayer(GamePacket& packet);
-    void handleLoadChunk(GamePacket& packet);
-    void handleLoadPlayer(GamePacket& packet);
+    auto const getPlayerID() {
+        return m_id;
+    }
 };

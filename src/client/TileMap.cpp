@@ -8,7 +8,7 @@ TileMap::TileMap(std::filesystem::path const& path, Vector2 v) {
 TileMap::~TileMap() {
     UnloadTexture(this->m_map);
 
-    for(auto& [k, v] : m_cachedTextures) {
+    for (auto& [k, v] : m_cachedTextures) {
         UnloadTexture(m_cachedTextures[k]);
     }
 }
@@ -34,7 +34,7 @@ Rectangle TileMap::getRectForTile(uint16_t index) {
 
 void TileMap::drawTile(uint16_t index, Vector2 position, Color color, bool flipedX) {
     auto rect = getRectForTile(index);
-    
+
     if (flipedX) {
         rect.width *= -1;
     }
@@ -44,7 +44,7 @@ void TileMap::drawTile(uint16_t index, Vector2 position, Color color, bool flipe
 
 void TileMap::drawTilePro(uint16_t index, Rectangle dest, Color color, bool flipedX) {
     auto rect = getRectForTile(index);
-    
+
     if (flipedX) {
         rect.width *= -1;
     }
@@ -53,10 +53,10 @@ void TileMap::drawTilePro(uint16_t index, Rectangle dest, Color color, bool flip
 }
 
 Texture2D TileMap::getTextureOfTileCached(uint16_t index) {
-    if(m_cachedTextures.count(index)) {
+    if (m_cachedTextures.count(index)) {
         return m_cachedTextures[index];
     }
-    
+
     Image mapimg = LoadImageFromTexture(m_map);
     ImageCrop(&mapimg, getRectForTile(index));
 

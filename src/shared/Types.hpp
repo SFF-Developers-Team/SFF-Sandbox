@@ -139,3 +139,38 @@ using Col3u = Col3<unsigned char>;
 
 using Col4f = Col4<float>;
 using Col4u = Col4<unsigned char>;
+
+// Custom raylib color palette for amazing visuals on WHITE background
+#define COL_LIGHTGRAY  (Col4u){ 200, 200, 200, 255 }   // Light Gray
+#define COL_GRAY       (Col4u){ 130, 130, 130, 255 }   // Gray
+#define COL_DARKGRAY   (Col4u){ 80, 80, 80, 255 }      // Dark Gray
+#define COL_YELLOW     (Col4u){ 253, 249, 0, 255 }     // Yellow
+#define COL_GOLD       (Col4u){ 255, 203, 0, 255 }     // Gold
+#define COL_ORANGE     (Col4u){ 255, 161, 0, 255 }     // Orange
+#define COL_PINK       (Col4u){ 255, 109, 194, 255 }   // Pink
+#define COL_RED        (Col4u){ 230, 41, 55, 255 }     // Red
+#define COL_MAROON     (Col4u){ 190, 33, 55, 255 }     // Maroon
+#define COL_GREEN      (Col4u){ 0, 228, 48, 255 }      // Green
+#define COL_LIME       (Col4u){ 0, 158, 47, 255 }      // Lime
+#define COL_DARKGREEN  (Col4u){ 0, 117, 44, 255 }      // Dark Green
+#define COL_SKYBLUE    (Col4u){ 102, 191, 255, 255 }   // Sky Blue
+#define COL_BLUE       (Col4u){ 0, 121, 241, 255 }     // Blue
+#define COL_DARKBLUE   (Col4u){ 0, 82, 172, 255 }      // Dark Blue
+#define COL_PURPLE     (Col4u){ 200, 122, 255, 255 }   // Purple
+#define COL_VIOLET     (Col4u){ 135, 60, 190, 255 }    // Violet
+#define COL_DARKPURPLE (Col4u){ 112, 31, 126, 255 }    // Dark Purple
+#define COL_BEIGE      (Col4u){ 211, 176, 131, 255 }   // Beige
+#define COL_BROWN      (Col4u){ 127, 106, 79, 255 }    // Brown
+#define COL_DARKBROWN  (Col4u){ 76, 63, 47, 255 }      // Dark Brown
+#define COL_WHITE      (Col4u){ 255, 255, 255, 255 }   // White
+#define COL_BLACK      (Col4u){ 0, 0, 0, 255 }         // Black
+#define COL_BLANK      (Col4u){ 0, 0, 0, 0 }           // Blank (Transparent)
+#define COL_MAGENTA    (Col4u){ 255, 0, 255, 255 }     // Magenta
+#define COL_RAYWHITE   (Col4u){ 245, 245, 245, 255 }   // My own White (raylib logo)
+
+enum DisconnectReasonID : uint32_t {
+    INVALID_FIRST_PACKET,
+    TOO_SHORT_USERNAME,
+    TOO_LONG_USERNAME,
+    USERNAME_ALREADY_TAKEN
+};

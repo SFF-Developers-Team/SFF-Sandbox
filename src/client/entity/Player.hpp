@@ -1,19 +1,12 @@
 #pragma once
-
+#include <entity/SimplePlayer.hpp>
 #include <memory>
-#include <raylib.h>
-#include <raymath.h>
 #include <vector>
-#include <unordered_map>
-#include <string>
-#include <Entity.hpp>
-#include <Block.hpp>
-#include <SimplePlayer.hpp>
-#include <GamePacket.hpp>
-#include <map>
+#include <raylib.h>
 
 class World;
 class Chunk;
+class Block;
 
 class Player : public SimplePlayer {
 private:
@@ -31,11 +24,10 @@ private:
 
     float m_lastAnimFrameTime = 0.f;
 
-    std::map<uint32_t, std::shared_ptr<GamePacket>> m_chunkLoadRequests;
 public:
     Player(std::shared_ptr<World> world);
-    
-    void onTick() override; 
+
+    void onTick() override;
     void update();
     void updateControls();
     void updateCamera();
@@ -46,12 +38,11 @@ public:
     bool canDestroyBlock(Vec2i target, uint8_t layer);
     bool canPlaceBlock(Vec2i target, uint8_t layer);
     bool canAccessBlock(Vec2i target, uint8_t layer);
+    
     Vec2i getTargetBlock();
-
-    void setCamera(Camera2D cam) { m_camera = cam; }
-    void setID(PlayerID id) { m_id = id; }
-
     std::shared_ptr<Block> getSelectedBlock();
-    auto getCamera() { return m_camera; }
-    auto getID() { return m_id; }
+
+    Camera2D& getCamera() {
+        return m_camera;
+    }
 };

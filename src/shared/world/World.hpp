@@ -1,16 +1,17 @@
 #pragma once
+#include <entity/SimplePlayer.hpp>
+#include <world/Block.hpp>
+#include <world/Chunk.hpp>
+#include <SerializedObject.hpp>
+#include <Hitbox.hpp>
+
 #include <vector>
 #include <string>
-#include <map>
-#include <Hitbox.hpp>
-#include <SerializedObject.hpp>
-#include <Block.hpp>
-#include <Chunk.hpp>
-#include <SimplePlayer.hpp>
 #include <memory>
 #include <cmath>
+#include <map>
 
-#define WORLDVER 2
+#define WORLDVER 3
 
 class Player;
 class WorldGen;
@@ -26,8 +27,11 @@ private:
     uint32_t m_version;
     PlayerID m_lastPlayerID = 1;
 
+    uint64_t m_spentTime;
+    uint64_t m_loadTime;
+
 public:
-    const uint32_t WORLD_VERSION = WORLDVER;
+    uint32_t const WORLD_VERSION = WORLDVER;
 
     World(uint32_t height, std::string const& worldName);
     World(std::string const& worldName);
@@ -62,13 +66,35 @@ public:
     bool isUsernameAlreadyTaken(std::string const& username);
     bool isOutOfBound(int32_t x, int32_t y, uint8_t layer);
 
-    inline Chunk::Position convertXtoChunkPosition(int32_t x) { return floorf(static_cast<float>(x) / CHUNK_WIDTH); }
+    inline Chunk::Position xToChunk(int32_t x) {
+        return floorf(static_cast<float>(x) / CHUNK_WIDTH);
+    }
 
-    void setGenerator(std::shared_ptr<WorldGen> generator) { m_worldGen = generator; }
-    
-    auto getHeight() { return m_height; }
-    auto getGenerator() { return m_worldGen; }
-    auto& getPlayers() { return m_players; }
-    auto& getChunks() { return m_chunks; }
-    auto getVersion() { return m_version; }
-};  
+    void setGenerator(std::shared_ptr<WorldGen> generator) {
+        m_worldGen = generator;
+    }
+
+    auto getHeight() {
+        return m_height;
+    }
+    auto getGenerator() {
+        return m_worldGen;
+    }
+    auto& getPlayers() {
+        return m_players;
+    }
+    auto& getChunks() {
+        return m_chunks;
+    }
+    auto getVersion() {
+        return m_version;
+    }
+
+    auto getLoadTime() {
+        return m_loadTime;
+    }
+
+    auto getSpentTime() {
+        return m_spentTime;
+    }
+};

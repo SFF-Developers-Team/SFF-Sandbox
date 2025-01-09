@@ -1,12 +1,19 @@
 #pragma once
+#include <Types.hpp>
 
-#include <raylib.h>
 class Scene {
 protected:
-    Color m_bgColor = SKYBLUE;
+    Col4u m_bgColor = COL_WHITE;
+
 public:
-    Color getColor() { return m_bgColor; }
-    virtual void setColor(Color color) { m_bgColor = color; }
-    virtual void update();
-    virtual void draw();
+    Col4u getColor() {
+        return m_bgColor;
+    }
+
+    virtual void setColor(Col4u color) {
+        m_bgColor = color;
+    }
+
+    virtual void update() = 0;
+    virtual void draw() = 0;
 };

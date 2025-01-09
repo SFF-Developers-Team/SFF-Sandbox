@@ -1,12 +1,12 @@
 [submodule "libs/raylib"]
 	path = libs/raylib
-	url = https://github.com/raysan5/raylib.git
-[submodule "libs/sockpp"]
-	path = libs/sockpp
-	url = https://github.com/fpagliughi/sockpp.git
+	url = https://github.c
+	path = libs/GitHashom/raysan5/raylib.git
 [submodule "libs/GitHash"]
-	path = libs/GitHash
 	url = https://github.com/Svalorzen/GitHash.git
 [submodule "libs/zlib"]
 	path = libs/zlib
 	url = https://github.com/madler/zlib
+[submodule "libs/enet"]
+	path = libs/enet
+	url = https://github.com/lsalzman/enet.git
