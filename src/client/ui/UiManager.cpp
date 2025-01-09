@@ -1,0 +1,40 @@
+#include <TextureManager.hpp>
+#include <RenderManager.hpp>
+#include <ui/UiManager.hpp>
+#include <raygui.h>
+#include <string>
+
+UiManager::UiManager() {}
+
+void UiManager::drawText(std::string const& str, Vec2f pos, float size, Col4u color) {
+    DrawText(str.c_str(), pos.x, pos.y, size, color.to<Color>());
+}
+
+void UiManager::drawMenuLogo() {
+    auto rm = RenderManager::get();
+    auto tm = TextureManager::get();
+
+    auto sw = static_cast<float>(GetScreenWidth());
+
+    auto sff = tm->getTexture("sff.png");
+    auto sffY = 100.f + ((float)sin(GetTime()) * 30);
+    rm->drawTexture("sff.png", {sw / 2 - sff.width / 2, sffY, static_cast<float>(sff.width), static_cast<float>(sff.height)});
+
+    auto text = "Sandbox";
+    auto textH = 35;
+    auto textW = MeasureText(text, textH);
+    drawText(text, {sw / 2 - textW / 2, sffY + sff.width * 0.7f}, 35);
+}
+
+void UiManager::drawButton(std::string const& label, Rectf dest, MiniFunction<void()> const& callback) {
+    if(GuiButton(dest.to<Rectangle>(), label.c_str())) {
+        callback();
+    }
+}
+
+void UiManager::drawButtonsV(Vec2f start, Vec2f btnSize, float padding, std::initializer_list<BtnPair> const& btns) {
+    for(auto const& btn : btns) {
+        drawButton(btn.label, {start.x, start.y, btnSize.x, btnSize.y}, btn.callback);
+        start.y += padding;
+    }
+}

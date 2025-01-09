@@ -1,15 +1,42 @@
-#include <ui/PlayScene.hpp>
+#include <world/gen/WorldGenNormal.hpp>
 #include <RenderManager.hpp>
-#include <world/World.hpp>
 #include <entity/Player.hpp>
+#include <ui/PlayScene.hpp>
+#include <world/World.hpp>
+#include <Multiplayer.hpp>
 #include <Types.hpp>
 #include <Debug.hpp>
 #include <Timer.hpp>
+#include <Game.hpp>
 
 #include <chrono>
 
-PlayScene::PlayScene(std::shared_ptr<World> world, std::shared_ptr<Player> player) :
-    m_world(world), m_player(player), m_timer(std::make_shared<Timer>(60)) {}
+PlayScene::PlayScene(std::shared_ptr<World> world, std::shared_ptr<Player> player, bool isOnline) :
+    m_world(world), m_player(player), m_timer(std::make_shared<Timer>(60)), m_online(isOnline) 
+{
+    m_bgColor = COL_SKYBLUE;
+
+    if(m_online) {
+        auto game = Game::get();
+        auto username = game->getUsername();
+        auto mp = Multiplayer::get();
+
+        SetWindowTitle(std::format("SFF Sandbox ({}) - {}:{}", username, mp->getAddress(), mp->getPort()).c_str());
+    } else {
+        if (!m_world->load()) {
+            m_world->setGenerator(std::make_shared<WorldGenNormal>(m_world, 1));
+            m_world->generate();
+        }
+
+        m_world->addPlayer(1, m_player);
+    }
+}
+
+PlayScene::~PlayScene() {
+    if(!m_online) {
+        m_world->save();
+    }
+}
 
 void PlayScene::draw() {
     auto rm = RenderManager::get();

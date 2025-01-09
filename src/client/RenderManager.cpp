@@ -1,11 +1,13 @@
+#include <TextureManager.hpp>
 #include <RenderManager.hpp>
-#include <Debug.hpp>
-#include <world/World.hpp>
 #include <entity/Player.hpp>
 #include <world/Chunk.hpp>
-#include <Game.hpp>
+#include <world/World.hpp>
+#include <TileMap.hpp>
 #include <Types.hpp>
-#include <TextureManager.hpp>
+#include <Debug.hpp>
+#include <Game.hpp>
+
 #include <string>
 
 RenderManager::RenderManager() {
@@ -16,10 +18,9 @@ RenderManager::RenderManager() {
 }
 
 void RenderManager::drawTexture(std::string const& key, Rectf dest, Col4u color, float rot, Vec2f origin) {
-    auto tex = TextureManager::get()->getTexture(key);
-
-    DrawTexturePro(tex, 
-        {0.f, 0.f, static_cast<float>(tex.width), static_cast<float>(tex.height)}, 
+    auto texture = TextureManager::get()->getTexture(key);
+    DrawTexturePro(texture, 
+        {0.f, 0.f, static_cast<float>(texture.width), static_cast<float>(texture.height)}, 
         dest.to<Rectangle>(), 
         origin.to<Vector2>(), rot, 
         color.to<Color>()

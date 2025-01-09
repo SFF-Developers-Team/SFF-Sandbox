@@ -1,5 +1,5 @@
 #pragma once
-#include <Scene.hpp>
+#include <ui/Scene.hpp>
 #include <string>
 #include <vector>
 
@@ -29,5 +29,4 @@ private:
 
 public:
     void draw() override;
-    void update() override;
 };

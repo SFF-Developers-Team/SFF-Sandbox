@@ -1,11 +1,13 @@
 #pragma once
 #include <Types.hpp>
+#include <ui/UiManager.hpp>
 
-class Scene {
+class Scene : protected UiManager {
 protected:
     Col4u m_bgColor = COL_WHITE;
 
 public:
+    Scene() {};
     Col4u getColor() {
         return m_bgColor;
     }
@@ -14,6 +16,6 @@ public:
         m_bgColor = color;
     }
 
-    virtual void update() = 0;
-    virtual void draw() = 0;
+    virtual void update() {}
+    virtual void draw() {}
 };
