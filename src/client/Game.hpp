@@ -15,8 +15,12 @@
 
 class Game {
 private:
-    const int m_screenWidth = 1280;
-    const int m_screenHeight = 720;
+    int const static m_bgwidth = 11;
+    int const static m_bgheight = 6;
+
+    int const  m_screenWidth = 1280;
+    int const  m_screenHeight = 720;
+
     uint8_t m_renderDistance = 3;
     bool m_isMultiplayer = false;
     bool m_inPlayScene = false;
@@ -29,7 +33,17 @@ private:
     std::shared_ptr<RenderManager> m_renderManager;
     std::shared_ptr<TileMap> m_blocksMap;
     std::shared_ptr<Timer> m_timer;
-
+    // 0 - GRASS, 1 - DIRT, 2 - STONE, 4 - AIR
+    std::array<uint8_t, m_bgheight * m_bgwidth > m_bgArr = {
+        0, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        1, 1, 0, 4, 4, 4, 4, 4, 4, 4, 4,
+        1, 1, 1, 0, 0, 4, 4, 4, 4, 4, 4,
+        1, 1, 1, 1, 1, 0, 0, 4, 4, 4, 4,
+        1, 1, 1, 1, 1, 1, 1, 0, 0, 4, 4,
+        2, 2, 2, 1, 1, 1, 1, 1, 1, 0, 0
+    };
+    RenderTexture2D m_bgTex;
+    Camera2D m_cameraMenu;
 public:
     static Game* get() {
         static Game* game = new Game();
@@ -37,8 +51,6 @@ public:
     }
 
     void init(std::vector<std::string>& args);
-    void render();
-    void update();
 
     void renderMenu();
     void updateMenu();
@@ -47,6 +59,7 @@ public:
     void drawCrosshair(Vector2 pos);
     void setRayGuiStyle();
     void setIsInPlayScene(bool is) { m_inPlayScene = is; }
+    void menuPreRender();
 
     auto getScreenWidth() { return m_screenWidth; }
     auto getScreenHeight() { return m_screenHeight; }

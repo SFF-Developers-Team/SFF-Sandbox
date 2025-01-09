@@ -12,6 +12,18 @@
 #include <GitHash.hpp>
 #include <TextureManager.hpp>
 #include <filesystem>
+void Game::menuPreRender() {
+    auto tex = TextureManager::get()->getTexture("player.png");
+
+    BeginTextureMode(m_bgTex);
+        ClearBackground(SKYBLUE);
+        for(int i = 0; i < m_bgArr.size(); i++) {
+            if(m_bgArr[i] == 4) continue;
+            m_blocksMap->drawTilePro(m_bgArr[i], {(float)(i % m_bgwidth) * 16, (float)(i / m_bgwidth) * 16, 16, 16}, RAYWHITE);
+        }
+        DrawTexturePro(tex, {(float)tex.width / 17 * 15, 0, (float) tex.width / 17 * -1, (float)tex.height}, {70, 14, (float)tex.width / 17, (float)tex.height}, {0, 0}, 0, WHITE);
+    EndTextureMode();
+}
 void Game::setRayGuiStyle() {
     GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
     GuiSetStyle(0, 0, 0x292B56ff);
@@ -54,6 +66,9 @@ void Game::init(std::vector<std::string>& args) {
     tm->loadTexture(std::filesystem::path("assets/del.png"));
     
     m_blocksMap = std::make_shared<TileMap>("assets/blocks.png", Vector2 {16, 16});
+
+    m_bgTex = LoadRenderTexture(m_bgwidth * 16, m_bgheight * 16);
+    menuPreRender();
     m_timer = std::make_shared<Timer>(60);
     m_world = std::make_shared<World>("world1");
     m_player = std::make_shared<Player>(m_world);
@@ -97,14 +112,7 @@ void Game::drawCrosshair(Vector2 pos) {
     DrawLineEx({pos.x - thickness / 2.f, pos.y - size / 2.f + thickness / 2.f}, {pos.x - thickness / 2.f, pos.y + size / 2.f - thickness / 2.f}, thickness, WHITE);
     DrawLineEx({pos.x - size / 2.f + thickness / 2.f, pos.y - thickness / 2.f}, {pos.x + size / 2.f - thickness / 2.f, pos.y - thickness / 2.f}, thickness, WHITE);
 }
-    
-void Game::render() {
-        // auto cur = GetMousePosition();
-        // drawCrosshair(cur);
-}
 
-void Game::update() {
-}
 void Game::updateMenu() {
     if(m_scene != nullptr) m_scene->update();
 }
@@ -120,6 +128,7 @@ void Game::renderMenu() {
 
         ClearBackground((m_scene ? m_scene->getColor() : WHITE));   
         if(!m_inPlayScene) {
+            DrawTexturePro(m_bgTex.texture, {0, 0, (float)m_bgTex.texture.width, (float)-m_bgTex.texture.height}, {-47, 235, 885, 485}, {0, 0}, 0, WHITE);
             DrawTexture(tm->getTexture("sff.png"), (GetScreenWidth() - tm->getTexture("sff.png").width) / 2, pos, WHITE);
             DrawText("Sandbox", (GetScreenWidth() - 35) / 2 - (tm->getTexture("sff.png").width - 35) / 2 - 5, pos + 35 + tm->getTexture("sff.png").width / 2, 35, RAYWHITE);
         }
