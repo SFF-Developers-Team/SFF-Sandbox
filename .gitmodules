@@ -10,3 +10,6 @@
 [submodule "libs/enet"]
 	path = libs/enet
 	url = https://github.com/lsalzman/enet.git
+[submodule "libs/raygui"]
+	path = libs/raygui
+	url = https://github.com/raysan5/raygui.git
