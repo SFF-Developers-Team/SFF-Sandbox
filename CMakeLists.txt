@@ -6,24 +6,17 @@ set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+
 set(BUILD_SHARED_LIBS OFF)
-set(SOCKPP_BUILD_STATIC ON CACHE BOOL "" FORCE)
-set(SOCKPP_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+
 set(ZLIB_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(RENAME_ZCONF OFF CACHE BOOL "" FORCE)
+set(ENET_STATIC ON CACHE BOOL "" FORCE)
 
 set(SHARED_HEADERS 
-    "libs/perlin-noise"
-    "libs/sockpp/include"
-
-    "src/shared/blocks/"
-    "src/shared/entity/"
-    "src/shared/world/gen/"
-    "src/shared/world/"
-    "src/shared/"
-
+    "libs/perlin-noise/"
     "libs/toml/"
-    "libs/zlib/"
+    "src/shared/"
 )
 
 file(GLOB SHARED_SOURCES CONFIGURE_DEPENDS
@@ -48,29 +41,21 @@ file(GLOB SERVER_SOURCES CONFIGURE_DEPENDS
 add_executable(SFFSandbox ${SHARED_SOURCES} ${CLIENT_SOURCES})
 add_executable(SFFSandbox-server ${SHARED_SOURCES} ${SERVER_SOURCES})
 
-add_subdirectory(libs/sockpp)
 add_subdirectory(libs/raylib)
 add_subdirectory(libs/GitHash)
-add_subdirectory(libs/ext_anims)
 add_subdirectory(libs/zlib)
+add_subdirectory(libs/enet)
 
-target_link_libraries(SFFSandbox raylib sockpp-static ${GITHASH_LIBRARIES} nt5animation zlibstatic)
-target_link_libraries(SFFSandbox-server sockpp-static ${GITHASH_LIBRARIES} zlibstatic)
+target_link_libraries(SFFSandbox raylib enet_static ${GITHASH_LIBRARIES} zlibstatic)
+target_link_libraries(SFFSandbox-server enet_static ${GITHASH_LIBRARIES} zlibstatic)
 
 target_include_directories(SFFSandbox PRIVATE
     ${SHARED_HEADERS}
-    "src/client/entity"
-    "src/client/particle"
-    "src/client/world/gen"
-    "src/client/world"
     "src/client/"
-    "libs/ext_anims/include"
 )
 
 target_include_directories(SFFSandbox-server PRIVATE
     ${SHARED_HEADERS}
-    "src/server/world/gen"
-    "src/server/world"
     "src/server/"
 )
 

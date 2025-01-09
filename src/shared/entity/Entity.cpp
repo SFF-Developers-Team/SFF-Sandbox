@@ -1,6 +1,6 @@
-#include <Entity.hpp>
-#include <Block.hpp>
-#include <World.hpp>
+#include <entity/Entity.hpp>
+#include <world/Block.hpp>
+#include <world/World.hpp>
 
 Entity::Entity(std::shared_ptr<World> world) : m_world(world), m_hitbox(0.0f, 0.0f, 0.8f, 1.65f) {
     m_header = ENTITY;

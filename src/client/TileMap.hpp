@@ -11,7 +11,7 @@ class TileMap {
 protected:
     Texture2D m_map;
     Vector2 m_tileSize = {0, 0};
-    std::map<uint16_t, Texture2D> m_cachedTextures; 
+    std::map<uint16_t, Texture2D> m_cachedTextures;
 
 public:
     TileMap(std::filesystem::path const& path, Vector2 tileSize);

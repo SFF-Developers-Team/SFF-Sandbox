@@ -1,121 +1,133 @@
 #include <Client.hpp>
 #include <Server.hpp>
-#include <World.hpp>
-#include <Chunk.hpp>
+#include <world/World.hpp>
+#include <world/Chunk.hpp>
 #include <Logger.hpp>
 #include <Timer.hpp>
 #include <mutex>
 
-Client::Client(sockpp::tcp_socket sock) : PacketManager(std::move(sock)) {}
+Client::Client(ENetPeer* peer) : PacketManager(peer) {}
 
-bool Client::accept() {
+bool Client::accept(Packet& packet) {
     auto srv = Server::get();
+    auto head = packet.get<Header>();
 
-    auto identification = recv();
-    if(!identification.size()) {
-        logE("Failed to accept player (can't receive packet)");
+    if (head != Header::IDENTIFICATION) {
+        disconnect(INVALID_FIRST_PACKET);
         return false;
     }
 
-    auto head = identification.get<Header>();
-    
-    if(head != Header::IDENTIFICATION) {
-        logE("Failed to accept player (invalid first packet)");
-        send(GamePacket(Header::NETWORK_ERROR, "First packet should be identification!"));
+    auto username = packet.get<std::string>();
+
+    if (username.size() < 3) {
+        disconnect(TOO_SHORT_USERNAME);
         return false;
     }
 
-    auto username = identification.get<std::string>();
-
-    if(username.size() < 3) {
-        send(GamePacket(Header::NETWORK_ERROR, "Too short username!"));
+    if (username.length() > 16) {
+        disconnect(TOO_LONG_USERNAME);
         return false;
     }
 
-    if(username.length() > 16) {
-        logE("Failed to accept player (too long username)");
-        send(GamePacket(Header::NETWORK_ERROR, "Too long username!"));
-        return false;
-    }
-
-    if(srv->getWorld()->isUsernameAlreadyTaken(username)) {
-        logE("Failed to accept player (username already taken)");
-        send(GamePacket(Header::NETWORK_ERROR, "Username already taken!"));
+    if (srv->getWorld()->isUsernameAlreadyTaken(username)) {
+        disconnect(USERNAME_ALREADY_TAKEN);
         return false;
     }
 
     m_id = srv->joinPlayer(username);
-    send(GamePacket(Header::IDENTIFICATION, m_id));
+    auto iden = Packet(Header::IDENTIFICATION, m_id);
+    send(iden);
 
-    uint16_t chunksCount = 1;
-    
-    while(chunksCount-- > 0) {
+    uint16_t chunksCount = 3;
+
+    while (chunksCount-- > 0) {
         addToQueue(srv->getWorld()->getChunk(chunksCount));
     }
 
-    for(auto& [id, player] : srv->getWorld()->getPlayers()) {
-        if(player->getID() == id) continue;
+    for (auto& [id, player] : srv->getWorld()->getPlayers()) {
+        if (id == m_id)
+            continue;
         addToQueue(CREATE_PACKET(Header::LOAD_PLAYER, id));
     }
 
-    std::thread(&Client::inThread, this).detach();
-    std::thread(&Client::outThread, this).detach();
+    m_loggedIn = true;
 
     return true;
 }
 
-void Client::inThread() {
-    while(!m_shouldDisconnect) {
-        auto read = recv();
-        if(!read.get<Header>()) {
-            m_shouldDisconnect = true;
-            return logE("Connection lost {}", read.get<std::string>());
-        }
-        read.reset();
-        
-        auto packet = GamePacket(read);
-        handle(packet);
-    }
-}
-
-void Client::outThread() {
-    auto srv = Server::get();
-
-    while(!m_shouldDisconnect) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(17));
+void Client::update() {
+    if (m_loggedIn && !m_disconnect) {
         sendQueue();
     }
 }
 
-void Client::handle(GamePacket& packet) {
+void Client::onPacketReceived(Packet& packet) {
+    if(m_disconnect) {
+        return;
+    }
+
+    if(!m_loggedIn && !accept(packet)) {
+        return;
+    }
+
+    handle(packet);
+}
+
+void Client::disconnect(DisconnectReasonID reason) {
+    auto srv = Server::get();
+    auto err = Packet(Header::NETWORK_ERROR, srv->getDisconnectReasonByID(reason));
+    send(err);
+
+    enet_peer_disconnect_later(m_peer, reason);
+    m_disconnect = true;
+}
+
+void Client::handle(Packet& packet) {
     PacketManager::handle(packet);
 
-    switch(packet.get<Header>()) {
-        case Header::LOAD_PLAYER: handleLoadPlayer(packet); break;
-        case Header::LOAD_CHUNK: handleLoadChunk(packet); break;
-        case Header::NETWORK_ERROR: handleError(packet); break;
-        case Header::PLAYER: handlePlayer(packet); break;
-        case Header::BLOCK: handleBlock(packet); break;
-        default: break;
+    switch (packet.get<Header>()) {
+    case Header::LOAD_PLAYER:
+        handleLoadPlayer(packet);
+        break;
+    case Header::LOAD_CHUNK:
+        handleLoadChunk(packet);
+        break;
+    case Header::BLOCK_PLACE:
+        handleBlockPlace(packet);
+        break;
+    case Header::BLOCK_DESTROY:
+        handleBlockDestroy(packet);
+        break;
+    case Header::PLAYER:
+        handlePlayer(packet);
+        break;
+    // case Header::BLOCK:
+    //     handleBlock(packet);
+    //     break;
+    default:
+        break;
     }
 }
 
-void Client::handlePlayer(GamePacket& packet) {
+void Client::handlePlayer(Packet& packet) {
+    if(packet.get<PlayerID>() != m_id) {
+        return;
+    }
+
     packet.reset();
-    
+
     auto srv = Server::get();
-    
-    auto player = srv->getWorld()->getPlayer(m_id); 
+    auto player = srv->getWorld()->getPlayer(m_id);
     player->deserialize(packet.bytes());
     srv->addToQueueExcept(m_id, player);
 }
 
-void Client::handleLoadPlayer(GamePacket& packet) {
+void Client::handleLoadPlayer(Packet& packet) {
     auto srv = Server::get();
     auto id = packet.get<PlayerID>(0);
     auto player = srv->getWorld()->getPlayer(id);
 
-    if(player != nullptr) {
+    if (player != nullptr) {
         auto packet = CREATE_PACKET(Header::LOAD_PLAYER, id);
         packet->add(player->getUsername());
         return addToQueue(packet);
@@ -124,36 +136,40 @@ void Client::handleLoadPlayer(GamePacket& packet) {
     return addToQueue(CREATE_PACKET(Header::UNLOAD_PLAYER, id));
 }
 
-void Client::handleBlock(GamePacket& packet) {
+void Client::handleBlockPlace(Packet& packet) {
     auto srv = Server::get();
-    
+
     auto block = std::make_shared<Block>();
-    block->deserialize(packet.bytes());
+    block->deserialize(packet.getN(packet.size() - 1));
 
     auto pos = block->getPos();
     auto lay = block->getLayer();
 
     srv->getWorld()->setBlock(pos.x, pos.y, lay, block);
-    
+
     logD("Player changed block {}, {}, {}", pos.x, pos.y, lay);
-    srv->addToQueueExcept(m_id, block);
+    srv->addToQueueAll(CREATE_PACKET(packet.bytes()));
 }
 
-void Client::handleLoadChunk(GamePacket& packet) {
+void Client::handleBlockDestroy(Packet& packet) {
+    auto x = packet.get<int32_t>();
+    auto y = packet.get<int32_t>();
+    auto l = packet.get<uint8_t>();
+    auto srv = Server::get();
+    srv->getWorld()->destroyBlock(x, y, l);
+    srv->addToQueueAll(CREATE_PACKET(packet.bytes()));
+}
+
+void Client::handleLoadChunk(Packet& packet) {
     auto srv = Server::get();
     auto world = srv->getWorld();
     auto pos = packet.get<Chunk::Position>();
     auto chunk = world->getChunk(pos);
 
-    if(chunk == nullptr) {
+    if (chunk == nullptr) {
         chunk = world->getGenerator()->generateChunk(pos);
         world->addChunk(chunk);
     }
 
     return addToQueue(chunk);
-}
-
-void Client::handleError(GamePacket& packet) {
-    m_lastError = packet.get<std::string>();
-    m_shouldDisconnect = true;
 }

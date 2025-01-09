@@ -1,8 +1,8 @@
-#include "SimplePlayer.hpp"
-#include <Block.hpp>
-#include <World.hpp>
-#include <Chunk.hpp>
-#include <Entity.hpp>
+#include <entity/SimplePlayer.hpp>
+#include <entity/Entity.hpp>
+#include <world/Block.hpp>
+#include <world/World.hpp>
+#include <world/Chunk.hpp>
 
 SimplePlayer::SimplePlayer(std::shared_ptr<World> world) : Entity::Entity(world) {
     m_header = Header::PLAYER;

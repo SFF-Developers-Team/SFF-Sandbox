@@ -1,102 +1,123 @@
-#include "RenderManager.hpp"
-#include "Debug.hpp"
-#include <World.hpp>
-#include <Player.hpp>
-#include <Chunk.hpp>
+#include <RenderManager.hpp>
+#include <Debug.hpp>
+#include <world/World.hpp>
+#include <entity/Player.hpp>
+#include <world/Chunk.hpp>
 #include <Game.hpp>
 #include <Types.hpp>
 #include <TextureManager.hpp>
 #include <string>
 
-int cdi;
-
-RenderManager::RenderManager(std::shared_ptr<World> world, std::shared_ptr<Player> player) : m_world(world), m_player(player) {
-    // Debug::addString("Chunks drawn: {}", chunksDrawn);
-    // Debug::addString("Player count: {}", m_world->getPlayers().size());
+RenderManager::RenderManager() {
     auto dbg = Debug::get();
-    cdi = dbg->addString("Chunks rendered: ");
+    dbg->addString(CHUNKS_DRAWN, "Chunks rendered: ");
+    dbg->addString(BLOCKS_DRAWN, "Blocks rendered: ");
+    dbg->addString(PLAYERS_DRAWN, "Players rendered: ");
 }
 
-void RenderManager::renderWorld() {
-    auto dbg = Debug::get();
-    int chunksCount = 0;
+void RenderManager::drawTexture(std::string const& key, Rectf dest, Col4u color, float rot, Vec2f origin) {
+    auto tex = TextureManager::get()->getTexture(key);
 
-    for (auto& [pos, chunk] : m_world->getChunks()) {
-        if(m_player->isChunkInView(chunk)) {
-            renderChunk(chunk);
+    DrawTexturePro(tex, 
+        {0.f, 0.f, static_cast<float>(tex.width), static_cast<float>(tex.height)}, 
+        dest.to<Rectangle>(), 
+        origin.to<Vector2>(), rot, 
+        color.to<Color>()
+    );
+}
+
+void RenderManager::renderWorld(std::shared_ptr<World> world, std::shared_ptr<Player> player) {
+    auto dbg = Debug::get();
+    auto chunksCount = 0;
+    auto playersCount = 0;
+
+    for (auto& [pos, chunk] : world->getChunks()) {
+        if (player->isChunkInView(chunk)) {
+            renderChunk(chunk, player);
             chunksCount++;
         }
 
         auto layer = IsKeyDown(KEY_LEFT_ALT);
-        auto target = m_player->getTargetBlock();
+        auto target = player->getTargetBlock();
 
         // Selected block
-        if(m_player->canAccessBlock(target, layer)) {
-            DrawRectangleLinesEx({(float)target.x, (float)target.y, 1.0f, 1.0f}, 0.025f, WHITE);
+        if (player->canAccessBlock(target, layer)) {
+            DrawRectangleLinesEx({(float)target.x, (float)target.y, 1.0f, 1.0f}, 1.0f / 16.f, WHITE);
         }
 
-        if(dbg->isVisible()) {
-            DrawLineV(
-                {(float)pos * CHUNK_WIDTH, 0}, 
-                {(float)pos * CHUNK_WIDTH, (float)m_world->getHeight()}, YELLOW
-            );
+        if (dbg->isVisible()) {
+            DrawLineV({(float)pos * CHUNK_WIDTH, 0.f}, {(float)pos * CHUNK_WIDTH, 256.f}, YELLOW);
 
-            DrawLineV(
-                {(float)pos * CHUNK_WIDTH + CHUNK_WIDTH, 0}, 
-                {(float)pos * CHUNK_WIDTH + CHUNK_WIDTH, (float)m_world->getHeight()}, YELLOW
-            );
+            DrawLineV({(float)pos * CHUNK_WIDTH + CHUNK_WIDTH, 0.f}, {(float)pos * CHUNK_WIDTH + CHUNK_WIDTH, 256.f}, YELLOW);
 
-            dbg->updateString(cdi, "Chunks rendered: {}", chunksCount);
+            dbg->updateString(CHUNKS_DRAWN, "Chunks rendered: {}", chunksCount);
+            
         }
     }
 
-    for(auto& [_, player] : m_world->getPlayers()) {
+    for (auto& [_, player] : world->getPlayers()) {
         renderSimplePlayer(player);
+        dbg->updateString(PLAYERS_DRAWN, "Players rendered: {}", playersCount++);
     }
 }
 
-void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk) {
-    auto wh = m_world->getHeight();
+void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Player> player) {
     auto game = Game::get();
+    auto dbg = Debug::get();
+    auto world = chunk->getWorld();
+    auto tilemap = game->getBlocksTileMap();
+    auto blocksDrawn = 0;
+    auto target = player->getTargetBlock();
+    auto layer = IsKeyDown(KEY_LEFT_ALT);
 
     for (int x = 0; x < CHUNK_WIDTH; x++) {
-        for(int y = 0; y < wh; y++) {
+        for (int y = 0; y < world->getHeight(); y++) {
             auto block0 = chunk->getBlock(x, y, 0);
             auto block1 = chunk->getBlock(x, y, 1);
 
             // Пока что все блоки у нас одинакового размера
-            if(!game->getPlayer()->isBlockInView(block0)) continue;
-            auto tilemap = Game::get()->getBlocksTileMap();
-            auto blockX = ((chunk->getPosition() > 0 || chunk->getPosition() < 0) && x < CHUNK_WIDTH ? (float)chunk->getPosition() * CHUNK_WIDTH + x : x);
+            if (player->isBlockInView(block0)) {
+                auto blockX = ((chunk->getPosition() > 0 || chunk->getPosition() < 0) && x < CHUNK_WIDTH ? (float)chunk->getPosition() * CHUNK_WIDTH + x : x);
 
-            if((block0 && block0->getID() != Block::ID::AIR) && (block1 && block1->getID() == Block::ID::AIR)) {
-                renderBlock(blockX, y, block0);
-            }
+                auto watchAltBlock = 
+                    target.x == blockX && 
+                    target.y == y && 
+                    IsKeyDown(KEY_LEFT_ALT) && 
+                    player->canAccessBlock(target, layer);
 
-            if(block1 && block1->getID() != Block::ID::AIR) {
-                renderBlock(blockX, y, block1);
+                if (block0 && ((block1 && block1->getID() == Block::ID::AIR) || watchAltBlock)) {
+                    renderBlock(blockX, y, block0);
+                    blocksDrawn++;
+                }
+
+                if (block1) {
+                    renderBlock(blockX, y, block1, (watchAltBlock ? 128 : 255));
+                    blocksDrawn++;
+                }
             }
         }
     }
+
+    if (dbg->isVisible()) {
+        dbg->updateString(BLOCKS_DRAWN, "Blocks rendered: {}", blocksDrawn);
+    }
 }
 
-void RenderManager::renderBlock(float x, float y, std::shared_ptr<Block> block) {
-    if(!block || block->getID() == Block::ID::AIR) {
+void RenderManager::renderBlock(float x, float y, std::shared_ptr<Block> block, uint8_t alpha) {
+    if (block->getID() == Block::ID::AIR) {
         return;
     }
 
     auto tilemap = Game::get()->getBlocksTileMap();
     auto dest = Rectangle {x, y, 1.0f, 1.0f};
     Color col = (block->hasTag(Block::TagID::COLOR) ? block->getTag<Col3u>(Block::TagID::COLOR).to<Color>() : WHITE);
-    col.a = 255;
+    col.a = alpha;
 
-    auto t = m_player->getTargetBlock();
-    
     tilemap->drawTilePro((uint16_t)block->getID() - 1, dest, ColorBrightness(col, (block->getLayer() == 0 ? -0.25f : 0.0f)));
 }
 
 void RenderManager::renderUIBlock(float x, float y, float width, float height, std::shared_ptr<Block> block) {
-    if(!block || block->getID() == Block::ID::AIR) {
+    if (!block || block->getID() == Block::ID::AIR) {
         return;
     }
 
@@ -108,7 +129,7 @@ void RenderManager::renderUIBlock(float x, float y, float width, float height, s
     tilemap->drawTilePro((uint16_t)block->getID() - 1, dest, col);
 }
 
-void RenderManager::renderEntity(std::string& textureKey, Entity* entity) {
+void RenderManager::renderEntity(std::string& textureKey, std::shared_ptr<Entity> entity) {
     auto tm = TextureManager::get();
     auto tex = tm->getTexture(textureKey);
 
@@ -117,38 +138,30 @@ void RenderManager::renderEntity(std::string& textureKey, Entity* entity) {
 
 void RenderManager::renderSimplePlayer(std::shared_ptr<SimplePlayer> player) {
     auto dbg = Debug::get();
-    if(dbg->isVisible()) {
-        for(auto& hitbox : m_world->getHitboxes(player->getHitbox())) {
+    if (dbg->isVisible()) {
+        for (auto& hitbox : player->getWorld()->getHitboxes(player->getHitbox())) {
             DrawRectangleLinesEx(hitbox.getRect().to<Rectangle>(), 0.05f, RED);
         }
     }
-    
+
     auto tex = TextureManager::get()->getTexture("player.png");
 
     float frameWidth = tex.width / 17;
     auto hitbox = player->getHitbox();
     auto dir = (player->getDirection() == Entity::Direction::LEFT ? 1.0f : -1.0f);
-    
-    Rectangle src = {
-        player->getAnimCurrentFrame() * frameWidth, 0, 
-        frameWidth * dir, static_cast<float>(tex.height)
-    };
 
-    Rectangle dest = {
-        hitbox.x + (hitbox.width / 2) - (hitbox.width * 1.45f) / 2, 
-        hitbox.y, 
-        hitbox.width * 1.45f, 
-        hitbox.height
-    };
+    Rectangle src = {player->getAnimCurrentFrame() * frameWidth, 0, frameWidth * dir, static_cast<float>(tex.height)};
+
+    Rectangle dest = {hitbox.x + (hitbox.width / 2) - (hitbox.width * 1.45f) / 2, hitbox.y, hitbox.width * 1.45f, hitbox.height};
     DrawTexturePro(tex, src, dest, {0, 0}, 0, WHITE);
 
     auto username = player->getUsername();
-    if(!username.empty()) {
+    if (!username.empty()) {
         auto size = MeasureTextEx(GetFontDefault(), username.c_str(), 0.5f, 0.05f);
         DrawTextEx(GetFontDefault(), username.c_str(), {hitbox.x + hitbox.width / 2.f - size.x / 2.f, hitbox.y - 1.f}, 0.5f, 0.05f, WHITE);
     }
 
-    if(dbg->isVisible()) {
+    if (dbg->isVisible()) {
         DrawRectangleLinesEx(hitbox.getRect().to<Rectangle>(), 0.025f, GREEN);
     }
 }

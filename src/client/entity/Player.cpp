@@ -1,12 +1,11 @@
-#include "Player.hpp"
-#include <Debug.hpp>
-#include <Block.hpp>
-#include <World.hpp>
-#include <Chunk.hpp>
-#include <Logger.hpp>
-#include <Utils.hpp>
+#include <entity/Player.hpp>
+#include <world/Block.hpp>
+#include <world/Chunk.hpp>
+#include <world/World.hpp>
 #include <Multiplayer.hpp>
-#include <assert.h>
+#include <Debug.hpp>
+#include <Utils.hpp>
+#include <Game.hpp>
 
 Player::Player(std::shared_ptr<World> world) : SimplePlayer::SimplePlayer(world) {
     m_header = Header::PLAYER;
@@ -14,22 +13,8 @@ Player::Player(std::shared_ptr<World> world) : SimplePlayer::SimplePlayer(world)
     m_camera.zoom = 50.0f;
     m_camera.rotation = 0.0f;
 
-    Col3u const colors[] = {
-        {255, 255, 255},
-        {255, 41, 55},
-        {255, 128, 0},
-        {255, 255, 0},
-        {0, 255, 0},
-        {0, 255, 255},
-        {0, 0, 255},
-        {128, 0, 255},
-        {255, 0, 255},
-        {255, 128, 255},
-        {255, 128, 255},
-        {128, 128, 128},
-        {0, 0, 0},
-        {128, 64, 0}
-    };
+    Col3u const colors[] = {{255, 255, 255}, {255, 41, 55}, {255, 128, 0},   {255, 255, 0},   {0, 255, 0},     {0, 255, 255}, {0, 0, 255},
+                            {128, 0, 255},   {255, 0, 255}, {255, 128, 255}, {255, 128, 255}, {128, 128, 128}, {0, 0, 0},     {128, 64, 0}};
 
     m_inventory.push_back(std::make_shared<Block>(Block::ID::GRASS));
     m_inventory.push_back(std::make_shared<Block>(Block::ID::DIRT));
@@ -37,7 +22,7 @@ Player::Player(std::shared_ptr<World> world) : SimplePlayer::SimplePlayer(world)
     m_inventory.push_back(std::make_shared<Block>(Block::ID::COBLESTONE));
     m_inventory.push_back(std::make_shared<Block>(Block::ID::PLANKS));
 
-    for(auto& col : colors) {
+    for (auto& col : colors) {
         auto wool = std::make_shared<Block>(Block::ID::WOOL);
         wool->setTag(Block::TagID::COLOR, col);
         m_inventory.push_back(wool);
@@ -49,8 +34,10 @@ Player::Player(std::shared_ptr<World> world) : SimplePlayer::SimplePlayer(world)
 void Player::updateCamera() {
     auto wheel = GetMouseWheelMove();
 
-    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0) m_camera.zoom -= 1.0f;
-    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) m_camera.zoom += 1.0f;
+    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0)
+        m_camera.zoom -= 1.0f;
+    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0)
+        m_camera.zoom += 1.0f;
 
     this->m_camera.target.x = m_hitbox.x + m_hitbox.width / 2;
     this->m_camera.target.y = m_hitbox.y - m_hitbox.height / 2;
@@ -59,79 +46,77 @@ void Player::updateCamera() {
 }
 
 void Player::updateAnimation() {
-    if(GetTime() >= m_lastAnimFrameTime + (1.0f / m_animFps)) {
+    if (GetTime() >= m_lastAnimFrameTime + (1.0f / m_animFps)) {
         m_lastAnimFrameTime = GetTime();
         m_animFrame++;
 
-        switch(m_animType) {
-            case PLAYER_IDLE:
-                m_animFrame = 0;
-                break;
-            case PLAYER_MOVE:
-                m_animFrame = animationClamp(m_animFrame, 1, 5);
-                break;
-            case PLAYER_SNEAK:
-                m_animFrame = animationClamp(m_animFrame, 6, 7);
-                break;
-            case PLAYER_JUMP:
-                m_animFrame = 8;
-                break;
-            case PLAYER_HIT:
-                m_animFrame = animationClamp(m_animFrame, 9, 13);
-                break;
-            case PLAYER_HURT:
-                m_animFrame = 14;
-                break;
-            case PLAYER_SIT:
-                m_animFrame = 15;
-                break;
-            case PLAYER_CART:
-                m_animFrame = 16;
-                break;
+        switch (m_animType) {
+        case PLAYER_IDLE:
+            m_animFrame = 0;
+            break;
+        case PLAYER_MOVE:
+            m_animFrame = animationClamp(m_animFrame, 1, 5);
+            break;
+        case PLAYER_SNEAK:
+            m_animFrame = animationClamp(m_animFrame, 6, 7);
+            break;
+        case PLAYER_JUMP:
+            m_animFrame = 8;
+            break;
+        case PLAYER_HIT:
+            m_animFrame = animationClamp(m_animFrame, 9, 13);
+            break;
+        case PLAYER_HURT:
+            m_animFrame = 14;
+            break;
+        case PLAYER_SIT:
+            m_animFrame = 15;
+            break;
+        case PLAYER_CART:
+            m_animFrame = 16;
+            break;
         }
     }
 }
 
 Vec2i Player::getTargetBlock() {
     Vector2 cur = TO_CAMERA_POS(m_camera, GetMousePosition());
-    
+
     return {static_cast<int>(floorl(cur.x)), static_cast<int>(floorl(cur.y))};
 }
 
 bool Player::canAccessBlock(Vec2i target, uint8_t layer) {
-    bool result = 
-        target.distance(Vec2f {m_hitbox.x, m_hitbox.y}) <= 4 &&
-        m_world->getBlock(target.x, target.y, layer) != nullptr;
+    bool result = target.distance(Vec2f {m_hitbox.x, m_hitbox.y}) <= 4 && m_world->getBlock(target.x, target.y, layer) != nullptr;
 
     return result;
 }
 
 bool Player::canDestroyBlock(Vec2i pos, uint8_t layer) {
-    if(m_world->isOutOfBound(pos.x, pos.y, layer)) {
+    if (m_world->isOutOfBound(pos.x, pos.y, layer)) {
         return false;
     }
 
-    if(auto block = m_world->getBlock(pos.x, pos.y, layer)) {
+    if (auto block = m_world->getBlock(pos.x, pos.y, layer)) {
         Block::ID type = block->getID();
-    
+
         return type != Block::ID::BEDROCK && type != Block::ID::AIR;
     }
-    
+
     return false;
 }
 
 bool Player::canPlaceBlock(Vec2i pos, uint8_t layer) {
-    if(m_world->isOutOfBound(pos.x, pos.y, layer)) {
+    if (m_world->isOutOfBound(pos.x, pos.y, layer)) {
         return false;
     }
 
     auto block = m_world->getBlock(pos.x, pos.y, layer);
-    auto closedByOtherBlocks = 
-        m_world->getBlock(pos.x - 1, pos.y, layer)->getID() == Block::ID::AIR &&
-        m_world->getBlock(pos.x + 1, pos.y, layer)->getID() == Block::ID::AIR &&
-        m_world->getBlock(pos.x, pos.y - 1, layer)->getID() == Block::ID::AIR &&
-        m_world->getBlock(pos.x, pos.y + 1, layer)->getID() == Block::ID::AIR && 
-        m_world->getBlock(pos.x, pos.y, !layer)->getID() == Block::ID::AIR;
+    // auto closedByOtherBlocks = 
+    //     m_world->getBlock(pos.x - 1, pos.y, layer)->getID() == Block::ID::AIR && 
+    //     m_world->getBlock(pos.x + 1, pos.y, layer)->getID() == Block::ID::AIR &&
+    //     m_world->getBlock(pos.x, pos.y - 1, layer)->getID() == Block::ID::AIR && 
+    //     m_world->getBlock(pos.x, pos.y + 1, layer)->getID() == Block::ID::AIR &&
+    //     m_world->getBlock(pos.x, pos.y, !layer)->getID() == Block::ID::AIR;
 
     if (!block) {
         m_world->setBlock(pos.x, pos.y, layer, std::make_unique<Block>(Block::ID::AIR));
@@ -141,9 +126,9 @@ bool Player::canPlaceBlock(Vec2i pos, uint8_t layer) {
         return false;
     }
 
-    if (closedByOtherBlocks) {
-        return false;
-    }
+    // if (closedByOtherBlocks) {
+    //     return false;
+    // }
 
     return m_world->getBlock(pos.x, pos.y, layer)->getID() == Block::ID::AIR;
 }
@@ -157,7 +142,7 @@ void Player::updateControls() {
 
     m_sneak = false;
 
-    if(canAccessBlock(target, layer)) {
+    if (canAccessBlock(target, layer)) {
         if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && canDestroyBlock(target, layer)) {
             m_world->destroyBlock(target.x, target.y, layer);
 
@@ -166,7 +151,13 @@ void Player::updateControls() {
             }
 
             if (mp->connected()) {
-                mp->onBlockChanged({target.x, target.y}, layer);
+                // mp->onBlockChanged({target.x, target.y}, layer);
+                auto pak = CREATE_PACKET(Header::BLOCK_DESTROY);
+                pak->add<int32_t>(target.x);
+                pak->add<int32_t>(target.y);
+                pak->add<uint8_t>(layer);
+                
+                mp->addToQueue(pak);
             }
         }
 
@@ -179,7 +170,8 @@ void Player::updateControls() {
             }
 
             if (mp->connected()) {
-                mp->onBlockChanged({target.x, target.y}, layer);
+                // mp->onBlockChanged({target.x, target.y}, layer);
+                mp->addToQueue(CREATE_PACKET(Header::BLOCK_PLACE, block->serialize()));
             }
         }
     }
@@ -219,7 +211,7 @@ void Player::updateControls() {
         m_speedY *= 0.7f;
     }
 
-    if(m_fly) {
+    if (m_fly) {
         m_speedY *= 0.7f;
     }
 }
@@ -234,40 +226,41 @@ void Player::onTick() {
     updateControls();
 
     auto hitLimit = m_animLimits.at(PLAYER_HIT);
-    if(m_animFrame < hitLimit.first || m_animFrame >= hitLimit.second) {
+    if (m_animFrame < hitLimit.first || m_animFrame >= hitLimit.second) {
         setAnimation(PLAYER_IDLE);
     }
 
-    if(m_sneak) {
+    if (m_sneak) {
         setAnimation(PLAYER_SNEAK);
         m_animFps = 0;
     }
 
-    if(m_onGround && (m_speedX > 0.025f || m_speedX < -0.025f)) {
+    if (m_onGround && (m_speedX > 0.025f || m_speedX < -0.025f)) {
         m_animFps = (m_sneak ? 7 : 10);
         setAnimation((m_sneak ? PLAYER_SNEAK : PLAYER_MOVE));
     }
 
-    if(!m_onGround) {
+    if (!m_onGround) {
         setAnimation(PLAYER_JUMP);
     }
 
     auto mp = Multiplayer::get();
 
-    auto minX = m_world->convertXtoChunkPosition(m_hitbox.x) - 2;
-    auto maxX = m_world->convertXtoChunkPosition(m_hitbox.x) + 2;
+    auto minX = m_world->xToChunk(m_hitbox.x) - 2;
+    auto maxX = m_world->xToChunk(m_hitbox.x) + 2;
 
-    // for(auto x = minX; x < maxX; x++) {
-    //     if(m_world->getChunk(x)) continue;
+    for(auto x = minX; x < maxX; x++) {
+        if(m_world->getChunk(x)) continue;
 
-    //     if(mp->connected()) {
-    //         mp->requestChunk(x);
-    //     } else {
-    //         auto chunk = m_world->getGenerator()->generateChunk(x);
-    //         m_world->addChunk(chunk);
-    //     }
-    // }
+        if(mp->connected()) {
+            mp->requestChunk(x);
+        } else {
+            auto chunk = m_world->getGenerator()->generateChunk(x);
+            m_world->addChunk(chunk);
+        }
+    }
 
+    // clang-format off
     bool shouldupd = (
         m_prevX != m_hitbox.x || 
         m_prevY != m_hitbox.y || 
@@ -275,31 +268,38 @@ void Player::onTick() {
         m_prevAnimType != m_animType || 
         m_prevDir != m_direction
     );
+    // clang-format on
 
     if (mp->connected() && shouldupd) {
-        mp->addToQueue(std::shared_ptr<SimplePlayer>(m_world->getPlayer(m_id)));
+        mp->addToQueue(std::shared_ptr<SimplePlayer>(Game::get()->getPlayer()));
     }
 }
 
 void Player::update() {
-    for(int i = 0; i < 9; i++) {
-        if(IsKeyDown(KEY_ONE + i)) {
+    for (int i = 0; i < 9; i++) {
+        if (IsKeyDown(KEY_ONE + i)) {
             m_selectedBlock = (Block::ID)(i + 1);
         }
     }
 
     auto wheel = GetMouseWheelMove();
-    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0) m_camera.zoom -= 1.0f;
-    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) m_camera.zoom += 1.0f;
+    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0)
+        m_camera.zoom -= 1.0f;
+    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0)
+        m_camera.zoom += 1.0f;
 
-    if(!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
+    if (!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
         m_selectedBlock += (wheel > 0 ? -1 : 1);
-        if (m_selectedBlock >= m_inventory.size()) m_selectedBlock = 0;
-        if (m_selectedBlock < 0) m_selectedBlock = static_cast<uint8_t>(m_inventory.size()) - 1;
+        if (m_selectedBlock >= m_inventory.size())
+            m_selectedBlock = 0;
+        if (m_selectedBlock < 0)
+            m_selectedBlock = static_cast<uint8_t>(m_inventory.size()) - 1;
     }
 
-    if (IsKeyPressed(KEY_R)) resetPosition();
-    if (IsKeyPressed(KEY_F)) m_fly = !m_fly;
+    if (IsKeyPressed(KEY_R))
+        resetPosition();
+    if (IsKeyPressed(KEY_F))
+        m_fly = !m_fly;
 
     updateCamera();
     updateAnimation();
@@ -313,12 +313,11 @@ bool Player::isChunkInView(std::shared_ptr<Chunk> chunk) {
     Vector2 min = TO_CAMERA_POS(m_camera, zero);
     Vector2 max = TO_CAMERA_POS(m_camera, screen);
 
-    return (minPos >= min.x && minPos <= max.x) || (maxPos >= min.x && maxPos <= max.x); 
+    return (minPos >= min.x && minPos <= max.x) || (maxPos >= min.x && maxPos <= max.x);
 }
 
 bool Player::isBlockInView(std::shared_ptr<Block> block) {
-    assert(block != nullptr);
-    if(block != nullptr) {
+    if (block != nullptr) {
         Vec2i zero = {0, 0};
         Vec2i screen = {GetScreenWidth(), GetScreenHeight()};
 
@@ -326,14 +325,14 @@ bool Player::isBlockInView(std::shared_ptr<Block> block) {
         Vector2 min = TO_CAMERA_POS(m_camera, zero);
         Vector2 max = TO_CAMERA_POS(m_camera, screen);
 
-        return (pos.x + 1.0f >= min.x && pos.x <= max.x) && (pos.y + 1.0f >= min.y && pos.y <= max.y); 
+        return (pos.x + 1.0f >= min.x && pos.x <= max.x) && (pos.y + 1.0f >= min.y && pos.y <= max.y);
     }
 
     return false;
 }
 
 std::shared_ptr<Block> Player::getSelectedBlock() {
-    if(m_selectedBlock < m_inventory.size()) {
+    if (m_selectedBlock < m_inventory.size()) {
         return m_inventory[m_selectedBlock];
     }
 

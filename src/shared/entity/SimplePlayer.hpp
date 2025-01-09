@@ -1,6 +1,6 @@
 #pragma once
 #include <map>
-#include <Entity.hpp>
+#include <entity/Entity.hpp>
 
 using PlayerID = uint32_t;
 
@@ -17,11 +17,13 @@ public:
         PLAYER_CART
     };
 
+    // clang-format off
     const static inline std::map<AnimationType, std::pair<uint8_t, uint8_t>> m_animLimits = {
         {PLAYER_MOVE, {1, 5}},
         {PLAYER_SNEAK, {6, 7}},
         {PLAYER_HIT, {9, 13}}
     };
+    //clang-format on
 
 protected:
     AnimationType m_animType = PLAYER_IDLE;

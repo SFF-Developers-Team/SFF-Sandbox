@@ -1,4 +1,4 @@
-#include <SimplePlayer.hpp>
+#include <entity/SimplePlayer.hpp>
 
 class OnlinePlayer : public SimplePlayer {
 public:
