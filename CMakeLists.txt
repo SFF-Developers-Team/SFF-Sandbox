@@ -52,6 +52,7 @@ target_link_libraries(SFFSandbox-server enet_static ${GITHASH_LIBRARIES} zlibsta
 target_include_directories(SFFSandbox PRIVATE
     ${SHARED_HEADERS}
     "src/client/"
+    "libs/raygui/src/"
 )
 
 target_include_directories(SFFSandbox-server PRIVATE

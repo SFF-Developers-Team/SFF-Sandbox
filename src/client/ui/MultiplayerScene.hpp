@@ -8,6 +8,6 @@ private:
 public:
     MultiplayerScene();
     ~MultiplayerScene();
+    
     void draw() override;
-    void update() override;
 };

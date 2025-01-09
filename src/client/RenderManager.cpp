@@ -1,11 +1,13 @@
+#include <TextureManager.hpp>
 #include <RenderManager.hpp>
-#include <Debug.hpp>
-#include <world/World.hpp>
 #include <entity/Player.hpp>
 #include <world/Chunk.hpp>
-#include <Game.hpp>
+#include <world/World.hpp>
+#include <TileMap.hpp>
 #include <Types.hpp>
-#include <TextureManager.hpp>
+#include <Debug.hpp>
+#include <Game.hpp>
+
 #include <string>
 
 RenderManager::RenderManager() {
@@ -16,10 +18,9 @@ RenderManager::RenderManager() {
 }
 
 void RenderManager::drawTexture(std::string const& key, Rectf dest, Col4u color, float rot, Vec2f origin) {
-    auto tex = TextureManager::get()->getTexture(key);
-
-    DrawTexturePro(tex, 
-        {0.f, 0.f, static_cast<float>(tex.width), static_cast<float>(tex.height)}, 
+    auto texture = TextureManager::get()->getTexture(key);
+    DrawTexturePro(texture, 
+        {0.f, 0.f, static_cast<float>(texture.width), static_cast<float>(texture.height)}, 
         dest.to<Rectangle>(), 
         origin.to<Vector2>(), rot, 
         color.to<Color>()
@@ -148,7 +149,7 @@ void RenderManager::renderSimplePlayer(std::shared_ptr<SimplePlayer> player) {
 
     float frameWidth = tex.width / 17;
     auto hitbox = player->getHitbox();
-    auto dir = (player->getDirection() == Entity::Direction::LEFT ? 1.0f : -1.0f);
+    auto dir = (player->getDirection() == Direction::LEFT ? 1.0f : -1.0f);
 
     Rectangle src = {player->getAnimCurrentFrame() * frameWidth, 0, frameWidth * dir, static_cast<float>(tex.height)};
 
@@ -163,5 +164,21 @@ void RenderManager::renderSimplePlayer(std::shared_ptr<SimplePlayer> player) {
 
     if (dbg->isVisible()) {
         DrawRectangleLinesEx(hitbox.getRect().to<Rectangle>(), 0.025f, GREEN);
+    }
+}
+
+ void RenderManager::renderPlayerTexture(Vec2f pos, std::string const& key, Vec2f size, int animFrame, Direction direction, std::string const& username, float nameHeight, float nameSpacing) {
+    auto tex = TextureManager::get()->getTexture(key);
+
+    float frameWidth = tex.width / 17;
+    auto dir = (direction == Direction::LEFT ? 1.0f : -1.0f);
+    Rectangle src = {animFrame * frameWidth, 0, frameWidth * dir, static_cast<float>(tex.height)};
+    Rectangle dest = {pos.x, pos.y, size.x, size.y};
+
+    DrawTexturePro(tex, src, dest, {0, 0}, 0, WHITE);
+
+    if (!username.empty()) {
+        auto size = MeasureTextEx(GetFontDefault(), username.c_str(), nameHeight, nameSpacing);
+        DrawTextEx(GetFontDefault(), username.c_str(), {pos.x + size.x / 2.f - size.x / 2.f, pos.y - 1.f}, nameHeight, nameSpacing, WHITE);
     }
 }

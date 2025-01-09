@@ -2,21 +2,12 @@
 #include <raygui.h>
 
 MultiplayerScene::MultiplayerScene() {
-    // m_ip = (char*)MemAlloc(64);
-    // m_nickname = (char*)MemAlloc(32);
+    m_bgColor = COL_SKYBLUE;
 }
 
 MultiplayerScene::~MultiplayerScene() {}
 
-void MultiplayerScene::update() {
-    Vector2 m_mousePos = GetMousePosition();
-
-    // m_isNick = CheckCollisionPointRec(m_mousePos, m_nickBox);
-    // m_isIP = CheckCollisionPointRec(m_mousePos, m_ipBox);
-}
-
 void MultiplayerScene::draw() {
-
     // DrawText("Nickname:", (float)(GetScreenWidth() - 200) / 2 - 125, 300, 25, RAYWHITE);
     // DrawText("IP:", (float)(GetScreenWidth() - 200) / 2 - 50, 360, 25, RAYWHITE);
 

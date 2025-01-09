@@ -1,4 +1,4 @@
-#include <CreditsScene.hpp>
+#include <ui/CreditsScene.hpp>
 #include <raylib.h>
 
 void CreditsScene::draw() {

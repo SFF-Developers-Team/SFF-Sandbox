@@ -28,6 +28,7 @@ public:
     }
 
     Multiplayer();
+    ~Multiplayer();
 
     bool connect(std::string const& host, uint16_t port);
     bool connected();
@@ -47,4 +48,7 @@ public:
     void handleUnloadPlayer(Packet& packet);
     void handleBlockPlace(Packet& packet);
     void handleBlockDestroy(Packet& packet);
+
+    std::string const getAddress();
+    uint16_t const getPort();
 };

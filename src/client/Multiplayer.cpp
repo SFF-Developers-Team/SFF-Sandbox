@@ -1,6 +1,7 @@
 #include <entity/OnlinePlayer.hpp>
 #include <entity/Player.hpp>
 #include <world/Chunk.hpp>
+#include <world/World.hpp>
 #include <Multiplayer.hpp>
 #include <Logger.hpp>
 #include <Debug.hpp>
@@ -9,7 +10,15 @@
 
 using Header = SerializedObject::Header;
 
-Multiplayer::Multiplayer() : PacketManager(nullptr) {}
+Multiplayer::Multiplayer() : PacketManager(nullptr) {
+    if (enet_initialize() != 0) {
+        logE("An error occurred while initializing ENet.");
+    }
+}
+
+Multiplayer::~Multiplayer() {
+    enet_deinitialize();
+}
 
 bool Multiplayer::connect(std::string const& host, uint16_t port) {
     ENetAddress address;
@@ -240,4 +249,14 @@ void Multiplayer::handleBlockDestroy(Packet& packet) {
     auto l = packet.get<uint8_t>();
     Game::get()->getWorld()->destroyBlock(x, y, l);
     logD("Destroyed block {}, {}, {}", x, y, l);
+}
+
+std::string const Multiplayer::getAddress() {
+    char buf[256];
+    enet_address_get_host(&m_client->address, buf, sizeof(buf));
+    return std::string(buf);
+}
+
+uint16_t const Multiplayer::getPort() {
+    return m_client->address.port;
 }

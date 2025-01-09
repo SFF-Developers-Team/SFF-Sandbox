@@ -1,18 +1,14 @@
 #pragma once
-
-#include <Scene.hpp>
-#include <Game.hpp>
-#include <Debug.hpp>
-#include <Timer.hpp>
-#include <TileMap.hpp>
-#include <WorldGenNormal.hpp>
-#include <RenderManager.hpp>
-#include <string>
-#include <cmath>
-#include <vector>
-#include <GitHash.hpp>
+#include <ui/Scene.hpp>
+#include <raylib.h>
 
 class MenuScene : public Scene {
+private:
+    RenderTexture2D m_bgRender;
+
 public:
+    MenuScene();
+    
     void draw() override;
+    void update() override {}
 };

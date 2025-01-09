@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <raylib.h>
+#include <Types.hpp>
 
 class World;
 class Chunk;
@@ -20,7 +21,7 @@ private:
     PlayerID m_id = 0;
     AnimationType m_prevAnimType;
     uint8_t m_prevAnimFrame;
-    Entity::Direction m_prevDir;
+    Direction m_prevDir;
 
     float m_lastAnimFrameTime = 0.f;
 

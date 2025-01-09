@@ -27,4 +27,5 @@ public:
     void renderUIBlock(float x, float y, float width, float height, std::shared_ptr<Block> block);
     void renderEntity(std::string& textureKey, std::shared_ptr<Entity> entity);
     void renderSimplePlayer(std::shared_ptr<SimplePlayer> player);
+    void renderPlayerTexture(Vec2f pos, std::string const& key = "player.png", Vec2f size = {16.f, 22.f}, int animFrame = 0, Direction dir = LEFT, std::string const& username = "", float nameHeight = 11.f, float nameSpacing = 1.f);
 };

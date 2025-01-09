@@ -8,12 +8,6 @@
 class World;
 
 class Entity : public SerializedObject {
-public:
-    enum Direction : uint8_t {
-        LEFT = 0,
-        RIGHT = 1
-    };
-
 protected:
     Hitbox m_hitbox;
     std::shared_ptr<World> m_world;
