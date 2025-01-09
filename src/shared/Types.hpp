@@ -174,3 +174,8 @@ enum DisconnectReasonID : uint32_t {
     TOO_LONG_USERNAME,
     USERNAME_ALREADY_TAKEN
 };
+
+enum Direction : uint8_t {
+    LEFT = 0,
+    RIGHT = 1
+};

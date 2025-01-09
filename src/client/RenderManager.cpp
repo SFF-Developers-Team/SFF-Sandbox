@@ -149,7 +149,7 @@ void RenderManager::renderSimplePlayer(std::shared_ptr<SimplePlayer> player) {
 
     float frameWidth = tex.width / 17;
     auto hitbox = player->getHitbox();
-    auto dir = (player->getDirection() == Entity::Direction::LEFT ? 1.0f : -1.0f);
+    auto dir = (player->getDirection() == Direction::LEFT ? 1.0f : -1.0f);
 
     Rectangle src = {player->getAnimCurrentFrame() * frameWidth, 0, frameWidth * dir, static_cast<float>(tex.height)};
 
@@ -164,5 +164,21 @@ void RenderManager::renderSimplePlayer(std::shared_ptr<SimplePlayer> player) {
 
     if (dbg->isVisible()) {
         DrawRectangleLinesEx(hitbox.getRect().to<Rectangle>(), 0.025f, GREEN);
+    }
+}
+
+ void RenderManager::renderPlayerTexture(Vec2f pos, std::string const& key, Vec2f size, int animFrame, Direction direction, std::string const& username, float nameHeight, float nameSpacing) {
+    auto tex = TextureManager::get()->getTexture(key);
+
+    float frameWidth = tex.width / 17;
+    auto dir = (direction == Direction::LEFT ? 1.0f : -1.0f);
+    Rectangle src = {animFrame * frameWidth, 0, frameWidth * dir, static_cast<float>(tex.height)};
+    Rectangle dest = {pos.x, pos.y, size.x, size.y};
+
+    DrawTexturePro(tex, src, dest, {0, 0}, 0, WHITE);
+
+    if (!username.empty()) {
+        auto size = MeasureTextEx(GetFontDefault(), username.c_str(), nameHeight, nameSpacing);
+        DrawTextEx(GetFontDefault(), username.c_str(), {pos.x + size.x / 2.f - size.x / 2.f, pos.y - 1.f}, nameHeight, nameSpacing, WHITE);
     }
 }
