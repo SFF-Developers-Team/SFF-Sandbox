@@ -4,7 +4,8 @@
 #endif
 
 #include <Game.hpp>
-
+#define RAYGUI_IMPLEMENTATION
+#include "raygui.h"
 int main(int argc, char* argv[]) {
 #ifdef _WIN32
     setlocale(LOCALE_ALL, "ru");
@@ -12,7 +13,6 @@ int main(int argc, char* argv[]) {
 #endif
 
     std::vector<std::string> arguments(argv + 1, argv + argc);
-
     Game::get()->init(arguments);
 
     return 0;

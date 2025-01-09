@@ -1,3 +1,8 @@
+#include <string>
+#include <chrono>
+#include <memory>
+#include "Game.hpp"
+#include <MenuScene.hpp>
 #include <Debug.hpp>
 #include <Game.hpp>
 #include <GamePacket.hpp>
@@ -8,13 +13,24 @@
 #include <chrono>
 #include <entity/Player.hpp>
 #include <filesystem>
-#include <memory>
-#include <string>
-#include <world/Chunk.hpp>
 
-using namespace std::chrono;
+void Game::setRayGuiStyle() {
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
+    GuiSetStyle(0, 0, 0x292B56ff);
+    GuiSetStyle(0, 1, 0x1a1c47ff);  
+    GuiSetStyle(0, 2, 0xd8d8d8ff);
+    GuiSetStyle(0, 3, 0x383A65ff);
+    GuiSetStyle(0, 4, 0x292B56ff);
+    GuiSetStyle(0, 5, 0xd8d8d8ff);
+    GuiSetStyle(0, 6, 0x464770ff);
+    GuiSetStyle(0, 7, 0x292B56ff);
+    GuiSetStyle(0, 8, 0xd8d8d8ff);
+    GuiSetStyle(0, BORDER_WIDTH, 5);
+}
 
-
+void Game::pushScene(std::shared_ptr<Scene> scene) {
+    m_scene = scene;
+}
 void Game::init(std::vector<std::string>& args) {
     SetConfigFlags(FLAG_VSYNC_HINT);
     InitWindow(m_screenWidth, m_screenHeight, "SFF Sandbox");
@@ -26,21 +42,30 @@ void Game::init(std::vector<std::string>& args) {
         logE("An error occurred while initializing ENet.");
     }
 
-    m_blocksMap = std::make_shared<TileMap>("assets/blocks.png", Vector2 {16, 16});
-    m_timer = std::make_shared<Timer>(60);
-    m_world = std::make_shared<World>("world1");
-    m_player = std::make_shared<Player>(m_world);
 
     auto tm = TextureManager::get();
-    tm->loadTexture(std::filesystem::path("assets/player.png"));
-    tm->loadTexture(std::filesystem::path("assets/crosshair.png"));
-    tm->loadTexture(std::filesystem::path("assets/selected.png"));
+    tm->loadTexture("assets/player.png");
+    tm->loadTexture("assets/sff.png");
+    tm->loadTexture("assets/kolyah35.png");
+    tm->loadTexture("assets/sergeymc9730.png");
+    tm->loadTexture("assets/invisedivine.png");
+    tm->loadTexture("assets/e2e4.png");
+    tm->loadTexture("assets/del.png");
+    tm->loadTexture("assets/player.png");
+    tm->loadTexture("assets/crosshair.png");
+    tm->loadTexture("assets/selected.png");
+    
+    m_blocksMap = std::make_shared<TileMap>("assets/blocks.png", Vector2 {16, 16});
+    m_world = std::make_shared<World>("world1");
+    m_player = std::make_shared<Player>(m_world);
 
     m_username = (args.size() > 0 ? args[0] : std::string("Player").append(std::to_string(rand())));
     m_isMultiplayer = args.size() > 1;
 
-    if (m_isMultiplayer) {
-        logD("Starting multiplayer session...");
+    setRayGuiStyle();
+    
+    if(m_isMultiplayer) {
+        logD("Starting multiplayer session...");    
         std::string address = args[1];
         uint16_t port = 7777;
         auto delimeter = address.find_first_of(':');
@@ -65,12 +90,14 @@ void Game::init(std::vector<std::string>& args) {
 
         m_world->addPlayer(1, m_player);
     }
+    
+    Game::get()->pushScene(std::make_shared<MenuScene>());
 
     Debug::get()->addString(DebugID::TIME_SPENT, "Time spent in world: {}", m_world->getSpentTime());
 
     while (!WindowShouldClose()) {
-        this->update();
-        this->render();
+        this->updateMenu();
+        this->renderMenu();
     }
 
     if (!m_isMultiplayer && !IsKeyPressed(KEY_F1)) {
@@ -81,59 +108,20 @@ void Game::init(std::vector<std::string>& args) {
 }
 
 void Game::render() {
-    auto rm = RenderManager::get();
+    auto tm = TextureManager::get();
+    double delta = GetFrameTime();
+    double m_timeTest;
+    m_timeTest += delta;
+    float pos = 100.f + (sinf(m_timeTest) * 30);
 
     BeginDrawing();
-        ClearBackground(SKYBLUE);
-
-        BeginMode2D(m_player->getCamera());
-            rm->renderWorld(m_world, m_player);
-        EndMode2D();
-
-        auto selectedBlock = m_player->getSelectedBlock();
-
-        if (selectedBlock) {
-            rm->renderUIBlock(m_screenWidth - 42.f, 10.f, 32.f, 32.f, selectedBlock);
-        }
-
-        Debug::get()->draw();
-
-        auto mouse = GetMousePosition();
-        rm->drawTexture("crosshair.png", {mouse.x, mouse.y, 0.5f, 0.5f}, COL_WHITE, 0.0f, {0.25f, 0.25f});
-    EndDrawing();
+        ClearBackground((m_scene ? m_scene->getColor() : WHITE));   
+        if(m_scene != nullptr) m_scene->draw();
+    EndDrawing()
 }
 
 void Game::update() {
-    m_timer->advanceTime();
-
-    for (uint32_t i = 0; i < m_timer->getTicks(); i++) {
-        m_world->onTick();
-
-        auto seconds = std::chrono::seconds(m_world->getSpentTime() + (std::time(NULL) - m_world->getLoadTime()));
-        auto hours = duration_cast<std::chrono::hours>(seconds);
-        seconds -= hours;
-        auto minutes = duration_cast<std::chrono::minutes>(seconds);
-        seconds -= minutes;
-
-        Debug::get()->updateString(DebugID::TIME_SPENT, "Time spent in world: {} {} {}", hours, minutes, seconds);
-    }
-
-    m_player->update();
-
-    if(m_isMultiplayer) {
-        Multiplayer::get()->update();
-    }
-
-    if (IsKeyPressed(KEY_F3)) {
-        auto dbg = Debug::get();
-        dbg->setVisible(!dbg->isVisible());
-    }
-
-    if (IsKeyPressed(KEY_F6)) {
-        m_world->save();
-    }
-
-    if (IsKeyPressed(KEY_F1)) {
-        CloseWindow();
+    if(m_scene != nullptr) { 
+        m_scene->update();
     }
 }

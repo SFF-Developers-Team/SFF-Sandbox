@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <cstring>
 #include <vector>
 #include <algorithm>
 #include <Logger.hpp>
