@@ -18,7 +18,7 @@ private:
     std::shared_ptr<World> m_world;
     std::shared_ptr<Player> m_player;
     std::shared_ptr<TileMap> m_blocksMap;
-
+    
 public:
     static Game* get() {
         static Game* game = new Game();

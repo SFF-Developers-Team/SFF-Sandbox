@@ -24,6 +24,7 @@ std::map<int, int> const style = {
 void Game::pushScene(std::shared_ptr<Scene> scene) {
     m_scene = scene;
 }
+
 void Game::init(std::vector<std::string>& args) {
     SetConfigFlags(FLAG_VSYNC_HINT);
     InitWindow(1280, 720, "SFF Sandbox");
@@ -67,21 +68,13 @@ void Game::init(std::vector<std::string>& args) {
     CloseWindow();
 }
 
-void Game::render() {
-    auto tm = TextureManager::get();
-    double delta = GetFrameTime();
-    double m_timeTest;
-    m_timeTest += delta;
-    float pos = 100.f + (sinf(m_timeTest) * 30);
+void Game::update() {
+    if(m_scene != nullptr) m_scene->update();
+}
 
+void Game::render() {
     BeginDrawing();
         ClearBackground((m_scene ? m_scene->getColor().to<Color>() : WHITE));   
         if(m_scene != nullptr) m_scene->draw();
     EndDrawing();
-}
-
-void Game::update() {
-    if(m_scene != nullptr) { 
-        m_scene->update();
-    }
 }
