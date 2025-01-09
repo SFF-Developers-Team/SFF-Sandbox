@@ -20,7 +20,6 @@ private:
     std::shared_ptr<World> m_world;
     std::shared_ptr<Player> m_player;
     std::shared_ptr<TileMap> m_blocksMap;
-    std::shared_ptr<Timer> m_timer;
 
 public:
     static Game* get() {
@@ -50,14 +49,8 @@ public:
     auto getWorld() {
         return m_world;
     }
-    auto getRenderManager() {
-        return m_renderManager;
-    }
     auto getBlocksTileMap() {
         return m_blocksMap;
-    }
-    auto getParticleManager() {
-        return m_particleManager;
     }
     auto getUsername() {
         return m_username;
@@ -67,8 +60,5 @@ public:
     }
     auto isMultiplayer() {
         return m_isMultiplayer;
-    }
-    auto getTimer() {
-        return m_timer;
     }
 };

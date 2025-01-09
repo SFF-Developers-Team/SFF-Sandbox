@@ -2,7 +2,7 @@
 #include <chrono>
 #include <memory>
 #include "Game.hpp"
-#include <MenuScene.hpp>
+#include <ui/MenuScene.hpp>
 #include <Debug.hpp>
 #include <Game.hpp>
 #include <GamePacket.hpp>
@@ -13,6 +13,7 @@
 #include <chrono>
 #include <entity/Player.hpp>
 #include <filesystem>
+#include <raygui.h>
 
 void Game::setRayGuiStyle() {
     GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
