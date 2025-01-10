@@ -72,7 +72,7 @@ void Game::init(std::vector<std::string>& args) {
     m_blocksMap = std::make_shared<TileMap>("assets/blocks.png", Vector2 {16, 16});
     m_world = std::make_shared<World>("world1");
     m_player = std::make_shared<Player>(m_world);
-
+    PlayMusicStream(sm->getMusic("menu.mp3"));
     // Load styles
     for(auto& [prop, val] : style) {
         GuiSetStyle(DEFAULT, prop, val);
@@ -95,7 +95,7 @@ void Game::init(std::vector<std::string>& args) {
 
 void Game::update() {
     auto sm = SoundManager::get();
-
+    UpdateMusicStream(sm->getMusic("menu.mp3"));
     if(GetMusicTimePlayed(sm->getMusic("menu.mp3")) >= GetMusicTimeLength(sm->getMusic("menu.mp3"))) {
         StopMusicStream(sm->getMusic("menu.mp3"));
         PlayMusicStream(sm->getMusic("menu.mp3"));
