@@ -139,6 +139,7 @@ void Player::updateControls() {
     auto layer = !IsKeyDown(KEY_LEFT_ALT);
     auto forward = 0.0f;
     auto mp = Multiplayer::get();
+    auto dbg = Debug::get();
 
     m_sneak = false;
 
@@ -213,6 +214,9 @@ void Player::updateControls() {
     if (m_fly) {
         m_speedY *= 0.7f;
     }
+
+    dbg->setString(PLAYER_TARGET_BLOCK, "Target block: [{}, {}]", target.x, target.y);
+    dbg->setString(PLAYER_POSITION, "Position: [{:.2f}, {:.2f}]", m_hitbox.x, m_hitbox.y);
 }
 
 void Player::onTick() {

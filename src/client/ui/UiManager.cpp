@@ -2,6 +2,7 @@
 #include <RenderManager.hpp>
 #include <ui/UiManager.hpp>
 #include <raygui.h>
+#include <Logger.hpp>
 #include <string>
 #include <cmath>
 
@@ -60,5 +61,6 @@ void UiManager::drawInput(std::string& out, Rectf dest, std::string const& capti
     }
 
     GuiTextBox(dest.to<Rectangle>(), out.data(), out.size(), m_selected == m_nodeCount);
+
     m_nodeCount++;
 }

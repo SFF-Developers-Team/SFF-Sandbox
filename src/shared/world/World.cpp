@@ -87,7 +87,9 @@ std::shared_ptr<Block> World::getBlock(int32_t x, int32_t y, uint8_t layer) {
 void World::setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block) {
     if (!isOutOfBound(x, y, layer)) {
         auto chunk = getChunk(xToChunk(x));
-        chunk->setBlock(x % CHUNK_WIDTH, y, layer, block);
+
+        auto localx = (x < 0 ? (CHUNK_WIDTH - (-x) % CHUNK_WIDTH) % CHUNK_WIDTH : x % CHUNK_WIDTH);
+        chunk->setBlock(localx, y, layer, block);
     }
 }
 

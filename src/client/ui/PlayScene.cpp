@@ -67,7 +67,7 @@ void PlayScene::update() {
         auto minutes = duration_cast<std::chrono::minutes>(seconds);
         seconds -= minutes;
 
-        Debug::get()->updateString(DebugID::TIME_SPENT, "Time spent in world: {} {} {}", hours, minutes, seconds);
+        Debug::get()->setString(DebugID::WORLD_TIME_SPENT, "Time spent in world: {} {} {}", hours, minutes, seconds);
     }
 
     m_player->update();

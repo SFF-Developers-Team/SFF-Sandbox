@@ -27,7 +27,6 @@ void JoinServerScene::update() {
             return;
             
         case PLAYING:
-            SetWindowTitle(std::format("SFF Sandbox ({}) - {}:{}", Game::get()->getUsername(), mp->getAddress(), mp->getPort()).c_str());
             Game::get()->pushScene(std::make_shared<PlayScene>(true));
             break;
     }
