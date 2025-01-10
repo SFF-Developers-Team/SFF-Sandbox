@@ -34,12 +34,11 @@ void Server::init() {
     auto cfgaddr = config["address"].value_or("*"sv);
 
     ENetAddress address = {
+        .host = ENET_HOST_ANY,
         .port = config["port"].value_or<uint16_t>(7777)
     };
 
-    if(cfgaddr == "*") {
-        address.host = ENET_HOST_ANY;
-    } else {
+    if(cfgaddr != "*") {
         enet_address_set_host(&address, cfgaddr.data());
     }
 
@@ -98,6 +97,15 @@ void Server::inputThread() {
 }
 
 void Server::update() {
+    m_timer->advanceTime();
+
+    for(int i = 0; i < m_timer->getTicks(); i++) {
+        this->onTick();
+        m_world->onTick();
+    }
+}
+
+void Server::onTick() {
     ENetEvent event;
 
     while(enet_host_service(m_server, &event, 0) > 0) {

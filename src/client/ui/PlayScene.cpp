@@ -79,6 +79,7 @@ void PlayScene::update() {
         if(mp->getState() == ERROR) {
             Game::get()->pushScene(std::make_shared<ErrorScene>(mp->getError()));
             mp->destroy();
+            m_world->reset();
         }
     }
 
