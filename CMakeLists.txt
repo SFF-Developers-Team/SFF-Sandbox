@@ -17,6 +17,7 @@ set(SHARED_HEADERS
     "libs/perlin-noise/"
     "libs/enet/inlcude"
     "libs/toml/"
+    "libs/enet/include"
     "src/shared/"
 )
 
@@ -46,6 +47,7 @@ add_subdirectory(libs/enet)
 
 add_executable(SFFSandbox ${SHARED_SOURCES} ${CLIENT_SOURCES})
 add_executable(SFFSandbox-server ${SHARED_SOURCES} ${SERVER_SOURCES})
+
 
 target_link_libraries(SFFSandbox raylib enet_static ${GITHASH_LIBRARIES} zlibstatic)
 target_link_libraries(SFFSandbox-server enet_static ${GITHASH_LIBRARIES} zlibstatic)

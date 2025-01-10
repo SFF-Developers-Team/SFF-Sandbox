@@ -1,4 +1,5 @@
 #include <TextureManager.hpp>
+#include <SoundManager.hpp>
 #include <entity/Player.hpp>
 #include <ui/MainMenuScene.hpp>
 #include <world/World.hpp>
@@ -46,10 +47,15 @@ void Game::popScene() {
 void Game::init(std::vector<std::string>& args) {
     SetConfigFlags(FLAG_VSYNC_HINT);
     InitWindow(1280, 720, "SFF Sandbox");
+    InitAudioDevice();
+
     SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
     SetExitKey(-1);
 
+
+    auto sm = SoundManager::get();
     auto tm = TextureManager::get();
+
     tm->loadTexture("assets/player.png");
     tm->loadTexture("assets/sff.png");
     tm->loadTexture("assets/kolyah35.png");
@@ -60,6 +66,8 @@ void Game::init(std::vector<std::string>& args) {
     tm->loadTexture("assets/player.png");
     tm->loadTexture("assets/crosshair.png");
     tm->loadTexture("assets/selected.png");
+    
+    sm->loadMusic("assets/menu.mp3");
     
     m_blocksMap = std::make_shared<TileMap>("assets/blocks.png", Vector2 {16, 16});
     m_world = std::make_shared<World>("world1");
@@ -82,9 +90,16 @@ void Game::init(std::vector<std::string>& args) {
     // }
 
     CloseWindow();
+    CloseAudioDevice();
 }
 
 void Game::update() {
+    auto sm = SoundManager::get();
+
+    if(GetMusicTimePlayed(sm->getMusic("menu.mp3")) >= GetMusicTimeLength(sm->getMusic("menu.mp3"))) {
+        StopMusicStream(sm->getMusic("menu.mp3"));
+        PlayMusicStream(sm->getMusic("menu.mp3"));
+    }
     if(m_scene != nullptr) m_scene->update();
 }
 
