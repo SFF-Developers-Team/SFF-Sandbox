@@ -7,8 +7,11 @@
 #include <Logger.hpp>
 #include <Timer.hpp>
 
+#include <string_view>
 #include <filesystem>
 #include <fstream>
+
+using namespace std::string_view_literals;
 
 void Server::init() {
 #ifdef _WIN32
@@ -28,7 +31,7 @@ void Server::init() {
 
     config = toml::parse_file("config.toml");
 
-    auto cfgaddr = config["address"].value_or<std::string>("*");
+    auto cfgaddr = config["address"].value_or("*"sv);
 
     ENetAddress address = {
         .port = config["port"].value_or<uint16_t>(7777)
@@ -37,7 +40,7 @@ void Server::init() {
     if(cfgaddr == "*") {
         address.host = ENET_HOST_ANY;
     } else {
-        enet_address_set_host(&address, cfgaddr.c_str());
+        enet_address_set_host(&address, cfgaddr.data());
     }
 
     m_server = enet_host_create(&address, 32, 2, 0, 0);

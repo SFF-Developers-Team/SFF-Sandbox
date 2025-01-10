@@ -2,13 +2,12 @@
 #include <ui/Scene.hpp>
 #include <raylib.h>
 
-class MenuScene : public Scene {
+class MenuBase : public Scene {
 private:
     RenderTexture2D m_bgRender;
 
 public:
-    MenuScene();
+    MenuBase();
     
     void draw() override;
-    void update() override {}
 };

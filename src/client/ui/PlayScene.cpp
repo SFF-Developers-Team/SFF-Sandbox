@@ -2,6 +2,7 @@
 #include <RenderManager.hpp>
 #include <entity/Player.hpp>
 #include <ui/PlayScene.hpp>
+#include <ui/ErrorScene.hpp>
 #include <world/World.hpp>
 #include <Multiplayer.hpp>
 #include <Types.hpp>
@@ -11,18 +12,15 @@
 
 #include <chrono>
 
-PlayScene::PlayScene(std::shared_ptr<World> world, std::shared_ptr<Player> player, bool isOnline) :
-    m_world(world), m_player(player), m_timer(std::make_shared<Timer>(60)), m_online(isOnline) 
+PlayScene::PlayScene(bool isOnline) : 
+    m_timer(std::make_shared<Timer>(60)), m_online(isOnline) 
 {
+    auto game = Game::get();
+    m_world = game->getWorld();
+    m_player = game->getPlayer();
     m_bgColor = COL_SKYBLUE;
 
-    if(m_online) {
-        auto game = Game::get();
-        auto username = game->getUsername();
-        auto mp = Multiplayer::get();
-
-        SetWindowTitle(std::format("SFF Sandbox ({}) - {}:{}", username, mp->getAddress(), mp->getPort()).c_str());
-    } else {
+    if(!m_online) {
         if (!m_world->load()) {
             m_world->setGenerator(std::make_shared<WorldGenNormal>(m_world, 1));
             m_world->generate();
@@ -73,6 +71,16 @@ void PlayScene::update() {
     }
 
     m_player->update();
+
+    if(m_online) {
+        auto mp = Multiplayer::get();
+        mp->update();
+
+        if(mp->getState() == ERROR) {
+            Game::get()->pushScene(std::make_shared<ErrorScene>(mp->getError()));
+            mp->destroy();
+        }
+    }
 
     if(IsKeyPressed(KEY_F3)) {
         auto dbg = Debug::get();

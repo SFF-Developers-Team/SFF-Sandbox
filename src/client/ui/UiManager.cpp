@@ -6,8 +6,9 @@
 
 UiManager::UiManager() {}
 
-void UiManager::drawText(std::string const& str, Vec2f pos, float size, Col4u color) {
-    DrawText(str.c_str(), pos.x, pos.y, size, color.to<Color>());
+void UiManager::drawText(std::string const& str, Vec2f pos, float fontSize, bool centered, Col4u color) {
+    auto width = MeasureText(str.c_str(), fontSize);
+    DrawText(str.c_str(), pos.x - width * (centered ? 0.5f : 0.f), pos.y, fontSize, color.to<Color>());
 }
 
 void UiManager::drawMenuLogo() {
@@ -37,4 +38,26 @@ void UiManager::drawButtonsV(Vec2f start, Vec2f btnSize, float padding, std::ini
         drawButton(btn.label, {start.x, start.y, btnSize.x, btnSize.y}, btn.callback);
         start.y += padding;
     }
+}
+
+void UiManager::drawInput(std::string& out, Rectf dest, std::string const& caption, float fontSize) {
+    Vec2f mouse = {
+        static_cast<float>(GetMouseX()), 
+        static_cast<float>(GetMouseY())
+    };
+
+    if(dest.contains(mouse) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        m_selected = m_nodeCount;
+    }
+
+    if(!caption.empty()) {
+        drawText(caption, {dest.x, dest.y - fontSize - 2.f}, fontSize);
+    }
+
+    if(m_selected != m_nodeCount) {
+        DrawRectangleRec(dest.to<Rectangle>(), GetColor(GuiGetStyle(TEXTBOX, BASE_COLOR_NORMAL)));
+    }
+
+    GuiTextBox(dest.to<Rectangle>(), out.data(), out.size(), m_selected == m_nodeCount);
+    m_nodeCount++;
 }

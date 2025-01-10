@@ -20,16 +20,23 @@ Multiplayer::~Multiplayer() {
     enet_deinitialize();
 }
 
+void Multiplayer::error(std::string const& str) {
+    m_connected = false;
+    m_state = ERROR;
+    m_error = str;
+}
+
 bool Multiplayer::connect(std::string const& host, uint16_t port) {
     ENetAddress address;
     ENetEvent event;
 
     logD("Connecting to {}:{}...", host, port);
 
+    m_state = CONNECTING;
     m_client = enet_host_create(0, 1, 2, 0, 0);
 
     if(!m_client) {
-        logE("Failed to create client!");
+        error("Failed to create client!");
         return false;
     }
 
@@ -42,7 +49,7 @@ bool Multiplayer::connect(std::string const& host, uint16_t port) {
 
     if(res < 0 || event.type != ENET_EVENT_TYPE_CONNECT) {
         enet_peer_reset(m_peer);
-        logE("Failed to connect to server!");
+        error("Failed to connect to server!");
         return false;
     }
 
@@ -53,6 +60,7 @@ bool Multiplayer::connect(std::string const& host, uint16_t port) {
     packet.add(myUsername);
     if(send(packet)) {
         logD("Identification sent. Waiting for response...");
+        m_state = LOGGING_IN;
     }
 
     return true;
@@ -104,6 +112,7 @@ void Multiplayer::update() {
                     game->getWorld()->addPlayer(id, player);
 
                     m_connected = true;
+                    m_state = PLAYING;
 
                     break;
                 }
@@ -113,14 +122,22 @@ void Multiplayer::update() {
             }
 
             case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT:
+                error("Timed out.");
+                break;
+
             case ENET_EVENT_TYPE_DISCONNECT: {
-                m_connected = false;
+                error("Connection closed.");
                 break;
             }
 
             default: break;
         }
     }
+}
+
+void Multiplayer::destroy() {
+    enet_peer_reset(m_peer);
+    enet_host_destroy(m_client);
 }
 
 void Multiplayer::handle(Packet& packet) {
@@ -140,8 +157,7 @@ void Multiplayer::handle(Packet& packet) {
 }
 
 void Multiplayer::handleError(Packet& packet) {
-    logE("Server error! {}", packet.get<std::string>("unknown"));
-    std::exit(1);
+    error(packet.get<std::string>("unknown"));
 }
 
 void Multiplayer::handlePlayer(Packet& packet) {
@@ -259,4 +275,12 @@ std::string const Multiplayer::getAddress() {
 
 uint16_t const Multiplayer::getPort() {
     return m_client->address.port;
+}
+
+std::string const& Multiplayer::getError() {
+    return m_error;
+}
+
+MultiplayerState const Multiplayer::getState() {
+    return m_state;
 }

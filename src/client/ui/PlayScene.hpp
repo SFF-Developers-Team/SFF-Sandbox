@@ -15,7 +15,7 @@ private:
     bool m_online = false;
 
 public:
-    PlayScene(std::shared_ptr<World> world, std::shared_ptr<Player> player, bool isOnline = false);
+    PlayScene(bool isOnline = false);
     ~PlayScene();
 
     void draw() override;

@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <deque>
 
 class Scene;
 class World;
@@ -11,13 +12,14 @@ class TileMap;
 class Game {
 private:
     uint8_t m_renderDistance = 3;
-    bool m_isMultiplayer = false;
     std::string m_username;
 
     std::shared_ptr<Scene> m_scene;
     std::shared_ptr<World> m_world;
     std::shared_ptr<Player> m_player;
     std::shared_ptr<TileMap> m_blocksMap;
+
+    std::deque<std::shared_ptr<Scene>> m_sceneHistory;
     
 public:
     static Game* get() {
@@ -28,24 +30,32 @@ public:
     void init(std::vector<std::string>& args);
     void render();
     void update();
+    
+    void clearSceneHistory();
     void pushScene(std::shared_ptr<Scene> scene);
+    void popScene();
+
+    void setUsername(std::string const& username) {
+        m_username = username;
+    }
+
+    auto getUsername() {
+        return m_username;
+    }
 
     auto getRenderDistance() {
         return m_renderDistance;
     }
+    
     auto getWorld() {
         return m_world;
     }
+    
     auto getBlocksTileMap() {
         return m_blocksMap;
     }
-    auto getUsername() {
-        return m_username;
-    }
+
     auto getPlayer() {
         return m_player;
-    }
-    auto isMultiplayer() {
-        return m_isMultiplayer;
     }
 };

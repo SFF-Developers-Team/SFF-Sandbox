@@ -1,13 +1,14 @@
 #pragma once
-#include <ui/Scene.hpp>
+#include <ui/MenuBase.hpp>
 
-class MultiplayerScene : public Scene {
+class MultiplayerScene : public MenuBase {
 private:
-    bool m_isNick = 0;
-    bool m_isIP = 0;
+    std::string m_username;
+    std::string m_hostname;
+
 public:
     MultiplayerScene();
     ~MultiplayerScene();
-    
+
     void draw() override;
 };

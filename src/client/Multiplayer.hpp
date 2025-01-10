@@ -12,12 +12,21 @@
 #include <memory>
 #include <map>
 
+enum MultiplayerState {
+    CONNECTING,
+    LOGGING_IN,
+    PLAYING,
+    ERROR
+};
+
 class Multiplayer : private PacketManager {
 private:
     bool m_connected = false;
     PlayerID m_myPlayerId;
     std::vector<Chunk::Position> m_chunkRequests;
     ENetHost* m_client;
+    MultiplayerState m_state;
+    std::string m_error;
 
 public:
     using PacketManager::addToQueue;
@@ -37,7 +46,8 @@ public:
     void requestChunk(Chunk::Position pos);
 
     void update();
-    void outThread();
+    void error(std::string const& str);
+    void destroy();
 
     void handle(Packet& packet) override;
     void handleError(Packet& packet);
@@ -48,6 +58,9 @@ public:
     void handleUnloadPlayer(Packet& packet);
     void handleBlockPlace(Packet& packet);
     void handleBlockDestroy(Packet& packet);
+
+    std::string const& getError();
+    MultiplayerState const getState();
 
     std::string const getAddress();
     uint16_t const getPort();

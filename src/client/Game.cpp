@@ -1,6 +1,6 @@
 #include <TextureManager.hpp>
 #include <entity/Player.hpp>
-#include <ui/MenuScene.hpp>
+#include <ui/MainMenuScene.hpp>
 #include <world/World.hpp>
 #include <TileMap.hpp>
 #include <Logger.hpp>
@@ -11,24 +11,43 @@ std::map<int, int> const style = {
     {BORDER_COLOR_NORMAL, 0x292B56ff},
     {BASE_COLOR_NORMAL, 0x1a1c47ff},
     {TEXT_COLOR_NORMAL, 0xd8d8d8ff},
+
     {BORDER_COLOR_FOCUSED, 0x383A65ff},
     {BASE_COLOR_FOCUSED, 0x292B56ff},
     {TEXT_COLOR_FOCUSED, 0xd8d8d8ff},
+    
     {BORDER_COLOR_PRESSED, 0x464770ff},
     {BASE_COLOR_PRESSED, 0x292B56ff},
     {TEXT_COLOR_PRESSED, 0xd8d8d8ff},
+    
     {TEXT_SIZE, 20},
     {BORDER_WIDTH, 5}
 };
 
+void Game::clearSceneHistory() {
+    m_sceneHistory.clear();
+}
+
 void Game::pushScene(std::shared_ptr<Scene> scene) {
+    if(m_scene != nullptr) {
+        m_sceneHistory.push_back(m_scene);
+    }
+
     m_scene = scene;
+}
+
+void Game::popScene() {
+    if(!m_sceneHistory.empty()) {
+        m_scene = m_sceneHistory.back();
+        m_sceneHistory.pop_back();
+    }
 }
 
 void Game::init(std::vector<std::string>& args) {
     SetConfigFlags(FLAG_VSYNC_HINT);
     InitWindow(1280, 720, "SFF Sandbox");
     SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
+    SetExitKey(-1);
 
     auto tm = TextureManager::get();
     tm->loadTexture("assets/player.png");
@@ -46,15 +65,12 @@ void Game::init(std::vector<std::string>& args) {
     m_world = std::make_shared<World>("world1");
     m_player = std::make_shared<Player>(m_world);
 
-    m_username = (args.size() > 0 ? args[0] : std::string("Player").append(std::to_string(rand())));
-    m_isMultiplayer = args.size() > 1;
-
     // Load styles
     for(auto& [prop, val] : style) {
         GuiSetStyle(DEFAULT, prop, val);
     }
     
-    pushScene(std::make_shared<MenuScene>());
+    pushScene(std::make_shared<MainMenuScene>());
 
     while (!WindowShouldClose()) {
         this->update();

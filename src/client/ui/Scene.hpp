@@ -1,6 +1,8 @@
 #pragma once
-#include <Types.hpp>
 #include <ui/UiManager.hpp>
+#include <Types.hpp>
+#include <Game.hpp>
+#include <raylib.h>
 
 class Scene : protected UiManager {
 protected:
@@ -16,6 +18,10 @@ public:
         m_bgColor = color;
     }
 
-    virtual void update() {}
-    virtual void draw() {}
+    virtual void update() {
+        if(IsKeyPressed(KEY_ESCAPE)) {
+            Game::get()->popScene();
+        }
+    }
+    virtual void draw() { m_nodeCount = 0; }
 };

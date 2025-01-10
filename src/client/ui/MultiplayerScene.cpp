@@ -1,24 +1,43 @@
 #include <ui/MultiplayerScene.hpp>
-#include <raygui.h>
+#include <ui/JoinServerScene.hpp>
+#include <ui/MainMenuScene.hpp>
+#include <Game.hpp>
 
-MultiplayerScene::MultiplayerScene() {
-    m_bgColor = COL_SKYBLUE;
+MultiplayerScene::MultiplayerScene() : MenuBase() {
+    m_username.resize(32);
+    m_hostname.resize(256);
 }
 
 MultiplayerScene::~MultiplayerScene() {}
 
 void MultiplayerScene::draw() {
-    // DrawText("Nickname:", (float)(GetScreenWidth() - 200) / 2 - 125, 300, 25, RAYWHITE);
-    // DrawText("IP:", (float)(GetScreenWidth() - 200) / 2 - 50, 360, 25, RAYWHITE);
+    MenuBase::draw();
 
-    // GuiTextBox(m_nickBox, m_nickname, 32, m_isNick);
-    // GuiTextBox(m_ipBox, m_ip, 64, m_isIP);
+    auto game = Game::get();
+    auto sw = static_cast<float>(GetScreenWidth());
+    auto sh = static_cast<float>(GetScreenHeight());
 
-    // if(GuiButton((Rectangle){ (float)(GetScreenWidth() - 200) / 2, 420, 200, 40 }, "Join")) {
-    //     // ..
-    // };
-    // if(GuiButton((Rectangle){ (float)(GetScreenWidth() - 200) / 2, 480, 200, 40 }, "Back") || IsKeyPressed(KEY_Q)) {
-    //     auto game = Game::get();
-    //     game->pushScene(std::make_shared<MainScene>());
-    // }
+    auto const inputW = 200.f;
+
+    drawInput(m_username, {sw / 2.f - inputW / 2.f, 300.f, inputW, 40.f}, "Nickname:", 22.f);
+    drawInput(m_hostname, {sw / 2.f - inputW / 2.f, 380.f, inputW, 40.f}, "IP:", 22.f);
+
+    drawButtonsV({sw / 2.f - inputW / 2.f, 460.f}, {200, 40}, 60.f, {
+        {"Join", [&]() {
+            if(m_username.length() < 3 || m_hostname.empty()) {
+                return;
+            }
+
+            game->setUsername(m_username);
+
+            auto colon = m_hostname.find(':');
+            std::string ip = m_hostname.substr(0, colon);
+            uint16_t port = (colon != std::string::npos ? std::stoi(m_hostname.substr(colon + 1)) : 7777);
+            
+            game->pushScene(std::make_shared<JoinServerScene>(ip, port)); 
+        }},
+        {"Back", [game]() { 
+            game->popScene(); 
+        }}
+    });
 }
