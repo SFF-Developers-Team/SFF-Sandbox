@@ -2,7 +2,7 @@
 #include <DefaultConfig.hpp>
 #include <world/Chunk.hpp>
 #include <world/World.hpp>
-#include <GamePacket.hpp>
+#include <Packet.hpp>
 #include <Server.hpp>
 #include <Logger.hpp>
 #include <Timer.hpp>
@@ -43,7 +43,10 @@ void Server::init() {
         enet_address_set_host(&address, cfgaddr.data());
     }
 
-    m_server = enet_host_create(&address, 32, 2, 0, 0);
+    auto maxclients = config["max-players"].value_or(32);
+    auto inbandwidth = config["incoming-bandwidth"].value_or(0);
+    auto outbandwidth = config["outcoming-bandwidth"].value_or(0);
+    m_server = enet_host_create(&address, maxclients, 4, inbandwidth, outbandwidth);
 
     if(m_server == NULL) {
         logE("An error occurred while trying to create an ENet server host.");
@@ -52,12 +55,24 @@ void Server::init() {
 
     logD("Server listening {}:{}", cfgaddr, address.port);
 
-    m_world = std::make_shared<World>(128, "world");
+    auto worldName = config["world-name"].value_or<std::string>("world");
+
+    m_world = std::make_shared<World>(128, worldName);
     m_timer = std::make_shared<Timer>(60);
 
     if(!m_world->load()) {
         logD("Generating world...");
-        m_world->setGenerator(std::make_shared<WorldGenNormal>(m_world, 1));
+        srand(time(NULL));
+        auto seed = config["world-seed"].value_or(rand());
+
+        std::shared_ptr<WorldGen> generator;
+        switch(config["world-generator"].value_or(0)) {
+            default:
+            case 0: generator = std::make_shared<WorldGenNormal>(m_world, seed); break;
+            // Oh fu*k I thought we have more worldgens
+        }
+
+        m_world->setGenerator(generator);
         m_world->generate();
     }
 
@@ -106,17 +121,13 @@ void Server::update() {
             case ENET_EVENT_TYPE_RECEIVE:
                 if(m_clients.contains(id)) {
                     auto pak = Packet(event.packet);
-                    m_clients[id]->onPacketReceived(pak);
+                    m_clients[id]->packetReceived(pak);
                     enet_packet_destroy(event.packet);
                 }
 
             default:
                 break;
         }
-    }
-
-    for(auto& [_, client] : m_clients) {
-        client->update();
     }
 }
 
@@ -127,21 +138,50 @@ void Server::destroy() {
     std::exit(0);
 }
 
-void Server::addToQueueAll(std::shared_ptr<SerializedObject> packet) {
-    for(auto& [addr, client] : m_clients) {
-        client->addToQueue(packet);
+void Server::broadcast(std::shared_ptr<SerializedObject> obj, Channel channel, bool reliable) {
+    uint32_t flag = (reliable ? ENET_PACKET_FLAG_RELIABLE : ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT);
+    auto bytes = obj->serialize();
+    auto packet = enet_packet_create(bytes.data(), bytes.size(), flag);
+    enet_host_broadcast(m_server, static_cast<uint8_t>(channel), packet);
+}
+
+void Server::broadcast(Packet const& packet, Channel channel, bool reliable) {
+    uint32_t flag = (reliable ? ENET_PACKET_FLAG_RELIABLE : ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT);
+    auto enetPacket = enet_packet_create(packet.data(), packet.size(), flag);
+    enet_host_broadcast(m_server, static_cast<uint8_t>(channel), enetPacket);
+}
+
+void Server::broadcastExcept(PlayerID pid, std::shared_ptr<SerializedObject> obj, Channel channel, bool reliable) {
+    for(auto& [_, client] : m_clients) {
+        if(client->getPlayerID() != pid) {
+            client->sendObj(obj, channel, reliable);
+        }
     }
 }
 
-void Server::addToQueue(PlayerID id, std::shared_ptr<SerializedObject> packet) {
-    for(auto& [addr, client] : m_clients) {
-        if(client->getPlayerID() == id) client->addToQueue(packet);
+void Server::broadcastExcept(PlayerID pid, Packet const& packet, Channel channel, bool reliable) {
+    for(auto& [_, client] : m_clients) {
+        if(client->getPlayerID() != pid) {
+            client->sendPacket(packet, channel, reliable);
+        }
     }
 }
 
-void Server::addToQueueExcept(PlayerID id, std::shared_ptr<SerializedObject> packet) {
-    for(auto& [addr, client] : m_clients) {
-        if(client->getPlayerID() != id) client->addToQueue(packet);
+void Server::send(PlayerID pid, std::shared_ptr<SerializedObject> obj, Channel channel, bool reliable) {
+    for(auto& [_, client] : m_clients) {
+        if(client->getPlayerID() == pid) {
+            client->sendObj(obj, channel, reliable);
+            break;
+        }
+    }
+}
+
+void Server::send(PlayerID pid, Packet const& packet, Channel channel, bool reliable) {
+    for(auto& [_, client] : m_clients) {
+        if(client->getPlayerID() == pid) {
+            client->sendPacket(packet, channel, reliable);
+            break;
+        }
     }
 }
 
@@ -149,10 +189,11 @@ PlayerID Server::joinPlayer(std::string const& username) {
     auto playerId = m_world->addPlayer(std::make_unique<SimplePlayer>(m_world), username);
     logD("{} joined the game", username);
 
-    auto packet = CREATE_PACKET(SerializedObject::Header::LOAD_PLAYER, playerId);
-    packet->add(username);
+    auto packet = Packet(Header::LOAD_PLAYER);
+    packet.add(playerId);
+    packet.add(username);
 
-    addToQueueExcept(playerId, packet);
+    broadcast(packet, NOTIFICATIONS, true);
 
     return playerId;
 }
@@ -164,7 +205,7 @@ void Server::disconnectPlayer(std::shared_ptr<Client> client, DisconnectReasonID
     m_world->unloadPlayer(id);
 
     std::erase_if(m_clients, [&](auto& pair) { return pair.second->getPlayerID() == id; });
-    addToQueueAll(CREATE_PACKET(SerializedObject::Header::UNLOAD_PLAYER, id));
+    broadcast(Packet(Header::UNLOAD_PLAYER, id), NOTIFICATIONS);
 }
 
 std::string const Server::getDisconnectReasonByID(DisconnectReasonID id) {

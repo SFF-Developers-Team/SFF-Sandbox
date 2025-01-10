@@ -152,12 +152,12 @@ void Player::updateControls() {
 
             if (mp->connected()) {
                 // mp->onBlockChanged({target.x, target.y}, layer);
-                auto pak = CREATE_PACKET(Header::BLOCK_DESTROY);
-                pak->add<int32_t>(target.x);
-                pak->add<int32_t>(target.y);
-                pak->add<uint8_t>(layer);
+                auto pak = Packet(Header::BLOCK_DESTROY);
+                pak.add<int32_t>(target.x);
+                pak.add<int32_t>(target.y);
+                pak.add<uint8_t>(layer);
                 
-                mp->addToQueue(pak);
+                mp->sendPacket(pak, BLOCKS);
             }
         }
 
@@ -170,8 +170,7 @@ void Player::updateControls() {
             }
 
             if (mp->connected()) {
-                // mp->onBlockChanged({target.x, target.y}, layer);
-                mp->addToQueue(CREATE_PACKET(Header::BLOCK_PLACE, block->serialize()));
+                mp->sendPacket(Packet(Header::BLOCK_PLACE, block->serialize()), BLOCKS);
             }
         }
     }
@@ -271,7 +270,7 @@ void Player::onTick() {
     // clang-format on
 
     if (mp->connected() && shouldupd) {
-        mp->addToQueue(std::shared_ptr<SimplePlayer>(Game::get()->getPlayer()));
+        mp->sendObj(std::shared_ptr<SimplePlayer>(Game::get()->getPlayer()), EVERYTHING, false);
     }
 }
 

@@ -36,18 +36,18 @@ bool Client::accept(Packet& packet) {
 
     m_id = srv->joinPlayer(username);
     auto iden = Packet(Header::IDENTIFICATION, m_id);
-    send(iden);
+    sendPacket(iden);
 
     uint16_t chunksCount = 3;
 
     while (chunksCount-- > 0) {
-        addToQueue(srv->getWorld()->getChunk(chunksCount));
+        sendObj(srv->getWorld()->getChunk(chunksCount));
     }
 
     for (auto& [id, player] : srv->getWorld()->getPlayers()) {
         if (id == m_id)
             continue;
-        addToQueue(CREATE_PACKET(Header::LOAD_PLAYER, id));
+        sendPacket(Packet(Header::LOAD_PLAYER, id));
     }
 
     m_loggedIn = true;
@@ -55,13 +55,7 @@ bool Client::accept(Packet& packet) {
     return true;
 }
 
-void Client::update() {
-    if (m_loggedIn && !m_disconnect) {
-        sendQueue();
-    }
-}
-
-void Client::onPacketReceived(Packet& packet) {
+void Client::packetReceived(Packet& packet) {
     if(m_disconnect) {
         return;
     }
@@ -75,8 +69,7 @@ void Client::onPacketReceived(Packet& packet) {
 
 void Client::disconnect(DisconnectReasonID reason) {
     auto srv = Server::get();
-    auto err = Packet(Header::NETWORK_ERROR, srv->getDisconnectReasonByID(reason));
-    send(err);
+    sendPacket(Packet(Header::NETWORK_ERROR, srv->getDisconnectReasonByID(reason)));
 
     enet_peer_disconnect_later(m_peer, reason);
     m_disconnect = true;
@@ -119,7 +112,7 @@ void Client::handlePlayer(Packet& packet) {
     auto srv = Server::get();
     auto player = srv->getWorld()->getPlayer(m_id);
     player->deserialize(packet.bytes());
-    srv->addToQueueExcept(m_id, player);
+    srv->broadcastExcept(m_id, std::shared_ptr<SerializedObject>(player), EVERYTHING, false);
 }
 
 void Client::handleLoadPlayer(Packet& packet) {
@@ -128,12 +121,15 @@ void Client::handleLoadPlayer(Packet& packet) {
     auto player = srv->getWorld()->getPlayer(id);
 
     if (player != nullptr) {
-        auto packet = CREATE_PACKET(Header::LOAD_PLAYER, id);
-        packet->add(player->getUsername());
-        return addToQueue(packet);
+        auto packet = Packet(Header::LOAD_PLAYER);
+        packet.add(id);
+        packet.add(player->getUsername());
+
+        sendPacket(packet, NOTIFICATIONS);
+        return;
     }
 
-    return addToQueue(CREATE_PACKET(Header::UNLOAD_PLAYER, id));
+    sendPacket(Packet(Header::UNLOAD_PLAYER, id), NOTIFICATIONS);
 }
 
 void Client::handleBlockPlace(Packet& packet) {
@@ -148,7 +144,7 @@ void Client::handleBlockPlace(Packet& packet) {
     srv->getWorld()->setBlock(pos.x, pos.y, lay, block);
 
     logD("Player changed block {}, {}, {}", pos.x, pos.y, lay);
-    srv->addToQueueAll(CREATE_PACKET(packet.bytes()));
+    srv->broadcast(packet);
 }
 
 void Client::handleBlockDestroy(Packet& packet) {
@@ -157,7 +153,7 @@ void Client::handleBlockDestroy(Packet& packet) {
     auto l = packet.get<uint8_t>();
     auto srv = Server::get();
     srv->getWorld()->destroyBlock(x, y, l);
-    srv->addToQueueAll(CREATE_PACKET(packet.bytes()));
+    srv->broadcast(packet);
 }
 
 void Client::handleLoadChunk(Packet& packet) {
@@ -171,5 +167,5 @@ void Client::handleLoadChunk(Packet& packet) {
         world->addChunk(chunk);
     }
 
-    return addToQueue(chunk);
+    sendObj(chunk);
 }

@@ -53,6 +53,4 @@ public:
 
         logD("GamePacket: {}", res);
     }
-
-
 };

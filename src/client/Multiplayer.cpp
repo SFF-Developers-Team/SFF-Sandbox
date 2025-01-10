@@ -58,7 +58,7 @@ bool Multiplayer::connect(std::string const& host, uint16_t port) {
 
     auto packet = Packet(SerializedObject::Header::IDENTIFICATION);
     packet.add(myUsername);
-    if(send(packet)) {
+    if(sendPacket(packet)) {
         logD("Identification sent. Waiting for response...");
         m_state = LOGGING_IN;
     }
@@ -70,28 +70,16 @@ bool Multiplayer::connected() {
     return m_connected;
 } 
 
-void Multiplayer::onBlockChanged(Vec2i pos, uint8_t layer) {
-    auto block = Game::get()->getWorld()->getBlock(pos.x, pos.y, layer);
-
-    if(block) {
-        addToQueue(block);
-    }
-}
-
 void Multiplayer::requestChunk(Chunk::Position pos) {
     auto it = std::find(m_chunkRequests.begin(), m_chunkRequests.end(), pos);
 
     if(it == m_chunkRequests.end()) {
         m_chunkRequests.push_back(pos);
-        addToQueue(CREATE_PACKET(Header::LOAD_CHUNK, pos));
+        sendPacket(Packet(Header::LOAD_CHUNK, pos));
     }
 }
 
 void Multiplayer::update() {
-    if(m_connected) {
-        sendQueue();
-    }
-
     ENetEvent event;
     while(enet_host_service(m_client, &event, 0) > 0) {
         switch(event.type) {
@@ -180,7 +168,7 @@ void Multiplayer::handlePlayer(Packet& packet) {
         }
 
         if(otherPlayer->getUsername().empty()) {
-            addToQueue(CREATE_PACKET(SerializedObject::LOAD_PLAYER, id));
+            sendPacket(Packet(SerializedObject::LOAD_PLAYER, id));
         }
 
         otherPlayer->deserialize(packet.bytes());

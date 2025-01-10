@@ -3,7 +3,7 @@
 #include <memory>
 #include <map>
 #include <entity/SimplePlayer.hpp>
-#include <GamePacket.hpp>
+#include <Packet.hpp>
 #include <toml.hpp>
 #include <Client.hpp>
 #include <enet.h>
@@ -16,7 +16,6 @@ class Server {
 private:
     ENetHost* m_server;
     toml::v3::table config;
-    std::mutex m_acceptLock;
 
     std::shared_ptr<World> m_world;
     std::shared_ptr<Timer> m_timer;
@@ -34,10 +33,12 @@ public:
 
     void init();
     void update();
-
-    void addToQueueAll(std::shared_ptr<SerializedObject> packet);
-    void addToQueue(PlayerID id, std::shared_ptr<SerializedObject> packet);
-    void addToQueueExcept(PlayerID id, std::shared_ptr<SerializedObject> packet);
+    void broadcast(std::shared_ptr<SerializedObject> obj, Channel channel = EVERYTHING, bool reliable = true);
+    void broadcast(Packet const& packet, Channel channel = EVERYTHING, bool reliable = true);
+    void broadcastExcept(PlayerID pid, std::shared_ptr<SerializedObject> obj, Channel channel = EVERYTHING, bool reliable = true);
+    void broadcastExcept(PlayerID pid, Packet const& packet, Channel channel = EVERYTHING, bool reliable = true);
+    void send(PlayerID pid, std::shared_ptr<SerializedObject> obj, Channel channel = EVERYTHING, bool reliable = true);
+    void send(PlayerID pid, Packet const& packet, Channel channel = EVERYTHING, bool reliable = true);
 
     PlayerID joinPlayer(std::string const& username);
     void disconnectPlayer(std::shared_ptr<Client> client, DisconnectReasonID reason);
@@ -46,5 +47,4 @@ public:
 
     auto getWorld() { return m_world; }
     auto getTimer() { return m_timer; }
-    auto& getAcceptLock() { return m_acceptLock; }
 };

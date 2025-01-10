@@ -1,32 +1,30 @@
 #pragma once
 #include <deque>
-#include <GamePacket.hpp>
+#include <Packet.hpp>
 #include <memory>
 #include <map>
 #include <mutex>
 #include <enet.h>
 
-using QueueID = uint32_t;
 using Header = SerializedObject::Header;
 
-class PacketManager {
-private:
-    int m_readBufSize;
+enum Channel : uint8_t {
+    EVERYTHING,
+    BLOCKS,
+    NOTIFICATIONS
+};
 
+class PacketManager {
 protected:
-    std::deque<std::shared_ptr<SerializedObject>> m_queue;
-    QueueID m_lastId;
     ENetPeer* m_peer;
 
 public:
-    PacketManager(ENetPeer* sock, int readBufSize = 1024 * 64);
+    PacketManager(ENetPeer* sock);
     ~PacketManager();
 
-    bool send(Packet& packet);
-    virtual void onPacketReceived(Packet& packet);
-
-    void addToQueue(std::shared_ptr<SerializedObject> classObj);
-    void sendQueue();
+    bool sendObj(std::shared_ptr<SerializedObject> obj, Channel channel = EVERYTHING, bool reliable = true);
+    bool sendPacket(Packet const& packet, Channel channel = EVERYTHING, bool reliable = true);
+    virtual void packetReceived(Packet& packet);
 
     virtual void handle(Packet& packet);
     void handleArray(Packet& packet);
