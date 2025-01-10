@@ -23,6 +23,7 @@ public:
     void drawText(std::string const& str, Vec2f pos, float size = 11.f, bool centered = false, Col4u color = COL_WHITE);
     void drawButton(std::string const& label, Rectf dest, MiniFunction<void()> const& callback);
     void drawButtonsV(Vec2f start, Vec2f btnSize, float padding, std::initializer_list<BtnPair> const& btns);
+    // void drawSliderBar();
 
     void drawInput(std::string& out, Rectf dest, std::string const& caption, float fontSize = 11.f);
     void drawMenuLogo();
