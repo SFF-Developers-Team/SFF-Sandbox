@@ -2,6 +2,7 @@
 #include <ui/PlayScene.hpp>
 #include <ui/MultiplayerScene.hpp>
 #include <ui/CreditsScene.hpp>
+#include <ui/SettingsScene.hpp>
 #include <RenderManager.hpp>
 #include <TextureManager.hpp>
 #include <Game.hpp>
@@ -24,7 +25,7 @@ void MainMenuScene::draw() {
         {"Play", [&](){ game->pushScene(std::make_shared<PlayScene>()); }},
         {"Multiplayer", [&](){ game->pushScene(std::make_shared<MultiplayerScene>()); }},
         {"Credits", [&](){ game->pushScene(std::make_shared<CreditsScene>()); }},
-        {"Settings", [&](){ /* game->pushScene(std::make_shared<SettingsScene>()); */ }},
+        {"Settings", [&](){ game->pushScene(std::make_shared<SettingsScene>()); }},
         {"Exit", [&](){ CloseWindow(); }}
     });
 }
