@@ -1,7 +1,7 @@
 #pragma once
 #include <entity/SimplePlayer.hpp>
 #include <PacketManager.hpp>
-#include <GamePacket.hpp>
+#include <Packet.hpp>
 #include <Types.hpp>
 
 #include <memory>
@@ -16,12 +16,12 @@ public:
     Client(ENetPeer* peer);
 
     bool accept(Packet& packet);
-    void update();
-    void onPacketReceived(Packet& packet) override;
+    // void update();
+    void packetReceived(Packet& packet) override;
     void disconnect(DisconnectReasonID reason);
 
     void handle(Packet& packet) override;
-    void handleBlock(Packet& packet);
+    // void handleBlock(Packet& packet);
     void handlePlayer(Packet& packet);
     void handleLoadChunk(Packet& packet);
     void handleLoadPlayer(Packet& packet);

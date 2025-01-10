@@ -7,7 +7,7 @@
 #include <PacketManager.hpp>
 #include <entity/Player.hpp>
 #include <world/Chunk.hpp>
-#include <GamePacket.hpp>
+#include <Packet.hpp>
 #include <Types.hpp>
 #include <memory>
 #include <map>
@@ -19,7 +19,7 @@ enum MultiplayerState {
     ERROR
 };
 
-class Multiplayer : private PacketManager {
+class Multiplayer : public PacketManager {
 private:
     bool m_connected = false;
     PlayerID m_myPlayerId;
@@ -29,8 +29,6 @@ private:
     std::string m_error;
 
 public:
-    using PacketManager::addToQueue;
-
     static auto get() {
         static auto inst = std::make_shared<Multiplayer>();
         return inst;
@@ -42,7 +40,6 @@ public:
     bool connect(std::string const& host, uint16_t port);
     bool connected();
 
-    void onBlockChanged(Vec2i pos, uint8_t layer);
     void requestChunk(Chunk::Position pos);
 
     void update();
