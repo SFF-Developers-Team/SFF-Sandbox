@@ -17,8 +17,10 @@ public:
     bool loadSound(std::filesystem::path const& filepath);
     void unloadSound(std::string const& key);
     Sound& getSound(std::string const& key);
+    void setSoundVolume(float volume);
 
     bool loadMusic(std::filesystem::path const& filepath);
     void unloadMusic(std::string const& key);
     Music& getMusic(std::string const& key);
+    void setMusicVolume(float volume);
 };
