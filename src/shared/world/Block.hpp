@@ -35,6 +35,8 @@ protected:
     std::mutex m_mutex;
     
 public:
+    static std::string const idToString(ID id);
+
     Block(ID id = ID::AIR, int32_t x = 0, int32_t y = 0, uint8_t layer = 1);
     Block(Block& block);
 

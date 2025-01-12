@@ -46,7 +46,7 @@ void PlayScene::draw() {
     auto selectedBlock = m_player->getSelectedBlock();
 
     if (selectedBlock) {
-        rm->renderUIBlock(GetScreenWidth() - 42.f, 10.f, 32.f, 32.f, selectedBlock);
+        rm->renderBlock({GetScreenWidth() - 42.f, 10.f, 32.f, 32.f}, selectedBlock);
     }
 
     Debug::get()->draw();

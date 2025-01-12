@@ -14,9 +14,7 @@ MenuBase::MenuBase() : m_bgRender(LoadRenderTexture(bgwidth * 16, bgheight * 16)
     m_bgColor = COL_SKYBLUE;
 
     auto game = Game::get();
-    // TODO: Make tilemap manager
-    // TODO: Merge all managers into AssetsManager
-    auto blocksMap = game->getBlocksTileMap();
+    auto rm = RenderManager::get();
 
     // 0 - AIR; 1 - GRASS; 2 - DIRT; 3 - STONE
     std::array<uint8_t, bgwidth * bgheight> blocks = {
@@ -36,7 +34,7 @@ MenuBase::MenuBase() : m_bgRender(LoadRenderTexture(bgwidth * 16, bgheight * 16)
                 auto x = static_cast<float>(i % bgwidth);
                 auto y = static_cast<float>(i / bgwidth);
 
-                blocksMap->drawTilePro(blocks[i] - 1, {x * 16, y * 16, 16, 16}, WHITE);
+                // rm->drawTile("blocks.png", blocks[i] - 1, {x * 16, y * 16, 16, 16}, COL_WHITE);
             }
         }
 

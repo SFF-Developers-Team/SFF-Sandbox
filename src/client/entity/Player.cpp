@@ -118,9 +118,11 @@ bool Player::canDestroyBlock(Vec2i pos, uint8_t layer) {
     }
 
     if (auto block = m_world->getBlock(pos.x, pos.y, layer)) {
+        if(block == nullptr) return false;
+
         Block::ID type = block->getID();
 
-        return type != Block::ID::BEDROCK && type != Block::ID::AIR;
+        return type != Block::ID::BEDROCK && type > 0;
     }
 
     return false;
@@ -131,27 +133,21 @@ bool Player::canPlaceBlock(Vec2i pos, uint8_t layer) {
         return false;
     }
 
-    auto block = m_world->getBlock(pos.x, pos.y, layer);
-    // auto closedByOtherBlocks = 
-    //     m_world->getBlock(pos.x - 1, pos.y, layer)->getID() == Block::ID::AIR && 
-    //     m_world->getBlock(pos.x + 1, pos.y, layer)->getID() == Block::ID::AIR &&
-    //     m_world->getBlock(pos.x, pos.y - 1, layer)->getID() == Block::ID::AIR && 
-    //     m_world->getBlock(pos.x, pos.y + 1, layer)->getID() == Block::ID::AIR &&
-    //     m_world->getBlock(pos.x, pos.y, !layer)->getID() == Block::ID::AIR;
+    bool closed = (
+        m_world->getBlock(pos.x - 1, pos.y, layer) && 
+        m_world->getBlock(pos.x + 1, pos.y, layer) &&
+        m_world->getBlock(pos.x, pos.y - 1, layer) && 
+        m_world->getBlock(pos.x, pos.y + 1, layer) &&
+        m_world->getBlock(pos.x, pos.y, !layer)
+    );
 
-    if (!block) {
-        m_world->setBlock(pos.x, pos.y, layer, std::make_unique<Block>(Block::ID::AIR));
+    bool overlap = layer == 1;
+
+    for(auto& [_, player] : m_world->getPlayers()) {
+        overlap &= CheckCollisionRecs(player->getHitbox().getRect().to<Rectangle>(), {(float)pos.x, (float)pos.y, 1.0f, 1.0f});
     }
 
-    if (layer == 1 && CheckCollisionRecs(m_hitbox.getRect().to<Rectangle>(), {(float)pos.x, (float)pos.y, 1.0f, 1.0f})) {
-        return false;
-    }
-
-    // if (closedByOtherBlocks) {
-    //     return false;
-    // }
-
-    return m_world->getBlock(pos.x, pos.y, layer)->getID() == Block::ID::AIR;
+    return !m_world->getBlock(pos.x, pos.y, layer) && !closed && !overlap;
 }
 
 void Player::updateControls() {
@@ -236,7 +232,9 @@ void Player::updateControls() {
         m_speedY *= 0.7f;
     }
 
-    dbg->setString(PLAYER_TARGET_BLOCK, "Target block: [{}, {}]", target.x, target.y);
+    auto block = m_world->getBlock(target.x, target.y, layer);
+
+    dbg->setString(PLAYER_TARGET_BLOCK, "Target block: [{}, {}] ({})", target.x, target.y, (block ? Block::idToString(block->getID()) : "nullptr"));
     dbg->setString(PLAYER_POSITION, "Position: [{:.2f}, {:.2f}]", m_hitbox.x, m_hitbox.y);
 }
 
@@ -337,7 +335,7 @@ bool Player::isChunkInView(std::shared_ptr<Chunk> chunk) {
     Vector2 min = TO_CAMERA_POS(m_camera, zero);
     Vector2 max = TO_CAMERA_POS(m_camera, screen);
 
-    return (minPos >= min.x && minPos <= max.x) || (maxPos >= min.x && maxPos <= max.x);
+    return (minPos >= min.x && minPos <= max.x) || (maxPos >= min.x && maxPos <= max.x) || (min.x >= minPos && max.x <= maxPos);
 }
 
 bool Player::isBlockInView(std::shared_ptr<Block> block) {

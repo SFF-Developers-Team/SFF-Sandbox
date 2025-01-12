@@ -71,18 +71,14 @@ void World::addChunk(std::shared_ptr<Chunk> chunk) {
 }
 
 void World::placeBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> newBlock) {
-    auto block = getBlock(x, y, layer);
-
-    if (block && block->getID() == Block::ID::AIR) {
+    if (!getBlock(x, y, layer)) {
         setBlock(x, y, layer, newBlock);
     }
 }
 
 void World::destroyBlock(int32_t x, int32_t y, uint8_t layer) {
-    auto block = getBlock(x, y, layer);
-
-    if (block && block->getID() != Block::ID::AIR) {
-        setBlock(x, y, layer, std::make_unique<Block>(Block::ID::AIR));
+    if (getBlock(x, y, layer)) {
+        setBlock(x, y, layer, nullptr);
     }
 }
 
@@ -96,12 +92,14 @@ std::shared_ptr<Block> World::getBlock(int32_t x, int32_t y, uint8_t layer) {
 }
 
 void World::setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block) {
-    if (!isOutOfBound(x, y, layer)) {
-        auto chunk = getChunk(xToChunk(x));
-
-        auto localx = (x < 0 ? (CHUNK_WIDTH - (-x) % CHUNK_WIDTH) % CHUNK_WIDTH : x % CHUNK_WIDTH);
-        chunk->setBlock(localx, y, layer, block);
+    if (isOutOfBound(x, y, layer) || (block && block->getID() == Block::ID::AIR)) {
+        return;
     }
+
+    auto chunk = getChunk(xToChunk(x));
+
+    auto localx = (x < 0 ? (CHUNK_WIDTH - (-x) % CHUNK_WIDTH) % CHUNK_WIDTH : x % CHUNK_WIDTH);
+    chunk->setBlock(localx, y, layer, block);
 }
 
 ByteVector World::serialize() {

@@ -1,6 +1,6 @@
 #include <TileMap.hpp>
 
-TileMap::TileMap(std::filesystem::path const& path, Vector2 v) {
+TileMap::TileMap(std::filesystem::path const& path, Vec2i v) {
     this->m_map = LoadTexture(path.string().c_str());
     this->m_tileSize = v;
 }
@@ -13,11 +13,14 @@ TileMap::~TileMap() {
     }
 }
 
-Vector2 TileMap::getPositionByIndex(uint16_t index) {
-    return Vector2 {floorf(index % (int)(m_map.width / m_tileSize.x)), floorf(index / (m_map.height / m_tileSize.y))};
+Vec2i TileMap::getPositionByIndex(uint16_t index) {
+    return {
+        index % (m_map.width / m_tileSize.x), 
+        index / (m_map.height / m_tileSize.y)
+    };
 }
 
-Rectangle TileMap::getRectForTile(Vector2 position) {
+Rectangle TileMap::getRectForTile(Vec2i position) {
     Rectangle r;
 
     r.width = floor(m_tileSize.x);
@@ -32,28 +35,8 @@ Rectangle TileMap::getRectForTile(uint16_t index) {
     return getRectForTile(getPositionByIndex(index));
 }
 
-void TileMap::drawTile(uint16_t index, Vector2 position, Color color, bool flipedX) {
-    auto rect = getRectForTile(index);
-
-    if (flipedX) {
-        rect.width *= -1;
-    }
-
-    DrawTextureRec(m_map, rect, position, color);
-}
-
-void TileMap::drawTilePro(uint16_t index, Rectangle dest, Color color, bool flipedX) {
-    auto rect = getRectForTile(index);
-
-    if (flipedX) {
-        rect.width *= -1;
-    }
-
-    DrawTexturePro(m_map, rect, dest, {0, 0}, 0, color);
-}
-
-Texture2D TileMap::getTextureOfTileCached(uint16_t index) {
-    if (m_cachedTextures.count(index)) {
+Texture2D& TileMap::getTextureOfTileCached(uint16_t index) {
+    if (m_cachedTextures.contains(index)) {
         return m_cachedTextures[index];
     }
 
@@ -65,5 +48,9 @@ Texture2D TileMap::getTextureOfTileCached(uint16_t index) {
 
     m_cachedTextures[index] = tile;
 
-    return tile;
+    return m_cachedTextures[index];
+}
+
+Texture2D& TileMap::getMap() {
+    return m_map;
 }

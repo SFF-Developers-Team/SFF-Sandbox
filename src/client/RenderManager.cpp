@@ -7,8 +7,12 @@
 #include <Types.hpp>
 #include <Debug.hpp>
 #include <Game.hpp>
+#include <assert.h>
+#include <Utils.hpp>
 
 #include <string>
+
+int blocksDrawn = 0;
 
 RenderManager::RenderManager() {}
 
@@ -22,10 +26,24 @@ void RenderManager::drawTexture(std::string const& key, Rectf dest, Col4u color,
     );
 }
 
+void RenderManager::drawTile(std::string const& mapKey, uint16_t index, Rectf dest, Col4u color, float rot, Vec2f origin) {
+    auto tm = TextureManager::get();
+    auto tilemap = tm->getTileMap(mapKey);
+
+    DrawTexturePro(tilemap->getMap(), 
+        tilemap->getRectForTile(index), 
+        dest.to<Rectangle>(), 
+        origin.to<Vector2>(), rot, 
+        color.to<Color>()
+    );
+}
+
 void RenderManager::renderWorld(std::shared_ptr<World> world, std::shared_ptr<Player> player) {
     auto dbg = Debug::get();
     auto chunksCount = 0;
     auto playersCount = 0;
+
+    blocksDrawn = 0;
 
     for (auto& [pos, chunk] : world->getChunks()) {
         if (player->isChunkInView(chunk)) {
@@ -61,8 +79,6 @@ void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Pl
     auto game = Game::get();
     auto dbg = Debug::get();
     auto world = chunk->getWorld();
-    auto tilemap = game->getBlocksTileMap();
-    auto blocksDrawn = 0;
     auto target = player->getTargetBlock();
     auto layer = IsKeyDown(KEY_LEFT_ALT);
     auto cpos = chunk->getPosition();
@@ -72,8 +88,7 @@ void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Pl
             auto block0 = chunk->getBlock(x, y, 0);
             auto block1 = chunk->getBlock(x, y, 1);
 
-            // Пока что все блоки у нас одинакового размера
-            if (player->isBlockInView(block0)) {
+            if (player->isBlockInView(block0) || player->isBlockInView(block1)) {
                 auto blockX = ((cpos > 0 || cpos < 0) && x < CHUNK_WIDTH ? static_cast<float>(cpos) * CHUNK_WIDTH + x : x);
 
                 auto watchAltBlock = 
@@ -82,13 +97,13 @@ void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Pl
                     IsKeyDown(KEY_LEFT_ALT) && 
                     player->canAccessBlock(target, layer);
 
-                if (block0 && ((block1 && block1->getID() == Block::ID::AIR) || watchAltBlock)) {
-                    renderBlock(blockX, y, block0);
+                if (block0 != nullptr && (block1 == nullptr || watchAltBlock)) {
+                    renderBlock(BLOCK_RECT(blockX, y), block0);
                     blocksDrawn++;
                 }
 
-                if (block1) {
-                    renderBlock(blockX, y, block1, (watchAltBlock ? 128 : 255));
+                if (block1 != nullptr) {
+                    renderBlock(BLOCK_RECT(blockX, y), block1, (watchAltBlock ? 128 : 255));
                     blocksDrawn++;
                 }
             }
@@ -100,30 +115,14 @@ void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Pl
     }
 }
 
-void RenderManager::renderBlock(float x, float y, std::shared_ptr<Block> block, uint8_t alpha) {
-    if (block->getID() == Block::ID::AIR) {
-        return;
-    }
+void RenderManager::renderBlock(Rectf dest, std::shared_ptr<Block> block, uint8_t alpha) {
+    assert(block != nullptr);
 
-    auto tilemap = Game::get()->getBlocksTileMap();
-    auto dest = Rectangle {x, y, 1.0f, 1.0f};
-    Color col = (block->hasTag(Block::TagID::COLOR) ? block->getTag<Col3u>(Block::TagID::COLOR).to<Color>() : WHITE);
+    auto index = static_cast<uint16_t>(block->getID() - 1);
+    Col4u col = (block->hasTag(Block::TagID::COLOR) ? block->getTag<Col3u>(Block::TagID::COLOR).to<Col4u>() : COL_WHITE);
     col.a = alpha;
 
-    tilemap->drawTilePro((uint16_t)block->getID() - 1, dest, ColorBrightness(col, (block->getLayer() == 0 ? -0.25f : 0.0f)));
-}
-
-void RenderManager::renderUIBlock(float x, float y, float width, float height, std::shared_ptr<Block> block) {
-    if (!block || block->getID() == Block::ID::AIR) {
-        return;
-    }
-
-    auto tilemap = Game::get()->getBlocksTileMap();
-    auto dest = Rectangle {x, y, width, height};
-    Color col = (block->hasTag(Block::TagID::COLOR) ? block->getTag<Col3u>(Block::TagID::COLOR).to<Color>() : WHITE);
-    col.a = 255;
-
-    tilemap->drawTilePro((uint16_t)block->getID() - 1, dest, col);
+    drawTile("blocks.png", index, dest, col);
 }
 
 void RenderManager::renderEntity(std::string& textureKey, std::shared_ptr<Entity> entity) {

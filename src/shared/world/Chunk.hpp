@@ -26,18 +26,12 @@ public:
 
     void setBlock(int x, int y, uint8_t layer, Block::ID type);
     void setBlock(int x, int y, uint8_t layer, std::shared_ptr<Block> block);
-    void setBlock(Vec2i pos, uint8_t layer, std::shared_ptr<Block> block);
-    void setBlock(Vec2i pos, uint8_t layer, Block::ID type);
-
     std::shared_ptr<Block> getBlock(int x, int y, uint8_t layer);
-    std::shared_ptr<Block> getBlock(Vec2i pos, uint8_t layer);
 
-    int getHeight();
     int getIndex(int x, int y, uint8_t layer);
 
     // Is block closed by other blocks in 4 directions
     bool isBlockClosed(int x, int y, uint8_t layer);
-    bool isBlockClosed(Vec2i pos, uint8_t layer);
 
     bool isOutOfBound(int x, int y, uint8_t layer);
 

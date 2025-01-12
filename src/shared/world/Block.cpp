@@ -10,6 +10,21 @@ Block::Block(Block& block) : Block(block.m_id, block.m_x, block.m_y, block.m_lay
     m_tags = block.m_tags;
 }
 
+std::string const Block::idToString(ID id) {
+    switch(id) {
+        case AIR: return "Air";
+        case GRASS: return "Grass";
+        case DIRT: return "Dirt";
+        case STONE: return "Stone";
+        case COBLESTONE: return "Coblestone";
+        case PLANKS: return "Planks";
+        case WOOL: return "Wool";
+        case BEDROCK: return "Bedrock";
+        case BRICKS: return "Bricks";
+        default: return "Unknown";
+    }
+}
+
 void Block::update() {}
 
 void Block::setPos(int32_t x, int32_t y, uint8_t layer) {
@@ -48,7 +63,7 @@ ByteVector Block::serialize() {
 size_t Block::deserialize(ByteVector const& bytes) {
     SerializedObject::deserialize(bytes);
 
-    m_id = get<ID>(ID::AIR);
+    m_id = get<ID>();
     m_x = get<int32_t>();
     m_y = get<int32_t>();
     m_layer = get<uint8_t>(1);
@@ -87,7 +102,7 @@ void Block::removeTag(TagID key) {
 }
 
 Rectf Block::getHitbox() {
-    if(m_layer == 0 || m_id == AIR) {
+    if(m_layer == 0 || m_id == AIR || (hasTag(GHOST) && getTag<bool>(GHOST))) {
         return Rectf {0.0f, 0.0f, 0.0f, 0.0f};
     }
 

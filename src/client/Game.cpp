@@ -52,7 +52,7 @@ void Game::init(std::vector<std::string>& args) {
     SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
     SetExitKey(-1);
     SetWindowState(FLAG_WINDOW_RESIZABLE);
-    ToggleFullscreen();
+    // ToggleFullscreen();
 
     auto sm = SoundManager::get();
     auto tm = TextureManager::get();
@@ -67,10 +67,11 @@ void Game::init(std::vector<std::string>& args) {
     tm->loadTexture("assets/player.png");
     tm->loadTexture("assets/crosshair.png");
     tm->loadTexture("assets/selected.png");
-    
+    tm->loadTileMap("assets/blocks.png", {16, 16});
+    tm->loadTileMap("assets/gui.png", {16, 16});
+
     sm->loadMusic("assets/menu.mp3");
     
-    m_blocksMap = std::make_shared<TileMap>("assets/blocks.png", Vector2 {16, 16});
     m_world = std::make_shared<World>("world1");
     m_player = std::make_shared<Player>(m_world);
     PlayMusicStream(sm->getMusic("menu.mp3"));

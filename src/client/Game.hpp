@@ -17,7 +17,6 @@ private:
     std::shared_ptr<Scene> m_scene;
     std::shared_ptr<World> m_world;
     std::shared_ptr<Player> m_player;
-    std::shared_ptr<TileMap> m_blocksMap;
 
     std::deque<std::shared_ptr<Scene>> m_sceneHistory;
     
@@ -49,10 +48,6 @@ public:
     
     auto getWorld() {
         return m_world;
-    }
-    
-    auto getBlocksTileMap() {
-        return m_blocksMap;
     }
 
     auto getPlayer() {
