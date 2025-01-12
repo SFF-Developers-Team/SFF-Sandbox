@@ -8,6 +8,7 @@ private:
 
 public:
     MenuBase();
+    ~MenuBase();
     
     void draw() override;
 };

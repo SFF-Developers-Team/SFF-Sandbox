@@ -46,14 +46,21 @@ MenuBase::MenuBase() : m_bgRender(LoadRenderTexture(bgwidth * 16, bgheight * 16)
     EndTextureMode();
 }
 
+MenuBase::~MenuBase() {
+    UnloadRenderTexture(m_bgRender);
+}
+
 void MenuBase::draw() {
     Scene::draw();
+
+    auto w = static_cast<float>(m_bgRender.texture.width) * 5.05f;
+    auto h = static_cast<float>(m_bgRender.texture.height) * 5.05f;
 
     DrawTexturePro(
         m_bgRender.texture, 
         {0, 0, (float)m_bgRender.texture.width, (float)-m_bgRender.texture.height},
         // what??? constant values without calculation???
-        {-47, 235, 885, 485}, {0, 0}, 0, WHITE
+        {-47.f, static_cast<float>(GetScreenHeight()) - h, w, h}, {0, 0}, 0, WHITE
     );
 
     drawMenuLogo();

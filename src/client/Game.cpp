@@ -51,7 +51,8 @@ void Game::init(std::vector<std::string>& args) {
 
     SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
     SetExitKey(-1);
-
+    SetWindowState(FLAG_WINDOW_RESIZABLE);
+    ToggleFullscreen();
 
     auto sm = SoundManager::get();
     auto tm = TextureManager::get();

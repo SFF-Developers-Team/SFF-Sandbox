@@ -15,7 +15,8 @@ public:
         COBLESTONE,
         PLANKS,
         WOOL,
-        BEDROCK
+        BEDROCK,
+        BRICKS
     };
 
     enum TagID : uint8_t {

@@ -9,18 +9,34 @@
 
 Player::Player(std::shared_ptr<World> world) : SimplePlayer::SimplePlayer(world) {
     m_header = Header::PLAYER;
-    m_camera.offset = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
     m_camera.zoom = 50.0f;
     m_camera.rotation = 0.0f;
 
-    Col3u const colors[] = {{255, 255, 255}, {255, 41, 55}, {255, 128, 0},   {255, 255, 0},   {0, 255, 0},     {0, 255, 255}, {0, 0, 255},
-                            {128, 0, 255},   {255, 0, 255}, {255, 128, 255}, {255, 128, 255}, {128, 128, 128}, {0, 0, 0},     {128, 64, 0}};
+    // clang-format off
+    Col3u const colors[] = {
+        {255, 255, 255}, 
+        {255, 41, 55}, 
+        {255, 128, 0},   
+        {255, 255, 0},   
+        {0, 255, 0},     
+        {0, 255, 255}, 
+        {0, 0, 255},
+        {128, 0, 255},   
+        {255, 0, 255}, 
+        {255, 128, 255}, 
+        {255, 128, 255}, 
+        {128, 128, 128}, 
+        {0, 0, 0},     
+        {128, 64, 0}
+    };
+    // clang-format on
 
     m_inventory.push_back(std::make_shared<Block>(Block::ID::GRASS));
     m_inventory.push_back(std::make_shared<Block>(Block::ID::DIRT));
     m_inventory.push_back(std::make_shared<Block>(Block::ID::STONE));
     m_inventory.push_back(std::make_shared<Block>(Block::ID::COBLESTONE));
     m_inventory.push_back(std::make_shared<Block>(Block::ID::PLANKS));
+    m_inventory.push_back(std::make_shared<Block>(Block::ID::BRICKS));
 
     for (auto& col : colors) {
         auto wool = std::make_shared<Block>(Block::ID::WOOL);
@@ -39,10 +55,15 @@ void Player::updateCamera() {
     if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0)
         m_camera.zoom += 1.0f;
 
-    this->m_camera.target.x = m_hitbox.x + m_hitbox.width / 2;
-    this->m_camera.target.y = m_hitbox.y - m_hitbox.height / 2;
+    m_camera.target.x = m_hitbox.x + m_hitbox.width / 2;
+    m_camera.target.y = m_hitbox.y - m_hitbox.height / 2;
+    m_camera.offset = {GetScreenWidth() / 2.f, GetScreenHeight() / 2.f};
+    const int logicalWidth = 1280;
+    const int logicalHeight = 720;
+    float scaleX = static_cast<float>(GetScreenWidth()) / logicalWidth;
+    float scaleY = static_cast<float>(GetScreenHeight()) / logicalHeight;
 
-    m_camera.zoom = std::clamp(m_camera.zoom, 5.f, 90.f);
+    m_camera.zoom = std::clamp(m_camera.zoom, 5.f * scaleX, 90.f * scaleX);
 }
 
 void Player::updateAnimation() {
