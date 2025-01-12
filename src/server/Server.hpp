@@ -33,6 +33,8 @@ public:
 
     void init();
     void update();
+    void onTick();
+
     void broadcast(std::shared_ptr<SerializedObject> obj, Channel channel = EVERYTHING, bool reliable = true);
     void broadcast(Packet const& packet, Channel channel = EVERYTHING, bool reliable = true);
     void broadcastExcept(PlayerID pid, std::shared_ptr<SerializedObject> obj, Channel channel = EVERYTHING, bool reliable = true);

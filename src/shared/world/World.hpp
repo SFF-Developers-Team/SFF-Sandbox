@@ -23,7 +23,7 @@ private:
     std::shared_ptr<WorldGen> m_worldGen;
     std::string m_worldName;
 
-    uint32_t m_height = 0;
+    uint32_t m_height;
     uint32_t m_version;
     PlayerID m_lastPlayerID = 1;
 
@@ -35,6 +35,9 @@ public:
 
     World(uint32_t height, std::string const& worldName);
     World(std::string const& worldName);
+
+    // I hope you saved world before this...
+    void reset();
 
     void generate();
     void onTick();

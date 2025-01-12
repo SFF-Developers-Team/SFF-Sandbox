@@ -10,12 +10,7 @@
 
 #include <string>
 
-RenderManager::RenderManager() {
-    auto dbg = Debug::get();
-    dbg->addString(CHUNKS_DRAWN, "Chunks rendered: ");
-    dbg->addString(BLOCKS_DRAWN, "Blocks rendered: ");
-    dbg->addString(PLAYERS_DRAWN, "Players rendered: ");
-}
+RenderManager::RenderManager() {}
 
 void RenderManager::drawTexture(std::string const& key, Rectf dest, Col4u color, float rot, Vec2f origin) {
     auto texture = TextureManager::get()->getTexture(key);
@@ -51,14 +46,14 @@ void RenderManager::renderWorld(std::shared_ptr<World> world, std::shared_ptr<Pl
 
             DrawLineV({(float)pos * CHUNK_WIDTH + CHUNK_WIDTH, 0.f}, {(float)pos * CHUNK_WIDTH + CHUNK_WIDTH, 256.f}, YELLOW);
 
-            dbg->updateString(CHUNKS_DRAWN, "Chunks rendered: {}", chunksCount);
+            dbg->setString(RENDER_CHUNKS, "Chunks rendered: {}", chunksCount);
             
         }
     }
 
     for (auto& [_, player] : world->getPlayers()) {
         renderSimplePlayer(player);
-        dbg->updateString(PLAYERS_DRAWN, "Players rendered: {}", playersCount++);
+        dbg->setString(RENDER_PLAYERS, "Players rendered: {}", playersCount++);
     }
 }
 
@@ -70,6 +65,7 @@ void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Pl
     auto blocksDrawn = 0;
     auto target = player->getTargetBlock();
     auto layer = IsKeyDown(KEY_LEFT_ALT);
+    auto cpos = chunk->getPosition();
 
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < world->getHeight(); y++) {
@@ -78,7 +74,7 @@ void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Pl
 
             // Пока что все блоки у нас одинакового размера
             if (player->isBlockInView(block0)) {
-                auto blockX = ((chunk->getPosition() > 0 || chunk->getPosition() < 0) && x < CHUNK_WIDTH ? (float)chunk->getPosition() * CHUNK_WIDTH + x : x);
+                auto blockX = ((cpos > 0 || cpos < 0) && x < CHUNK_WIDTH ? static_cast<float>(cpos) * CHUNK_WIDTH + x : x);
 
                 auto watchAltBlock = 
                     target.x == blockX && 
@@ -100,7 +96,7 @@ void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Pl
     }
 
     if (dbg->isVisible()) {
-        dbg->updateString(BLOCKS_DRAWN, "Blocks rendered: {}", blocksDrawn);
+        dbg->setString(RENDER_BLOCKS, "Blocks rendered: {}", blocksDrawn);
     }
 }
 

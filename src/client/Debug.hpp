@@ -8,11 +8,14 @@ enum DebugID : uint8_t {
     GAME_VERSION,
     FPS,
 
-    CHUNKS_DRAWN,
-    BLOCKS_DRAWN,
-    PLAYERS_DRAWN,
+    RENDER_CHUNKS,
+    RENDER_BLOCKS,
+    RENDER_PLAYERS,
 
-    TIME_SPENT
+    WORLD_TIME_SPENT,
+
+    PLAYER_POSITION,
+    PLAYER_TARGET_BLOCK
 };
 
 class Debug {
@@ -33,12 +36,7 @@ public:
     bool isVisible();
 
     template <typename... Args>
-    void addString(DebugID id, std::format_string<Args...> s, Args&&... args) {
-        m_debugList[id] = std::format(s, std::forward<Args>(args)...);
-    }
-
-    template <typename... Args>
-    void updateString(DebugID id, std::format_string<Args...> s, Args&&... args) {
+    void setString(DebugID id, std::format_string<Args...> s, Args&&... args) {
         m_debugList[id] = std::format(s, std::forward<Args>(args)...);
     }
 

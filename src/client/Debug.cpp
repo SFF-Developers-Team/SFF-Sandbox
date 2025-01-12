@@ -5,13 +5,12 @@
 #define FONT_SIZE 20
 
 Debug::Debug() {
-    addString(GAME_VERSION, "SFF Sandbox {}-dev ({} {})", GitHash::shortSha1, __DATE__, __TIME__);
-    addString(FPS, "0 FPS");
+    setString(GAME_VERSION, "SFF Sandbox {}-dev ({} {})", GitHash::shortSha1, __DATE__, __TIME__);
 }
 
 void Debug::draw() {
     int y = 0;
-    updateString(FPS, "{} FPS", GetFPS());
+    setString(FPS, "{} FPS", GetFPS());
 
     for (auto& [id, str] : m_debugList) {
         DrawText(str.c_str(), 0, y, FONT_SIZE, WHITE);

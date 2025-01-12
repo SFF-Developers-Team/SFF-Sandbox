@@ -8,7 +8,7 @@
 #include <cmath>
 #include <assert.h>
 
-World::World(uint32_t height, std::string const& worldName) : m_height(height), m_worldName(worldName), m_version(WORLDVER) {
+World::World(uint32_t height, std::string const& worldName) : m_height(height), m_worldName(worldName), m_version(WORLDVER), m_spentTime(0), m_loadTime(0) {
     m_header = WORLD;
 }
 
@@ -23,6 +23,17 @@ void World::generate() {
         logD("gen chunk {}", x);
         m_chunks.insert(std::make_pair(x, m_worldGen->generateChunk(x)));
     }
+}
+
+void World::reset() {
+    m_chunks.clear();
+    m_players.clear();
+    m_worldName.clear();
+    m_worldGen = nullptr;
+    m_version = WORLDVER;
+    m_lastPlayerID = 1;
+    m_spentTime = 0;
+    m_loadTime = 0;
 }
 
 void World::onTick() {
@@ -87,7 +98,9 @@ std::shared_ptr<Block> World::getBlock(int32_t x, int32_t y, uint8_t layer) {
 void World::setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block) {
     if (!isOutOfBound(x, y, layer)) {
         auto chunk = getChunk(xToChunk(x));
-        chunk->setBlock(x % CHUNK_WIDTH, y, layer, block);
+
+        auto localx = (x < 0 ? (CHUNK_WIDTH - (-x) % CHUNK_WIDTH) % CHUNK_WIDTH : x % CHUNK_WIDTH);
+        chunk->setBlock(localx, y, layer, block);
     }
 }
 
@@ -109,7 +122,7 @@ ByteVector World::serialize() {
 
             if (!cbytes.size()) {
                 logE("Failed to save chunk");
-                clear();
+                reset();
 
                 return bytes();
             }
