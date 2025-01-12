@@ -56,6 +56,7 @@ target_include_directories(SFFSandbox PRIVATE
     ${SHARED_HEADERS}
     "src/client/"
     "libs/raygui/src/"
+    "libs/raylib/src/external/glfw/include/GLFW/"
 )
 
 target_include_directories(SFFSandbox-server PRIVATE

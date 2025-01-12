@@ -47,9 +47,9 @@ void Game::popScene() {
 void Game::init(std::vector<std::string>& args) {
     SetConfigFlags(FLAG_VSYNC_HINT);
     InitWindow(1280, 720, "SFF Sandbox");
+    SetWindowState(FLAG_WINDOW_RESIZABLE);
     InitAudioDevice();
 
-    SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
     SetExitKey(-1);
 
 

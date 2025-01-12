@@ -62,3 +62,19 @@ void UiManager::drawInput(std::string& out, Rectf dest, std::string const& capti
     GuiTextBox(dest.to<Rectangle>(), out.data(), out.size(), m_selected == m_nodeCount);
     m_nodeCount++;
 }
+
+void UiManager::drawSliderBar(Rectf dest, std::string const& strLeft, std::string const& strRight, float* value, float minValue, float maxValue) {
+    GuiSlider(dest.to<Rectangle>(), strLeft.c_str(), strRight.c_str(), value, minValue, maxValue);
+}
+
+void UiManager::drawCheckBox(Rectf dest, std::string const& str, bool* check) {
+    GuiCheckBox(dest.to<Rectangle>(), str.c_str(), check);
+}
+
+void UiManager::drawDropDownBox(std::string& str, Rectf dest, int active, bool edit) {
+    GuiDropdownBox(dest.to<Rectangle>(), str.c_str(), &active, edit);
+}
+
+void UiManager::drawGuiListView(const std::string& str, Rectf dest, int scrollIndex, int active) {
+    GuiListView(dest.to<Rectangle>(), str.c_str(), &scrollIndex, &active);
+}
