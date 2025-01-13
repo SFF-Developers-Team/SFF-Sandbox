@@ -51,12 +51,18 @@ void RenderManager::renderWorld(std::shared_ptr<World> world, std::shared_ptr<Pl
             chunksCount++;
         }
 
-        auto layer = IsKeyDown(KEY_LEFT_ALT);
+        auto layer = !IsKeyDown(KEY_LEFT_ALT);
         auto target = player->getTargetBlock();
 
         // Selected block
         if (player->canAccessBlock(target, layer)) {
-            DrawRectangleLinesEx({(float)target.x, (float)target.y, 1.0f, 1.0f}, 1.0f / 16.f, WHITE);
+            if(player->canPlaceBlock(target, layer)) {
+                drawTile("gui.png", 1, BLOCK_RECT(target.x, target.y));
+            }
+
+            if(player->canDestroyBlock(target, layer)) {
+                drawTile("gui.png", 2 + IsKeyDown(KEY_LEFT_CONTROL), BLOCK_RECT(target.x, target.y));
+            }
         }
 
         if (dbg->isVisible()) {
@@ -119,10 +125,17 @@ void RenderManager::renderBlock(Rectf dest, std::shared_ptr<Block> block, uint8_
     assert(block != nullptr);
 
     auto index = static_cast<uint16_t>(block->getID() - 1);
-    Col4u col = (block->hasTag(Block::TagID::COLOR) ? block->getTag<Col3u>(Block::TagID::COLOR).to<Col4u>() : COL_WHITE);
-    col.a = alpha;
+    Col3u col = {255, 255, 255};
 
-    drawTile("blocks.png", index, dest, col);
+    if (block->hasTag(Block::TagID::COLOR)) { 
+        col = block->getTag<Col3u>(Block::TagID::COLOR);
+    }
+
+    if(!block->getLayer()) {
+        col.brightness(-0.25f);
+    }
+
+    drawTile("blocks.png", index, dest, {col.r, col.g, col.b, alpha});
 }
 
 void RenderManager::renderEntity(std::string& textureKey, std::shared_ptr<Entity> entity) {

@@ -54,7 +54,7 @@ public:
     void addChunk(std::shared_ptr<Chunk> chunk);
     std::shared_ptr<Chunk> getChunk(int32_t position);
 
-    std::vector<Hitbox> getHitboxes(Hitbox entityHitbox);
+    std::vector<Hitbox> getHitboxes(Hitbox entityHitbox, int radius = 1);
 
     bool save();
     bool load();

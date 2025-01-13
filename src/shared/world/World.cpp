@@ -230,11 +230,11 @@ bool World::load() {
     return true;
 }
 
-std::vector<Hitbox> World::getHitboxes(Hitbox entityHitbox) {
-    int minX = entityHitbox.x - 1;
-    int maxX = ceil(entityHitbox.x + entityHitbox.width);
-    int minY = entityHitbox.y - 1;
-    int maxY = ceil(entityHitbox.y + entityHitbox.height);
+std::vector<Hitbox> World::getHitboxes(Hitbox entityHitbox, int radius) {
+    int minX = entityHitbox.x - radius;
+    int maxX = ceil(entityHitbox.x + entityHitbox.width * radius);
+    int minY = entityHitbox.y - radius;
+    int maxY = ceil(entityHitbox.y + entityHitbox.height * radius);
 
     std::vector<Hitbox> ret;
 

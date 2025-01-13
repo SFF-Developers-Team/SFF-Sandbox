@@ -9,11 +9,6 @@ struct Vec2 {
     T x;
     T y;
 
-    template <typename N>
-    inline Vec2<N> toType() const {
-        return {static_cast<N>(x), static_cast<N>(y)};
-    }
-
     template <typename T2>
     inline T2 to() const {
         return T2 {x, y};
@@ -32,11 +27,6 @@ struct Vec3 {
     T x;
     T y;
     T z;
-
-    template <typename N>
-    inline Vec2<N> toType() const {
-        return {static_cast<N>(x), static_cast<N>(y), static_cast<N>(z)};
-    }
 
     template <typename T2>
     inline T2 to() const {
@@ -94,6 +84,26 @@ struct Col3 {
     template <typename T2>
     inline T2 to() const {
         return T2 {r, g, b};
+    }
+
+    void brightness(float factor) {
+        float tr = static_cast<float>(r);
+        float tg = static_cast<float>(g);
+        float tb = static_cast<float>(b);
+
+        if (factor > 0) {
+            tr += (255.f - tr) * factor;
+            tg += (255.f - tg) * factor;
+            tb += (255.f - tb) * factor;
+        } else {
+            tr *= (1.0f + factor);
+            tg *= (1.0f + factor);
+            tb *= (1.0f + factor);
+        }
+
+        r = static_cast<uint8_t>(tr);
+        g = static_cast<uint8_t>(tg);
+        b = static_cast<uint8_t>(tb);
     }
 };
 
