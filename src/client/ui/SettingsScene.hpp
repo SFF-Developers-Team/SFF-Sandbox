@@ -28,13 +28,12 @@ private:
     bool m_selectMode = 0;
     int m_isActive = -1;
     KeyID m_selectKey;
-
-    float m_keyX = m_container.x + 400;
+    std::vector<int> poss;
+    float m_keyX = m_container.x + 700;
     float m_keyY = 480;
 
     int count = 0;
 
-    
 public:
     SettingsScene();
     ~SettingsScene();

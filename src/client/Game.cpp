@@ -20,6 +20,8 @@ std::map<int, int> const style = {
     {BORDER_COLOR_PRESSED, 0x464770ff},
     {BASE_COLOR_PRESSED, 0x292B56ff},
     {TEXT_COLOR_PRESSED, 0xd8d8d8ff},
+
+    {BACKGROUND_COLOR, 0x1a1c47ff},
     
     {TEXT_SIZE, 20},
     {BORDER_WIDTH, 5}

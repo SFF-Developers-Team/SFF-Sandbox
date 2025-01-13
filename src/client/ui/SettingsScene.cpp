@@ -56,7 +56,7 @@ void SettingsScene::draw() {
     drawSliderBar({m_container.x + 10, 420, 200, 50}, "", "Sound Volume", &m_soundVolume, 0, 1);
     sm->setSoundVolume(m_soundVolume);  
 
-    drawButton("FullScreen", {m_container.x + 10, 500, 150, 50}, [&]() {
+    drawButton("FullScreen", {m_container.x + 10, 500, 200, 50}, [&]() {
         int display = GetCurrentMonitor();
         if(!IsWindowFullscreen()) {
             SetWindowSize(GetMonitorWidth(display), GetMonitorHeight(display));
@@ -66,7 +66,7 @@ void SettingsScene::draw() {
             SetWindowSize(1280, 720);
         } 
     });
-    drawButton("V-Sync", {m_container.x + 10, 570, 150, 50}, [&]() {
+    drawButton("V-Sync", {m_container.x + 10, 570, 200, 50}, [&]() {
         if (IsWindowState(FLAG_VSYNC_HINT)) ClearWindowState(FLAG_VSYNC_HINT);
         else SetWindowState(FLAG_VSYNC_HINT);  
     });
@@ -82,23 +82,18 @@ void SettingsScene::draw() {
     if(IsKeyPressed(KEY_SPACE) && m_isActive != -1) {
         SetWindowSize(stm->getModes().at(m_isActive).width, stm->getModes().at(m_isActive).height);
     }
-    logD("Scroll Index: {}", m_isActive);
-    for(auto& bind : stm->getBindings()) {
-        // 
-        // if(count > 0) {
-        //     m_keyY += 60;
-        // }
-        // count++;
-
-        // if(m_keyY > 1000) {
-        //     m_keyX += 100;
-        //     m_keyY = 420;
-        //     count = 0;
-        // }
-        // DrawText(TextFormat("%d", stm->getKeyFromID(bind.first)), 200, 100 + 60 * bind.first, 50, WHITE);
-        // drawButton(stm->getKeyNameFromID(bind.first), {m_keyX, m_keyY, 100, 50}, [&]() {
-        //     m_selectMode = true;
-        //     m_selectKey = bind.first;
-        // });
+    for(int i = 0; i < stm->getBindings().size(); i++) {
+        static int test = 0;
+        logD("X {}", m_keyX);
+        logD("Y {}", m_keyY);
+        DrawText(TextFormat("%d", stm->getKeyFromID(KeyID(i))), m_keyX + 120, m_container.y + 55 * i, 40, WHITE);
+        drawButton(stm->getKeyNameFromID(KeyID(i)), {m_keyX, m_container.y + 55 * i, 100, 50}, [&]() {
+            m_selectMode = true;
+            m_selectKey = KeyID(i);
+        });
+        count++;
     }
+    // for(auto& bind : stm->getBindings()) {
+
+    // }
 }
