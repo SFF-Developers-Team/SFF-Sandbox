@@ -34,7 +34,7 @@ MenuBase::MenuBase() : m_bgRender(LoadRenderTexture(bgwidth * 16, bgheight * 16)
                 auto x = static_cast<float>(i % bgwidth);
                 auto y = static_cast<float>(i / bgwidth);
 
-                // rm->drawTile("blocks.png", blocks[i] - 1, {x * 16, y * 16, 16, 16}, COL_WHITE);
+                rm->drawTile("blocks.png", blocks[i] - 1, {x * 16, y * 16, 16, 16}, COL_WHITE);
             }
         }
 

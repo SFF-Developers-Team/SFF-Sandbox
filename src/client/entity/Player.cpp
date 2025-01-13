@@ -107,7 +107,7 @@ Vec2i Player::getTargetBlock() {
 }
 
 bool Player::canAccessBlock(Vec2i target, uint8_t layer) {
-    bool result = target.distance(Vec2f {m_hitbox.x, m_hitbox.y}) <= 4 && m_world->getBlock(target.x, target.y, layer) != nullptr;
+    bool result = target.distance(Vec2f {m_hitbox.x, m_hitbox.y}) <= 4;
 
     return result;
 }
@@ -133,21 +133,21 @@ bool Player::canPlaceBlock(Vec2i pos, uint8_t layer) {
         return false;
     }
 
-    bool closed = (
-        m_world->getBlock(pos.x - 1, pos.y, layer) && 
-        m_world->getBlock(pos.x + 1, pos.y, layer) &&
-        m_world->getBlock(pos.x, pos.y - 1, layer) && 
-        m_world->getBlock(pos.x, pos.y + 1, layer) &&
+    bool blockAround = (
+        m_world->getBlock(pos.x - 1, pos.y, layer) || 
+        m_world->getBlock(pos.x + 1, pos.y, layer) ||
+        m_world->getBlock(pos.x, pos.y - 1, layer) || 
+        m_world->getBlock(pos.x, pos.y + 1, layer) ||
         m_world->getBlock(pos.x, pos.y, !layer)
     );
 
-    bool overlap = layer == 1;
+    bool overlap = false;
 
     for(auto& [_, player] : m_world->getPlayers()) {
-        overlap &= CheckCollisionRecs(player->getHitbox().getRect().to<Rectangle>(), {(float)pos.x, (float)pos.y, 1.0f, 1.0f});
+        overlap |= (layer == 1 && CheckCollisionRecs(player->getHitbox().getRect().to<Rectangle>(), BLOCK_RECT(pos.x, pos.y)));
     }
 
-    return !m_world->getBlock(pos.x, pos.y, layer) && !closed && !overlap;
+    return !m_world->getBlock(pos.x, pos.y, layer) && blockAround && !overlap;
 }
 
 void Player::updateControls() {
@@ -163,6 +163,11 @@ void Player::updateControls() {
     if (canAccessBlock(target, layer)) {
         if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && canDestroyBlock(target, layer)) {
             m_world->destroyBlock(target.x, target.y, layer);
+            
+            if(IsKeyDown(KEY_LEFT_CONTROL)) {
+                auto block = std::make_shared<Block>(*m_inventory[m_selectedBlock]);
+                m_world->placeBlock(target.x, target.y, layer, block);
+            }
 
             if (m_onGround) {
                 setAnimation(PLAYER_HIT);

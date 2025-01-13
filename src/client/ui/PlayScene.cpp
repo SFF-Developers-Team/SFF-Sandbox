@@ -28,6 +28,8 @@ PlayScene::PlayScene(bool isOnline) :
 
         m_world->addPlayer(1, m_player);
     }
+
+    HideCursor();
 }
 
 PlayScene::~PlayScene() {
@@ -52,7 +54,7 @@ void PlayScene::draw() {
     Debug::get()->draw();
 
     auto mouse = GetMousePosition();
-    rm->drawTexture("crosshair.png", {mouse.x, mouse.y, 0.5f, 0.5f}, COL_WHITE, 0.0f, {0.25f, 0.25f});
+    rm->drawTile("gui.png", 0, {mouse.x, mouse.y, 16.f, 16.f}, COL_WHITE, 0.f, {8.f, 8.f});
 }
 
 void PlayScene::update() {
