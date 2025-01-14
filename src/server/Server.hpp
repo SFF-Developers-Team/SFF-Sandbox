@@ -2,26 +2,25 @@
 #include <thread>
 #include <memory>
 #include <map>
-#include <sockpp/tcp_acceptor.h>
-#include <PacketManager.hpp>
-#include <SimplePlayer.hpp>
-#include <GamePacket.hpp>
+#include <entity/SimplePlayer.hpp>
+#include <Packet.hpp>
 #include <toml.hpp>
 #include <Client.hpp>
+#include <enet.h>
+#include <Types.hpp>
 
 class World;
 class Timer;
 
 class Server {
 private:
-    sockpp::tcp_acceptor m_acceptor;
+    ENetHost* m_server;
     toml::v3::table config;
-    std::mutex m_acceptLock;
 
     std::shared_ptr<World> m_world;
     std::shared_ptr<Timer> m_timer;
 
-    std::vector<std::unique_ptr<Client>> m_clients;
+    std::map<uint32_t, std::shared_ptr<Client>> m_clients;
 
 public:
     static Server* get() {
@@ -30,23 +29,24 @@ public:
     }
 
     void destroy();
-
-    void onTick();
-    void acceptThread(sockpp::tcp_socket sock);
     void inputThread();
 
     void init();
-    void loop();
+    void update();
+    void onTick();
 
-    void addToQueueAll(std::shared_ptr<GamePacket> packet);
-    void addToQueue(PlayerID id, std::shared_ptr<GamePacket> packet);
-    void addToQueueExcept(PlayerID id, std::shared_ptr<GamePacket> packet);
-
-    void notifyAll(PlayerID id);
+    void broadcast(std::shared_ptr<SerializedObject> obj, Channel channel = EVERYTHING, bool reliable = true);
+    void broadcast(Packet const& packet, Channel channel = EVERYTHING, bool reliable = true);
+    void broadcastExcept(PlayerID pid, std::shared_ptr<SerializedObject> obj, Channel channel = EVERYTHING, bool reliable = true);
+    void broadcastExcept(PlayerID pid, Packet const& packet, Channel channel = EVERYTHING, bool reliable = true);
+    void send(PlayerID pid, std::shared_ptr<SerializedObject> obj, Channel channel = EVERYTHING, bool reliable = true);
+    void send(PlayerID pid, Packet const& packet, Channel channel = EVERYTHING, bool reliable = true);
 
     PlayerID joinPlayer(std::string const& username);
-    void disconnectPlayer(PlayerID id);
+    void disconnectPlayer(std::shared_ptr<Client> client, DisconnectReasonID reason);
+
+    std::string const getDisconnectReasonByID(DisconnectReasonID id);
 
     auto getWorld() { return m_world; }
-    auto& getAcceptLock() { return m_acceptLock; }
+    auto getTimer() { return m_timer; }
 };

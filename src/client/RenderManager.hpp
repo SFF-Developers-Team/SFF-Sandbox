@@ -1,7 +1,7 @@
 #pragma once
-#include <raylib.h>
 #include <memory>
 #include <string>
+#include <Types.hpp>
 
 class World;
 class Player;
@@ -11,17 +11,21 @@ class SimplePlayer;
 class Block;
 
 class RenderManager {
-private:
-    std::shared_ptr<Player> m_player; 
-    std::shared_ptr<World> m_world;
-
 public:
-    RenderManager(std::shared_ptr<World> world, std::shared_ptr<Player> player);
+    RenderManager();
 
-    void renderWorld();
-    void renderChunk(std::shared_ptr<Chunk> chunk);
-    void renderBlock(float x, float y, std::shared_ptr<Block> block);
-    void renderSelectedBlock(float x, float y, std::shared_ptr<Block> block);
-    void renderEntity(std::string& textureKey, Entity* entity);
+    static RenderManager* get() {
+        static auto rm = new RenderManager();
+        return rm;
+    }
+
+    void drawTexture(std::string const& key, Rectf dest, Col4u color = COL_WHITE, float rot = 0.f, Vec2f origin = {0, 0});
+    void drawTile(std::string const& mapKey, uint16_t index, Rectf dest, Col4u color = COL_WHITE, float rot = 0.f, Vec2f origin = {0, 0});
+
+    void renderWorld(std::shared_ptr<World> world, std::shared_ptr<Player> player);
+    void renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Player> player);
+    void renderBlock(Rectf dest, std::shared_ptr<Block> block, uint8_t alpha = 255);
+    void renderEntity(std::string& textureKey, std::shared_ptr<Entity> entity);
     void renderSimplePlayer(std::shared_ptr<SimplePlayer> player);
+    void renderPlayerTexture(Vec2f pos, std::string const& key = "player.png", Vec2f size = {16.f, 22.f}, int animFrame = 0, Direction dir = LEFT, std::string const& username = "", float nameHeight = 11.f, float nameSpacing = 1.f);
 };

@@ -1,6 +1,6 @@
 #pragma once
 #include <map>
-#include <Entity.hpp>
+#include <entity/Entity.hpp>
 
 using PlayerID = uint32_t;
 
@@ -17,11 +17,13 @@ public:
         PLAYER_CART
     };
 
+    // clang-format off
     const static inline std::map<AnimationType, std::pair<uint8_t, uint8_t>> m_animLimits = {
         {PLAYER_MOVE, {1, 5}},
         {PLAYER_SNEAK, {6, 7}},
         {PLAYER_HIT, {9, 13}}
     };
+    //clang-format on
 
 protected:
     AnimationType m_animType = PLAYER_IDLE;
@@ -31,6 +33,7 @@ protected:
     // multiplayer features
     PlayerID m_id;
     std::string m_username;
+    std::mutex mutex;
 
 public:
     SimplePlayer(std::shared_ptr<World> world);
@@ -39,10 +42,8 @@ public:
     void setAnimation(AnimationType type);
     static const char* getAnimationName(AnimationType type);
 
-    ByteVector& serialize() override;
-    size_t deserialize(ByteVector& bytes) override;
-
-    static std::size_t const getSizeBytes();
+    ByteVector serialize() override;
+    size_t deserialize(ByteVector const& bytes) override;
 
     void setUsername(std::string const& username) { m_username = username; }
     void setAnimCurrentFrame(uint8_t frame) { m_animFrame = frame; }

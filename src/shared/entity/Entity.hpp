@@ -8,12 +8,6 @@
 class World;
 
 class Entity : public SerializedObject {
-public:
-    enum Direction : uint8_t {
-        LEFT = 0,
-        RIGHT = 1
-    };
-
 protected:
     Hitbox m_hitbox;
     std::shared_ptr<World> m_world;
@@ -36,8 +30,8 @@ public:
     virtual void onTick();
     void move(float x, float y);
 
-    ByteVector& serialize() override;
-    size_t deserialize(ByteVector& bytes) override;
+    ByteVector serialize() override;
+    size_t deserialize(ByteVector const& bytes) override;
 
     void setPosition(Vec2f pos);
     void setSize(Vec2f size);
@@ -51,4 +45,5 @@ public:
     auto getSize() { return Vec2f {m_hitbox.width, m_hitbox.height}; }
     auto willRemove() { return m_remove; }
     auto getSpeed() { return Vec2f {m_speedX, m_speedY}; }
+    auto getWorld() { return m_world; }
 };
