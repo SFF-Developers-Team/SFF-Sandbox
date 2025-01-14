@@ -1,95 +1,32 @@
 #pragma once
-#include <vector>
-#include <GamePacket.hpp>
-#include <platform.hpp>
-#include <sockpp/connector.h>
-#include <sockpp/acceptor.h>
+#include <deque>
+#include <Packet.hpp>
 #include <memory>
+#include <map>
+#include <mutex>
+#include <enet.h>
 
-#if defined(_WIN32)
-    #define ERRWOULDBLOCK WSAEWOULDBLOCK
-    #define ERRALREADY WSAEALREADY
-#elif defined(__linux__)
-    #define ERRWOULDBLOCK EWOULDBLOCK
-    #define ERRALREADY EALREADY
-#else
-    #error "Unknown platform"
-#endif
+using Header = SerializedObject::Header;
 
+enum Channel : uint8_t {
+    EVERYTHING,
+    BLOCKS,
+    NOTIFICATIONS
+};
 
-template<typename Socket>
 class PacketManager {
-private:
-    Socket& m_sock;
-    
-    std::vector<uint8_t> m_writeBuf;
-    std::vector<uint8_t> m_readBuf;
-
-    std::size_t m_writeOffset = 0;
-    std::size_t m_readOffset = 0;
-    std::size_t m_readPacketSize = 0;
+protected:
+    ENetPeer* m_peer;
 
 public:
-    PacketManager(Socket& sock, size_t bufSize) : m_sock(sock), m_readBuf(bufSize) {}
+    PacketManager(ENetPeer* sock);
+    ~PacketManager();
 
-    bool send(std::shared_ptr<GamePacket> packet) {
-        // if(m_readOffset > 0) return false; // prevent sending while receiving
+    bool sendObj(std::shared_ptr<SerializedObject> obj, Channel channel = EVERYTHING, bool reliable = true);
+    bool sendPacket(Packet const& packet, Channel channel = EVERYTHING, bool reliable = true);
+    virtual void packetReceived(Packet& packet);
 
-        if(!m_writeOffset) {
-            if(!packet) return false;
-            
-            auto bytes = packet->serialize();
-            uint32_t packetSize = bytes.size();
-
-            // logD("Sending packet size {} bytes", packetSize);
-
-            m_writeBuf.resize(packetSize + 4);
-            
-            std::memcpy(m_writeBuf.data(), &packetSize, 4);
-            std::memcpy(m_writeBuf.data() + 4, bytes.data(), packetSize);
-        }
-        
-        auto res = m_sock.write(m_writeBuf.data() + m_writeOffset, m_writeBuf.size() - m_writeOffset);
-        m_writeOffset += (res.value() > 0 ? res.value() : 0);
-
-        if(res.error().value() == ERRWOULDBLOCK || m_writeOffset < m_writeBuf.size()) {
-            return false;
-        }
-
-        if(res.is_error()) {
-            logE("SEND ERROR {} ({})", res.error_message(), res.error().value());
-        }
-
-        m_writeBuf.clear();
-        m_writeOffset = 0;
-
-        return true;
-    }
-
-    std::shared_ptr<GamePacket> recv() {
-        // if(m_writeOffset > 0) return nullptr; // prevent receiving while sending
-
-        auto res = m_sock.read(m_readBuf.data() + m_readOffset, m_readBuf.size() - m_readOffset);
-        m_readOffset += (res.value() > 0 ? res.value() : 0);
-        
-        if(m_readOffset >= 4) {
-            m_readPacketSize = *(uint32_t*)(m_readBuf.data());
-            // logD("Receiving packet size {} bytes", m_readPacketSize);
-        }
-
-        if(res.error().value() == ERRWOULDBLOCK || (m_readPacketSize > 0 && m_readOffset < m_readPacketSize + 4)) {
-            return nullptr;
-        }
-
-        if(res.is_error()) {
-            return CREATE_PACKET(SerializedObject::NETWORK_ERROR, res.error_message());
-        }
-
-        auto bytes = ByteVector(m_readBuf.begin() + 4, m_readBuf.begin() + m_readOffset);
-
-        m_readOffset = 0;
-        m_readPacketSize = 0;
-
-        return CREATE_PACKET(bytes);
-    }
+    virtual void handle(Packet& packet);
+    void handleArray(Packet& packet);
+    // void handlePacket(Packet& packet);
 };

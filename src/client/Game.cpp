@@ -1,193 +1,121 @@
-#include <string>
-#include <chrono>
-#include <memory>
-#include "Game.hpp"
-#include <Debug.hpp>
-#include <Player.hpp>
-#include <Logger.hpp>
-#include <Chunk.hpp>
-#include <WorldGenNormal.hpp>
-#include <GamePacket.hpp>
-#include <GitHash.hpp>
-#include <ui/CallbackNode.hpp>
 #include <TextureManager.hpp>
-#include <filesystem>
+#include <SoundManager.hpp>
+#include <entity/Player.hpp>
+#include <ui/MainMenuScene.hpp>
+#include <world/World.hpp>
+#include <TileMap.hpp>
+#include <Logger.hpp>
+#include <Game.hpp>
+#include <raygui.h>
+#include <SettingsManager.hpp>
+
+std::map<int, int> const style = {
+    {BORDER_COLOR_NORMAL, 0x292B56ff},
+    {BASE_COLOR_NORMAL, 0x1a1c47ff},
+    {TEXT_COLOR_NORMAL, 0xd8d8d8ff},
+
+    {BORDER_COLOR_FOCUSED, 0x383A65ff},
+    {BASE_COLOR_FOCUSED, 0x292B56ff},
+    {TEXT_COLOR_FOCUSED, 0xd8d8d8ff},
+    
+    {BORDER_COLOR_PRESSED, 0x464770ff},
+    {BASE_COLOR_PRESSED, 0x292B56ff},
+    {TEXT_COLOR_PRESSED, 0xd8d8d8ff},
+
+    {BACKGROUND_COLOR, 0x1a1c47ff},
+    
+    {TEXT_SIZE, 20},
+    {BORDER_WIDTH, 5}
+};
+
+void Game::clearSceneHistory() {
+    m_sceneHistory.clear();
+}
+
+void Game::pushScene(std::shared_ptr<Scene> scene) {
+    if(m_scene != nullptr) {
+        m_sceneHistory.push_back(m_scene);
+    }
+
+    m_scene = scene;
+}
+
+void Game::popScene() {
+    if(!m_sceneHistory.empty()) {
+        m_scene = m_sceneHistory.back();
+        m_sceneHistory.pop_back();
+    }
+}
 
 void Game::init(std::vector<std::string>& args) {
-#ifdef _WIN32
-    setlocale(LOCALE_ALL, "ru");
-    SetConsoleOutputCP(CP_UTF8);
-#endif
     SetConfigFlags(FLAG_VSYNC_HINT);
-    InitWindow(m_screenWidth, m_screenHeight, "SFF Sandbox");
-    SetTargetFPS(GetMonitorRefreshRate(0));
+    InitWindow(1280, 720, "SFF Sandbox");
+    SetWindowState(FLAG_WINDOW_RESIZABLE);
+    InitAudioDevice();
 
-    SetWindowSize(m_screenWidth * sandbox_ui::Node::getDpiScaling(), m_screenHeight * sandbox_ui::Node::getDpiScaling());
-  
-    sockpp::initialize();
+    SetExitKey(-1);
+    SetWindowState(FLAG_WINDOW_RESIZABLE);
 
-    m_username = (args.size() > 0 ? args[0] : std::string("Player").append(std::to_string(rand()))); 
-    m_multiplayer = args.size() > 1;
-    m_blocksMap = std::make_shared<TileMap>("assets/blocks.png", Vector2 {16, 16});
-    m_timer = std::make_shared<Timer>(60);
+    // Load assets
+    auto sm = SoundManager::get();
+    auto tm = TextureManager::get();
+
+    tm->loadTexture("assets/player.png");
+    tm->loadTexture("assets/sff.png");
+    tm->loadTexture("assets/kolyah35.png");
+    tm->loadTexture("assets/sergeymc9730.png");
+    tm->loadTexture("assets/invisedivine.png");
+    tm->loadTexture("assets/e2e4.png");
+    tm->loadTexture("assets/del.png");
+    tm->loadTexture("assets/player.png");
+    tm->loadTexture("assets/crosshair.png");
+    tm->loadTexture("assets/selected.png");
+    tm->loadTileMap("assets/blocks.png", {16, 16});
+    tm->loadTileMap("assets/gui.png", {16, 16});
+    sm->loadMusic("assets/menu.mp3");
+    
+    // Load main classes
     m_world = std::make_shared<World>("world1");
     m_player = std::make_shared<Player>(m_world);
-    // m_particleManager = std::make_shared<ParticleManager>(m_world, m_player);
-    m_renderManager = std::make_shared<RenderManager>(m_world, m_player);
-    m_multiplayerManager = std::make_shared<Multiplayer>();
-    m_gameMenu = std::make_shared<sandbox_ui::InitialMenu>();
-    m_uiRenderer = std::make_shared<sandbox_ui::NodeRenderer>();
-
-    auto tm = TextureManager::get();
-    tm->loadTexture(std::filesystem::path("assets/player.png"));
-
-    m_uiRenderer->setScaling(8);
-    m_uiRenderer->addChild(m_gameMenu);
-
-    m_player->disableInput(true);
-    m_player->unlinkCameraX(true);
-
-    auto cn = std::make_shared<sandbox_ui::CallbackNode>();
-    cn->setDrawCallback([this](auto node) {
-        auto cam = m_player->getCamera();
-        auto old_cam = cam;
-
-        m_gameMenu->m_worldCam.y = cam.target.y + 4;
-        m_gameMenu->m_worldCam.x += 0.001f;
-
-        auto container = m_gameMenu->getNodeContainer();
-        float mscale = container->getScaling();
-
-        container->setScaling(1.f / 5.f);
-
-        auto m = m_gameMenu->getNodeContainer()->getMappedPosition(m_gameMenu->m_worldCam);
-
-        cam.target.x = m.x;
-        cam.target.y = m_gameMenu->m_worldCam.y;
-
-        // printf("cam.target.x=%f\n", m.x);
-
-        m_player->setCamera(cam);
-
-        BeginMode2D(cam);
-
-        m_renderManager->renderWorld();
-
-        EndMode2D();
-
-        m_player->setCamera(old_cam);
-        container->setScaling(mscale);
-    });
-    cn->setSize((float)m_screenWidth, (float)m_screenHeight);
-    cn->setID("game-viewpoint");
-
-    m_gameMenu->getNodeContainer()->addChild(cn, -1);
-
-    if(!m_multiplayer || !m_multiplayerManager->connect(args[1], (args.size() > 2 ? atoi(args[2].c_str()) : 7777))) {
-        if(!m_world->load()) {
-            m_world->setGenerator(std::make_shared<WorldGenNormal>(m_world, 1));
-            m_world->generate();
-        }
-
-        m_world->addPlayer(1, m_player);
+    
+    // Load styles
+    for(auto& [prop, val] : style) {
+        GuiSetStyle(DEFAULT, prop, val);
     }
+
+    // Load settings
+    SettingsManager::get();
+    
+    // Load main menu
+    pushScene(std::make_shared<MainMenuScene>());
+    PlayMusicStream(sm->getMusic("menu.mp3"));
 
     while (!WindowShouldClose()) {
         this->update();
         this->render();
     }
 
-    if(!m_multiplayer) {
-        m_world->save();
-    }
+    // if (!m_isMultiplayer && !IsKeyPressed(KEY_F1)) {
+    //     m_world->save();
+    // }
 
     CloseWindow();
-}
-
-void Game::drawCrosshair(Vector2 pos) {
-    const float thickness = 3.0f;
-    const float size = 20.f;
-    DrawLineEx({pos.x - thickness / 2.f, pos.y - size / 2.f + thickness / 2.f}, {pos.x - thickness / 2.f, pos.y + size / 2.f - thickness / 2.f}, thickness, WHITE);
-    DrawLineEx({pos.x - size / 2.f + thickness / 2.f, pos.y - thickness / 2.f}, {pos.x + size / 2.f - thickness / 2.f, pos.y - thickness / 2.f}, thickness, WHITE);
-}
-    
-void Game::render() {
-    BeginDrawing();
-        ClearBackground(SKYBLUE);
-
-        if(m_inPlayScene) {
-            BeginMode2D(m_player->getCamera());
-                m_renderManager->renderWorld();
-            EndMode2D();
-            auto selectedBlock = m_player->getSelectedBlock();
-            if(selectedBlock) {
-                m_renderManager->renderSelectedBlock(m_screenWidth - 42.f, 10.f, selectedBlock);
-            }
-            if(m_inInventory) { 
-                Rectangle BG = {(float)(GetScreenWidth() - 1050) / 2, (float)(GetScreenHeight() - 600) / 2, 1050, 600};
-                Rectangle m_currentBlock = {(float)BG.x + 20, BG.y + 50, 32, 32};
-                int m_blockCount = 0;
-
-                DrawRectangleRec(BG, {0, 0, 0, 155});
-                DrawText("Select Block", (BG.width - 30) / 2, BG.y, 30, RAYWHITE);
-                for(int i = 0; i < m_player->getInventory().size(); i++) {
-                    std::shared_ptr<Block> block = m_player->getInventory().at(i); 
-                    if(m_blockCount > 0) {
-                        m_currentBlock.x += 70;
-                    }
-                    m_blockCount++;
-
-                    if(m_currentBlock.x > BG.width + 100) {
-                        m_currentBlock.y += 60; 
-                        m_currentBlock.x = BG.x + 20;
-                    }
-                    if(CheckCollisionPointRec(GetMousePosition(), m_currentBlock) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                        m_player->setSelectedBlock(i);
-                        m_inInventory = 0;
-                    }
-                    m_renderManager->renderSelectedBlock(m_currentBlock.x, m_currentBlock.y, block);
-                }
-            }
-        } else {
-            m_uiRenderer->render();
-        }
-
-        auto dbg = Debug::get();
-
-        if(dbg->isVisible()){
-            dbg->draw();
-        } else {
-            DrawText(std::format("SFF Sandbox {}-dev ({} {})", GitHash::shortSha1, __DATE__, __TIME__).c_str(), 5, 5, 20, WHITE);
-            DrawText(std::format("{} FPS", GetFPS()).c_str(), 5, 30, 20, WHITE);
-        }
-
-        // auto cur = GetMousePosition();
-        // drawCrosshair(cur);
-    EndDrawing();
+    CloseAudioDevice();
 }
 
 void Game::update() {
-    m_timer->advanceTime();
+    auto sm = SoundManager::get();
+    UpdateMusicStream(sm->getMusic("menu.mp3"));
+    if(GetMusicTimePlayed(sm->getMusic("menu.mp3")) >= GetMusicTimeLength(sm->getMusic("menu.mp3"))) {
+        StopMusicStream(sm->getMusic("menu.mp3"));
+        PlayMusicStream(sm->getMusic("menu.mp3"));
+    }
+    if(m_scene != nullptr) m_scene->update();
+}
 
-    for (uint32_t i = 0; i < m_timer->getTicks(); i++) {
-        m_world->onTick();
-    }
-
-    m_player->update();
-
-    if(IsKeyPressed(KEY_F3)) {
-        auto dbg = Debug::get();
-        dbg->setVisible(!dbg->isVisible());
-    }
-    
-    if(IsKeyPressed(KEY_E)) {
-        m_inInventory = !m_inInventory;
-    }
-
-    if(IsKeyPressed(KEY_F6)) {
-        m_world->save();
-    }
-    if(m_multiplayer) {
-        m_multiplayerManager->onTick();
-    }
+void Game::render() {
+    BeginDrawing();
+        ClearBackground((m_scene ? m_scene->getColor().to<Color>() : WHITE));   
+        if(m_scene != nullptr) m_scene->draw();
+    EndDrawing();
 }

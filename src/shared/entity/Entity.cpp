@@ -1,6 +1,6 @@
-#include <Entity.hpp>
-#include <Block.hpp>
-#include <World.hpp>
+#include <entity/Entity.hpp>
+#include <world/Block.hpp>
+#include <world/World.hpp>
 
 Entity::Entity(std::shared_ptr<World> world) : m_world(world), m_hitbox(0.0f, 0.0f, 0.8f, 1.65f) {
     m_header = ENTITY;
@@ -56,22 +56,22 @@ void Entity::resetPosition() {
     m_hitbox.y = -3.0f;
 }
 
-ByteVector& Entity::serialize() {
+ByteVector Entity::serialize() {
     SerializedObject::serialize();
 
-    addBytes(m_hitbox.x);
-    addBytes(m_hitbox.y);
-    addBytes(m_direction);
+    add(m_hitbox.x);
+    add(m_hitbox.y);
+    add(m_direction);
 
-    return m_bytes;
+    return bytes();
 }
 
-size_t Entity::deserialize(ByteVector& bytes) {
+size_t Entity::deserialize(ByteVector const& bytes) {
     SerializedObject::deserialize(bytes);
 
-    m_hitbox.x = getBytes<float>();
-    m_hitbox.y = getBytes<float>();
-    m_direction = getBytes<Direction>();
+    m_hitbox.x = get<float>();
+    m_hitbox.y = get<float>();
+    m_direction = get<Direction>();
 
     return m_offset;
 }

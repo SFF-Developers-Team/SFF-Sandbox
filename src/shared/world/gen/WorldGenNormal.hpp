@@ -1,6 +1,6 @@
 #pragma once
+#include <world/gen/WorldGen.hpp>
 #include <PerlinNoise.hpp>
-#include <WorldGen.hpp>
 
 class WorldGenNormal : public WorldGen {
 private:

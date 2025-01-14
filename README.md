@@ -1,11 +1,16 @@
-Just a FriendsTeam Sandbox 
-Maybe I'll add more later :P
+# SFF Sandbox
+Welcome to **SFF Sandbox** - a 2D sandbox game that combines the best elements of **Minecraft** and **Terraria**!
 
-# Credits
-@Kolyah35 - Developer
-@InviseDivine - Developer
-@dogotrigger - Developer
-@JaanDev - Help with player physics :p
+## Features
+- Placing/destroying blocks.
+- Procedurally generated world.
+- Multiplayer.
 
-# Resources used
-Steve character from [Mineblocks](https://mineblocks.com/1/skin/328)
+## Credits
+[@Kolyah35](https://github.com/Kolyah35) - Lead developer\
+[@InviseDivine](https://github.com/InviseDivine) - Developer\
+[@dogotrigger](https://github.com/SergeyMC9730) - Developer\
+[@JaanDev](https://github.com/JaanDev) - Help with player physics :p\
+[@njuyse](https://www.discord.com/users/1035869665198624768) - Artist\
+[@e2e4](https://www.discord.com/users/858363705011994655) - Artist\
+[@DeL](https://www.discord.com/users/1015611842858602506) - Artist

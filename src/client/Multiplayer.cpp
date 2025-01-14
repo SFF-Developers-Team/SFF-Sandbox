@@ -1,223 +1,274 @@
+#include <entity/OnlinePlayer.hpp>
+#include <entity/Player.hpp>
+#include <world/Chunk.hpp>
+#include <world/World.hpp>
 #include <Multiplayer.hpp>
 #include <Logger.hpp>
-#include <Player.hpp>
-#include <Game.hpp>
-#include <Chunk.hpp>
-#include <thread>
 #include <Debug.hpp>
-#include <sockpp/platform.h>
-using namespace std::chrono;
-
-#if defined(_WIN32)
-  #define WOULDBLOCK WSAEWOULDBLOCK
-#elif defined(__linux__)
-  #define WOULDBLOCK EWOULDBLOCK
-#else
-  #error Unknown platform WOULDBLOCK error code
-#endif
+#include <Game.hpp>
+#include <thread>
 
 using Header = SerializedObject::Header;
 
-Multiplayer::~Multiplayer() {
-    m_connector.shutdown();
-    delete m_pacman;
+Multiplayer::Multiplayer() : PacketManager(nullptr) {
+    if (enet_initialize() != 0) {
+        logE("An error occurred while initializing ENet.");
+    }
 }
 
-bool Multiplayer::connect(std::string const& host, in_port_t port) {
-    if (auto res = m_connector.connect(host, port); !res) {
-        logE("Failed to connect to {}:{}: {}", host, port, res.error_message());
+Multiplayer::~Multiplayer() {
+    enet_deinitialize();
+}
+
+void Multiplayer::error(std::string const& str) {
+    m_connected = false;
+    m_state = ERROR;
+    m_error = str;
+}
+
+bool Multiplayer::connect(std::string const& host, uint16_t port) {
+    ENetAddress address;
+    ENetEvent event;
+
+    logD("Connecting to {}:{}...", host, port);
+
+    m_state = CONNECTING;
+    m_client = enet_host_create(0, 1, 2, 0, 0);
+
+    if(!m_client) {
+        error("Failed to create client!");
         return false;
     }
 
-    m_pacman = new PacketManager(m_connector, MP_BUF_SIZE);
+    enet_address_set_host(&address, host.c_str());
+    address.port = port;
+
+    m_peer = enet_host_connect(m_client, &address, 2, 0);
+
+    auto res = enet_host_service(m_client, &event, 5000);
+
+    if(res < 0 || event.type != ENET_EVENT_TYPE_CONNECT) {
+        enet_peer_reset(m_peer);
+        error("Failed to connect to server!");
+        return false;
+    }
 
     auto game = Game::get();
     auto myUsername = game->getUsername();
-    auto player = game->getPlayer();
 
-    auto packet = std::make_shared<GamePacket>(SerializedObject::Header::IDENTIFICATION);
-    packet->addBytes(myUsername);
-
-    m_pacman->send(packet);
-
-    auto response = m_pacman->recv();
-    if(!response->getSize()) return false;
-
-    m_connector.set_non_blocking();
-
-    auto header = response->getBytes<SerializedObject::Header>();
-    if(header == SerializedObject::Header::NETWORK_ERROR) {
-        logE("SERVER ERROR {}", response->getBytes<std::string>());
-        std::exit(1);
+    auto packet = Packet(SerializedObject::Header::IDENTIFICATION);
+    packet.add(myUsername);
+    if(sendPacket(packet)) {
+        logD("Identification sent. Waiting for response...");
+        m_state = LOGGING_IN;
     }
-
-    auto id = response->getBytes<PlayerID>(0);
-    player->setID(id);
-    game->getWorld()->addPlayer(id, player);
-
-    logD("My playerID {}", id);
 
     return true;
 }
 
-void Multiplayer::addToQueue(std::shared_ptr<SerializedObject> classObj) {
-    if(std::find(m_queue.begin(), m_queue.end(), classObj) != m_queue.end()) return;
-    if(m_queue.size() > 10) logD("big queue size {}", m_queue.size());
+bool Multiplayer::connected() {
+    return m_connected;
+} 
 
-    m_queue.push_back(classObj);
-}
+void Multiplayer::requestChunk(Chunk::Position pos) {
+    auto it = std::find(m_chunkRequests.begin(), m_chunkRequests.end(), pos);
 
-void Multiplayer::onBlockChanged(Vec2i pos, uint8_t layer) {
-    auto block = Game::get()->getWorld()->getBlock(pos.x, pos.y, layer);
-    if(block) {
-        logD("block changed {}", (int)block->getID());
-        addToQueue(std::shared_ptr<Block>(block));
+    if(it == m_chunkRequests.end()) {
+        m_chunkRequests.push_back(pos);
+        sendPacket(Packet(Header::LOAD_CHUNK, pos));
     }
 }
 
-void Multiplayer::onTick() {
+void Multiplayer::update() {
+    ENetEvent event;
+    while(enet_host_service(m_client, &event, 0) > 0) {
+        switch(event.type) {
+            case ENET_EVENT_TYPE_RECEIVE: {
+                auto packet = Packet(event.packet);
+                enet_packet_destroy(event.packet);
+
+                if(!m_connected) {
+                    auto header = packet.get<Header>();
+                    if(header == Header::NETWORK_ERROR) handleError(packet);
+                    if(header != Header::IDENTIFICATION) break;
+
+                    auto game = Game::get();
+                    auto player = game->getPlayer();
+                    auto id = packet.get<PlayerID>(0);
+                    logD("Received PlayerID from server {}", id);
+
+                    game->getWorld()->addPlayer(id, player);
+
+                    m_connected = true;
+                    m_state = PLAYING;
+
+                    break;
+                }
+
+                handle(packet);
+                break;
+            }
+
+            case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT:
+                error("Timed out.");
+                break;
+
+            case ENET_EVENT_TYPE_DISCONNECT: {
+                error("Connection closed.");
+                break;
+            }
+
+            default: break;
+        }
+    }
+}
+
+void Multiplayer::destroy() {
+    enet_peer_reset(m_peer);
+    enet_host_destroy(m_client);
+}
+
+void Multiplayer::handle(Packet& packet) {
+    PacketManager::handle(packet);
+
+    switch(packet.get<Header>()) {
+        case Header::UNLOAD_PLAYER: handleUnloadPlayer(packet); break;
+        case Header::LOAD_PLAYER: handleLoadPlayer(packet); break;
+        case Header::NETWORK_ERROR: handleError(packet); break;
+        case Header::PLAYER: handlePlayer(packet); break;
+        case Header::CHUNK: handleChunk(packet); break;
+        // case Header::BLOCK: handleBlock(packet); break;
+        case Header::BLOCK_DESTROY: handleBlockDestroy(packet); break;
+        case Header::BLOCK_PLACE: handleBlockPlace(packet); break;
+        default: return;
+    }
+}
+
+void Multiplayer::handleError(Packet& packet) {
+    error(packet.get<std::string>("unknown"));
+}
+
+void Multiplayer::handlePlayer(Packet& packet) {
     auto game = Game::get();
     auto world = game->getWorld();
     auto me = game->getPlayer();
-
-    // packet queue is not empty and world loaded
-    if(!m_queue.empty() && m_worldLoaded && m_pacman->send(CREATE_PACKET((*m_queue.begin())->serialize()))) {
-        m_queue.erase(m_queue.begin());
-        return;
-    }
-
-    auto packet = m_pacman->recv();
-    if(!packet) return;
-
-    switch (packet->getBytes<Header>()) {
-        case Header::NETWORK_ERROR: {
-            logE("SERVER ERROR {}", packet->getBytes<std::string>());
-            std::exit(1);
-            break;
-        }
-
-        case Header::LOAD_PLAYER: {
-            auto id = packet->getBytes<PlayerID>(0);
-            logD("Load player {}", id);
-            if(!id) break;
-            
-            auto player = world->getPlayer(id);
-            auto username = packet->getBytes<std::string>("undefined");
-            
-            if(!player) {
-                player = std::make_shared<SimplePlayer>(world);
-                world->addPlayer(id, player);
-            }
-
-            player->setUsername(username);
-
-            break;
-        }
-
-        case Header::UNLOAD_PLAYER: {
-            auto id = packet->getBytes<PlayerID>(0);
-            logD("Unload player {}", id);
-            if(!world->getPlayer(id)) break;
-            
-            world->unloadPlayer(id);
-            
-            break;
-        }
-
-        case Header::PLAYERS: {
-            auto count = packet->getBytes<uint32_t>(0);
-            if(packet->getSize() > 5 + SimplePlayer::getSizeBytes() * count) {
-                logD("STRANGE PACKET {} BYTES ", packet->getSize());
-                for(auto i = 0; i < packet->getSize() - 5; i++) std::cout << std::hex << std::setfill('0') << std::setw(2) << (int)packet->getBytes<uint8_t>() << " ";
-                std::cout << std::endl;
-            }
-            
-            while(count-- > 0) {
-                auto bytes = packet->getBytesN(SimplePlayer::getSizeBytes());
-                auto playerPacket = CREATE_PACKET(bytes);
-                
-                if(playerPacket->getBytes<SerializedObject::Header>() != SerializedObject::PLAYER) continue;
-                auto id = playerPacket->getBytes<PlayerID>(0);
-                if(!id) continue;
-
-                // logD("Update player id {}", id);
-
-                auto player = world->getPlayer(id);
-                if(!player) {
-                    player = std::make_shared<SimplePlayer>(world);
-                    world->addPlayer(id, player);
-                }
-
-                if(player->getUsername().empty()) addToQueue(CREATE_PACKET(SerializedObject::LOAD_PLAYER, id));
-
-                player->deserialize(bytes);
-            }
-            break;
-        }
-
-        case Header::PLAYER: {
-            auto id = packet->getBytes<PlayerID>(0);
-            if(id == 0) {
-                break;
-            }
-
-            if(id == me->getID()) {
-                me->deserialize(packet->serialize());
-                break;
-            }
-
-            auto otherPlayer = world->getPlayer(id);
-            if(!otherPlayer) {
-                otherPlayer = std::make_shared<SimplePlayer>(world);
-                world->addPlayer(id, otherPlayer);
-            }
-
-            if(otherPlayer->getUsername().empty()) addToQueue(CREATE_PACKET(SerializedObject::LOAD_PLAYER, id));
-
-            otherPlayer->deserialize(packet->serialize());
-
-            break;
-        }
-
-        case Header::BLOCK: {
-            auto block = std::make_unique<Block>(Block::ID::AIR);
-            block->deserialize(packet->serialize());
-            auto pos = block->getPos();
-            auto layer = block->getLayer();
-
-            world->setBlock(pos.x, pos.y, layer, std::move(block));
-
-            break;
-        }
-
-        case Header::CHUNK: {
-            auto chunk = std::make_shared<Chunk>(world);
-            chunk->deserialize(packet->serialize());
-
-            logD("Chunk {} ({} bytes)", chunk->getPosition(), packet->serialize().size());
-
-            world->addChunk(chunk);
-            break;
-        }
-
-        case Header::CHUNKS: {
-            auto chunksCount = packet->getBytes<uint8_t>();
-
-            while(chunksCount-- > 0) {
-                auto csize = packet->getBytes<uint16_t>();
-                auto cbytes = packet->getBytesN(csize);
-                auto chunk = std::make_shared<Chunk>(world);
-                chunk->deserialize(cbytes);
-                world->addChunk(chunk);
-            }
-
-            m_worldLoaded = true;
-
-            break;
-        }
-
-        default: {
+    auto id = packet.get<PlayerID>(0);
+    
+    if(id > 0) {
+        if(id == me->getID()) {
+            me->deserialize(packet.bytes());
             return;
         }
+
+        auto otherPlayer = world->getPlayer(id);
+
+        if(!otherPlayer) {
+            otherPlayer = std::make_shared<OnlinePlayer>(world);
+            world->addPlayer(id, otherPlayer);
+        }
+
+        if(otherPlayer->getUsername().empty()) {
+            sendPacket(Packet(SerializedObject::LOAD_PLAYER, id));
+        }
+
+        otherPlayer->deserialize(packet.bytes());
     }
+}
+
+void Multiplayer::handleLoadPlayer(Packet& packet) {
+    auto game = Game::get();
+    auto world = game->getWorld();
+    auto id = packet.get<PlayerID>(0);
+    logD("Load player {}", id);
+
+    if(id > 0) {
+        auto player = world->getPlayer(id);
+        auto username = packet.get<std::string>("undefined");
+        
+        if(!player) {
+            player = std::make_shared<OnlinePlayer>(world);
+            world->addPlayer(id, player);
+        }
+
+        player->setUsername(username);
+    }
+}
+
+void Multiplayer::handleUnloadPlayer(Packet& packet) {
+    auto game = Game::get();
+    auto world = game->getWorld();
+    auto id = packet.get<PlayerID>(0);
+    logD("Unload player {}", id);
+
+    if(world->getPlayer(id)) {
+        world->unloadPlayer(id);
+    }
+}
+
+void Multiplayer::handleChunk(Packet& packet) {
+    auto game = Game::get();
+    auto world = game->getWorld();
+    auto chunk = std::make_shared<Chunk>(world);
+    chunk->deserialize(packet.bytes());
+
+    auto it = std::find(m_chunkRequests.begin(), m_chunkRequests.end(), chunk->getPosition());
+    if(it != m_chunkRequests.end()) {
+        m_chunkRequests.erase(it);
+    }
+
+    world->addChunk(chunk);
+}
+
+// void Multiplayer::handleBlock(Packet& packet) {
+//     auto game = Game::get();
+    
+//     auto block = std::make_shared<Block>();
+//     block->deserialize(packet.bytes());
+
+//     auto pos = block->getPos();
+//     auto lay = block->getLayer();
+
+//     game->getWorld()->setBlock(pos.x, pos.y, lay, block);
+    
+//     logD("Received block {}, {}, {}", pos.x, pos.y, lay);
+// }
+
+void Multiplayer::handleBlockPlace(Packet& packet) {
+    auto game = Game::get();
+
+    auto block = std::make_shared<Block>();
+    block->deserialize(packet.getN(packet.size() - 1));
+
+    auto pos = block->getPos();
+    auto lay = block->getLayer();
+
+    game->getWorld()->setBlock(pos.x, pos.y, lay, block);
+
+    logD("Placed block {}, {}, {}", pos.x, pos.y, lay);
+}
+
+void Multiplayer::handleBlockDestroy(Packet& packet) {
+    auto x = packet.get<int32_t>();
+    auto y = packet.get<int32_t>();
+    auto l = packet.get<uint8_t>();
+    Game::get()->getWorld()->destroyBlock(x, y, l);
+    logD("Destroyed block {}, {}, {}", x, y, l);
+}
+
+std::string const Multiplayer::getAddress() {
+    char buf[256];
+    enet_address_get_host(&m_client->address, buf, sizeof(buf));
+    return std::string(buf);
+}
+
+uint16_t const Multiplayer::getPort() {
+    return m_client->address.port;
+}
+
+std::string const& Multiplayer::getError() {
+    return m_error;
+}
+
+MultiplayerState const Multiplayer::getState() {
+    return m_state;
 }
