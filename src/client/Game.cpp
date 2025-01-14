@@ -7,6 +7,7 @@
 #include <Logger.hpp>
 #include <Game.hpp>
 #include <raygui.h>
+#include <SettingsManager.hpp>
 
 std::map<int, int> const style = {
     {BORDER_COLOR_NORMAL, 0x292B56ff},
@@ -54,8 +55,8 @@ void Game::init(std::vector<std::string>& args) {
 
     SetExitKey(-1);
     SetWindowState(FLAG_WINDOW_RESIZABLE);
-    // ToggleFullscreen();
 
+    // Load assets
     auto sm = SoundManager::get();
     auto tm = TextureManager::get();
 
@@ -71,18 +72,23 @@ void Game::init(std::vector<std::string>& args) {
     tm->loadTexture("assets/selected.png");
     tm->loadTileMap("assets/blocks.png", {16, 16});
     tm->loadTileMap("assets/gui.png", {16, 16});
-
     sm->loadMusic("assets/menu.mp3");
     
+    // Load main classes
     m_world = std::make_shared<World>("world1");
     m_player = std::make_shared<Player>(m_world);
-    PlayMusicStream(sm->getMusic("menu.mp3"));
+    
     // Load styles
     for(auto& [prop, val] : style) {
         GuiSetStyle(DEFAULT, prop, val);
     }
+
+    // Load settings
+    SettingsManager::get();
     
+    // Load main menu
     pushScene(std::make_shared<MainMenuScene>());
+    PlayMusicStream(sm->getMusic("menu.mp3"));
 
     while (!WindowShouldClose()) {
         this->update();
@@ -100,12 +106,10 @@ void Game::init(std::vector<std::string>& args) {
 void Game::update() {
     auto sm = SoundManager::get();
     UpdateMusicStream(sm->getMusic("menu.mp3"));
-  
     if(GetMusicTimePlayed(sm->getMusic("menu.mp3")) >= GetMusicTimeLength(sm->getMusic("menu.mp3"))) {
         StopMusicStream(sm->getMusic("menu.mp3"));
         PlayMusicStream(sm->getMusic("menu.mp3"));
     }
-  
     if(m_scene != nullptr) m_scene->update();
 }
 

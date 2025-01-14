@@ -23,7 +23,7 @@ public:
     void drawText(std::string const& str, Vec2f pos, float size = 11.f, bool centered = false, Col4u color = COL_WHITE);
     void drawButton(std::string const& label, Rectf dest, MiniFunction<void()> const& callback);
     void drawButtonsV(Vec2f start, Vec2f btnSize, float padding, std::initializer_list<BtnPair> const& btns);
-    void drawSliderBar(Rectf dest, std::string const& strLeft, std::string const& strRight, float* value, float minValue, float maxValue);
+    void drawSlider(Rectf dest, std::string const& left, float value, float min, float max, bool bar, MiniFunction<void(float)> const& callback);
     void drawCheckBox(Rectf dest, std::string const& str, bool* check);
     void drawInput(std::string& out, Rectf dest, std::string const& caption, float fontSize = 11.f);
     void drawDropDownBox(std::string& str, Rectf dest, int active, bool edit);

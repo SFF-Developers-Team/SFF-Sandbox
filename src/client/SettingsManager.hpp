@@ -5,31 +5,14 @@
 #include <rlgl.h>
 #include <map>
 #include <glfw3.h>
-enum KeyID {
-    JUMP,
-    UP,
-    DOWN,
-    LEFT_K,
-    RIGHT_K,
-    FLY,
-    RESET_POSITION,
-};
+#include <toml.hpp>
+
 class SettingsManager {
-
 private:
-    bool m_selectMode = false;
+    std::vector<GLFWvidmode> m_modes;
+    toml::table m_settings;
+    std::vector<std::string> const m_keylist = {"Jump", "Duck", "Left", "Right", "Fly"};
 
-    std::map<KeyID, int> m_bindings = {
-        {JUMP, KEY_SPACE},
-        {UP, KEY_W},
-        {DOWN, KEY_S},
-        {LEFT_K, KEY_A},
-        {RIGHT_K, KEY_D},
-        {FLY, KEY_F},
-        {RESET_POSITION, KEY_R},
-    };
-    int modeCount;
-    const GLFWvidmode* modes;
 public:
     static SettingsManager* get() {
         static auto stm = new SettingsManager();
@@ -37,9 +20,20 @@ public:
     }
 
     SettingsManager();
-    std::string const getKeyNameFromID(KeyID id);
-    int getKeyFromID(KeyID);
-    std::map<KeyID, int>& getBindings();
-    void setSelectKey(KeyID id, int key);    
-    std::vector<GLFWvidmode> getModes();
+
+    template<typename T>
+    void setValue(std::string const& path, T value) {
+        m_settings.insert_or_assign(path, value);
+    }
+
+    template<typename T>
+    T getValue(std::string const& path, T defaultVal) {
+        return m_settings.at_path(path).value_or(defaultVal);
+    }
+
+    int getKeybind(std::string const& action);
+    void setKeybind(std::string const& action, int key);
+    
+    std::vector<std::string> const& getKeyList();
+    std::vector<GLFWvidmode> const& getModes();
 };

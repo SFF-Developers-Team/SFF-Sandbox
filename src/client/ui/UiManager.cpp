@@ -65,10 +65,13 @@ void UiManager::drawInput(std::string& out, Rectf dest, std::string const& capti
     m_nodeCount++;
 }
 
-void UiManager::drawSliderBar(Rectf dest, std::string const& strLeft, std::string const& strRight, float* value, float minValue, float maxValue) {
-    GuiSlider(dest.to<Rectangle>(), strLeft.c_str(), strRight.c_str(), value, minValue, maxValue);
-}
+void UiManager::drawSlider(Rectf dest, std::string const& left, float value, float min, float max, bool bar, MiniFunction<void(float)> const& callback) {
+    auto slider = (bar ? GuiSliderBar : GuiSlider);
 
+    if(slider(dest.to<Rectangle>(), left.c_str(), std::format("{}%", static_cast<int>(value * 100)).c_str(), &value, min, max)) {
+        callback(value);
+    }
+}
 void UiManager::drawCheckBox(Rectf dest, std::string const& str, bool* check) {
     GuiCheckBox(dest.to<Rectangle>(), str.c_str(), check);
 }
