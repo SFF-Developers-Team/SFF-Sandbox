@@ -46,4 +46,6 @@ public:
     Camera2D& getCamera() {
         return m_camera;
     }
+    
+    auto& getInventory() { return m_inventory; }
 };

@@ -305,7 +305,7 @@ void Player::onTick() {
 void Player::update() {
     for (int i = 0; i < 9; i++) {
         if (IsKeyDown(KEY_ONE + i)) {
-            m_selectedBlock = (Block::ID)(i + 1);
+            m_selectedBlock = i;
         }
     }
 
@@ -327,6 +327,7 @@ void Player::update() {
         resetPosition();
     if (IsKeyPressed(KEY_F))
         m_fly = !m_fly;
+	}
 
     updateCamera();
     updateAnimation();

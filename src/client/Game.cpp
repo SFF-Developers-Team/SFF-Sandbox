@@ -100,10 +100,12 @@ void Game::init(std::vector<std::string>& args) {
 void Game::update() {
     auto sm = SoundManager::get();
     UpdateMusicStream(sm->getMusic("menu.mp3"));
+  
     if(GetMusicTimePlayed(sm->getMusic("menu.mp3")) >= GetMusicTimeLength(sm->getMusic("menu.mp3"))) {
         StopMusicStream(sm->getMusic("menu.mp3"));
         PlayMusicStream(sm->getMusic("menu.mp3"));
     }
+  
     if(m_scene != nullptr) m_scene->update();
 }
 

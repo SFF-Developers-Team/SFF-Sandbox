@@ -7,7 +7,6 @@
 class Scene;
 class World;
 class Player;
-class TileMap;
 
 class Game {
 private:
