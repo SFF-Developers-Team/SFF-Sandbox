@@ -1,7 +1,12 @@
 # SFF Sandbox
 Welcome to **SFF Sandbox** - a 2D sandbox game that combines the best elements of **Minecraft** and **Terraria**!
 
-# Credits
+## Features
+- Placing/destroying blocks.
+- Procedurally generated world.
+- Multiplayer.
+
+## Credits
 [@Kolyah35](https://github.com/Kolyah35) - Lead developer\
 [@InviseDivine](https://github.com/InviseDivine) - Developer\
 [@dogotrigger](https://github.com/SergeyMC9730) - Developer\
