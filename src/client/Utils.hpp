@@ -6,3 +6,7 @@
 }
 
 #define BLOCK_RECT(x, y) {static_cast<float>(x), static_cast<float>(y), 1.f, 1.f}
+
+#define GETTER_SETTER(type, name, member)               \
+        type get##name() { return member; };            \
+        void set##name(type val) { member = val; }      \

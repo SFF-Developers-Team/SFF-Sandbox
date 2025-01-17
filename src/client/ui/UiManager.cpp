@@ -6,12 +6,9 @@
 #include <string>
 #include <cmath>
 
-UiManager::UiManager() {}
 
-void UiManager::drawText(std::string const& str, Vec2f pos, float fontSize, bool centered, Col4u color) {
-    auto width = MeasureText(str.c_str(), fontSize);
-    DrawText(str.c_str(), pos.x - width * (centered ? 0.5f : 0.f), pos.y, fontSize, color.to<Color>());
-}
+
+UiManager::UiManager() {}
 
 void UiManager::drawMenuLogo() {
     auto rm = RenderManager::get();
@@ -26,60 +23,5 @@ void UiManager::drawMenuLogo() {
     auto text = "Sandbox";
     auto textH = 35;
     auto textW = MeasureText(text, textH);
-    drawText(text, {sw / 2 - textW / 2, sffY + sff.width * 0.7f}, 35);
-}
-
-void UiManager::drawButton(std::string const& label, Rectf dest, MiniFunction<void()> const& callback) {
-    if(GuiButton(dest.to<Rectangle>(), label.c_str())) {
-        callback();
-    }
-}
-
-void UiManager::drawButtonsV(Vec2f start, Vec2f btnSize, float padding, std::initializer_list<BtnPair> const& btns) {
-    for(auto const& btn : btns) {
-        drawButton(btn.label, {start.x, start.y, btnSize.x, btnSize.y}, btn.callback);
-        start.y += padding;
-    }
-}
-
-void UiManager::drawInput(std::string& out, Rectf dest, std::string const& caption, float fontSize) {
-    Vec2f mouse = {
-        static_cast<float>(GetMouseX()), 
-        static_cast<float>(GetMouseY())
-    };
-
-    if(dest.contains(mouse) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        m_selected = m_nodeCount;
-    }
-
-    if(!caption.empty()) {
-        drawText(caption, {dest.x, dest.y - fontSize - 2.f}, fontSize);
-    }
-
-    if(m_selected != m_nodeCount) {
-        DrawRectangleRec(dest.to<Rectangle>(), GetColor(GuiGetStyle(TEXTBOX, BASE_COLOR_NORMAL)));
-    }
-
-    GuiTextBox(dest.to<Rectangle>(), out.data(), out.size(), m_selected == m_nodeCount);
-
-    m_nodeCount++;
-}
-
-void UiManager::drawSlider(Rectf dest, std::string const& left, float value, float min, float max, bool bar, MiniFunction<void(float)> const& callback) {
-    auto slider = (bar ? GuiSliderBar : GuiSlider);
-
-    if(slider(dest.to<Rectangle>(), left.c_str(), std::format("{}%", static_cast<int>(value * 100)).c_str(), &value, min, max)) {
-        callback(value);
-    }
-}
-void UiManager::drawCheckBox(Rectf dest, std::string const& str, bool* check) {
-    GuiCheckBox(dest.to<Rectangle>(), str.c_str(), check);
-}
-
-void UiManager::drawDropDownBox(std::string& str, Rectf dest, int active, bool edit) {
-    GuiDropdownBox(dest.to<Rectangle>(), str.c_str(), &active, edit);
-}
-
-void UiManager::drawGuiListView(const std::string& str, Rectf dest, int scrollIndex, int active) {
-    GuiListView(dest.to<Rectangle>(), str.c_str(), &scrollIndex, &active);
+    DrawText(text, sw / 2 - textW / 2, sffY + sff.width * 0.7f, 35, WHITE);
 }

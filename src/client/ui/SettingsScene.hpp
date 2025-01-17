@@ -12,17 +12,9 @@
 class SettingsScene : public MenuBase {
 private:
     std::string m_dropText;
-
-    // bool m_fullscreen = 0;
-    bool m_selectMode = 0;
-    // int m_isActive = -1;
     std::string m_selectKey;
-    // std::vector<int> poss;
-    // float m_keyX = m_container.x + 700;
-    // float m_keyY = 480;
-
-    // int count = 0;
-
+    bool m_selectMode = false;
+    
 public:
     SettingsScene();
 
