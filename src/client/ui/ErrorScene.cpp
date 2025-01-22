@@ -11,11 +11,11 @@ void ErrorScene::draw() {
     auto screenH = static_cast<float>(GetScreenHeight());
     auto const buttonW = 200.f;
 
-    drawText(m_message, {screenW / 2.f, screenH / 2.f}, 28.f, true);
+    // drawText(m_message, {screenW / 2.f, screenH / 2.f}, 28.f, true);
 
-    drawButton("Main menu", {screenW / 2.f - buttonW / 2.f, 460.f, 200.f, 40.f}, []() -> void {
-        auto game = Game::get();
-        game->clearSceneHistory();
-        game->pushScene(std::make_shared<MainMenuScene>());
-    });
+    // drawButton("Main menu", {screenW / 2.f - buttonW / 2.f, 460.f, 200.f, 40.f}, []() -> void {
+    //     auto game = Game::get();
+    //     game->clearSceneHistory();
+    //     game->pushScene(std::make_shared<MainMenuScene>());
+    // });
 }

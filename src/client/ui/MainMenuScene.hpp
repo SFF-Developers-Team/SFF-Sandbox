@@ -4,6 +4,4 @@
 class MainMenuScene : public MenuBase {
 public:
     MainMenuScene();
-    
-    void draw() override;
 };

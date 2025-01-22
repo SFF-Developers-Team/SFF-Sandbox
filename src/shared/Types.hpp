@@ -50,11 +50,6 @@ struct Rect {
     bool contains(const Vec2<T>& other) const { return other.x >= x && other.x <= x + width && other.y >= y && other.y <= y + height; }
 
     template <typename T2>
-    inline Rect<T2> toType() const {
-        return {static_cast<T2>(x), static_cast<T2>(y), static_cast<T2>(width), static_cast<T2>(height)};
-    }
-
-    template <typename T2>
     inline T2 to() const {
         return T2 {x, y, width, height};
     }
@@ -145,10 +140,7 @@ using Vec3i = Vec3<int>;
 using Rectf = Rect<float>;
 using Recti = Rect<int>;
 
-using Col3f = Col3<float>;
 using Col3u = Col3<unsigned char>;
-
-using Col4f = Col4<float>;
 using Col4u = Col4<unsigned char>;
 
 // Custom raylib color palette for amazing visuals on WHITE background

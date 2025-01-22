@@ -6,27 +6,8 @@
 #include <TileMap.hpp>
 #include <Logger.hpp>
 #include <Game.hpp>
-#include <raygui.h>
 #include <SettingsManager.hpp>
-
-std::map<int, int> const style = {
-    {BORDER_COLOR_NORMAL, 0x292B56ff},
-    {BASE_COLOR_NORMAL, 0x1a1c47ff},
-    {TEXT_COLOR_NORMAL, 0xd8d8d8ff},
-
-    {BORDER_COLOR_FOCUSED, 0x383A65ff},
-    {BASE_COLOR_FOCUSED, 0x292B56ff},
-    {TEXT_COLOR_FOCUSED, 0xd8d8d8ff},
-    
-    {BORDER_COLOR_PRESSED, 0x464770ff},
-    {BASE_COLOR_PRESSED, 0x292B56ff},
-    {TEXT_COLOR_PRESSED, 0xd8d8d8ff},
-
-    {BACKGROUND_COLOR, 0x1a1c47ff},
-    
-    {TEXT_SIZE, 20},
-    {BORDER_WIDTH, 5}
-};
+#include <StyleManager.hpp>
 
 void Game::clearSceneHistory() {
     m_sceneHistory.clear();
@@ -78,29 +59,24 @@ void Game::init(std::vector<std::string>& args) {
     m_world = std::make_shared<World>("world1");
     m_player = std::make_shared<Player>(m_world);
     
-    // Load styles
-    for(auto& [prop, val] : style) {
-        GuiSetStyle(DEFAULT, prop, val);
-    }
-
     // Load settings
     SettingsManager::get();
+    StyleManager::get();
     
     // Load main menu
     pushScene(std::make_shared<MainMenuScene>());
     PlayMusicStream(sm->getMusic("menu.mp3"));
 
     while (!WindowShouldClose()) {
-        this->update();
-        this->render();
+        update();
+        render();
     }
+
+    destroy();
 
     // if (!m_isMultiplayer && !IsKeyPressed(KEY_F1)) {
     //     m_world->save();
     // }
-
-    CloseWindow();
-    CloseAudioDevice();
 }
 
 void Game::update() {
@@ -118,4 +94,9 @@ void Game::render() {
         ClearBackground((m_scene ? m_scene->getColor().to<Color>() : WHITE));   
         if(m_scene != nullptr) m_scene->draw();
     EndDrawing();
+}
+
+void Game::destroy() {
+    CloseAudioDevice();
+    CloseWindow();
 }

@@ -29,6 +29,7 @@ public:
     void init(std::vector<std::string>& args);
     void render();
     void update();
+    void destroy();
     
     void clearSceneHistory();
     void pushScene(std::shared_ptr<Scene> scene);

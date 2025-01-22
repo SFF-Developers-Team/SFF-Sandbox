@@ -6,26 +6,29 @@
 #include <RenderManager.hpp>
 #include <TextureManager.hpp>
 #include <Game.hpp>
+#include <ui/nodes/Button.hpp>
 
-MainMenuScene::MainMenuScene() : MenuBase() {}
-
-void MainMenuScene::draw() {
-    MenuBase::draw();
-
+MainMenuScene::MainMenuScene() : MenuBase() {
     auto sw = static_cast<float>(GetScreenWidth());
-    auto sh = static_cast<float>(GetScreenHeight());
-    auto rm = RenderManager::get();
-    auto tm = TextureManager::get();
-
     auto game = Game::get();
+    auto y = 300.f;
+    auto const padding = 60.f;
 
-    Vec2f const btnSize = {300.f, 40.f};
+    std::map<std::string, MiniFunction<void()>> const btns = {
+        {"Play", [game]() { game->pushScene(std::make_shared<PlayScene>()); }},
+        {"Multiplayer", [game]() { game->pushScene(std::make_shared<MultiplayerScene>()); }},
+        {"Credits", [game]() { game->pushScene(std::make_shared<CreditsScene>()); }},
+        {"Settings", [game]() { game->pushScene(std::make_shared<SettingsScene>()); }},
+        {"Quit", [game]() { game->destroy(); }}
+    };
 
-    drawButtonsV({sw / 2.f - btnSize.x / 2.f, 300.f}, btnSize, 60.f, {
-        {"Play", [&](){ game->pushScene(std::make_shared<PlayScene>()); }},
-        {"Multiplayer", [&](){ game->pushScene(std::make_shared<MultiplayerScene>()); }},
-        {"Credits", [&](){ game->pushScene(std::make_shared<CreditsScene>()); }},
-        {"Settings", [&](){ game->pushScene(std::make_shared<SettingsScene>()); }},
-        {"Exit", [&](){ CloseWindow(); CloseAudioDevice();}}
-    });
+    for(auto& [text, call] : btns) {
+        auto btn = std::make_shared<Button>(text, call);
+        btn->setPos({sw / 2, y});
+        btn->setSize({300.f, 40.f});
+        
+        addChild(btn);
+        
+        y += padding;
+    }
 }

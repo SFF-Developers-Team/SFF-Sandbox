@@ -2,7 +2,7 @@
 #include <algorithm>
 
 Timer::Timer(float ticksPerSecond)
-    : m_ticksPerSecond(ticksPerSecond), m_lastTime(getNanos()), m_passedTime(0.f), m_timeScale(1.f), m_ticks(0), m_a(0.f) {}
+    : m_ticksPerSecond(ticksPerSecond), m_lastTime(getNanos()), m_passedTime(0.f), m_timeScale(1.f), m_ticks(0) {}
 
 void Timer::advanceTime() {
     auto now = getNanos();
@@ -18,10 +18,6 @@ void Timer::advanceTime() {
 
 int64_t Timer::getNanos() {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(m_clock.now().time_since_epoch()).count();
-}
-
-float Timer::getA() {
-    return m_a;
 }
 
 uint32_t Timer::getTicks() {

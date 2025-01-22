@@ -49,17 +49,27 @@ MenuBase::~MenuBase() {
 }
 
 void MenuBase::draw() {
-    Scene::draw();
+    auto rm = RenderManager::get();
+    auto tm = TextureManager::get();
 
+    auto sw = static_cast<float>(GetScreenWidth());
     auto w = static_cast<float>(m_bgRender.texture.width) * 5.05f;
     auto h = static_cast<float>(m_bgRender.texture.height) * 5.05f;
 
     DrawTexturePro(
         m_bgRender.texture, 
         {0, 0, (float)m_bgRender.texture.width, (float)-m_bgRender.texture.height},
-        // what??? constant values without calculation???
         {-47.f, static_cast<float>(GetScreenHeight()) - h, w, h}, {0, 0}, 0, WHITE
     );
 
-    drawMenuLogo();
+    auto sff = tm->getTexture("sff.png");
+    auto sffY = 100.f + ((float)sin(GetTime()) * 30);
+    rm->drawTexture("sff.png", {sw / 2 - sff.width / 2, sffY, static_cast<float>(sff.width), static_cast<float>(sff.height)});
+
+    auto text = "Sandbox";
+    auto textH = 35;
+    auto textW = MeasureText(text, textH);
+    DrawText(text, sw / 2 - textW / 2, sffY + sff.width * 0.7f, 35, WHITE);
+
+    Scene::draw();
 }

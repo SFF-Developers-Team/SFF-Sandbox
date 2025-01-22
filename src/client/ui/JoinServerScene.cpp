@@ -1,5 +1,6 @@
 #include <ui/MultiplayerScene.hpp>
 #include <ui/JoinServerScene.hpp>
+#include <ui/nodes/Text.hpp>
 #include <ui/PlayScene.hpp>
 #include <Multiplayer.hpp>
 #include <Game.hpp>
@@ -9,6 +10,12 @@
 JoinServerScene::JoinServerScene(std::string const& hostname, uint16_t port) : m_startTime(GetTime()) {
     auto mp = Multiplayer::get();
     std::thread(&Multiplayer::connect, mp, hostname, port).detach();
+
+    auto const screenW = static_cast<float>(GetScreenWidth());
+    auto const screenH = static_cast<float>(GetScreenHeight());
+    auto const inputW = 200.f;
+
+    auto state = std::make_shared<Text>("", 28.f);
 }
 
 void JoinServerScene::update() {
@@ -46,18 +53,14 @@ void JoinServerScene::update() {
 }
 
 void JoinServerScene::draw() {
-    MenuBase::draw();
+    MenuBase::draw()
 
-    auto screenW = static_cast<float>(GetScreenWidth());
-    auto screenH = static_cast<float>(GetScreenHeight());
-    auto const inputW = 200.f;
+    // drawText(m_message, {screenW / 2.f, screenH / 2.f}, 28.f, true);
 
-    drawText(m_message, {screenW / 2.f, screenH / 2.f}, 28.f, true);
-
-    if(GetTime() >= m_startTime + 5.f) {
-        drawButton("Cancel", {screenW / 2.f - inputW / 2.f, 460.f, 200.f, 40.f}, []() -> void {
-            Multiplayer::get()->destroy();
-            Game::get()->popScene();
-        });
-    }
+    // if(GetTime() >= m_startTime + 5.f) {
+    //     drawButton("Cancel", {screenW / 2.f - inputW / 2.f, 460.f, 200.f, 40.f}, []() -> void {
+    //         Multiplayer::get()->destroy();
+    //         Game::get()->popScene();
+    //     });
+    // }
 }

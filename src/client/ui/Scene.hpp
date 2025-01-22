@@ -7,21 +7,18 @@
 class Scene : protected UiManager {
 protected:
     Col4u m_bgColor = COL_WHITE;
+    bool m_shouldExit = false;
 
 public:
-    Scene() {};
-    Col4u getColor() {
-        return m_bgColor;
-    }
+    Scene();
 
-    virtual void setColor(Col4u color) {
-        m_bgColor = color;
-    }
+    Col4u getColor();
+    void setColor(Col4u color);
+    void exit();
 
-    virtual void update() {
-        if(IsKeyPressed(KEY_ESCAPE)) {
-            Game::get()->popScene();
-        }
-    }
-    virtual void draw() { m_nodeCount = 0; }
+    virtual void update();
+    virtual void draw();
+
+    virtual void onPush() {}
+    virtual void onPop() {};
 };

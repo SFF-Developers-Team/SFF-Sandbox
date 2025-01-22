@@ -2,42 +2,62 @@
 #include <ui/JoinServerScene.hpp>
 #include <ui/MainMenuScene.hpp>
 #include <Game.hpp>
+#include <ui/nodes/Button.hpp>
+#include <ui/nodes/Text.hpp>
+#include <ui/nodes/TextInput.hpp>
 
 MultiplayerScene::MultiplayerScene() : MenuBase() {
-    m_username.resize(32);
-    m_hostname.resize(256);
-}
+    auto const sw = static_cast<float>(GetScreenWidth());
+    auto const sh = static_cast<float>(GetScreenHeight());
+    auto const btnSize = Vec2f {200.f, 40.f};
+    auto const btnPos = Vec2f {sw / 2.f, 460.f};
+    auto const game = Game::get();
+    auto const padding = 60.f;
 
-MultiplayerScene::~MultiplayerScene() {}
+    auto usernameLabel = std::make_shared<Text>("Username:", 22.f);
+    usernameLabel->setPos({sw / 2, 270.f});
+    addChild(usernameLabel);
 
-void MultiplayerScene::draw() {
-    MenuBase::draw();
+    auto usernameInput = std::make_shared<TextInput>();
+    usernameInput->setPos({sw / 2, 300.f});
+    usernameInput->setSize(btnSize);
+    usernameInput->setTag("username-input");
+    addChild(usernameInput);
 
-    auto game = Game::get();
-    auto sw = static_cast<float>(GetScreenWidth());
-    auto sh = static_cast<float>(GetScreenHeight());
+    auto hostnameLabel = std::make_shared<Text>("Server IP:", 22.f);
+    hostnameLabel->setPos({sw / 2, 350.f});
+    addChild(hostnameLabel);
 
-    auto const inputW = 200.f;
+    auto hostnameInput = std::make_shared<TextInput>();
+    hostnameInput->setPos({sw / 2, 380.f});
+    hostnameInput->setSize(btnSize);
+    hostnameInput->setTag("hostname-input");
+    addChild(hostnameInput);
+    
+    auto joinBtn = std::make_shared<Button>("Join", [this, game]() {
+        auto usernameInput = std::dynamic_pointer_cast<TextInput>(this->getChild("username-input"));
+        auto hostnameInput = std::dynamic_pointer_cast<TextInput>(this->getChild("hostname-input"));
 
-    drawInput(m_username, {sw / 2.f - inputW / 2.f, 300.f, inputW, 40.f}, "Nickname:", 22.f);
-    drawInput(m_hostname, {sw / 2.f - inputW / 2.f, 380.f, inputW, 40.f}, "IP:", 22.f);
+        auto username = usernameInput->getText();
+        auto hostname = hostnameInput->getText();
 
-    drawButtonsV({sw / 2.f - inputW / 2.f, 460.f}, {200, 40}, 60.f, {
-        {"Join", [&]() {
-            if(m_username.length() < 3 || m_hostname.empty()) {
-                return;
-            }
-
-            game->setUsername(m_username);
-
-            auto colon = m_hostname.find(':');
-            std::string ip = m_hostname.substr(0, colon);
-            uint16_t port = (colon != std::string::npos ? std::stoi(m_hostname.substr(colon + 1)) : 7777);
+        if(username.size() > 3 && hostname.size() > 2) {
+            auto colon = hostname.find(':');
+            auto ip = hostname.substr(0, colon);
+            uint16_t port = (colon != std::string::npos ? std::stoi(hostname.substr(colon + 1)) : 7777);
             
-            game->pushScene(std::make_shared<JoinServerScene>(ip, port)); 
-        }},
-        {"Back", [game]() { 
-            game->popScene(); 
-        }}
+            game->setUsername(username);
+            game->pushScene(std::make_shared<JoinServerScene>(ip, port));
+        }
     });
+
+    joinBtn->setPos(btnPos);
+    joinBtn->setSize(btnSize);
+    addChild(joinBtn);
+
+    auto backBtn = std::make_shared<Button>("Back", [this]() { this->exit(); });
+    backBtn->setX(btnPos.x);
+    backBtn->setY(btnPos.y + padding);
+    backBtn->setSize(btnSize);
+    addChild(backBtn);
 }
