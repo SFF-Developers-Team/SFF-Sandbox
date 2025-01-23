@@ -24,6 +24,7 @@ public:
     auto getType() {
         return m_type;
     }
+    
     auto getSeed() {
         return m_seed;
     }

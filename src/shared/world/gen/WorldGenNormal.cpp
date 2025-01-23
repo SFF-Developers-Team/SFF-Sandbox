@@ -11,6 +11,9 @@ WorldGenNormal::WorldGenNormal(std::shared_ptr<World> world, uint64_t seed) : Wo
 
 std::shared_ptr<Chunk> WorldGenNormal::generateChunk(int32_t position) {
     auto ret = std::make_shared<Chunk>(m_world, position);
+
+    auto const terrainScale = 0.01f; 
+
     for (auto x = 0u; x < CHUNK_WIDTH; x++) {
         for (auto y = 0u; y < m_world->getHeight(); y++) {
             for (auto z = 0u; z < LAYERS; z++) {
@@ -18,6 +21,8 @@ std::shared_ptr<Chunk> WorldGenNormal::generateChunk(int32_t position) {
                     ret->setBlock(x, y, z, Block::ID::BEDROCK);
                     continue;
                 }
+
+                float baseTerrainHeight = m_perlinNoise.noise2D_01(x * terrainScale, z);
 
                 auto grassLevel = static_cast<int32_t>(m_world->getHeight() * m_perlinNoise.noise2D_01(fabs(INT_MAX / 2 + position * CHUNK_WIDTH + x) * 0.01f, z * 0.01f));
                 auto stoneLevel = grassLevel + 4 + rand() % 3;

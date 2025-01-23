@@ -222,5 +222,6 @@ std::string const Server::getDisconnectReasonByID(DisconnectReasonID id) {
         case TOO_SHORT_USERNAME: return "Too short username!";
         case TOO_LONG_USERNAME: return "Too long username!";
         case USERNAME_ALREADY_TAKEN: return "Username already taken!";
+        default: return "What?!";
     }
 }

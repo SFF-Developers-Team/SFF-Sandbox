@@ -25,7 +25,7 @@ public:
         LOAD_PLAYER, UNLOAD_PLAYER,
         BLOCK_PLACE, BLOCK_DESTROY,
 
-        NETWORK_ERROR, OK, KEEP_ALIVE, PACKET, ARRAY,
+        NETWORK_ERROR, ARRAY,
         NULL_PACKET = 0xFF
     };
 
@@ -59,18 +59,6 @@ public:
         for(int i = 0; i < sizeof(T); i++) push_back(((uint8_t*)&value)[i]);
     }
 
-    template<>
-    void add<std::string>(std::string str) {
-        for(char c : str) push_back(c);
-        push_back('\0');
-        m_offset += str.size() + 1;
-    }
-
-    template<>
-    void add<const char*>(const char* str) {
-        return add<std::string>(str);
-    }
-
     /// @brief Append other ByteVector to serialized object
     void add(ByteVector const& bytes) {
         // wtf why it is dont work
@@ -85,6 +73,16 @@ public:
         }
 
         m_offset += bytes.size();
+    }
+
+    void add(std::string str) {
+        for(char c : str) push_back(c);
+        push_back('\0');
+        m_offset += str.size() + 1;
+    }
+
+    void add(const char* str) {
+        return add<std::string>(str);
     }
 
     /// @brief Get N-count bytes from serialized object
@@ -119,20 +117,18 @@ public:
         return ret;
     }
 
-    template<>
-    std::string get<std::string>(std::string defaultVal) {
+    inline std::string get(std::string defaultVal) {
         auto len = std::strlen((char*)data() + m_offset);
         
         if(m_offset + len > size()) return defaultVal;
 
         auto ret = std::string(begin() + m_offset, begin() + m_offset + len);
         m_offset += len;
-
+        
         return ret;
     }
 
-    template<>
-    const char* get<const char*>(const char* defaultVal) = delete;
+    const char* get(const char* defaultVal) = delete;
 
     std::size_t offset() { return m_offset; }
     
