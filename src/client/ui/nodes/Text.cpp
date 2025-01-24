@@ -14,3 +14,7 @@ void Text::draw() {
 
     DrawText(m_text.c_str(), m_bounds.x - width * m_anchor.x, m_bounds.y - m_size * m_anchor.y, m_size, color);
 }
+
+void Text::setText(std::string const& text) {
+    m_text = text;
+}

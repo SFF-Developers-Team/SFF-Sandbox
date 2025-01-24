@@ -7,6 +7,7 @@
 #include <TextureManager.hpp>
 #include <Game.hpp>
 #include <ui/nodes/Button.hpp>
+#include <list>
 
 MainMenuScene::MainMenuScene() : MenuBase() {
     auto sw = static_cast<float>(GetScreenWidth());
@@ -14,7 +15,7 @@ MainMenuScene::MainMenuScene() : MenuBase() {
     auto y = 300.f;
     auto const padding = 60.f;
 
-    std::map<std::string, MiniFunction<void()>> const btns = {
+    std::list<std::pair<std::string, MiniFunction<void()>>> const btns = {
         {"Play", [game]() { game->pushScene(std::make_shared<PlayScene>()); }},
         {"Multiplayer", [game]() { game->pushScene(std::make_shared<MultiplayerScene>()); }},
         {"Credits", [game]() { game->pushScene(std::make_shared<CreditsScene>()); }},

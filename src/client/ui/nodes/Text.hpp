@@ -10,4 +10,6 @@ public:
 
     void draw();
     void update() {}
+
+    void setText(std::string const& text);
 };

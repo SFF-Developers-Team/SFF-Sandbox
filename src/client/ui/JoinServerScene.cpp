@@ -1,6 +1,8 @@
 #include <ui/MultiplayerScene.hpp>
 #include <ui/JoinServerScene.hpp>
 #include <ui/nodes/Text.hpp>
+#include <ui/nodes/Button.hpp>
+#include <ui/ErrorScene.hpp>
 #include <ui/PlayScene.hpp>
 #include <Multiplayer.hpp>
 #include <Game.hpp>
@@ -15,11 +17,25 @@ JoinServerScene::JoinServerScene(std::string const& hostname, uint16_t port) : m
     auto const screenH = static_cast<float>(GetScreenHeight());
     auto const inputW = 200.f;
 
-    auto state = std::make_shared<Text>("", 28.f);
+    auto state = std::make_shared<Text>("", 30.f);
+    state->setPos({screenW / 2, screenH / 2});
+    state->setTag("connection-state");
+    addChild(state);
+
+    auto btn = std::make_shared<Button>("Cancel", [this]() {
+        Multiplayer::get()->destroy();
+        exit();
+    });
+    
+    btn->setPos({screenW / 2, 460.f});
+    btn->setSize({200.f, 40.f});
+    addChild(btn);
 }
 
 void JoinServerScene::update() {
+    auto game = Game::get();
     auto mp = Multiplayer::get();
+    auto state = std::dynamic_pointer_cast<Text>(getChild("connection-state"));
 
     switch(mp->getState()) {
         case CONNECTING:
@@ -30,11 +46,13 @@ void JoinServerScene::update() {
             m_message = "Logging in";
             break;
         case ERROR:
-            m_message = mp->getError();
+            game->clearSceneHistory();
+            game->pushScene(std::make_shared<ErrorScene>(mp->getError()));
             return;
             
         case PLAYING:
-            Game::get()->pushScene(std::make_shared<PlayScene>(true));
+            game->clearSceneHistory();
+            game->pushScene(std::make_shared<PlayScene>(true));
             break;
     }
 
@@ -50,17 +68,6 @@ void JoinServerScene::update() {
     if(GetTime() >= m_startTime + 5.f) {
         m_message += std::format(" ({}s)", static_cast<int>(GetTime() - m_startTime));
     }
-}
 
-void JoinServerScene::draw() {
-    MenuBase::draw()
-
-    // drawText(m_message, {screenW / 2.f, screenH / 2.f}, 28.f, true);
-
-    // if(GetTime() >= m_startTime + 5.f) {
-    //     drawButton("Cancel", {screenW / 2.f - inputW / 2.f, 460.f, 200.f, 40.f}, []() -> void {
-    //         Multiplayer::get()->destroy();
-    //         Game::get()->popScene();
-    //     });
-    // }
+    state->setText(m_message);
 }
