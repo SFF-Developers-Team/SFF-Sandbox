@@ -26,6 +26,6 @@ void MainMenuScene::draw() {
         {"Multiplayer", [&](){ game->pushScene(std::make_shared<MultiplayerScene>()); }},
         {"Credits", [&](){ game->pushScene(std::make_shared<CreditsScene>()); }},
         {"Settings", [&](){ game->pushScene(std::make_shared<SettingsScene>()); }},
-        {"Exit", [&](){ CloseWindow(); CloseAudioDevice();}}
+        {"Exit", [&](){ CloseWindow(); CloseAudioDevice(); SettingsManager::get()->save(); }}
     });
 }

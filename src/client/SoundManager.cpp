@@ -24,7 +24,7 @@ void SoundManager::unloadSound(std::string const& key) {
 Sound& SoundManager::getSound(std::string const& key) {
     return m_sounds[key];
 }
-void SoundManager::setSoundVolume(float volume) {
+void SoundManager::setSoundVol(float volume) {
     SettingsManager::get()->setValue("Audio/sound", volume);
 
     for(const auto& [key, value] : m_sounds) {
@@ -55,7 +55,7 @@ Music& SoundManager::getMusic(std::string const& key) {
     return m_tracks[key];
 }
 
-void SoundManager::setMusicVolume(float volume) {
+void SoundManager::setMusicVol(float volume) {
     SettingsManager::get()->setValue("Audio/music", volume);
 
     for(const auto& [key, value] : m_tracks) {

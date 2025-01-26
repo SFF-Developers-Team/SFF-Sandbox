@@ -65,21 +65,21 @@ void UiManager::drawInput(std::string& out, Rectf dest, std::string const& capti
     m_nodeCount++;
 }
 
-void UiManager::drawSlider(Rectf dest, std::string const& left, float value, float min, float max, bool bar, MiniFunction<void(float)> const& callback) {
+void UiManager::drawSlider(Rectf dest, std::string const& left, float value, float min, float max, bool bar, bool percent, MiniFunction<void(float)> const& callback) {
     auto slider = (bar ? GuiSliderBar : GuiSlider);
-
-    if(slider(dest.to<Rectangle>(), left.c_str(), std::format("{}%", static_cast<int>(value * 100)).c_str(), &value, min, max)) {
+    std::string textRight;
+    if(percent) {
+        textRight = std::format("{}%", static_cast<int>(value * 100));
+    } else {
+        textRight = std::format("{}", static_cast<int>(value));
+    }
+    if(slider(dest.to<Rectangle>(), left.c_str(), textRight.c_str(), &value, min, max)) {
         callback(value);
     }
 }
-void UiManager::drawCheckBox(Rectf dest, std::string const& str, bool* check) {
-    GuiCheckBox(dest.to<Rectangle>(), str.c_str(), check);
-}
 
-void UiManager::drawDropDownBox(std::string& str, Rectf dest, int active, bool edit) {
-    GuiDropdownBox(dest.to<Rectangle>(), str.c_str(), &active, edit);
-}
-
-void UiManager::drawGuiListView(const std::string& str, Rectf dest, int scrollIndex, int active) {
-    GuiListView(dest.to<Rectangle>(), str.c_str(), &scrollIndex, &active);
+void UiManager::drawToggleSlider(Rectf dest, std::string const& str, int active, MiniFunction<void()> const& callback) {
+    if(GuiToggleSlider(dest.to<Rectangle>(), str.c_str(), &active)) {
+        callback();
+    }
 }

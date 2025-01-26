@@ -6,7 +6,7 @@
 #include <Debug.hpp>
 #include <Utils.hpp>
 #include <Game.hpp>
-
+#include <SettingsManager.hpp>
 Player::Player(std::shared_ptr<World> world) : SimplePlayer::SimplePlayer(world) {
     m_header = Header::PLAYER;
     m_camera.zoom = 50.0f;
@@ -197,26 +197,26 @@ void Player::updateControls() {
             }
         }
     }
-
-    if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
+    auto stm = SettingsManager::get();
+    if (IsKeyDown(stm->getKeybind("Right"))) {
         m_direction = RIGHT;
         forward++;
     }
 
-    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
+    if (IsKeyDown(stm->getKeybind("Left")) || IsKeyDown(KEY_LEFT)) {
         m_direction = LEFT;
         forward--;
     }
 
-    if ((IsKeyDown(KEY_W) || IsKeyDown(KEY_UP) || IsKeyDown(KEY_SPACE)) && (m_onGround || m_fly)) {
+    if (IsKeyDown(stm->getKeybind("Jump"))  && (m_onGround || m_fly)) {
         m_speedY = ((!m_fly) ? -0.3f : -0.25f);
     }
 
-    if ((IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)) && m_fly && !m_onGround) {
+    if (IsKeyDown(stm->getKeybind("Duck")) && m_fly && !m_onGround) {
         m_speedY = 0.25f;
     }
 
-    if ((IsKeyDown(KEY_S) || IsKeyDown(KEY_LEFT_SHIFT)) && !m_fly && m_onGround) {
+    if (IsKeyDown(stm->getKeybind("Duck")) && !m_fly && m_onGround) {
         m_sneak = true;
     }
 
@@ -322,10 +322,11 @@ void Player::update() {
         if (m_selectedBlock < 0)
             m_selectedBlock = static_cast<uint8_t>(m_inventory.size()) - 1;
     }
+    auto stm = SettingsManager::get();
 
     if (IsKeyPressed(KEY_R))
         resetPosition();
-    if (IsKeyPressed(KEY_F))
+    if (IsKeyPressed(stm->getKeybind("Fly")))
         m_fly = !m_fly;
 
     updateCamera();

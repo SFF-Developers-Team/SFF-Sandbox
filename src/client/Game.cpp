@@ -48,7 +48,6 @@ void Game::popScene() {
 }
 
 void Game::init(std::vector<std::string>& args) {
-    SetConfigFlags(FLAG_VSYNC_HINT);
     InitWindow(1280, 720, "SFF Sandbox");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     InitAudioDevice();
@@ -59,17 +58,14 @@ void Game::init(std::vector<std::string>& args) {
     // Load assets
     auto sm = SoundManager::get();
     auto tm = TextureManager::get();
+    auto stm = SettingsManager::get();
 
     tm->loadTexture("assets/player.png");
     tm->loadTexture("assets/sff.png");
-    tm->loadTexture("assets/kolyah35.png");
-    tm->loadTexture("assets/sergeymc9730.png");
-    tm->loadTexture("assets/invisedivine.png");
-    tm->loadTexture("assets/e2e4.png");
-    tm->loadTexture("assets/del.png");
     tm->loadTexture("assets/player.png");
     tm->loadTexture("assets/crosshair.png");
     tm->loadTexture("assets/selected.png");
+    tm->loadTileMap("assets/developers.png", {128, 128});
     tm->loadTileMap("assets/blocks.png", {16, 16});
     tm->loadTileMap("assets/gui.png", {16, 16});
     sm->loadMusic("assets/menu.mp3");
@@ -85,7 +81,15 @@ void Game::init(std::vector<std::string>& args) {
 
     // Load settings
     SettingsManager::get();
-    
+    // Set values from config
+    SetMasterVolume(SettingsManager::get()->getValue<float>("Audio/volume", 0.5f));
+    sm->setMusicVol(SettingsManager::get()->getValue<float>("Audio/music", 0.5f));
+    sm->setSoundVol(SettingsManager::get()->getValue<float>("Audio/volume", 0.5f));
+    if(!SettingsManager::get()->getValue<float>("Video/vsync", 1)) {
+        ClearWindowState(FLAG_VSYNC_HINT);
+    } else {
+        SetWindowState(FLAG_VSYNC_HINT);
+    }
     // Load main menu
     pushScene(std::make_shared<MainMenuScene>());
     PlayMusicStream(sm->getMusic("menu.mp3"));
@@ -101,6 +105,7 @@ void Game::init(std::vector<std::string>& args) {
 
     CloseWindow();
     CloseAudioDevice();
+    stm->save();
 }
 
 void Game::update() {
