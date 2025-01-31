@@ -1,32 +1,18 @@
 #pragma once
-#include <ui/Scene.hpp>
+#include <ui/UI.hpp>
 #include <string>
 #include <vector>
+#include <ui/MenuBase.hpp>
 
-class CreditsScene : public Scene {
+class CreditsScene : public MenuBase {
 private:
     struct Developer {
-        std::string const texture;
         std::string const name;
         std::string const role;
     };
 
-    // clang-format off
-    std::vector<Developer> devs = {
-        {"dogotrigger.png", "dogotrigger", "Programmer"},
-        {"kolyah35.png", "Kolyah35", "Programmer"},
-        {"invisedivine.png", "InviseDivine", "Programmer"},
-        {"del.png", "del", "Artist"},
-        {"e2e4.png", "e2e4", "Artist"}
-    };
-    // clang-format on
-
-    Vec2f const picsize = {128.f, 128.f};
-    int const yoffset = 30;
-    int const textoffset = 10;
-    int const textheight = 25;
-    int const devsoffset = 30;
-
 public:
+    CreditsScene();
+
     void draw() override;
 };

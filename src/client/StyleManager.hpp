@@ -16,6 +16,8 @@ enum StyleKey : uint8_t {
     SECOND_COLOR_PRESS,
     TEXT_COLOR_PRESS,
 
+    TEXT_COLOR_PLACEHOLDER,
+
     TEXT_SIZE,
     BORDER_WIDTH
 };

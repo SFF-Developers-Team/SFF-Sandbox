@@ -1,5 +1,5 @@
 #pragma once
-#include <ui/Scene.hpp>
+#include <ui/nodes/Scene.hpp>
 #include <memory>
 
 class World;

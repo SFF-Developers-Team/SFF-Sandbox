@@ -7,6 +7,4 @@ private:
 
 public:
     ErrorScene(std::string const& message);
-
-    void draw() override;
 };

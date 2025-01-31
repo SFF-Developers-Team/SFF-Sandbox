@@ -49,6 +49,8 @@ struct Rect {
 
     bool contains(const Vec2<T>& other) const { return other.x >= x && other.x <= x + width && other.y >= y && other.y <= y + height; }
 
+    Rect<T> const anchor(Vec2<T> const& point) { return Rectf {x - width * point.x, y - height * point.y, width, height}; }
+
     template <typename T2>
     inline T2 to() const {
         return T2 {x, y, width, height};
@@ -111,12 +113,12 @@ struct Col4 {
     T b;
     T a;
 
-    Col4<T> operator+(const Col4<T>& other) { return {r + other.r, g + other.g, b + other.b, a + other.a}; }
-    Col4<T> operator-(const Col4<T>& other) { return {r - other.r, g - other.g, b - other.b, a - other.a}; }
-    Col4<T> operator*(const Col4<T>& other) { return {r * other.r, g * other.g, b * other.b, a * other.a}; }
-    Col4<T> operator/(const Col4<T>& other) { return {r / other.r, g / other.g, b / other.b, a / other.a}; }
-    Col4<T> operator*(T other) { return {r * other, g * other, b * other, a * other}; }
-    Col4<T> operator/(T other) { return {r / other, g / other, b / other, a / other}; }
+    Col4<T> operator+(const Col4<T>& other) { return {static_cast<T>(r + other.r), static_cast<T>(g + other.g), static_cast<T>(b + other.b), static_cast<T>(a + other.a)}; }
+    Col4<T> operator-(const Col4<T>& other) { return {static_cast<T>(r - other.r), static_cast<T>(g - other.g), static_cast<T>(b - other.b), static_cast<T>(a - other.a)}; }
+    Col4<T> operator*(const Col4<T>& other) { return {static_cast<T>(r * other.r), static_cast<T>(g * other.g), static_cast<T>(b * other.b), static_cast<T>(a * other.a)}; }
+    Col4<T> operator/(const Col4<T>& other) { return {static_cast<T>(r / other.r), static_cast<T>(g / other.g), static_cast<T>(b / other.b), static_cast<T>(a / other.a)}; }
+    Col4<T> operator*(T other) { return {static_cast<T>(r * other), static_cast<T>(g * other), static_cast<T>(b * other), static_cast<T>(a * other)}; }
+    Col4<T> operator/(T other) { return {static_cast<T>(r / other), static_cast<T>(g / other), static_cast<T>(b / other), static_cast<T>(a / other)}; }
 
     void operator+=(const Col4<T>& other) { *this = *this + other; }
     void operator-=(const Col4<T>& other) { *this = *this - other; }
@@ -128,6 +130,27 @@ struct Col4 {
     template <typename T2>
     inline T2 to() const {
         return T2 {r, g, b, a};
+    }
+
+    // bruh i hate it
+    void brightness(float factor) {
+        float tr = static_cast<float>(r);
+        float tg = static_cast<float>(g);
+        float tb = static_cast<float>(b);
+
+        if (factor > 0) {
+            tr += (255.f - tr) * factor;
+            tg += (255.f - tg) * factor;
+            tb += (255.f - tb) * factor;
+        } else {
+            tr *= (1.0f + factor);
+            tg *= (1.0f + factor);
+            tb *= (1.0f + factor);
+        }
+
+        r = static_cast<uint8_t>(tr);
+        g = static_cast<uint8_t>(tg);
+        b = static_cast<uint8_t>(tb);
     }
 };
 

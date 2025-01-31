@@ -1,72 +1,86 @@
 #include <ui/nodes/TextInput.hpp>
 #include <StyleManager.hpp>
+#include <TextureManager.hpp>
+#include <RenderManager.hpp>
 #include <raylib.h>
+#include <Logger.hpp>
 
-TextInput::TextInput() : Node() {
-    m_allowedChars = " !@#$%^&*()\\/:;\"'№?abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+TextInput::TextInput(std::string const& font, std::string const& placeholder) : Frame(), m_font(font), m_placeholder(placeholder) {
+    m_allowedChars = " !@#$%^&*()\\/:;.,\"'№?abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 }
 
 void TextInput::draw() {
+    Frame::draw();
+
     auto sm = StyleManager::get();
-    auto fontSize = sm->getValue<float>(TEXT_SIZE);
-    auto borderw = sm->getValue<float>(BORDER_WIDTH);
-    auto width = MeasureText(m_text.c_str(), fontSize);
+    auto tm = TextureManager::get();
+    auto rm = RenderManager::get();
+    auto fontsize = sm->getValue<float>(TEXT_SIZE);
+    auto textsize = rm->getTextSize(m_text, m_font, fontsize);
+    auto cursorpos = rm->getTextSize(m_text.substr(0, m_cursorX), m_font, fontsize).x;
     auto mouse = GetMousePosition();
-    auto bounds = getBoundsAnchor();
-    auto cursorPos = MeasureText(m_text.substr(0, m_cursorX).c_str(), fontSize);
+    auto color = COL_WHITE;
 
-    auto first = FIRST_COLOR_NORMAL;
-    auto second = SECOND_COLOR_NORMAL;
+    if(m_text.empty()) color.a = 0x7F;
 
-    if(bounds.contains({mouse.x, mouse.y}) && IsMouseButtonUp(MOUSE_BUTTON_LEFT)) {
-        first = FIRST_COLOR_FOCUS;
-        second = SECOND_COLOR_FOCUS;
+    auto textPos = Vec2f {m_border + 4.f, (m_bounds.height - fontsize) * 0.5f};
+    if(cursorpos > m_bounds.width - m_border * 2) {
+        textPos.x -= cursorpos - m_bounds.width + m_border * 2.f + 8.f; 
     }
 
-    if(m_active) {
-        first = FIRST_COLOR_PRESS;
-        second = SECOND_COLOR_PRESS;
-    }
-
-    auto bnd = bounds.to<Rectangle>();
-    auto textPos = Vec2f {bnd.x + borderw + 4, bnd.y + bnd.height / 2 - fontSize / 2};
-    auto textCol = sm->getValue<Col4u>(TEXT_COLOR_NORMAL).to<Color>();
-    
-    DrawRectangleRec(bnd, sm->getValue<Col4u>(first).to<Color>());
-    DrawRectangleLinesEx(bnd, borderw, sm->getValue<Col4u>(second).to<Color>());
-    DrawText(m_text.c_str(), textPos.x, textPos.y, fontSize, textCol);
-    
-    if(m_active) {
-        DrawText("|", textPos.x + cursorPos, textPos.y, fontSize, textCol);
-    }
+    auto bounds = getRealBounds().to<Rectangle>();
+    BeginScissorMode(bounds.x + m_border, bounds.y + m_border, bounds.width - m_border * 2.f, bounds.height - m_border * 2.f);
+        rm->drawText(m_font, (m_text.empty() ? m_placeholder : m_text), textPos, color, fontsize);
+        
+        if(m_active) {
+            rm->drawRect({textPos.x + cursorpos, textPos.y, 1.f, fontsize}, COL_WHITE);
+        }
+    EndScissorMode();
 }
 
 void TextInput::update() {
     auto mouse = GetMousePosition();
-    auto bounds = getBoundsAnchor();
+    auto sm = StyleManager::get();
+    auto cursorhover = getRealBounds().contains({mouse.x, mouse.y});
+    m_color = sm->getValue<Col4u>(FIRST_COLOR_NORMAL);
 
     if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        m_active = bounds.contains({mouse.x, mouse.y});
+        m_active = cursorhover;
+    }
+
+    if(cursorhover && !m_active) {
+        m_color.brightness(-0.3f);
     }
 
     if(m_active) {
+        m_color.brightness(-0.6f);
+        auto isKeyHold = [](int key) -> bool { return IsKeyPressed(key) || IsKeyPressedRepeat(key); };
         char c = GetCharPressed();
 
         if(m_allowedChars.find(c) != std::string::npos && m_text.size() < m_maxChars) {
-            m_text.append(1, c);
+            m_text.insert(m_text.begin() + m_cursorX, c);
             m_cursorX++;
         }
 
-        if(IsKeyPressed(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_V)) {
-            m_text.append(GetClipboardText());
+        if(IsKeyDown(KEY_LEFT_CONTROL) && isKeyHold(KEY_V)) {
+            auto text = GetClipboardText();
+            m_text.append(text);
+            m_cursorX += strlen(text);
         }
 
-        if(IsKeyPressed(KEY_BACKSPACE) && m_cursorX > 0) {
+        if(IsKeyDown(KEY_LEFT_CONTROL) && isKeyHold(KEY_BACKSPACE)) {
+            auto it = m_text.find_last_of(" ", m_cursorX) + 1;
+            m_text.erase(it, m_cursorX);
+            m_cursorX -= m_cursorX - it;
+        }
+
+
+        if(isKeyHold(KEY_BACKSPACE) && m_cursorX > 0) {
             m_text.erase(m_cursorX - 1, 1);
             m_cursorX--;
         }
 
-        if(IsKeyPressed(KEY_DELETE) && m_cursorX < m_text.size()) {
+        if(isKeyHold(KEY_DELETE) && m_cursorX < m_text.size()) {
             m_text.erase(m_cursorX, 1);
         }
 
@@ -78,11 +92,11 @@ void TextInput::update() {
             m_cursorX = m_text.size();
         }
 
-        if(IsKeyPressed(KEY_LEFT) && m_cursorX > 0) {
+        if(isKeyHold(KEY_LEFT) && m_cursorX > 0) {
             m_cursorX--;
         }
 
-        if(IsKeyPressed(KEY_RIGHT) && m_cursorX < m_text.size()) {
+        if(isKeyHold(KEY_RIGHT) && m_cursorX < m_text.size()) {
             m_cursorX++;
         }
     }

@@ -1,16 +1,17 @@
 #pragma once
 #include <string>
-#include <ui/nodes/Node.hpp>
+#include <ui/nodes/Frame.hpp>
 #include <MiniFunction.hpp>
 
-class Button : public Node {
+class Button : public Frame {
 protected:
-    std::string m_text;
     MiniFunction<void()> m_callback;
+    std::string m_text;
+    float m_fontSize;
 
 public:
     Button(std::string const& text, MiniFunction<void()> const& callback);
 
-    void draw() override;
-    void update() override;
+    void draw();
+    void update();
 };

@@ -3,7 +3,7 @@
 #include <format>
 
 SettingsScene::SettingsScene() {
-    m_bgColor = COL_SKYBLUE;
+    m_color = COL_SKYBLUE;
 
     auto stm = SettingsManager::get();
 

@@ -11,6 +11,6 @@ private:
 public:
     JoinServerScene(std::string const& hostname, uint16_t port);
 
-    void draw() override;
-    void update() override;
+    void draw();
+    void update();
 };

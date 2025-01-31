@@ -15,11 +15,16 @@ JoinServerScene::JoinServerScene(std::string const& hostname, uint16_t port) : m
     auto const screenH = static_cast<float>(GetScreenHeight());
     auto const inputW = 200.f;
 
-    auto state = std::make_shared<Text>("", 28.f);
+    auto state = std::make_shared<Text>("font", "", 32.f);
+    state->setPos({screenW / 2, 300.f});
+    state->setSize({screenW, 30.f});
+    state->setTag("state");
+    addChild(state);
 }
 
 void JoinServerScene::update() {
     auto mp = Multiplayer::get();
+    auto state = getChild<Text>("state");
 
     switch(mp->getState()) {
         case CONNECTING:
@@ -50,10 +55,12 @@ void JoinServerScene::update() {
     if(GetTime() >= m_startTime + 5.f) {
         m_message += std::format(" ({}s)", static_cast<int>(GetTime() - m_startTime));
     }
+
+    state->setText(m_message);
 }
 
 void JoinServerScene::draw() {
-    MenuBase::draw()
+    MenuBase::draw();
 
     // drawText(m_message, {screenW / 2.f, screenH / 2.f}, 28.f, true);
 

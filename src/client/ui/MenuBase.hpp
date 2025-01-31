@@ -1,5 +1,5 @@
 #pragma once
-#include <ui/Scene.hpp>
+#include <ui/UI.hpp>
 #include <raylib.h>
 
 class MenuBase : public Scene {
