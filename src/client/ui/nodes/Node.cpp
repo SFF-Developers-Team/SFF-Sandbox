@@ -1,13 +1,24 @@
 #include <ui/nodes/Node.hpp>
+#include <ui/nodes/Container.hpp>
+#include <rlgl.h>
 
-Node::Node() : m_bounds({0.f, 0.f, 32.f, 32.f}), m_anchor({0.5f, 0.5f}) {}
+Node::Node() : m_bounds({0.f, 0.f, 32.f, 32.f}), m_anchor({0.5f, 0.5f}), m_color(COL_WHITE) {}
 
-Rectf Node::getBoundsAnchor() {
-    auto bounds = m_bounds;
-    bounds.x = m_bounds.x - m_bounds.width * m_anchor.x; 
-    bounds.y = m_bounds.y - m_bounds.height * m_anchor.y;
+Rectf Node::getRealBounds() {
+    auto parent = getParent();
+    Rectf ret = m_bounds;
+    
+    while(parent != nullptr) {
+        ret.x += parent->getX() - parent->getWidth() * parent->getAnchorX();
+        ret.y += parent->getY() - parent->getHeight() * parent->getAnchorY();
+        parent = parent->getParent();
+    }
 
-    return bounds;
+    return ret.anchor(m_anchor);
+}
+
+Container* Node::getParent() {
+    return m_parent;
 }
 
 void Node::setTag(std::string const& tag) {
@@ -91,3 +102,15 @@ void Node::setAnchorX(float x) {
 void Node::setAnchorY(float y) {
     m_anchor.y = y;
 }
+
+Col4u Node::getColor() {
+    return m_color;
+}
+
+void Node::setColor(Col4u color) {
+    m_color = color;
+}
+
+void Node::update() {}
+
+void Node::draw() {}

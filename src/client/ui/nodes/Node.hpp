@@ -2,20 +2,28 @@
 #include <Types.hpp>
 #include <Utils.hpp>
 #include <string>
+#include <memory>
+#include <vector>
+
+class Container;
 
 class Node {
+    friend class Container;
+
 protected:
+    Container* m_parent = nullptr;
+    std::string m_tag;
     Rectf m_bounds;
     Vec2f m_anchor;
-    std::string m_tag;
+    Col4u m_color;
 
-    Rectf getBoundsAnchor();
+    Rectf getRealBounds();
 
 public:
     Node();
 
-    virtual void update() = 0;
-    virtual void draw() = 0;
+    virtual void update();
+    virtual void draw();
 
     void setTag(std::string const& tag);
     std::string const& getTag();
@@ -43,4 +51,9 @@ public:
     void setAnchor(Vec2f anchor);
     void setAnchorX(float x);
     void setAnchorY(float y);
+
+    Col4u getColor();
+    void setColor(Col4u color);
+
+    Container* getParent();
 };

@@ -6,8 +6,7 @@ bool TextureManager::loadTexture(std::filesystem::path const& filepath) {
     }
 
     auto key = filepath.filename().string();
-    auto texture = LoadTexture(filepath.string().c_str());
-    m_textures[key] = texture;
+    m_textures[key] = LoadTexture(filepath.string().c_str());
 
     return true;
 }
@@ -22,6 +21,18 @@ bool TextureManager::loadTileMap(std::filesystem::path const& filepath, Vec2i ti
     return true;
 }
 
+bool TextureManager::loadFont(std::filesystem::path const& filepath)  {
+    if(!std::filesystem::exists(filepath)) {
+        return false;
+    }
+
+    auto key = filepath.filename().stem().string();
+    m_fonts[key] = LoadFont(filepath.string().c_str());
+
+    return true;
+}
+
+
 void TextureManager::unloadTexture(std::string const& key) {
     if(m_textures.contains(key)) {
         UnloadTexture(m_textures[key]);
@@ -29,8 +40,20 @@ void TextureManager::unloadTexture(std::string const& key) {
     }
 }
 
+void TextureManager::unloadFont(std::string const& key) {
+    if(m_fonts.contains(key)) {
+        UnloadFont(m_fonts[key]);
+        m_fonts.erase(key);
+    }
+}
+
+
 Texture2D& TextureManager::getTexture(std::string const& key) {
     return m_textures[key];
+}
+
+Font& TextureManager::getFont(std::string const& key) {
+    return m_fonts[key];
 }
 
 bool TextureManager::textureLoaded(std::string const& key) {

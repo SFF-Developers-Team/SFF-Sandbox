@@ -7,36 +7,28 @@
 #include <ui/nodes/TextInput.hpp>
 
 MultiplayerScene::MultiplayerScene() : MenuBase() {
-    auto const sw = static_cast<float>(GetScreenWidth());
-    auto const sh = static_cast<float>(GetScreenHeight());
-    auto const btnSize = Vec2f {200.f, 40.f};
-    auto const btnPos = Vec2f {sw / 2.f, 460.f};
+    auto const btnSize = Vec2f {300.f, 40.f};
+    auto const inpSize = Vec2f {300.f, 50.f};
+    auto const btnPos = Vec2f {getWidth() / 2.f, 460.f};
     auto const game = Game::get();
     auto const padding = 60.f;
 
-    auto usernameLabel = std::make_shared<Text>("Username:", 22.f);
-    usernameLabel->setPos({sw / 2, 270.f});
-    addChild(usernameLabel);
-
-    auto usernameInput = std::make_shared<TextInput>();
-    usernameInput->setPos({sw / 2, 300.f});
-    usernameInput->setSize(btnSize);
+    auto usernameInput = std::make_shared<TextInput>("font", "Username");
+    usernameInput->setPos({getWidth() / 2, 300.f});
+    usernameInput->setSize(inpSize);
     usernameInput->setTag("username-input");
     addChild(usernameInput);
 
-    auto hostnameLabel = std::make_shared<Text>("Server IP:", 22.f);
-    hostnameLabel->setPos({sw / 2, 350.f});
-    addChild(hostnameLabel);
 
-    auto hostnameInput = std::make_shared<TextInput>();
-    hostnameInput->setPos({sw / 2, 380.f});
-    hostnameInput->setSize(btnSize);
+    auto hostnameInput = std::make_shared<TextInput>("font", "Server IP");
+    hostnameInput->setPos({getWidth() / 2, 380.f});
+    hostnameInput->setSize(inpSize);
     hostnameInput->setTag("hostname-input");
     addChild(hostnameInput);
     
     auto joinBtn = std::make_shared<Button>("Join", [this, game]() {
-        auto usernameInput = std::dynamic_pointer_cast<TextInput>(this->getChild("username-input"));
-        auto hostnameInput = std::dynamic_pointer_cast<TextInput>(this->getChild("hostname-input"));
+        auto usernameInput = this->getChild<TextInput>("username-input");
+        auto hostnameInput = this->getChild<TextInput>("hostname-input");
 
         auto username = usernameInput->getText();
         auto hostname = hostnameInput->getText();
@@ -55,7 +47,7 @@ MultiplayerScene::MultiplayerScene() : MenuBase() {
     joinBtn->setSize(btnSize);
     addChild(joinBtn);
 
-    auto backBtn = std::make_shared<Button>("Back", [this]() { this->exit(); });
+    auto backBtn = std::make_shared<Button>("Back", [this]() { destroy(); });
     backBtn->setX(btnPos.x);
     backBtn->setY(btnPos.y + padding);
     backBtn->setSize(btnSize);

@@ -10,13 +10,12 @@
 #include <list>
 
 MainMenuScene::MainMenuScene() : MenuBase() {
-    auto sw = static_cast<float>(GetScreenWidth());
     auto game = Game::get();
     auto y = 300.f;
     auto const padding = 60.f;
 
     std::list<std::pair<std::string, MiniFunction<void()>>> const btns = {
-        {"Play", [game]() { game->pushScene(std::make_shared<PlayScene>()); }},
+        {"Singleplayer", [game]() { game->pushScene(std::make_shared<PlayScene>()); }},
         {"Multiplayer", [game]() { game->pushScene(std::make_shared<MultiplayerScene>()); }},
         {"Credits", [game]() { game->pushScene(std::make_shared<CreditsScene>()); }},
         {"Settings", [game]() { game->pushScene(std::make_shared<SettingsScene>()); }},
@@ -25,7 +24,7 @@ MainMenuScene::MainMenuScene() : MenuBase() {
 
     for(auto& [text, call] : btns) {
         auto btn = std::make_shared<Button>(text, call);
-        btn->setPos({sw / 2, y});
+        btn->setPos({getWidth() / 2, y});
         btn->setSize({300.f, 40.f});
         
         addChild(btn);

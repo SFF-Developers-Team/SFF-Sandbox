@@ -18,7 +18,7 @@ PlayScene::PlayScene(bool isOnline) :
     auto game = Game::get();
     m_world = game->getWorld();
     m_player = game->getPlayer();
-    m_bgColor = COL_SKYBLUE;
+    m_color = COL_SKYBLUE;
 
     if(!m_online) {
         if (!m_world->load()) {

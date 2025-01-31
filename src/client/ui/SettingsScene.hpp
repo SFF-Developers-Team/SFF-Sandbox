@@ -18,6 +18,6 @@ private:
 public:
     SettingsScene();
 
-    void draw() override;
-    void update() override;
+    void draw();
+    void update();
 };

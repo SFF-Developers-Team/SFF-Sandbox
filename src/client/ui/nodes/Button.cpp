@@ -1,44 +1,31 @@
 #include <ui/nodes/Button.hpp>
+#include <ui/nodes/Text.hpp>
 #include <raylib.h>
 #include <StyleManager.hpp>
+#include <RenderManager.hpp>
 
-Button::Button(std::string const& text, MiniFunction<void()> const& callback) : Node(), m_text(text), m_callback(callback) {}
+Button::Button(std::string const& text, MiniFunction<void()> const& callback) : Frame(), m_text(text), m_callback(callback), m_fontSize(40.f) {}
 
 void Button::update() {
+    auto sm = StyleManager::get();
     auto mouse = GetMousePosition();
-    auto bounds = getBoundsAnchor();
+    auto rect = getRealBounds();
+    m_color = sm->getValue<Col4u>(FIRST_COLOR_NORMAL);
 
-    if(bounds.contains({mouse.x, mouse.y}) && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+    if(rect.contains({mouse.x, mouse.y})) {
+        m_color.brightness(-0.3f * (IsMouseButtonDown(MOUSE_BUTTON_LEFT) + 1));
+    }
+
+    if(rect.contains({mouse.x, mouse.y}) && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
         m_callback();
     }
 }
 
 void Button::draw() {
-    auto sm = StyleManager::get();
-    auto fontSize = sm->getValue<float>(TEXT_SIZE);
-    auto borderw = sm->getValue<float>(BORDER_WIDTH);
-    auto width = MeasureText(m_text.c_str(), fontSize);
-    auto mouse = GetMousePosition();
-    auto bounds = getBoundsAnchor();
+    Frame::draw();
 
-    auto first = FIRST_COLOR_NORMAL;
-    auto second = SECOND_COLOR_NORMAL;
-    auto textCol = TEXT_COLOR_NORMAL;
+    auto rm = RenderManager::get();
+    auto textsize = rm->getTextSize(m_text, "boldfont", m_fontSize);
 
-    if(bounds.contains({mouse.x, mouse.y}) && IsMouseButtonUp(MOUSE_BUTTON_LEFT)) {
-        first = FIRST_COLOR_FOCUS;
-        second = SECOND_COLOR_FOCUS;
-        textCol = TEXT_COLOR_FOCUS;
-    }
-
-    if(bounds.contains({mouse.x, mouse.y}) && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-        first = FIRST_COLOR_PRESS;
-        second = SECOND_COLOR_PRESS;
-        textCol = TEXT_COLOR_PRESS;
-    }
-
-    auto bnd = bounds.to<Rectangle>();
-    DrawRectangleRec(bnd, sm->getValue<Col4u>(first).to<Color>());
-    DrawRectangleLinesEx(bnd, borderw, sm->getValue<Col4u>(second).to<Color>());
-    DrawText(m_text.c_str(), bnd.x + bnd.width / 2 - width / 2, bnd.y + bnd.height / 2 - fontSize / 2, fontSize, sm->getValue<Col4u>(textCol).to<Color>());
+    rm->drawText("boldfont", m_text, {(m_bounds.width - textsize.x) * 0.5f, (m_bounds.height - m_fontSize) * 0.5f}, COL_WHITE, m_fontSize);
 }

@@ -16,6 +16,7 @@ void Game::clearSceneHistory() {
 void Game::pushScene(std::shared_ptr<Scene> scene) {
     if(m_scene != nullptr) {
         m_sceneHistory.push_back(m_scene);
+        // logD("Pushed scene {} - {:X}", typeid(*m_scene.get()).name(), (uintptr_t)(m_scene.get()));
     }
 
     m_scene = scene;
@@ -24,7 +25,8 @@ void Game::pushScene(std::shared_ptr<Scene> scene) {
 void Game::popScene() {
     if(!m_sceneHistory.empty()) {
         m_scene = m_sceneHistory.back();
-        m_sceneHistory.pop_back();
+         m_sceneHistory.pop_back();
+        // logD("Back {} - {:X}", typeid(*m_scene.get()).name(), (uintptr_t)(m_scene.get()));
     }
 }
 
@@ -43,16 +45,14 @@ void Game::init(std::vector<std::string>& args) {
 
     tm->loadTexture("assets/player.png");
     tm->loadTexture("assets/sff.png");
-    tm->loadTexture("assets/kolyah35.png");
-    tm->loadTexture("assets/sergeymc9730.png");
-    tm->loadTexture("assets/invisedivine.png");
-    tm->loadTexture("assets/e2e4.png");
-    tm->loadTexture("assets/del.png");
     tm->loadTexture("assets/player.png");
     tm->loadTexture("assets/crosshair.png");
     tm->loadTexture("assets/selected.png");
     tm->loadTileMap("assets/blocks.png", {16, 16});
     tm->loadTileMap("assets/gui.png", {16, 16});
+    tm->loadTileMap("assets/developers.png", {128, 128});
+    tm->loadFont("assets/boldfont.fnt");
+    tm->loadFont("assets/font.fnt");
     sm->loadMusic("assets/menu.mp3");
     
     // Load main classes
@@ -86,12 +86,20 @@ void Game::update() {
         StopMusicStream(sm->getMusic("menu.mp3"));
         PlayMusicStream(sm->getMusic("menu.mp3"));
     }
-    if(m_scene != nullptr) m_scene->update();
+
+    if(m_scene != nullptr) {
+        m_scene->update();
+
+        if(m_scene->shouldDestroy()) {
+            m_scene = m_sceneHistory.back();
+            m_sceneHistory.pop_back();
+        }
+    }
 }
 
 void Game::render() {
     BeginDrawing();
-        ClearBackground((m_scene ? m_scene->getColor().to<Color>() : WHITE));   
+        ClearBackground((m_scene ? m_scene->getColor().to<Color>() : WHITE));
         if(m_scene != nullptr) m_scene->draw();
     EndDrawing();
 }

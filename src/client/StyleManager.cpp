@@ -14,7 +14,9 @@ StyleManager::StyleManager() {
         {FIRST_COLOR_PRESS, Col4u {0x29, 0x2B, 0x56, 0xff}},
         {TEXT_COLOR_PRESS, Col4u {0xD8, 0xD8, 0xD8, 0xFF}},
 
-        {TEXT_SIZE, 20.f},
+        {TEXT_COLOR_PLACEHOLDER, Col4u {0xFF, 0xFF, 0xFF, 0x7F}},
+
+        {TEXT_SIZE, 40.f},
         {BORDER_WIDTH, 5.f}
     };
 }

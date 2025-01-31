@@ -1,29 +1,55 @@
 #include <ui/CreditsScene.hpp>
+#include <StyleManager.hpp>
+#include <RenderManager.hpp>
+#include <TextureManager.hpp>
 #include <raylib.h>
 
+CreditsScene::CreditsScene() {
+    
+}
+
 void CreditsScene::draw() {
-    // DrawRectangle((GetScreenWidth() - 1000) / 2, 300, 1000, 400, {49, 132, 124, 255});
-    // DrawRectangleRec(container, {34, 117, 109, 255});
+    MenuBase::draw();
 
-    // for(auto& dev : devs) {
-    //     printf("X: %f \n", offset.x);
-    //     printf("Y: %f \n", offset.y);
+    auto sm = StyleManager::get();
+    auto rm = TextureManager::get();
+    auto rdm = RenderManager::get();
+    auto const consize = Vec2f {700.f, 300.f}; 
+    auto const picsize = Vec2f {128.f, 128.f};
+    auto const picsoffset = 30.f;
+    auto const fcolor = sm->getValue<Col4u>(FIRST_COLOR_NORMAL);
+    auto const scolor = sm->getValue<Col4u>(SECOND_COLOR_NORMAL);
+    auto const border = sm->getValue<float>(BORDER_WIDTH);
+    auto const boldfont = rm->getFont("boldfont");
+    auto const font = rm->getFont("font");
+
+    // clang-format off
+    std::vector<Developer> const devs = {
+        {"del", "Artist"},
+        {"e2e4", "Artist"},
+        {"InviseDivine", "Programmer"},
+        {"Kolyah35", "Programmer"},
+        {"dogotrigger", "Programmer"},
+    };
+    // clang-format on
+
+    DrawRectangle((getWidth() - consize.x) / 2, (getHeight() - consize.y) / 2, consize.x, consize.y, fcolor.to<Color>());
+    DrawRectangleLinesEx({(getWidth() - consize.x) / 2, (getHeight() - consize.y) / 2, consize.x, consize.y}, border, scolor.to<Color>());
+
+    auto start = Vec2f {
+        .x = getWidth() / 2 - picsize.x * devs.size() + picsoffset * devs.size(),
+        .y = getHeight() / 2 - picsize.y + 40.f
+    };
+
+    for(auto i = 0; i < devs.size(); i++) {
+        rdm->drawTile("developers.png", i, {start.x, start.y, picsize.x, picsize.y});
         
-    //     auto namewidth = MeasureText(dev.name.c_str(), textheight);
-    //     auto rolewidth = MeasureText(dev.role.c_str(), textheight);
+        auto namesize = MeasureTextEx(boldfont, devs[i].name.c_str(), 16.f, 1.f);
+        auto rolesize = MeasureTextEx(font, devs[i].role.c_str(), 16.f, 1.f);
 
-    //     DrawTexturePro(dev.texture, {0, 0, (float)dev.texture.width, (float)dev.texture.height}, {offset.x, offset.y, picsize.x, picsize.y}, {0, 0}, 0, RAYWHITE);
-    //     DrawText(dev.name.c_str(), offset.x + picsize.x / 2 - namewidth / 2, offset.y + textoffset + 20, textheight, RAYWHITE);
-    //     DrawText(dev.role.c_str(), offset.x + picsize.x / 2 - rolewidth / 2, offset.y + textoffset * 2 + textheight + 20, textheight, RAYWHITE);
-    //     if(count < devs.size()) {
-    //         offset.x += picsize.x + devsoffset;
-    //     }
-    //     count++;
-    // }
+        DrawTextEx(boldfont, devs[i].name.c_str(), {start.x + picsize.x / 2 - namesize.x / 2, start.y + picsize.y + 4.f}, 40.f, 1.f, RAYWHITE);
+        DrawTextEx(font, devs[i].role.c_str(), {start.x + picsize.x / 2 - namesize.x / 2, start.y + picsize.y + 20.f}, 40.f, 1.f, RAYWHITE);
 
-    // if(GuiButton((Rectangle){ (float)(GetScreenWidth() - 200) / 2,   650, 200, 40 }, "Back") || IsKeyPressed(KEY_Q)) {
-    //     auto game = Game::get();
-    //     game->pushScene(std::make_shared<MainScene>());
-    //     count = 0;
-    // }
+        start.x += picsize.x + picsoffset;
+    }
 }
