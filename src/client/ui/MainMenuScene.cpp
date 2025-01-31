@@ -10,7 +10,6 @@
 #include <list>
 
 MainMenuScene::MainMenuScene() : MenuBase() {
-    auto sw = static_cast<float>(GetScreenWidth());
     auto game = Game::get();
     auto y = 300.f;
     auto const padding = 60.f;
@@ -25,7 +24,7 @@ MainMenuScene::MainMenuScene() : MenuBase() {
 
     for(auto& [text, call] : btns) {
         auto btn = std::make_shared<Button>(text, call);
-        btn->setPos({sw / 2, y});
+        btn->setPos({getWidth() / 2, y});
         btn->setSize({300.f, 40.f});
         
         addChild(btn);

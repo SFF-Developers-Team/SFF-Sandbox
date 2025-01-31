@@ -11,7 +11,7 @@ class Node {
     friend class Container;
 
 protected:
-    std::shared_ptr<Container> m_parent = nullptr;
+    Container* m_parent = nullptr;
     std::string m_tag;
     Rectf m_bounds;
     Vec2f m_anchor;
@@ -55,5 +55,5 @@ public:
     Col4u getColor();
     void setColor(Col4u color);
 
-    std::shared_ptr<Container> getParent();
+    Container* getParent();
 };

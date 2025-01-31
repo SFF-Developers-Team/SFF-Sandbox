@@ -17,7 +17,7 @@ Rectf Node::getRealBounds() {
     return ret.anchor(m_anchor);
 }
 
-std::shared_ptr<Container> Node::getParent() {
+Container* Node::getParent() {
     return m_parent;
 }
 

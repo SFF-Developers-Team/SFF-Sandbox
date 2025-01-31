@@ -5,12 +5,10 @@
 #include <Game.hpp>
 
 ErrorScene::ErrorScene(std::string const& message) : m_message(message) {
-    auto screenW = static_cast<float>(GetScreenWidth());
-    auto screenH = static_cast<float>(GetScreenHeight());
     auto const buttonW = 200.f;
 
-    auto error = std::make_shared<Text>("", 30.f);
-    error->setPos({screenW / 2, screenH / 2});
+    auto error = std::make_shared<Text>("font", "", 30.f);
+    error->setPos({getWidth() / 2, getHeight() / 2});
     addChild(error);
 
     auto btn = std::make_shared<Button>("Main menu", [this]() {
@@ -19,7 +17,7 @@ ErrorScene::ErrorScene(std::string const& message) : m_message(message) {
         game->pushScene(std::make_shared<MainMenuScene>());
     });
     
-    btn->setPos({screenW / 2, 460.f});
+    btn->setPos({getWidth() / 2, 460.f});
     btn->setSize({200.f, 40.f});
     addChild(btn);
 }

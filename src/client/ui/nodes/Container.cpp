@@ -2,7 +2,7 @@
 #include <rlgl.h>
 
 void Container::addChild(std::shared_ptr<Node> node) {
-    node->m_parent = std::shared_ptr<Container>(this);
+    node->m_parent = this;
     m_childs.push_back(node);
 }
 
@@ -41,9 +41,10 @@ void Container::draw() {
 
     for(auto& node : m_childs) {
         rlPushMatrix();
-        rlTranslatef(node->getX(), node->getY(), 0.f);
-        rlTranslatef(-(node->getAnchorX() * node->getWidth()), -(node->getAnchorY() * node->getHeight()), 0.f);
-        node->draw();
+            rlTranslatef(node->getX(), node->getY(), 0.f);
+            rlTranslatef(-(node->getAnchorX() * node->getWidth()), -(node->getAnchorY() * node->getHeight()), 0.f);
+            
+            node->draw();
         rlPopMatrix();
     }
 }

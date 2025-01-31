@@ -18,4 +18,5 @@ public:
     virtual void onPop() {}
     
     void destroy();
+    bool shouldDestroy();
 };

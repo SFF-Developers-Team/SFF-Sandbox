@@ -17,17 +17,18 @@ JoinServerScene::JoinServerScene(std::string const& hostname, uint16_t port) : m
     auto const screenH = static_cast<float>(GetScreenHeight());
     auto const inputW = 200.f;
 
-    auto state = std::make_shared<Text>("font", "", 32.f);
-    state->setPos({screenW / 2, 300.f});
-    state->setSize({screenW, 30.f});
-    state->setTag("state");
-    addChild(state);
+    m_state = std::make_shared<Text>("font", "", 32.f);
+    m_state->setPos({screenW / 2, 300.f});
+    m_state->setSize({screenW, 30.f});
+    m_state->setTag("state");
+    addChild(m_state);
 }
 
 void JoinServerScene::update() {
+    MenuBase::update();
+
     auto game = Game::get();
     auto mp = Multiplayer::get();
-    auto state = getChild<Text>("state");
 
     switch(mp->getState()) {
         case CONNECTING:
@@ -59,20 +60,17 @@ void JoinServerScene::update() {
 
     if(GetTime() >= m_startTime + 5.f) {
         m_message += std::format(" ({}s)", static_cast<int>(GetTime() - m_startTime));
+    
+        if(!m_cancelBtn) {
+            m_cancelBtn = std::make_shared<Button>("Cancel", [&] () {
+                mp->destroy();
+            });
+            m_cancelBtn->setPos({GetScreenWidth() / 2.f, 460.f});
+            m_cancelBtn->setSize({200.f, 40.f});
+
+            addChild(m_cancelBtn);
+        }
     }
 
-    state->setText(m_message);
-}
-
-void JoinServerScene::draw() {
-    MenuBase::draw();
-
-    // drawText(m_message, {screenW / 2.f, screenH / 2.f}, 28.f, true);
-
-    // if(GetTime() >= m_startTime + 5.f) {
-    //     drawButton("Cancel", {screenW / 2.f - inputW / 2.f, 460.f, 200.f, 40.f}, []() -> void {
-    //         Multiplayer::get()->destroy();
-    //         Game::get()->popScene();
-    //     });
-    // }
+    m_state->setText(m_message);
 }

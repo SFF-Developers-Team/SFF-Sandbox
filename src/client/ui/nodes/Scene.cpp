@@ -2,13 +2,23 @@
 #include <rlgl.h>
 
 Scene::Scene() : Container() {
+    auto scrW = static_cast<float>(GetScreenWidth());
+    auto scrH = static_cast<float>(GetScreenHeight());
+
+    m_bounds = {scrW / 2.f, scrH / 2.f, scrW, scrH};
     m_border = 0.f;
-    m_bounds = {GetScreenWidth() / 2.f, GetScreenHeight() / 2.f, 1280.f, 720.f};
 }
 
 void Scene::update() {
-    if(IsKeyPressed(KEY_ESCAPE) || m_destroy) {
-        return Game::get()->popScene();
+    if(IsKeyPressed(KEY_ESCAPE)) {
+        m_destroy = true;
+    }
+
+    if(IsWindowResized()) {
+        auto scrW = static_cast<float>(GetScreenWidth());
+        auto scrH = static_cast<float>(GetScreenHeight());
+
+        m_bounds = {scrW / 2.f, scrH / 2.f, scrW, scrH};
     }
 
     Container::update();
@@ -16,6 +26,10 @@ void Scene::update() {
 
 void Scene::destroy() {
     m_destroy = true;
+}
+
+bool Scene::shouldDestroy() {
+    return m_destroy;
 }
 
 void Scene::draw() {
