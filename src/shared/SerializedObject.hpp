@@ -59,16 +59,15 @@ public:
         for(int i = 0; i < sizeof(T); i++) push_back(((uint8_t*)&value)[i]);
     }
 
-    template<>
-    void add<std::string>(std::string str) {
-        for(char c : str) push_back(c);
-        push_back('\0');
-        m_offset += str.size() + 1;
+    void add(std::string str) {
+        return add(str.data(), str.size());
     }
 
-    template<>
-    void add<const char*>(const char* str) {
-        return add<std::string>(str);
+    void add(const char* str, size_t size) {
+        resize(m_offset + size);
+        std::copy(str, str + size, &at(m_offset));
+
+        m_offset += size;
     }
 
     /// @brief Append other ByteVector to serialized object
@@ -119,8 +118,7 @@ public:
         return ret;
     }
 
-    template<>
-    std::string get<std::string>(std::string defaultVal) {
+    std::string get(std::string defaultVal) {
         auto len = std::strlen((char*)data() + m_offset);
         
         if(m_offset + len > size()) return defaultVal;
@@ -131,8 +129,7 @@ public:
         return ret;
     }
 
-    template<>
-    const char* get<const char*>(const char* defaultVal) = delete;
+    const char* get(const char* defaultVal) = delete;
 
     std::size_t offset() { return m_offset; }
     

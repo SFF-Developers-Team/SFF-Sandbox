@@ -1,6 +1,8 @@
 #include <ui/MultiplayerScene.hpp>
 #include <ui/JoinServerScene.hpp>
 #include <ui/nodes/Text.hpp>
+#include <ui/nodes/Button.hpp>
+#include <ui/ErrorScene.hpp>
 #include <ui/PlayScene.hpp>
 #include <Multiplayer.hpp>
 #include <Game.hpp>
@@ -23,6 +25,7 @@ JoinServerScene::JoinServerScene(std::string const& hostname, uint16_t port) : m
 }
 
 void JoinServerScene::update() {
+    auto game = Game::get();
     auto mp = Multiplayer::get();
     auto state = getChild<Text>("state");
 
@@ -35,11 +38,13 @@ void JoinServerScene::update() {
             m_message = "Logging in";
             break;
         case ERROR:
-            m_message = mp->getError();
+            game->clearSceneHistory();
+            game->pushScene(std::make_shared<ErrorScene>(mp->getError()));
             return;
             
         case PLAYING:
-            Game::get()->pushScene(std::make_shared<PlayScene>(true));
+            game->clearSceneHistory();
+            game->pushScene(std::make_shared<PlayScene>(true));
             break;
     }
 
