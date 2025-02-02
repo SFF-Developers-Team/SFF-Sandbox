@@ -4,12 +4,21 @@
 class Container : public Frame {
 protected:
     std::vector<std::shared_ptr<Node>> m_childs;
+    float m_scrollOffset;
+    bool m_scrollable;
 
+    float calculateTotalHeight();
 public:
+    Container();
+
     void update();
     void draw();
 
     void alignItemsHorizontal(float padding);
+    bool isScrollable();
+    void setScrollable(bool flag);
+
+    void resetScroll();
 
     void addChild(std::shared_ptr<Node> node);
     bool hasChild(size_t index);

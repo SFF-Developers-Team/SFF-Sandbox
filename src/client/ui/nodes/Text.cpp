@@ -59,8 +59,6 @@ void Text::draw() {
     auto rm = RenderManager::get();
     auto textpos = Vec2f {0.f, 0.f};
 
-    rm->drawRectLines({0.f, 0.f, m_bounds.width, m_bounds.height}, COL_RED, 1.f);
-
     if(m_wordWrap) {
         std::vector<std::string> lines = wrapText();
 
@@ -77,7 +75,7 @@ void Text::draw() {
             if(m_alignHorizontal == H_RIGHT) textpos.x = m_bounds.width - size.x;
 
             rm->drawText(m_font, line, textpos, m_color, m_fontSize, 1.f);
-            textpos.y += lineHeight;
+            textpos.y += size.y + 2.f;
 
             if (textpos.y + lineHeight > m_bounds.height) return;
         }
@@ -123,8 +121,15 @@ void Text::setWordWrap(bool flag, bool autoHeight) {
 
     if(autoHeight) {
         auto lines = wrapText();
+        auto rm = RenderManager::get();
+        auto height = 0.f;
 
-        setHeight((m_fontSize + 2.f) * lines.size());
+        for(auto& line : lines) {
+            auto size = rm->getTextSize(line, m_font, m_fontSize).y;
+            height += size + 2.f;
+        }
+
+        setHeight(height);
     }
 }
 

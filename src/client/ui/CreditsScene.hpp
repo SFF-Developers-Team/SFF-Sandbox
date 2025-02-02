@@ -13,6 +13,8 @@ private:
 
     std::shared_ptr<Container> m_developersBox;
     std::shared_ptr<Container> m_licensesBox;
+    std::shared_ptr<Container> m_textBox;
+    std::shared_ptr<Text> m_licenseText;
 
 public:
     CreditsScene();

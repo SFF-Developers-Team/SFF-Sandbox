@@ -1,5 +1,10 @@
 #include <ui/nodes/Container.hpp>
+#include <RenderManager.hpp>
+#include <algorithm>
+#include <raylib.h>
 #include <rlgl.h>
+
+Container::Container() : Frame(), m_scrollOffset(0.f), m_scrollable(false) {}
 
 void Container::alignItemsHorizontal(float padding) {
     float width = 0.f;
@@ -45,27 +50,80 @@ bool Container::hasChild(std::string const& tag) {
     return i != m_childs.end();
 }
 
+float Container::calculateTotalHeight() {
+    float ret = 0.f;
+    
+    for(auto& node : m_childs) {
+        ret = std::max(ret, node->getY() + node->getHeight());
+    }
+
+    return ret;
+}
+
 void Container::update() {
     for(auto& node : m_childs) {
         if(node->isEnabled()) {
             node->update();
         }
     }
+
+    if(m_scrollable) {
+        auto bounds = getRealBounds();
+        auto mouse = GetMousePosition();
+        auto totalHeight = calculateTotalHeight();
+
+        if(totalHeight > m_bounds.height) {
+            if(bounds.contains({mouse.x, mouse.y}) && GetMouseWheelMove() != 0.f) {
+                m_scrollOffset -= GetMouseWheelMove() * 10.f;
+            }
+
+            m_scrollOffset = std::clamp(m_scrollOffset, 0.f, totalHeight - bounds.height + m_border);
+        }
+    }
 }
 
 void Container::draw() {
     Frame::draw();
+    auto rm = RenderManager::get();
 
-    for(auto& node : m_childs) {
-        if(node->isVisible()) {
-            rlPushMatrix();
-                rlTranslatef(node->getX(), node->getY(), 0.f);
-                rlTranslatef(-(node->getAnchorX() * node->getWidth()), -(node->getAnchorY() * node->getHeight()), 0.f);
-                
-                node->draw();
-            rlPopMatrix();
+    auto const bounds = getRealBounds();
+    auto const totalHeight = calculateTotalHeight();
+    auto const contentHeight = bounds.height - m_border * 2;
+    auto const borderColor = m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F};
+    auto const scrollBar = totalHeight > bounds.height && m_scrollable;
+
+    BeginScissorMode(bounds.x + m_border, bounds.y + m_border, bounds.width - m_border * 2, contentHeight);
+        for(auto& node : m_childs) {
+            if(node->isVisible()) {
+                rlPushMatrix();
+                    rlTranslatef(node->getX(), node->getY() - m_scrollOffset, 0.f);
+                    rlTranslatef(-(node->getAnchorX() * node->getWidth()), -(node->getAnchorY() * node->getHeight()), 0.f);
+                    
+                    node->draw();
+                rlPopMatrix();
+            }
         }
+
+        if(scrollBar) {
+            rm->drawRect({bounds.width - m_border * 2, m_border + (m_scrollOffset / totalHeight) * contentHeight, m_border, (contentHeight / totalHeight) * contentHeight}, borderColor);
+        }
+    EndScissorMode();
+}
+
+bool Container::isScrollable() {
+    return m_scrollable;
+}
+
+void Container::setScrollable(bool flag) {
+    m_scrollable = flag;
+
+    if(!m_scrollable) {
+        m_scrollOffset = false;
     }
+}
+
+void Container::resetScroll() {
+    m_scrollOffset = 0.f;
 }
 
 std::vector<std::shared_ptr<Node>> const& Container::getChildren() {

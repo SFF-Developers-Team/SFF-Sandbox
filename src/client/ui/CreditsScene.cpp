@@ -5,6 +5,7 @@
 #include <ui/nodes/Tile.hpp>
 #include <ui/nodes/SpriteNode.hpp>
 #include <ui/nodes/List.hpp>
+#include <Licenses.hpp>
 
 CreditsScene::CreditsScene() {
     // clang-format off
@@ -72,13 +73,34 @@ CreditsScene::CreditsScene() {
         m_licensesBox->setEnabled(false);
         container->addChild(m_licensesBox);
 
-        auto libsList = std::make_shared<List>(std::vector<std::string>({"enet", "GitHash", "perlin-noise", "raylib", "toml", "zlib"}), [](int i) {
-            
+
+        auto libsList = std::make_shared<List>(std::vector<std::string>({"enet", "GitHash", "perlin-noise", "raylib", "toml", "zlib"}), [this](int i) {
+            m_licenseText->setText(licensesText[i]);
+            m_licenseText->setWordWrap(true, true); // for auto-height
+            m_licensesBox->resetScroll();
         });
 
-        libsList->setSize({300.f, m_licensesBox->getHeight() - libsList->getBorderWidth() * 2});
-        libsList->setPos({libsList->getWidth() / 2 + libsList->getBorderWidth() * 2, m_licensesBox->getHeight() / 2 + libsList->getBorderWidth()});
+        auto const borderw = libsList->getBorderWidth();
+
+        libsList->setSize({300.f, m_licensesBox->getHeight() - borderw * 2});
+        libsList->setPos({libsList->getWidth() / 2 + borderw * 2, m_licensesBox->getHeight() / 2 + borderw});
         m_licensesBox->addChild(libsList);
+
+        m_textBox = std::make_shared<Container>();
+        m_textBox->setAnchor({0.f, 0.5f});
+        m_textBox->setPos({libsList->getX() + libsList->getWidth() * libsList->getAnchorX() + borderw, libsList->getY()});
+        m_textBox->setSize({m_licensesBox->getWidth() - libsList->getWidth() - borderw * 5, libsList->getHeight()});
+        m_textBox->setScrollable(true);
+        m_licensesBox->addChild(m_textBox);
+
+        m_licenseText = std::make_shared<Text>("font", licensesText[0], 20.f);
+        m_licenseText->setAnchor({0.5f, 0.f});
+        m_licenseText->setPos({m_textBox->getWidth() / 2, 0.f});
+        m_licenseText->setSize({m_textBox->getWidth() - m_textBox->getBorderWidth() * 2, 0.f});
+        m_licenseText->setAlignH(TextAlignmentH::H_LEFT);
+        m_licenseText->setAlignV(TextAlignmentV::V_TOP);
+        m_licenseText->setWordWrap(true, true);
+        m_textBox->addChild(m_licenseText);
     }
 
     auto backBtn = std::make_shared<Button>("Back", [this](Button*) { destroy(); });
