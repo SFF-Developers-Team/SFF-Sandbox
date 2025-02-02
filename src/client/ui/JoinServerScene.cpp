@@ -62,7 +62,7 @@ void JoinServerScene::update() {
         m_message += std::format(" ({}s)", static_cast<int>(GetTime() - m_startTime));
     
         if(!m_cancelBtn) {
-            m_cancelBtn = std::make_shared<Button>("Cancel", [&] () {
+            m_cancelBtn = std::make_shared<Button>("Cancel", [&] (Button*) {
                 mp->destroy();
             });
             m_cancelBtn->setPos({GetScreenWidth() / 2.f, 460.f});

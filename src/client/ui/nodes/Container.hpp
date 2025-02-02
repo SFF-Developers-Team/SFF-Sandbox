@@ -9,6 +9,8 @@ public:
     void update();
     void draw();
 
+    void alignItemsHorizontal(float padding);
+
     void addChild(std::shared_ptr<Node> node);
     bool hasChild(size_t index);
     bool hasChild(std::string const& tag);

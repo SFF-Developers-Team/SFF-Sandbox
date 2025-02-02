@@ -34,11 +34,13 @@ bool Scene::shouldDestroy() {
 
 void Scene::draw() {
     for(auto& node : m_childs) {
-        rlPushMatrix();
-            rlTranslatef(node->getX(), node->getY(), 0.f);
-            rlTranslatef(-(node->getAnchorX() * node->getWidth()), -(node->getAnchorY() * node->getHeight()), 0.f);
-            
-            node->draw();
-        rlPopMatrix();
+        if(node->isVisible()) {
+            rlPushMatrix();
+                rlTranslatef(node->getX(), node->getY(), 0.f);
+                rlTranslatef(-(node->getAnchorX() * node->getWidth()), -(node->getAnchorY() * node->getHeight()), 0.f);
+                
+                node->draw();
+            rlPopMatrix();
+        }
     }
 }

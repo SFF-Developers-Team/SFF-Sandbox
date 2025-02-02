@@ -72,10 +72,9 @@ void MenuBase::draw() {
     );
 
     auto sff = tm->getTexture("sff.png");
-    auto sffY = 100.f + ((float)sin(GetTime()) * 30);
+    auto sffY = 40.f + ((float)sin(GetTime()) * 30);
     rm->drawTexture("sff.png", {(getWidth() - sff.width) / 2, sffY, static_cast<float>(sff.width), static_cast<float>(sff.height)});
 
-    auto text = "Sandbox";
     auto textsize = rm->getTextSize("Sandbox", "boldfont", 35.f);
     rm->drawText("boldfont", "Sandbox", {(getWidth() - textsize.x) / 2, sffY + sff.height * 0.7f}, COL_WHITE, 35.f);
 

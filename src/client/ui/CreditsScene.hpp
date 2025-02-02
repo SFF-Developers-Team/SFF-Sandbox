@@ -11,8 +11,9 @@ private:
         std::string const role;
     };
 
+    std::shared_ptr<Container> m_developersBox;
+    std::shared_ptr<Container> m_licensesBox;
+
 public:
     CreditsScene();
-
-    void draw() override;
 };

@@ -1,6 +1,21 @@
 #include <ui/nodes/Container.hpp>
 #include <rlgl.h>
 
+void Container::alignItemsHorizontal(float padding) {
+    float width = 0.f;
+
+    for(auto& child : m_childs) {
+        width += (child->getWidth() * child->getAnchorX()) + padding;
+    }
+
+    auto x = (getWidth() - width) / 2;
+
+    for(auto& child : m_childs) {
+        child->setPos({x, (getHeight() - child->getHeight()) / 2});
+        x += child->getWidth() + padding * child->getAnchorX();
+    }
+}
+
 void Container::addChild(std::shared_ptr<Node> node) {
     node->m_parent = this;
     m_childs.push_back(node);
@@ -32,7 +47,9 @@ bool Container::hasChild(std::string const& tag) {
 
 void Container::update() {
     for(auto& node : m_childs) {
-        node->update();
+        if(node->isEnabled()) {
+            node->update();
+        }
     }
 }
 
@@ -40,12 +57,14 @@ void Container::draw() {
     Frame::draw();
 
     for(auto& node : m_childs) {
-        rlPushMatrix();
-            rlTranslatef(node->getX(), node->getY(), 0.f);
-            rlTranslatef(-(node->getAnchorX() * node->getWidth()), -(node->getAnchorY() * node->getHeight()), 0.f);
-            
-            node->draw();
-        rlPopMatrix();
+        if(node->isVisible()) {
+            rlPushMatrix();
+                rlTranslatef(node->getX(), node->getY(), 0.f);
+                rlTranslatef(-(node->getAnchorX() * node->getWidth()), -(node->getAnchorY() * node->getHeight()), 0.f);
+                
+                node->draw();
+            rlPopMatrix();
+        }
     }
 }
 

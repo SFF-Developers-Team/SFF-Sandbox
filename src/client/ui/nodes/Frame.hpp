@@ -8,5 +8,8 @@ protected:
 public:
     Frame();
 
+    void setBorderWidth(float width);
+    float getBorderWidth();
+
     void draw();
 };

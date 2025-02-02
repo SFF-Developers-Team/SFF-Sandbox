@@ -13,5 +13,16 @@ void Frame::draw() {
     auto rect = Rectf {0.f, 0.f, m_bounds.width, m_bounds.height};
 
     rm->drawRect(rect, m_color);
-    rm->drawRectLines(rect, m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F}, m_border);
+    
+    if(m_border > 0) {
+        rm->drawRectLines(rect, m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F}, m_border);
+    }
+}
+
+void Frame::setBorderWidth(float width) {
+    m_border = width;
+}
+
+float Frame::getBorderWidth() {
+    return m_border;
 }

@@ -8,18 +8,19 @@
 #include <Game.hpp>
 #include <ui/nodes/Button.hpp>
 #include <list>
+#include <ui/nodes/List.hpp>
 
 MainMenuScene::MainMenuScene() : MenuBase() {
     auto game = Game::get();
     auto y = 300.f;
     auto const padding = 60.f;
 
-    std::list<std::pair<std::string, MiniFunction<void()>>> const btns = {
-        {"Singleplayer", [game]() { game->pushScene(std::make_shared<PlayScene>()); }},
-        {"Multiplayer", [game]() { game->pushScene(std::make_shared<MultiplayerScene>()); }},
-        {"Credits", [game]() { game->pushScene(std::make_shared<CreditsScene>()); }},
-        {"Settings", [game]() { game->pushScene(std::make_shared<SettingsScene>()); }},
-        {"Quit", [game]() { game->destroy(); }}
+    std::list<std::pair<std::string, MiniFunction<void(Button*)>>> const btns = {
+        {"Singleplayer", [game](Button*) { game->pushScene(std::make_shared<PlayScene>()); }},
+        {"Multiplayer", [game](Button*) { game->pushScene(std::make_shared<MultiplayerScene>()); }},
+        {"Credits", [game](Button*) { game->pushScene(std::make_shared<CreditsScene>()); }},
+        {"Settings", [game](Button*) { game->pushScene(std::make_shared<SettingsScene>()); }},
+        {"Quit", [game](Button*) { game->destroy(); }}
     };
 
     for(auto& [text, call] : btns) {

@@ -2,7 +2,7 @@
 #include <ui/nodes/Node.hpp>
 
 enum TextAlignmentV : uint8_t {
-    V_UP, V_CENTER, V_DOWN
+    V_TOP, V_CENTER, V_BOTTOM
 };
 
 
@@ -17,6 +17,9 @@ protected:
     std::string m_font;
     std::string m_text;
     float m_fontSize;
+    bool m_wordWrap;
+
+    std::vector<std::string> wrapText();
 
 public:
     Text(std::string const& font, std::string const& text, float size = 11.f);
@@ -31,4 +34,9 @@ public:
 
     std::string const& getFont();
     void setFont(std::string const& font);
+
+    void setWordWrap(bool flag, bool autoHeight);
+
+    void setAlignV(TextAlignmentV alignV);
+    void setAlignH(TextAlignmentH alignH);
 };

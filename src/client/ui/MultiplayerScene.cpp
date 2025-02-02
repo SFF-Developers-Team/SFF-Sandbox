@@ -26,7 +26,7 @@ MultiplayerScene::MultiplayerScene() : MenuBase() {
     hostnameInput->setTag("hostname-input");
     addChild(hostnameInput);
     
-    auto joinBtn = std::make_shared<Button>("Join", [this, game]() {
+    auto joinBtn = std::make_shared<Button>("Join", [this, game](Button*) {
         auto usernameInput = this->getChild<TextInput>("username-input");
         auto hostnameInput = this->getChild<TextInput>("hostname-input");
 
@@ -47,7 +47,7 @@ MultiplayerScene::MultiplayerScene() : MenuBase() {
     joinBtn->setSize(btnSize);
     addChild(joinBtn);
 
-    auto backBtn = std::make_shared<Button>("Back", [this]() { destroy(); });
+    auto backBtn = std::make_shared<Button>("Back", [this](Button*) { destroy(); });
     backBtn->setX(btnPos.x);
     backBtn->setY(btnPos.y + padding);
     backBtn->setSize(btnSize);

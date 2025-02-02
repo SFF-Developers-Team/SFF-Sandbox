@@ -4,7 +4,10 @@
 #include <StyleManager.hpp>
 #include <RenderManager.hpp>
 
-Button::Button(std::string const& text, MiniFunction<void()> const& callback) : Frame(), m_text(text), m_callback(callback), m_fontSize(40.f) {}
+Button::Button(std::string const& text, MiniFunction<void(Button*)> const& callback) : Frame(), m_text(text), m_callback(callback), m_fontSize(40.f) {
+    setWidth(400.f);
+    setHeight(40.f);
+}
 
 void Button::update() {
     auto sm = StyleManager::get();
@@ -17,7 +20,7 @@ void Button::update() {
     }
 
     if(rect.contains({mouse.x, mouse.y}) && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-        m_callback();
+        m_callback(this);
     }
 }
 
@@ -28,4 +31,8 @@ void Button::draw() {
     auto textsize = rm->getTextSize(m_text, "boldfont", m_fontSize);
 
     rm->drawText("boldfont", m_text, {(m_bounds.width - textsize.x) * 0.5f, (m_bounds.height - m_fontSize) * 0.5f}, COL_WHITE, m_fontSize);
+}
+
+void Button::setText(std::string const& text) {
+    m_text = text;
 }

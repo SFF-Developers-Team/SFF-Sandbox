@@ -1,8 +1,8 @@
 #include <ui/nodes/Node.hpp>
 #include <ui/nodes/Container.hpp>
-#include <rlgl.h>
+#include <raylib.h>
 
-Node::Node() : m_bounds({0.f, 0.f, 32.f, 32.f}), m_anchor({0.5f, 0.5f}), m_color(COL_WHITE) {}
+Node::Node() : m_bounds({0.f, 0.f, 32.f, 32.f}), m_anchor({0.5f, 0.5f}), m_color(COL_WHITE), m_enabled(true), m_visible(true) {}
 
 Rectf Node::getRealBounds() {
     auto parent = getParent();
@@ -113,4 +113,22 @@ void Node::setColor(Col4u color) {
 
 void Node::update() {}
 
-void Node::draw() {}
+void Node::draw() {
+    // DrawRectangleLinesEx({0, 0, m_bounds.width, m_bounds.height}, 1.f, RED);
+}
+
+void Node::setVisible(bool flag) {
+    m_visible = flag;
+}
+
+bool Node::isVisible() {
+    return m_visible;
+}
+
+void Node::setEnabled(bool flag) {
+    m_enabled = flag;
+}
+
+bool Node::isEnabled() {
+    return m_enabled;
+}

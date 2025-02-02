@@ -49,7 +49,7 @@ struct Rect {
 
     bool contains(const Vec2<T>& other) const { return other.x >= x && other.x <= x + width && other.y >= y && other.y <= y + height; }
 
-    Rect<T> const anchor(Vec2<T> const& point) { return Rectf {x - width * point.x, y - height * point.y, width, height}; }
+    Rect<T> const anchor(Vec2<T> const& point) { return Rect<T> {x - width * point.x, y - height * point.y, width, height}; }
 
     template <typename T2>
     inline T2 to() const {

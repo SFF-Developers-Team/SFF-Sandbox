@@ -11,7 +11,7 @@ ErrorScene::ErrorScene(std::string const& message) : m_message(message) {
     error->setPos({getWidth() / 2, getHeight() / 2});
     addChild(error);
 
-    auto btn = std::make_shared<Button>("Main menu", [this]() {
+    auto btn = std::make_shared<Button>("Main menu", [this](Button*) {
         auto game = Game::get();
         game->clearSceneHistory();
         game->pushScene(std::make_shared<MainMenuScene>());

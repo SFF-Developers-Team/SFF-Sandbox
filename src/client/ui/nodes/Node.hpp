@@ -16,6 +16,8 @@ protected:
     Rectf m_bounds;
     Vec2f m_anchor;
     Col4u m_color;
+    bool m_visible;
+    bool m_enabled;
 
     Rectf getRealBounds();
 
@@ -54,6 +56,12 @@ public:
 
     Col4u getColor();
     void setColor(Col4u color);
+
+    void setVisible(bool flag);
+    bool isVisible();
+
+    void setEnabled(bool flag);
+    bool isEnabled();
 
     Container* getParent();
 };

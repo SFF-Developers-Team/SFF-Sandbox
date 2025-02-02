@@ -1,20 +1,22 @@
 #include <Debug.hpp>
 #include <raylib.h>
 #include <GitHash.hpp>
-
-#define FONT_SIZE 20
+#include <RenderManager.hpp>
 
 Debug::Debug() {
     setString(GAME_VERSION, "SFF Sandbox {}-dev ({} {})", GitHash::shortSha1, __DATE__, __TIME__);
 }
 
 void Debug::draw() {
-    int y = 0;
+    //Какие же костыли...
+    float y = -10.f;
     setString(FPS, "{} FPS", GetFPS());
 
+    auto rm = RenderManager::get();
+
     for (auto& [id, str] : m_debugList) {
-        DrawText(str.c_str(), 0, y, FONT_SIZE, WHITE);
-        y += FONT_SIZE + 2;
+        rm->drawText("font", str, {0.f, y}, COL_WHITE, 40.f);
+        y += 30.f;
 
         if(!isVisible() && (id != GAME_VERSION || id != FPS)) {
             break;

@@ -48,6 +48,7 @@ void Game::init(std::vector<std::string>& args) {
     tm->loadTexture("assets/player.png");
     tm->loadTexture("assets/crosshair.png");
     tm->loadTexture("assets/selected.png");
+    tm->loadTexture("assets/raylib.png");
     tm->loadTileMap("assets/blocks.png", {16, 16});
     tm->loadTileMap("assets/gui.png", {16, 16});
     tm->loadTileMap("assets/developers.png", {128, 128});

@@ -2,30 +2,14 @@
 #include <StyleManager.hpp>
 #include <RenderManager.hpp>
 #include <TextureManager.hpp>
-#include <raylib.h>
+#include <ui/nodes/Tile.hpp>
+#include <ui/nodes/SpriteNode.hpp>
+#include <ui/nodes/List.hpp>
 
 CreditsScene::CreditsScene() {
-    
-}
-
-void CreditsScene::draw() {
-    MenuBase::draw();
-
-    auto sm = StyleManager::get();
-    auto rm = TextureManager::get();
-    auto rdm = RenderManager::get();
-    auto const consize = Vec2f {700.f, 300.f}; 
-    auto const picsize = Vec2f {128.f, 128.f};
-    auto const picsoffset = 30.f;
-    auto const fcolor = sm->getValue<Col4u>(FIRST_COLOR_NORMAL);
-    auto const scolor = sm->getValue<Col4u>(SECOND_COLOR_NORMAL);
-    auto const border = sm->getValue<float>(BORDER_WIDTH);
-    auto const boldfont = rm->getFont("boldfont");
-    auto const font = rm->getFont("font");
-
     // clang-format off
     std::vector<Developer> const devs = {
-        {"del", "Artist"},
+        {"Del", "Artist"},
         {"e2e4", "Artist"},
         {"InviseDivine", "Programmer"},
         {"Kolyah35", "Programmer"},
@@ -33,23 +17,90 @@ void CreditsScene::draw() {
     };
     // clang-format on
 
-    DrawRectangle((getWidth() - consize.x) / 2, (getHeight() - consize.y) / 2, consize.x, consize.y, fcolor.to<Color>());
-    DrawRectangleLinesEx({(getWidth() - consize.x) / 2, (getHeight() - consize.y) / 2, consize.x, consize.y}, border, scolor.to<Color>());
+    auto container = std::make_shared<Container>();
+    container->setSize({1000, 500});
+    container->setPos({getWidth() / 2, getHeight() / 2 + 100.f});
+    addChild(container);
 
-    auto start = Vec2f {
-        .x = getWidth() / 2 - picsize.x * devs.size() + picsoffset * devs.size(),
-        .y = getHeight() / 2 - picsize.y + 40.f
-    };
+    m_developersBox = std::make_shared<Container>();
+    m_licensesBox = std::make_shared<Container>();
 
-    for(auto i = 0; i < devs.size(); i++) {
-        rdm->drawTile("developers.png", i, {start.x, start.y, picsize.x, picsize.y});
-        
-        auto namesize = MeasureTextEx(boldfont, devs[i].name.c_str(), 16.f, 1.f);
-        auto rolesize = MeasureTextEx(font, devs[i].role.c_str(), 16.f, 1.f);
+    // developers container
+    {
+        m_developersBox->setBorderWidth(0.f);
+        m_developersBox->setAnchor({0.5f, 0.f});
+        m_developersBox->setColor({0, 0, 0, 0});
+        m_developersBox->setSize({container->getWidth(), container->getHeight() - 150});
+        m_developersBox->setPos({container->getWidth() / 2, 0.f});
+        container->addChild(m_developersBox);
 
-        DrawTextEx(boldfont, devs[i].name.c_str(), {start.x + picsize.x / 2 - namesize.x / 2, start.y + picsize.y + 4.f}, 40.f, 1.f, RAYWHITE);
-        DrawTextEx(font, devs[i].role.c_str(), {start.x + picsize.x / 2 - namesize.x / 2, start.y + picsize.y + 20.f}, 40.f, 1.f, RAYWHITE);
+        for(auto i = 0; i < devs.size(); i++) {
+            auto tile = std::make_shared<Tile>("developers.png", i);
+            tile->setSize({128.f, 128.f});
+            m_developersBox->addChild(tile);
+        }
 
-        start.x += picsize.x + picsoffset;
+        m_developersBox->alignItemsHorizontal(64.f);
+
+        for(auto i = 0; i < devs.size(); i++) {
+            auto child = m_developersBox->getChild(i);
+
+            auto name = std::make_shared<Text>("boldfont", devs[i].name, 40.f);
+            name->setPos({child->getX(), child->getY() + 84.f});
+            name->setSize({child->getWidth(), 40.f});
+            m_developersBox->addChild(name);
+
+            auto role = std::make_shared<Text>("font", devs[i].role, 40.f);
+            role->setPos({child->getX(), name->getY() + 30.f});
+            role->setSize({child->getWidth(), 40.f});
+            m_developersBox->addChild(role);
+        }
+
+        auto title = std::make_shared<Text>("boldfont", "Developers", 40.f);
+        title->setPos({m_developersBox->getWidth() / 2, 30.f});
+        m_developersBox->addChild(title);
     }
+
+    // licenses container
+    {
+        m_licensesBox->setBorderWidth(0.f);
+        m_licensesBox->setAnchor({0.5f, 0.f});
+        m_licensesBox->setColor({0, 0, 0, 0});
+        m_licensesBox->setSize({container->getWidth(), container->getHeight() - 150});
+        m_licensesBox->setPos({container->getWidth() / 2, 0.f});
+        m_licensesBox->setVisible(false);
+        m_licensesBox->setEnabled(false);
+        container->addChild(m_licensesBox);
+
+        auto libsList = std::make_shared<List>(std::vector<std::string>({"enet", "GitHash", "perlin-noise", "raylib", "toml", "zlib"}), [](int i) {
+            
+        });
+
+        libsList->setSize({300.f, m_licensesBox->getHeight() - libsList->getBorderWidth() * 2});
+        libsList->setPos({libsList->getWidth() / 2 + libsList->getBorderWidth() * 2, m_licensesBox->getHeight() / 2 + libsList->getBorderWidth()});
+        m_licensesBox->addChild(libsList);
+    }
+
+    auto backBtn = std::make_shared<Button>("Back", [this](Button*) { destroy(); });
+    backBtn->setPos({container->getWidth() / 2, container->getHeight() - 40});
+    container->addChild(backBtn);
+
+    auto licensesBtn = std::make_shared<Button>("Licenses", [this](Button* sender) {
+        bool licenses = m_licensesBox->isVisible();
+
+        sender->setText(licenses ? "Licenses" : "Developers");
+        m_licensesBox->setVisible(!licenses);
+        m_licensesBox->setEnabled(!licenses);
+        m_developersBox->setVisible(licenses);
+        m_developersBox->setEnabled(licenses);
+    });
+
+    licensesBtn->setPos({container->getWidth() / 2, backBtn->getY() - 60.f});
+    container->addChild(licensesBtn);
+
+    auto raylib = std::make_shared<SpriteNode>("raylib");
+    raylib->setSize({128.f, 128.f});
+    raylib->setAnchor({0.f, 1.f});
+    raylib->setPos({container->getWidth() * container->getAnchorX() + 5.f, container->getHeight() * container->getAnchorY() - 5.f});
+    container->addChild(raylib);
 }
