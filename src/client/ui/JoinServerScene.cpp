@@ -9,7 +9,7 @@
 #include <format>
 #include <thread>
 
-JoinServerScene::JoinServerScene(std::string const& hostname, uint16_t port) : m_startTime(GetTime()) {
+JoinServerScene::JoinServerScene(std::string const& hostname, uint16_t port) : m_startTime((float)GetTime()) {
     auto mp = Multiplayer::get();
     std::thread(&Multiplayer::connect, mp, hostname, port).detach();
 

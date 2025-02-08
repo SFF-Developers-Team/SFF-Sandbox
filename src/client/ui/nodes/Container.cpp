@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <raylib.h>
 #include <rlgl.h>
+#include <Logger.hpp>
 
 Container::Container() : Frame(), m_scrollOffset(0.f), m_scrollable(false) {}
 
@@ -79,6 +80,10 @@ void Container::update() {
 
             m_scrollOffset = std::clamp(m_scrollOffset, 0.f, totalHeight - bounds.height + m_border);
         }
+    }
+
+    if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        logD("Opened");
     }
 }
 

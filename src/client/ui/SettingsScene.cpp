@@ -1,18 +1,56 @@
 #include <ui/SettingsScene.hpp>
 #include <raygui.h>
 #include <format>
+#include <ui/nodes/DropDown.hpp>
 
-SettingsScene::SettingsScene() {
-    m_color = COL_SKYBLUE;
+SettingsScene::SettingsScene() : MenuBase() {
+    auto container = std::make_shared<Container>();
+    container->setSize({1000, 500});
+    container->setPos({getWidth() / 2, getHeight() / 2 + 100.f});
+    addChild(container);
 
-    auto stm = SettingsManager::get();
+    Vec2f categorySize = {container->getWidth() / 3, container->getHeight()};
 
-    for (auto& mode : stm->getModes()) {
-        m_dropText.append(std::format("{}x{};", mode.width, mode.height));
-    }
+    auto video = std::make_shared<Container>();
+    video->setSize(categorySize);
+    video->setPos({categorySize.x / 2, categorySize.y / 2});
+    container->addChild(video);
+
+    auto audio = std::make_shared<Container>();
+    audio->setSize(categorySize);
+    audio->setPos({categorySize.x * 1.5f, categorySize.y / 2});
+    container->addChild(audio);
+
+    auto keyboard = std::make_shared<Container>();
+    keyboard->setSize(categorySize);
+    keyboard->setPos({categorySize.x * 2.5f, categorySize.y / 2});
+    container->addChild(keyboard);
+
+    auto videoTitle = std::make_shared<Text>("boldfont", "Video", 40.f);
+    videoTitle->setSize({categorySize.x, 60.f});
+    videoTitle->setPos({categorySize.x / 2, 30.f});
+    video->addChild(videoTitle);
+
+    auto audioTitle = std::make_shared<Text>("boldfont", "Audio", 40.f);
+    audioTitle->setSize({categorySize.x, 60.f});
+    audioTitle->setPos({categorySize.x / 2, 30.f});
+    audio->addChild(audioTitle);
+
+    auto keyboardTitle = std::make_shared<Text>("boldfont", "Keyboard", 40.f);
+    keyboardTitle->setSize({categorySize.x, 60.f});
+    keyboardTitle->setPos({categorySize.x / 2, 30.f});
+    keyboard->addChild(keyboardTitle);
+
+    auto dropdown = std::make_shared<DropDown>(std::vector<std::string>({"First", "Second", "Third"}), [](DropDown*, int i) {
+        logD("{}", i);
+    });
+    dropdown->setPos({video->getWidth() / 2, video->getHeight() / 2});
+    dropdown->setSize({video->getWidth() - video->getBorderWidth() * 4, 40.f});
+    video->addChild(dropdown);
 }
 
 void SettingsScene::update() {
+    MenuBase::update();
     // auto stm = SettingsManager::get();
     // auto key = GetKeyPressed();
 
@@ -33,17 +71,6 @@ void SettingsScene::draw() {
     // Vec2f const container = {1235.f, 400.f};
     // float const x = scr.x / 2 - container.x / 2;
     // float const y = 100 + scr.y / 2 - container.y / 2;
-
-
-    // DrawRectangleRec({x, y, container.x, container.y}, BLUE);
-    // DrawRectangleLinesEx({x, y, container.x, container.y}, 5.f, DARKBLUE);
-
-    // DrawLineEx({x + container.x / 3.f, y}, {x + container.x / 3.f, y + container.y}, 5.f, DARKBLUE);
-    // DrawLineEx({x + container.x / 1.5f, y}, {x + container.x / 1.5f, y + container.y}, 5.f, DARKBLUE);
-
-    // drawText("Audio", {x + container.x / 3 - container.x / 6, y + 10}, 25.f, true, COL_DARKBLUE);
-    // drawText("Video", {x + container.x / 3 + container.x / 6, y + 10}, 25.f, true, COL_DARKBLUE);
-    // drawText("Keyboard", {x + container.x / 1.5f + container.x / 6, y + 10}, 25.f, true, COL_DARKBLUE);
 
     // auto volume = stm->getValue<float>("Audio/volume", 0.5f);
     // drawSlider({x + 150, y + 50, 200, 25}, "Master volume", volume, 0.f, 1.f, true, [stm](float value) {
