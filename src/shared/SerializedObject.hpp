@@ -56,7 +56,11 @@ public:
 
     template<typename T>
     void add(T value) {
-        for(int i = 0; i < sizeof(T); i++) push_back(((uint8_t*)&value)[i]);
+        for(int i = 0; i < sizeof(T); i++) {
+            push_back(((uint8_t*)&value)[i]);
+        }
+
+        m_offset += sizeof(T);
     }
 
     /// @brief Append other ByteVector to serialized object
@@ -75,14 +79,21 @@ public:
         m_offset += bytes.size();
     }
 
-    void add(std::string str) {
-        for(char c : str) push_back(c);
-        push_back('\0');
-        m_offset += str.size() + 1;
+    void add(const char* str, size_t size) {
+        logD("Adding str {} | size {} | offset {}", str, size, m_offset);
+        resize(m_offset + size);
+        std::copy(str, str + size, begin() + m_offset);
+
+        if(str[size - 1] != 0) {
+            push_back(0);
+            size++;
+        }
+
+        m_offset += size;
     }
 
-    void add(const char* str) {
-        return add<std::string>(str);
+    void add(std::string const& str) {
+        return add(str.c_str(), str.size());
     }
 
     /// @brief Get N-count bytes from serialized object
@@ -117,18 +128,32 @@ public:
         return ret;
     }
 
-    inline std::string get(std::string defaultVal) {
-        auto len = std::strlen((char*)data() + m_offset);
-        
-        if(m_offset + len > size()) return defaultVal;
+    const char* get(const char* defaultVal) {
+        auto len = 0;
 
-        auto ret = std::string(begin() + m_offset, begin() + m_offset + len);
-        m_offset += len;
-        
+        while(m_offset < size() && at(m_offset) != 0) {
+            if(m_offset + 1 >= size()) {
+                return defaultVal;
+            }
+            
+            m_offset++;
+            len++;
+        }
+
+        logD("get const char {}", len);
+
+        auto ret = new char[len + 1];
+        std::memset(ret, 0, len + 1);
+        std::copy(begin() + m_offset - len, begin() + m_offset, ret);
+
+        logD("Parsed str len {}: {}", len, ret);
+
         return ret;
     }
 
-    const char* get(const char* defaultVal) = delete;
+    std::string get(std::string const& defaultVal) {
+        return std::string(get(defaultVal.c_str()));
+    }
 
     std::size_t offset() { return m_offset; }
     

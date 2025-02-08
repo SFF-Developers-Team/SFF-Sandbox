@@ -326,6 +326,7 @@ void Player::update() {
 
     if (IsKeyPressed(KEY_R))
         resetPosition();
+
     if (IsKeyPressed(stm->getKeybind("Fly")))
         m_fly = !m_fly;
 

@@ -49,6 +49,7 @@ SettingsManager::SettingsManager() {
     
     logD("{}", m_settings.size());
 }
+
 void SettingsManager::save() {
     std::ofstream file("settings.toml");
     logD("{}", m_settings.size());
@@ -59,11 +60,13 @@ void SettingsManager::save() {
         logE("Failed to init config!");
     }
 }
+
 int SettingsManager::getKeybind(std::string const& action) {
-    return getValue<int>("Keyboard/" + action, *m_defconf[action].value<int>());
+    return getValue<int>("Keyboard/" + action, *m_defconf["Keyboard/" + action].value<int>());
 }
 std::string SettingsManager::getKeyName(int key) {
     if (key >= 39 && key <= 125) return std::to_string((char)key);
+    
     switch (key) {
         case KEY_ESCAPE: return "Escape";
         case KEY_ENTER: return "Enter";

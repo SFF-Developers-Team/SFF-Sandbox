@@ -17,9 +17,7 @@ public:
     }
 
     Packet(Header header) { 
-        add(header); 
-
-        m_offset = 0;    
+        add(header);
     }
 
     Packet(ByteVector const& bytes) {
@@ -30,15 +28,11 @@ public:
     template<typename... Args>
     Packet(Header const header, Args const&... arg) : Packet(header) {
         add(arg...);
-
-        m_offset = 0;
     }
 
     template<typename... Args>
     Packet(Args const&... arg) {
         add(arg...);
-
-        m_offset = 0;
     }
 
     ByteVector serialize() override {

@@ -45,7 +45,7 @@ void Server::init() {
     auto maxclients = config["max-players"].value_or(32);
     auto inbandwidth = config["incoming-bandwidth"].value_or(0);
     auto outbandwidth = config["outcoming-bandwidth"].value_or(0);
-    m_server = enet_host_create(&address, maxclients, 4, inbandwidth, outbandwidth);
+    m_server = enet_host_create(&address, maxclients, Channel::LAST_CHANNEL, inbandwidth, outbandwidth);
 
     if(m_server == NULL) {
         logE("An error occurred while trying to create an ENet server host.");

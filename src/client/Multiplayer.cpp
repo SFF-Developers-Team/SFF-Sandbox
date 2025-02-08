@@ -33,7 +33,7 @@ bool Multiplayer::connect(std::string const& host, uint16_t port) {
     logD("Connecting to {}:{}...", host, port);
 
     m_state = CONNECTING;
-    m_client = enet_host_create(0, 1, 2, 0, 0);
+    m_client = enet_host_create(0, 1, Channel::LAST_CHANNEL, 0, 0);
 
     if(!m_client) {
         error("Failed to create client!");
@@ -43,7 +43,7 @@ bool Multiplayer::connect(std::string const& host, uint16_t port) {
     enet_address_set_host(&address, host.c_str());
     address.port = port;
 
-    m_peer = enet_host_connect(m_client, &address, 2, 0);
+    m_peer = enet_host_connect(m_client, &address, Channel::LAST_CHANNEL, 0);
 
     auto res = enet_host_service(m_client, &event, 5000);
 
@@ -145,7 +145,7 @@ void Multiplayer::handle(Packet& packet) {
 }
 
 void Multiplayer::handleError(Packet& packet) {
-    error(packet.get<std::string>("unknown"));
+    error(packet.get("Unknown error has occured"));
 }
 
 void Multiplayer::handlePlayer(Packet& packet) {
@@ -183,7 +183,7 @@ void Multiplayer::handleLoadPlayer(Packet& packet) {
 
     if(id > 0) {
         auto player = world->getPlayer(id);
-        auto username = packet.get<std::string>("undefined");
+        std::string username = packet.get("undefined");
         
         if(!player) {
             player = std::make_shared<OnlinePlayer>(world);

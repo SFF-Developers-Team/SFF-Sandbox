@@ -17,7 +17,7 @@ bool Client::accept(Packet& packet) {
         return false;
     }
 
-    auto username = packet.get<std::string>();
+    std::string username = packet.get("");
 
     if (username.size() < 3) {
         disconnect(TOO_SHORT_USERNAME);
@@ -47,7 +47,10 @@ bool Client::accept(Packet& packet) {
     for (auto& [id, player] : srv->getWorld()->getPlayers()) {
         if (id == m_id)
             continue;
-        sendPacket(Packet(Header::LOAD_PLAYER, id));
+
+        auto pak = Packet(Header::LOAD_PLAYER, id);
+        pak.add(player->getUsername());
+        sendPacket(pak, Channel::NOTIFICATIONS);
     }
 
     m_loggedIn = true;
@@ -69,6 +72,7 @@ void Client::packetReceived(Packet& packet) {
 
 void Client::disconnect(DisconnectReasonID reason) {
     auto srv = Server::get();
+    logD("Disconnecting client {} because of {}", m_id, srv->getDisconnectReasonByID(reason));
     sendPacket(Packet(Header::NETWORK_ERROR, srv->getDisconnectReasonByID(reason)));
 
     enet_peer_disconnect_later(m_peer, reason);
@@ -124,12 +128,11 @@ void Client::handleLoadPlayer(Packet& packet) {
         auto packet = Packet(Header::LOAD_PLAYER);
         packet.add(id);
         packet.add(player->getUsername());
-
-        sendPacket(packet, NOTIFICATIONS);
+        sendPacket(packet, Channel::NOTIFICATIONS);
         return;
     }
 
-    sendPacket(Packet(Header::UNLOAD_PLAYER, id), NOTIFICATIONS);
+    sendPacket(Packet(Header::UNLOAD_PLAYER, id), Channel::NOTIFICATIONS);
 }
 
 void Client::handleBlockPlace(Packet& packet) {
