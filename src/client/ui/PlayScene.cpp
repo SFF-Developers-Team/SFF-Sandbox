@@ -55,6 +55,17 @@ void PlayScene::draw() {
 
     auto mouse = GetMousePosition();
     rm->drawTile("gui.png", 0, {mouse.x, mouse.y, 16.f, 16.f}, COL_WHITE, 0.f, {8.f, 8.f});
+
+    if (IsKeyDown(KEY_TAB) && m_online) {
+        auto players = m_world->getPlayers();
+        DrawRectangle(static_cast<float>(GetScreenWidth() - 32 * 16) / 2, 0, static_cast<float>(32 * 16), 32 *  players.size(), GRAY);
+        for (int i = 0; i < m_world->getPlayers().size(); i++) {
+            if (i != 0) {
+                logD("Username: {}", players[i]->getUsername());
+                DrawText(players[i]->getUsername().c_str(), static_cast<float>(GetScreenWidth() - 32 * 16) / 2, i * 36, 25, WHITE);
+            }
+        }
+    }
 }
 
 void PlayScene::update() {

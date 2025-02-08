@@ -17,7 +17,8 @@ private:
 
     bool m_sneak = false;
     bool m_fly = false;
-
+    bool m_inv = false;
+    
     PlayerID m_id = 0;
     AnimationType m_prevAnimType;
     uint8_t m_prevAnimFrame;

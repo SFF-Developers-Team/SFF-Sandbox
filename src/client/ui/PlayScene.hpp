@@ -13,7 +13,7 @@ private:
     std::shared_ptr<Timer> m_timer;
 
     bool m_online = false;
-
+    
 public:
     PlayScene(bool isOnline = false);
     ~PlayScene();

@@ -54,7 +54,7 @@ bool Multiplayer::connect(std::string const& host, uint16_t port) {
     }
 
     auto game = Game::get();
-    auto myUsername = game->getUsername();
+    std::string myUsername = game->getUsername();
 
     auto packet = Packet(SerializedObject::Header::IDENTIFICATION);
     packet.add(myUsername);
@@ -180,11 +180,9 @@ void Multiplayer::handleLoadPlayer(Packet& packet) {
     auto world = game->getWorld();
     auto id = packet.get<PlayerID>(0);
     logD("Load player {}", id);
-
     if(id > 0) {
         auto player = world->getPlayer(id);
-        std::string username = packet.get("undefined");
-        
+        std::string username = packet.get(std::string(""));
         if(!player) {
             player = std::make_shared<OnlinePlayer>(world);
             world->addPlayer(id, player);

@@ -329,7 +329,8 @@ void Player::update() {
 
     if (IsKeyPressed(stm->getKeybind("Fly")))
         m_fly = !m_fly;
-
+    if(IsKeyPressed(KEY_E)) 
+        m_inv = !m_inv;
     updateCamera();
     updateAnimation();
 }

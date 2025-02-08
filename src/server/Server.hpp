@@ -28,6 +28,8 @@ public:
         return server;
     }
 
+    void displayList();
+    void displayHelp();
     void destroy();
     void inputThread();
 

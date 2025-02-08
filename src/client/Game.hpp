@@ -38,7 +38,7 @@ public:
         m_username = username;
     }
 
-    auto getUsername() {
+    std::string const& getUsername() {
         return m_username;
     }
 

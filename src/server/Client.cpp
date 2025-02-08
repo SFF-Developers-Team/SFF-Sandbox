@@ -11,14 +11,14 @@ Client::Client(ENetPeer* peer) : PacketManager(peer) {}
 bool Client::accept(Packet& packet) {
     auto srv = Server::get();
     auto head = packet.get<Header>();
-
+    auto players = srv->getWorld()->getPlayers();
     if (head != Header::IDENTIFICATION) {
         disconnect(INVALID_FIRST_PACKET);
         return false;
     }
 
-    std::string username = packet.get("");
-
+    std::string username = packet.get(std::string("Undefined"));
+    
     if (username.size() < 3) {
         disconnect(TOO_SHORT_USERNAME);
         return false;
@@ -128,7 +128,8 @@ void Client::handleLoadPlayer(Packet& packet) {
         auto packet = Packet(Header::LOAD_PLAYER);
         packet.add(id);
         packet.add(player->getUsername());
-        sendPacket(packet, Channel::NOTIFICATIONS);
+        
+        sendPacket(packet, NOTIFICATIONS);
         return;
     }
 
