@@ -27,6 +27,8 @@ public:
     std::shared_ptr<Node> getChild(std::string const& tag);
     std::vector<std::shared_ptr<Node>> const& getChildren();
 
+    void sortChildsZ();
+
     template<typename T>
     std::shared_ptr<T> getChild(size_t index) {
         auto ptr = std::static_pointer_cast<T>(getChild(index));

@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <deque>
+#include <Types.hpp>
 
 class Scene;
 class World;
@@ -19,6 +20,8 @@ private:
     std::shared_ptr<Player> m_player;
 
     std::deque<std::shared_ptr<Scene>> m_sceneHistory;
+
+    Vec2i m_lastWindowSize;
     
 public:
     static Game* get() {
@@ -54,4 +57,6 @@ public:
     auto getPlayer() {
         return m_player;
     }
+    
+    Vec2i const getLastWindowSize() { return m_lastWindowSize; }
 };

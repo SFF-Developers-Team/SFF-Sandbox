@@ -9,14 +9,16 @@ Debug::Debug() {
 
 void Debug::draw() {
     //Какие же костыли...
-    float y = -10.f;
+    float y = 0.f;
     setString(FPS, "{} FPS", GetFPS());
 
     auto rm = RenderManager::get();
 
     for (auto& [id, str] : m_debugList) {
-        rm->drawText("font", str, {0.f, y}, COL_WHITE, 40.f);
-        y += 30.f;
+        auto size = rm->getTextSize(str, "font", 20.f);
+        rm->drawRect({0.f, y, size.x, size.y}, {0, 0, 0, 128});
+        rm->drawText("font", str, {0.f, y}, COL_WHITE, 20.f);
+        y += size.y;
 
         if(!isVisible() && (id != GAME_VERSION || id != FPS)) {
             break;

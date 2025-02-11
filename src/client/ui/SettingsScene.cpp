@@ -2,8 +2,11 @@
 #include <raygui.h>
 #include <format>
 #include <ui/nodes/DropDown.hpp>
+#include <ui/nodes/ToggleButton.hpp>
 
 SettingsScene::SettingsScene() : MenuBase() {
+    auto stm = SettingsManager::get();
+
     auto container = std::make_shared<Container>();
     container->setSize({1000, 500});
     container->setPos({getWidth() / 2, getHeight() / 2 + 100.f});
@@ -41,12 +44,76 @@ SettingsScene::SettingsScene() : MenuBase() {
     keyboardTitle->setPos({categorySize.x / 2, 30.f});
     keyboard->addChild(keyboardTitle);
 
-    auto dropdown = std::make_shared<DropDown>(std::vector<std::string>({"First", "Second", "Third"}), [](DropDown*, int i) {
-        logD("{}", i);
+    std::vector<std::string> modesList{"Auto"};
+    auto modes = stm->getModes();
+
+    for(auto& mode : modes) {
+        modesList.push_back(std::format("{}x{}", mode.width, mode.height));
+    }
+
+    auto dropdown = std::make_shared<DropDown>(modesList, [stm, this](DropDown*, int i) {
+        auto monitor = GetCurrentMonitor();
+        auto modes = stm->getModes();
+        auto game = Game::get();
+        auto ws = game->getLastWindowSize();
+        auto mode = (IsWindowState(FLAG_FULLSCREEN_MODE) ? VideoMode {GetMonitorWidth(monitor), GetMonitorHeight(monitor)} : ws.to<VideoMode>());
+
+        if(i > 0) {
+            mode = modes[i - 1];
+        }
+    
+        m_autoResolution = i == 0;
+
+        SetWindowSize(mode.width, mode.height);
+        SetWindowPosition((GetMonitorWidth(monitor) - mode.width) / 2, (GetMonitorHeight(monitor) - mode.height) / 2);
     });
-    dropdown->setPos({video->getWidth() / 2, video->getHeight() / 2});
+    
+    dropdown->setPos({video->getWidth() / 2, 90.f});
     dropdown->setSize({video->getWidth() - video->getBorderWidth() * 4, 40.f});
     video->addChild(dropdown);
+
+    auto fullscreen = std::make_shared<DropDown>(std::vector<std::string>{"Window", "Fullscreen", "Borderless"}, [stm, this](DropDown*, int i) {
+        auto size = Game::get()->getLastWindowSize();
+        auto mon = GetCurrentMonitor();
+
+        switch (i) {
+            case 0:
+                ClearWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
+                ClearWindowState(FLAG_FULLSCREEN_MODE);
+                SetWindowSize(size.x, size.y);
+                break;
+            case 1:
+                ClearWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
+                SetWindowState(FLAG_FULLSCREEN_MODE);
+                
+                if(m_autoResolution) {
+                    SetWindowSize(GetMonitorWidth(mon), GetMonitorHeight(mon));
+                }
+                break;
+            case 2:
+                ClearWindowState(FLAG_FULLSCREEN_MODE);
+                SetWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
+                break;
+        }
+    });
+    
+    fullscreen->setPos({video->getWidth() / 2, dropdown->getY() + 50.f});
+    fullscreen->setSize({video->getWidth() - video->getBorderWidth() * 4, 40.f});
+    video->addChild(fullscreen);
+
+    auto vsync = std::make_shared<ToggleButton>("VSYNC", [](ToggleButton*, bool flag) {
+        if(!flag && IsWindowState(FLAG_VSYNC_HINT)) {
+            ClearWindowState(FLAG_VSYNC_HINT);
+        }
+
+        if(flag && !IsWindowState(FLAG_VSYNC_HINT)) {
+            SetWindowState(FLAG_VSYNC_HINT);
+        }
+    });
+
+    vsync->setPos({video->getWidth() / 2, fullscreen->getY() + 50.f});
+    vsync->setSize({video->getWidth() - video->getBorderWidth() * 4, 40.f});
+    video->addChild(vsync);
 }
 
 void SettingsScene::update() {

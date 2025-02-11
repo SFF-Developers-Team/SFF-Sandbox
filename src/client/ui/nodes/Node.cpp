@@ -2,7 +2,7 @@
 #include <ui/nodes/Container.hpp>
 #include <raylib.h>
 
-Node::Node() : m_bounds({0.f, 0.f, 32.f, 32.f}), m_anchor({0.5f, 0.5f}), m_color(COL_WHITE), m_enabled(true), m_visible(true) {}
+Node::Node() : m_bounds({0.f, 0.f, 32.f, 32.f}), m_anchor({0.5f, 0.5f}), m_color(COL_WHITE), m_enabled(true), m_visible(true), m_zOrder(0) {}
 
 Rectf Node::getRealBounds() {
     auto parent = getParent();
@@ -131,4 +131,16 @@ void Node::setEnabled(bool flag) {
 
 bool Node::isEnabled() {
     return m_enabled;
+}
+
+void Node::setZOrder(int z) {
+    m_zOrder = z;
+    
+    if(m_parent != nullptr) {
+        m_parent->sortChildsZ();
+    }
+}
+
+int Node::getZOrder() {
+    return m_zOrder;
 }

@@ -81,10 +81,6 @@ void Container::update() {
             m_scrollOffset = std::clamp(m_scrollOffset, 0.f, totalHeight - bounds.height + m_border);
         }
     }
-
-    if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-        logD("Opened");
-    }
 }
 
 void Container::draw() {
@@ -133,4 +129,18 @@ void Container::resetScroll() {
 
 std::vector<std::shared_ptr<Node>> const& Container::getChildren() {
     return m_childs;
+}
+
+void Container::sortChildsZ() {
+    // std::qsort(&m_childs[0], m_childs.size(), sizeof(std::shared_ptr<Node>), [](void const* a, void const* b) -> int {
+    //     return ((Node*)b)->getZOrder() - ((Node*)a)->getZOrder();
+    // });
+    std::sort(m_childs.begin(), m_childs.end(), [](auto const& a, auto const& b) {
+        return a->getZOrder() < b->getZOrder();
+    });
+
+    logD("------------------");
+    for(auto& child : m_childs) {
+        logD("{} | 0x{:X}", child->getZOrder(), *(uintptr_t*)&child);
+    }
 }

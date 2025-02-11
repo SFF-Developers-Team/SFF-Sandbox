@@ -4,9 +4,11 @@
 
 class DropDown : public Frame {
 protected:
-    std::vector<std::string> m_elements;
     MiniFunction<void(DropDown*, int)> m_callback;
+    std::vector<std::string> m_elements;
+    std::string m_mask;
     float m_maxHeight;
+    float m_scrollOffset;
     bool m_opened;
     int m_selected;
 
@@ -18,4 +20,7 @@ public:
 
     void setMaxHeight(float height);
     float getMaxHeight();
+
+    void setMask(std::string const& mask);
+    std::string const& getMask();
 };

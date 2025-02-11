@@ -14,6 +14,7 @@ private:
     std::string m_dropText;
     std::string m_selectKey;
     bool m_selectMode = false;
+    bool m_autoResolution = true;
     
 public:
     SettingsScene();

@@ -7,9 +7,14 @@
 #include <glfw3.h>
 #include <toml.hpp>
 
+struct VideoMode {
+    int width;
+    int height;
+};
+
 class SettingsManager {
 private:
-    std::vector<GLFWvidmode> m_modes;
+    std::vector<VideoMode> m_modes;
     toml::table m_settings;
     std::vector<std::string> const m_keylist = {"Jump", "Duck", "Left", "Right", "Fly"};
 
@@ -35,5 +40,5 @@ public:
     void setKeybind(std::string const& action, int key);
     
     std::vector<std::string> const& getKeyList();
-    std::vector<GLFWvidmode> const& getModes();
+    std::vector<VideoMode> const& getModes();
 };

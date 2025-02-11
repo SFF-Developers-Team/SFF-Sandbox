@@ -18,6 +18,7 @@ protected:
     Col4u m_color;
     bool m_visible;
     bool m_enabled;
+    int m_zOrder;
 
     Rectf getRealBounds();
 
@@ -53,6 +54,9 @@ public:
     void setAnchor(Vec2f anchor);
     void setAnchorX(float x);
     void setAnchorY(float y);
+
+    void setZOrder(int z);
+    int getZOrder();
 
     Col4u getColor();
     void setColor(Col4u color);

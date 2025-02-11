@@ -259,7 +259,7 @@ void Player::onTick() {
 
     if (m_sneak) {
         setAnimation(PLAYER_SNEAK);
-        m_animFps = 0;
+        m_animFps = 4;
     }
 
     if (m_onGround && (m_speedX > 0.025f || m_speedX < -0.025f)) {

@@ -16,7 +16,6 @@ void Game::clearSceneHistory() {
 void Game::pushScene(std::shared_ptr<Scene> scene) {
     if(m_scene != nullptr) {
         m_sceneHistory.push_back(m_scene);
-        // logD("Pushed scene {} - {:X}", typeid(*m_scene.get()).name(), (uintptr_t)(m_scene.get()));
     }
 
     m_scene = scene;
@@ -25,8 +24,7 @@ void Game::pushScene(std::shared_ptr<Scene> scene) {
 void Game::popScene() {
     if(!m_sceneHistory.empty()) {
         m_scene = m_sceneHistory.back();
-         m_sceneHistory.pop_back();
-        // logD("Back {} - {:X}", typeid(*m_scene.get()).name(), (uintptr_t)(m_scene.get()));
+        m_sceneHistory.pop_back();
     }
 }
 
@@ -59,6 +57,8 @@ void Game::init(std::vector<std::string>& args) {
     // Load main classes
     m_world = std::make_shared<World>("world1");
     m_player = std::make_shared<Player>(m_world);
+
+    m_lastWindowSize = {1280, 720};
     
     // Load settings
     SettingsManager::get();
@@ -95,6 +95,10 @@ void Game::update() {
             m_scene = m_sceneHistory.back();
             m_sceneHistory.pop_back();
         }
+    }
+
+    if(IsWindowResized()) {
+        m_lastWindowSize = {GetScreenWidth(), GetScreenHeight()};
     }
 }
 
