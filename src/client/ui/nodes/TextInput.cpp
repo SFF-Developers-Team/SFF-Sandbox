@@ -5,9 +5,7 @@
 #include <raylib.h>
 #include <Logger.hpp>
 
-TextInput::TextInput(std::string const& font, std::string const& placeholder) : Frame(), m_font(font), m_placeholder(placeholder) {
-    m_allowedChars = " !@#$%^&*()\\/:;.,\"'№?abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-}
+TextInput::TextInput(std::string const& font, std::string const& placeholder) : Frame(), m_font(font), m_placeholder(placeholder), m_allowedChars(DEFAULT_ALLOWED_CHARS) {}
 
 void TextInput::draw() {
     Frame::draw();
@@ -28,7 +26,7 @@ void TextInput::draw() {
         textPos.x -= cursorpos - m_bounds.width + m_border * 2.f + 8.f; 
     }
 
-    auto bounds = getRealBounds().to<Rectangle>();
+    auto bounds = getWorldBounds().to<Rectangle>();
     BeginScissorMode(bounds.x + m_border, bounds.y + m_border, bounds.width - m_border * 2.f, bounds.height - m_border * 2.f);
         rm->drawText(m_font, (m_text.empty() ? m_placeholder : m_text), textPos, color, fontsize);
         
@@ -41,7 +39,7 @@ void TextInput::draw() {
 void TextInput::update() {
     auto mouse = GetMousePosition();
     auto sm = StyleManager::get();
-    auto cursorhover = getRealBounds().contains({mouse.x, mouse.y});
+    auto cursorhover = getWorldBounds().contains({mouse.x, mouse.y});
     m_color = sm->getValue<Col4u>(FIRST_COLOR_NORMAL);
 
     if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -63,9 +61,9 @@ void TextInput::update() {
         }
 
         if(IsKeyDown(KEY_LEFT_CONTROL) && isKeyHold(KEY_V)) {
-            auto text = GetClipboardText();
+            auto text = std::string(GetClipboardText());
             m_text.append(text);
-            m_cursorX += strlen(text);
+            m_cursorX += text.size();
         }
 
         if(IsKeyDown(KEY_LEFT_CONTROL) && isKeyHold(KEY_BACKSPACE)) {
@@ -108,4 +106,8 @@ std::string const& TextInput::getText() {
 
 int TextInput::getLength() {
     return m_text.length();
+}
+
+void TextInput::setAllowedChars(std::string const& allowedChars) {
+    m_allowedChars = allowedChars;
 }

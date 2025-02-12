@@ -69,7 +69,7 @@ void Container::update() {
     }
 
     if(m_scrollable) {
-        auto bounds = getRealBounds();
+        auto bounds = getWorldBounds();
         auto mouse = GetMousePosition();
         auto totalHeight = calculateTotalHeight();
 
@@ -87,7 +87,7 @@ void Container::draw() {
     Frame::draw();
     auto rm = RenderManager::get();
 
-    auto const bounds = getRealBounds();
+    auto const bounds = getWorldBounds();
     auto const totalHeight = calculateTotalHeight();
     auto const contentHeight = bounds.height - m_border * 2;
     auto const borderColor = m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F};

@@ -15,8 +15,8 @@ void DropDown::draw() {
     auto selected = std::vformat(m_mask, std::make_format_args(m_elements[m_selected]));
     auto size = rm->getTextSize(selected, "boldfont", 40.f);
     auto arrowsize = rm->getTextSize("^", "boldfont", 40.f);
-    auto textpos = Vec2f {(m_bounds.width - size.x) / 2 - m_bounds.height, (m_bounds.height - size.y) / 2};
-    auto bounds = getRealBounds();
+    auto textpos = Vec2f {(m_bounds.width - size.x) / 2, (m_bounds.height - size.y) / 2};
+    auto bounds = getWorldBounds();
 
     rm->drawText("boldfont", selected, textpos, COL_WHITE, 40.f);
     rlPushMatrix();
@@ -59,7 +59,7 @@ void DropDown::draw() {
 
 void DropDown::update() {
     Frame::update();
-    auto bounds = getRealBounds();
+    auto bounds = getWorldBounds();
     auto mouse = GetMousePosition();
 
     if(m_opened && getZOrder() < 100) {

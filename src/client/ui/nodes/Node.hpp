@@ -20,7 +20,7 @@ protected:
     bool m_enabled;
     int m_zOrder;
 
-    Rectf getRealBounds();
+    Rectf getWorldBounds();
 
 public:
     Node();

@@ -9,7 +9,7 @@ List::List(std::vector<std::string> const& elements, MiniFunction<void(int)> cal
 void List::draw() {
     Frame::draw();
 
-    auto bounds = getRealBounds();
+    auto bounds = getWorldBounds();
     auto rm = RenderManager::get();
     auto const totalHeight = 40.f * m_elements.size() + m_border * m_elements.size();
     auto const conHeight = bounds.height - m_border * 2;
@@ -38,7 +38,7 @@ void List::draw() {
 }
 
 void List::update() {
-    auto bounds = getRealBounds();
+    auto bounds = getWorldBounds();
     auto mouse = GetMousePosition();
     auto totalHeight = m_border * 2 + 40.f * m_elements.size() + m_border * m_elements.size();
 

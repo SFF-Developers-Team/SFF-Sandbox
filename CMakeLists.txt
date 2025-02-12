@@ -16,8 +16,8 @@ set(ENET_STATIC ON CACHE BOOL "" FORCE)
 set(SHARED_HEADERS 
     "libs/perlin-noise/"
     "libs/enet/inlcude"
+    "libs/miniz/"
     "libs/toml/"
-    "libs/enet/include"
     "src/shared/"
 )
 
@@ -43,15 +43,20 @@ file(GLOB SERVER_SOURCES CONFIGURE_DEPENDS
 
 add_subdirectory(libs/raylib)
 add_subdirectory(libs/GitHash)
-add_subdirectory(libs/zlib)
+# add_subdirectory(libs/zlib)
+add_subdirectory(libs/miniz)
 add_subdirectory(libs/enet)
+
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/zconf.h.included)
+    file(RENAME ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/zconf.h.included ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/zconf.h)
+endif()
 
 add_executable(SFFSandbox ${SHARED_SOURCES} ${CLIENT_SOURCES})
 add_executable(SFFSandbox-server ${SHARED_SOURCES} ${SERVER_SOURCES})
 
 
-target_link_libraries(SFFSandbox raylib enet_static ${GITHASH_LIBRARIES} zlibstatic)
-target_link_libraries(SFFSandbox-server enet_static ${GITHASH_LIBRARIES} zlibstatic)
+target_link_libraries(SFFSandbox raylib enet_static ${GITHASH_LIBRARIES} miniz)
+target_link_libraries(SFFSandbox-server enet_static ${GITHASH_LIBRARIES} miniz)
 
 target_include_directories(SFFSandbox PRIVATE
     ${SHARED_HEADERS}

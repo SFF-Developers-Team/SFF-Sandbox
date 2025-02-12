@@ -74,7 +74,7 @@ void Text::draw() {
             if(m_alignHorizontal == H_CENTER) textpos.x = m_bounds.width * 0.5f - size.x * 0.5f;
             if(m_alignHorizontal == H_RIGHT) textpos.x = m_bounds.width - size.x;
 
-            rm->drawText(m_font, line, textpos, m_color, m_fontSize, 1.f);
+            rm->drawText(m_font, line, textpos, m_color, m_fontSize);
             textpos.y += size.y + 2.f;
 
             if (textpos.y + lineHeight > m_bounds.height) return;
@@ -88,7 +88,7 @@ void Text::draw() {
         if(m_alignVertical == V_CENTER) textpos.y += m_bounds.height * 0.5f - size.y * 0.5f;
         if(m_alignVertical == V_BOTTOM) textpos.y += m_bounds.height - size.y;
 
-        rm->drawText(m_font, m_text, textpos, m_color, m_fontSize, 1.f);
+        rm->drawText(m_font, m_text, textpos, m_color, m_fontSize);
     }
 }
 

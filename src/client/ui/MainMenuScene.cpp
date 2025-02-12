@@ -8,7 +8,7 @@
 #include <Game.hpp>
 #include <ui/nodes/Button.hpp>
 #include <list>
-#include <ui/nodes/List.hpp>
+#include <ui/nodes/Slider.hpp>
 
 MainMenuScene::MainMenuScene() : MenuBase() {
     auto game = Game::get();

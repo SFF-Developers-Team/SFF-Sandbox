@@ -3,22 +3,6 @@
 #include <fstream>
 #include <Logger.hpp>
 
-std::string_view const defaultConfig = R"([Audio]
-volume=0.5
-music=0.5
-sound=0.5
-
-[Video]
-fullscreen=true
-resolution=0
-
-[Keyboard]
-Jump=31
-Duck=340
-Left=65
-Right=68
-Fly=70)";
-
 SettingsManager::SettingsManager() {
     // shitcode
     auto monitorI = GetCurrentMonitor();
@@ -38,33 +22,49 @@ SettingsManager::SettingsManager() {
         }
     }
 
-    std::ifstream file("settings.toml");
-    std::string settings;
+    // m_settings = toml::table {
+    //     {"audio", toml::table {
+    //         {"volume", 0.5f},
+    //         {"music", 0.5f},
+    //         {"sound", 0.5f}
+    //     }},
+    //     {"video", toml::table {
+    //         {"fullscreen", false},
+    //         {"resolution", 0}
+    //     }},
+    //     {"keyboard", toml::table {
+    //         {"jump", KEY_SPACE},
+    //         {"duck", KEY_LEFT_SHIFT},
+    //         {"left", KEY_A},
+    //         {"right", KEY_D},
+    //         {"fly", KEY_F}
+    //     }}
+    // };
 
-    if(file.is_open()) {
-        auto size = file.tellg();
-        file.seekg(0, std::ios::beg);
-        settings.resize(size);
-        file.read(settings.data(), size);
-    } else {
-        logE("Failed to init settings!");
-        settings = defaultConfig;
+    try {
+        m_settings = toml::parse_file("settings.toml");
+    } catch(toml::parse_error const& e) {
+        logE("Failed to init settings! {}", e.description());
     }
-
-    m_settings = toml::parse(settings);
-
 }
 
 int SettingsManager::getKeybind(std::string const& action) {
-    return getValue<int>("Keyboard/" + action, 0);
+    return getValue<int>("keyboard." + action, 0);
 }
 
 void SettingsManager::setKeybind(std::string const& action, int key) {
-    setValue("Keyboard/" + action, key);
+    setValue("keyboard." + action, key);
 }
 
-std::vector<std::string> const& SettingsManager::getKeyList() {
-    return m_keylist;
+std::vector<std::string> const SettingsManager::getKeyList() {
+    auto table = m_settings["keyboard"].as_table();
+    std::vector<std::string> ret;
+    
+    for(auto const& [action, key] : *table) {
+        ret.push_back(action.str().data());
+    }
+
+    return ret;
 }
 
 std::vector<VideoMode> const& SettingsManager::getModes() {

@@ -38,9 +38,15 @@ void RenderManager::drawTile(std::string const& mapKey, uint16_t index, Rectf de
     );
 }
 
-void RenderManager::drawText(std::string const& fontKey, std::string const& text, Vec2f pos, Col4u color, float fontSize, float spacing) {
+void RenderManager::drawText(std::string const& fontKey, std::string const& text, Vec2f pos, Col4u color, float fontSize, Vec2f origin, float spacing) {
     auto tm = TextureManager::get();
     auto font = tm->getFont(fontKey);
+
+    if(origin.x != 0.f || origin.y != 0.f) { // Эта оптимизация направлена на пропуск подсчета размера текста, если точка опоры равна нулю
+        auto size = getTextSize(text, fontKey, fontSize, spacing);
+        pos.x -= size.x * origin.x;
+        pos.y -= size.y * origin.y;
+    }
 
     DrawTextEx(font, text.c_str(), pos.to<Vector2>(), fontSize, spacing, color.to<Color>());
 }
@@ -53,10 +59,10 @@ void RenderManager::drawRectLines(Rectf rect, Col4u col, float thick) {
     DrawRectangleLinesEx(rect.to<Rectangle>(), thick, col.to<Color>());
 }
 
-Vec2f RenderManager::getTextSize(std::string const& text, std::string const& fontKey, float fontSize) {
+Vec2f RenderManager::getTextSize(std::string const& text, std::string const& fontKey, float fontSize, float spacing) {
     auto tm = TextureManager::get();
     auto font = tm->getFont(fontKey);
-    auto size = MeasureTextEx(font, text.c_str(), fontSize, 1.f);
+    auto size = MeasureTextEx(font, text.c_str(), fontSize, spacing);
 
     return Vec2f {size.x, size.y}; 
 }

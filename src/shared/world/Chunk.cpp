@@ -3,7 +3,7 @@
 #include <world/Block.hpp>
 #include <Logger.hpp>
 #include <assert.h>
-#include <zlib.h>
+#include <miniz.h>
 
 Chunk::Chunk(std::shared_ptr<World> world, Chunk::Position pos) : m_world(world), m_position(pos) {
     m_header = Header::CHUNK;

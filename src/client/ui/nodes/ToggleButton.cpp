@@ -21,7 +21,7 @@ void ToggleButton::draw() {
 void ToggleButton::update() {
     auto sm = StyleManager::get();
     auto mouse = GetMousePosition();
-    auto rect = getRealBounds();
+    auto rect = getWorldBounds();
     m_color = sm->getValue<Col4u>(FIRST_COLOR_NORMAL);
 
     if(rect.contains({mouse.x, mouse.y})) {

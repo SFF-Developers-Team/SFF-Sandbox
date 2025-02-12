@@ -24,6 +24,7 @@ MultiplayerScene::MultiplayerScene() : MenuBase() {
     hostnameInput->setPos({getWidth() / 2, 380.f});
     hostnameInput->setSize(inpSize);
     hostnameInput->setTag("hostname-input");
+    hostnameInput->setAllowedChars(URL_ALLOWED_CHARS);
     addChild(hostnameInput);
     
     auto joinBtn = std::make_shared<Button>("Join", [this, game](Button*) {

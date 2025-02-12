@@ -2,3 +2,5 @@
 /.vscode
 out
 .vs
+
+libs/zlib/zconf.h

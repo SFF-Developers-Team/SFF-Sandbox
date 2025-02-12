@@ -3,6 +3,7 @@
 #include <format>
 #include <ui/nodes/DropDown.hpp>
 #include <ui/nodes/ToggleButton.hpp>
+#include <ui/nodes/Slider.hpp>
 
 SettingsScene::SettingsScene() : MenuBase() {
     auto stm = SettingsManager::get();
@@ -44,76 +45,134 @@ SettingsScene::SettingsScene() : MenuBase() {
     keyboardTitle->setPos({categorySize.x / 2, 30.f});
     keyboard->addChild(keyboardTitle);
 
-    std::vector<std::string> modesList{"Auto"};
-    auto modes = stm->getModes();
+    // video settings
+    {
+        Vec2f const elementSize = {video->getWidth() - video->getBorderWidth() * 4, 40.f};
 
-    for(auto& mode : modes) {
-        modesList.push_back(std::format("{}x{}", mode.width, mode.height));
+        std::vector<std::string> modesList{"Auto"};
+        auto modes = stm->getModes();
+
+        for(auto& mode : modes) {
+            modesList.push_back(std::format("{}x{}", mode.width, mode.height));
+        }
+
+        auto resolutions = std::make_shared<DropDown>(modesList, [stm, this](DropDown*, int i) {
+            auto monitor = GetCurrentMonitor();
+            auto modes = stm->getModes();
+            auto game = Game::get();
+            auto ws = game->getLastWindowSize();
+            auto mode = (IsWindowState(FLAG_FULLSCREEN_MODE) ? VideoMode {GetMonitorWidth(monitor), GetMonitorHeight(monitor)} : ws.to<VideoMode>());
+
+            if(i > 0) {
+                mode = modes[i - 1];
+            }
+        
+            m_autoResolution = i == 0;
+
+            SetWindowSize(mode.width, mode.height);
+            SetWindowPosition((GetMonitorWidth(monitor) - mode.width) / 2, (GetMonitorHeight(monitor) - mode.height) / 2);
+
+            stm->setValue("video.resolution", i);
+        });
+        
+        resolutions->setPos({video->getWidth() / 2, 90.f});
+        resolutions->setSize(elementSize);
+        video->addChild(resolutions);
+
+        auto fullscreen = std::make_shared<DropDown>(std::vector<std::string>{"Window", "Fullscreen", "Borderless"}, [stm, this](DropDown*, int i) {
+            auto size = Game::get()->getLastWindowSize();
+            auto mon = GetCurrentMonitor();
+
+            switch (i) {
+                case 0:
+                    ClearWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
+                    ClearWindowState(FLAG_FULLSCREEN_MODE);
+                    SetWindowSize(size.x, size.y);
+                    break;
+                case 1:
+                    ClearWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
+                    SetWindowState(FLAG_FULLSCREEN_MODE);
+                    
+                    if(m_autoResolution) {
+                        SetWindowSize(GetMonitorWidth(mon), GetMonitorHeight(mon));
+                    }
+                    break;
+                case 2:
+                    ClearWindowState(FLAG_FULLSCREEN_MODE);
+                    SetWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
+                    break;
+            }
+
+            stm->setValue("video.fullscreen", i);
+        });
+        
+        fullscreen->setPos({video->getWidth() / 2, resolutions->getY() + 50.f});
+        fullscreen->setSize(elementSize);
+        video->addChild(fullscreen);
+
+        auto vsync = std::make_shared<ToggleButton>("VSYNC", [stm](ToggleButton*, bool flag) {
+            if(!flag && IsWindowState(FLAG_VSYNC_HINT)) {
+                ClearWindowState(FLAG_VSYNC_HINT);
+            }
+
+            if(flag && !IsWindowState(FLAG_VSYNC_HINT)) {
+                SetWindowState(FLAG_VSYNC_HINT);
+            }
+
+            stm->setValue("video.vsync", flag);
+        });
+
+        vsync->setPos({video->getWidth() / 2, fullscreen->getY() + 50.f});
+        vsync->setSize(elementSize);
+        video->addChild(vsync);
+
+        auto scale = std::make_shared<Slider<int>>("GUI Scale: ", 1, 4, [stm](auto, auto value) {
+            stm->setValue("video.scale", value);
+        });
+
+        scale->setPos({audio->getWidth() / 2, vsync->getY() + 50.f});
+        scale->setSize(elementSize);
+        video->addChild(scale);
     }
 
-    auto dropdown = std::make_shared<DropDown>(modesList, [stm, this](DropDown*, int i) {
-        auto monitor = GetCurrentMonitor();
-        auto modes = stm->getModes();
-        auto game = Game::get();
-        auto ws = game->getLastWindowSize();
-        auto mode = (IsWindowState(FLAG_FULLSCREEN_MODE) ? VideoMode {GetMonitorWidth(monitor), GetMonitorHeight(monitor)} : ws.to<VideoMode>());
+    // audio settings
+    {
+        Vec2f const elementSize = {audio->getWidth() - audio->getBorderWidth() * 4, 40.f};
 
-        if(i > 0) {
-            mode = modes[i - 1];
-        }
-    
-        m_autoResolution = i == 0;
+        auto volume = std::make_shared<Slider<float>>("General volume: ", 0.f, 1.f, [stm](auto, auto value) {
+            SetMasterVolume(value);
+            stm->setValue("audio.volume.general", value);
+        });
+        volume->setPos({audio->getWidth() / 2, 90.f});
+        volume->setSize(elementSize);
+        audio->addChild(volume);
 
-        SetWindowSize(mode.width, mode.height);
-        SetWindowPosition((GetMonitorWidth(monitor) - mode.width) / 2, (GetMonitorHeight(monitor) - mode.height) / 2);
-    });
-    
-    dropdown->setPos({video->getWidth() / 2, 90.f});
-    dropdown->setSize({video->getWidth() - video->getBorderWidth() * 4, 40.f});
-    video->addChild(dropdown);
+        auto music = std::make_shared<Slider<float>>("Music volume: ", 0.f, 1.f, [stm](auto, auto value) {
+            stm->setValue("audio.volume.music", value);
+        });
+        music->setPos({audio->getWidth() / 2, volume->getY() + 50.f});
+        music->setSize(elementSize);
+        audio->addChild(music);
 
-    auto fullscreen = std::make_shared<DropDown>(std::vector<std::string>{"Window", "Fullscreen", "Borderless"}, [stm, this](DropDown*, int i) {
-        auto size = Game::get()->getLastWindowSize();
-        auto mon = GetCurrentMonitor();
+        auto sound = std::make_shared<Slider<float>>("Sound volume: ", 0.f, 1.f, [stm](auto, auto value) {
+            stm->setValue("audio.volume.sound", value);
+        });
+        sound->setPos({audio->getWidth() / 2, music->getY() + 50.f});
+        sound->setSize(elementSize);
+        audio->addChild(sound);
+    }
 
-        switch (i) {
-            case 0:
-                ClearWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
-                ClearWindowState(FLAG_FULLSCREEN_MODE);
-                SetWindowSize(size.x, size.y);
-                break;
-            case 1:
-                ClearWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
-                SetWindowState(FLAG_FULLSCREEN_MODE);
-                
-                if(m_autoResolution) {
-                    SetWindowSize(GetMonitorWidth(mon), GetMonitorHeight(mon));
-                }
-                break;
-            case 2:
-                ClearWindowState(FLAG_FULLSCREEN_MODE);
-                SetWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
-                break;
-        }
-    });
-    
-    fullscreen->setPos({video->getWidth() / 2, dropdown->getY() + 50.f});
-    fullscreen->setSize({video->getWidth() - video->getBorderWidth() * 4, 40.f});
-    video->addChild(fullscreen);
+    // keyboard settings
+    {
+        Vec2f const elementSize = {keyboard->getWidth() - keyboard->getBorderWidth() * 4, 40.f};
 
-    auto vsync = std::make_shared<ToggleButton>("VSYNC", [](ToggleButton*, bool flag) {
-        if(!flag && IsWindowState(FLAG_VSYNC_HINT)) {
-            ClearWindowState(FLAG_VSYNC_HINT);
-        }
+        auto keysContainer = std::make_shared<Container>();
+        keysContainer->setPos({keyboard->getWidth() / 2, 60.f});
+        keysContainer->setAnchorY(0.f);
+        keysContainer->setSize({elementSize.x, keyboard->getHeight() - keysContainer->getY() - keyboard->getBorderWidth() * 2});
+        keyboard->addChild(keysContainer);
 
-        if(flag && !IsWindowState(FLAG_VSYNC_HINT)) {
-            SetWindowState(FLAG_VSYNC_HINT);
-        }
-    });
-
-    vsync->setPos({video->getWidth() / 2, fullscreen->getY() + 50.f});
-    vsync->setSize({video->getWidth() - video->getBorderWidth() * 4, 40.f});
-    video->addChild(vsync);
+    }
 }
 
 void SettingsScene::update() {

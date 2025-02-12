@@ -8,26 +8,20 @@ SimplePlayer::SimplePlayer(std::shared_ptr<World> world) : Entity::Entity(world)
     m_header = Header::PLAYER;
 }
 
-// for debug
 const char* SimplePlayer::getAnimationName(AnimationType type) {
+    // clang-format off
     switch(type) {
-        case PLAYER_IDLE:
-            return "PLAYER_IDLE";
-        case PLAYER_MOVE:
-            return "PLAYER_MOVE";
-        case PLAYER_SNEAK:
-            return "PLAYER_SNEAK";
-        case PLAYER_JUMP:
-            return "PLAYER_JUMP";
-        case PLAYER_HIT:
-            return "PLAYER_HIT";
-        case PLAYER_HURT:
-            return "PLAYER_HURT";
-        case PLAYER_SIT:
-            return "PLAYER_SIT";
-        case PLAYER_CART:
-            return "PLAYER_CART";
+        case PLAYER_IDLE: return "PLAYER_IDLE";
+        case PLAYER_MOVE: return "PLAYER_MOVE";
+        case PLAYER_SNEAK: return "PLAYER_SNEAK";
+        case PLAYER_JUMP: return "PLAYER_JUMP";
+        case PLAYER_HIT: return "PLAYER_HIT";
+        case PLAYER_HURT: return "PLAYER_HURT";
+        case PLAYER_SIT: return "PLAYER_SIT";
+        case PLAYER_CART: return "PLAYER_CART";
+        default: return "PLAYER_UNKNOWN";
     }
+    //clang-format on
 }
 
 void SimplePlayer::setAnimation(AnimationType type) {

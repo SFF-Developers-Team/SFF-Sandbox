@@ -4,7 +4,7 @@
 
 Node::Node() : m_bounds({0.f, 0.f, 32.f, 32.f}), m_anchor({0.5f, 0.5f}), m_color(COL_WHITE), m_enabled(true), m_visible(true), m_zOrder(0) {}
 
-Rectf Node::getRealBounds() {
+Rectf Node::getWorldBounds() {
     auto parent = getParent();
     Rectf ret = m_bounds;
     

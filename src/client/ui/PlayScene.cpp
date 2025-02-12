@@ -12,9 +12,7 @@
 
 #include <chrono>
 
-PlayScene::PlayScene(bool isOnline) : 
-    m_timer(std::make_shared<Timer>(60)), m_online(isOnline) 
-{
+PlayScene::PlayScene(bool isOnline) : m_timer(std::make_shared<Timer>(60)), m_online(isOnline) {
     auto game = Game::get();
     m_world = game->getWorld();
     m_player = game->getPlayer();

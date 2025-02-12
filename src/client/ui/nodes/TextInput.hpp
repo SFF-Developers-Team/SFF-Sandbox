@@ -1,6 +1,9 @@
 #pragma once
 #include <ui/nodes/Frame.hpp>
 
+#define DEFAULT_ALLOWED_CHARS " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+#define URL_ALLOWED_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!*'();/?:@&=+$ "
+
 class TextInput : public Frame {
 protected:
     std::string m_font;
@@ -21,4 +24,6 @@ public:
 
     std::string const& getText();
     int getLength();
+
+    void setAllowedChars(std::string const& allowedChars);
 };
