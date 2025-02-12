@@ -12,3 +12,6 @@
 [submodule "libs/raygui"]
 	path = libs/raygui
 	url = https://github.com/raysan5/raygui.git
+[submodule "libs/miniz"]
+	path = libs/miniz
+	url = https://github.com/richgel999/miniz
