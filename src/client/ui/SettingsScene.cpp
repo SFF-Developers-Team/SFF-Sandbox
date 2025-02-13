@@ -5,7 +5,7 @@
 #include <ui/nodes/ToggleButton.hpp>
 #include <ui/nodes/Slider.hpp>
 
-SettingsScene::SettingsScene() : MenuBase() {
+SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolution(true) {
     auto stm = SettingsManager::get();
 
     auto container = std::make_shared<Container>();
@@ -13,40 +13,42 @@ SettingsScene::SettingsScene() : MenuBase() {
     container->setPos({getWidth() / 2, getHeight() / 2 + 100.f});
     addChild(container);
 
-    Vec2f categorySize = {container->getWidth() / 3, container->getHeight()};
+    std::vector<std::string> containers{"Video", "Audio", "Keyboard"};
+    Vec2f categorySize = {container->getWidth() / containers.size(), container->getHeight() - 55.f};
+    float x = 0.f;
 
-    auto video = std::make_shared<Container>();
-    video->setSize(categorySize);
-    video->setPos({categorySize.x / 2, categorySize.y / 2});
-    container->addChild(video);
+    for(auto& s : containers) {
+        auto cat = std::make_shared<Container>();
+        cat->setAnchor({0.f, 0.f});
+        cat->setPos({x, 0.f});
+        cat->setSize(categorySize);
+        container->addChild(cat);
 
-    auto audio = std::make_shared<Container>();
-    audio->setSize(categorySize);
-    audio->setPos({categorySize.x * 1.5f, categorySize.y / 2});
-    container->addChild(audio);
+        x += categorySize.x;
 
-    auto keyboard = std::make_shared<Container>();
-    keyboard->setSize(categorySize);
-    keyboard->setPos({categorySize.x * 2.5f, categorySize.y / 2});
-    container->addChild(keyboard);
+        auto title = std::make_shared<Text>("boldfont", s, 40.f);
+        title->setSize({categorySize.x, 60.f});
+        title->setPos({categorySize.x / 2, 30.f});
+        cat->addChild(title);
 
-    auto videoTitle = std::make_shared<Text>("boldfont", "Video", 40.f);
-    videoTitle->setSize({categorySize.x, 60.f});
-    videoTitle->setPos({categorySize.x / 2, 30.f});
-    video->addChild(videoTitle);
+        std::transform(s.begin(), s.end(), s.begin(), [](auto c) { 
+            return std::tolower(c); 
+        });
 
-    auto audioTitle = std::make_shared<Text>("boldfont", "Audio", 40.f);
-    audioTitle->setSize({categorySize.x, 60.f});
-    audioTitle->setPos({categorySize.x / 2, 30.f});
-    audio->addChild(audioTitle);
+        cat->setTag("container-" + s);
+        title->setTag(s + "-title");
+    }
 
-    auto keyboardTitle = std::make_shared<Text>("boldfont", "Keyboard", 40.f);
-    keyboardTitle->setSize({categorySize.x, 60.f});
-    keyboardTitle->setPos({categorySize.x / 2, 30.f});
-    keyboard->addChild(keyboardTitle);
+    auto apply = std::make_shared<Button>("Apply", [stm](Button*) {
+        stm->save();
+    });
+    apply->setSize({400.f, 40.f});
+    apply->setPos({container->getWidth() / 2, container->getHeight() - 30.f});
+    container->addChild(apply);
 
     // video settings
     {
+        auto video = container->getChild<Container>("container-video");
         Vec2f const elementSize = {video->getWidth() - video->getBorderWidth() * 4, 40.f};
 
         std::vector<std::string> modesList{"Auto"};
@@ -130,33 +132,40 @@ SettingsScene::SettingsScene() : MenuBase() {
             stm->setValue("video.scale", value);
         });
 
-        scale->setPos({audio->getWidth() / 2, vsync->getY() + 50.f});
+        scale->setPos({video->getWidth() / 2, vsync->getY() + 50.f});
         scale->setSize(elementSize);
         video->addChild(scale);
     }
 
     // audio settings
     {
+        auto audio = container->getChild<Container>("container-audio");
         Vec2f const elementSize = {audio->getWidth() - audio->getBorderWidth() * 4, 40.f};
 
         auto volume = std::make_shared<Slider<float>>("General volume: ", 0.f, 1.f, [stm](auto, auto value) {
             SetMasterVolume(value);
             stm->setValue("audio.volume.general", value);
         });
+
+        volume->setValue(stm->getValue<float>("audio.volume.general", 0.5f));
         volume->setPos({audio->getWidth() / 2, 90.f});
         volume->setSize(elementSize);
         audio->addChild(volume);
 
         auto music = std::make_shared<Slider<float>>("Music volume: ", 0.f, 1.f, [stm](auto, auto value) {
+            SoundManager::get()->setMusicVolume(value);
             stm->setValue("audio.volume.music", value);
         });
+        music->setValue(stm->getValue<float>("audio.volume.music", 0.5f));
         music->setPos({audio->getWidth() / 2, volume->getY() + 50.f});
         music->setSize(elementSize);
         audio->addChild(music);
 
         auto sound = std::make_shared<Slider<float>>("Sound volume: ", 0.f, 1.f, [stm](auto, auto value) {
+            SoundManager::get()->setSoundVolume(value);
             stm->setValue("audio.volume.sound", value);
         });
+        sound->setValue(stm->getValue<float>("audio.volume.sound", 0.5f));
         sound->setPos({audio->getWidth() / 2, music->getY() + 50.f});
         sound->setSize(elementSize);
         audio->addChild(sound);
@@ -164,6 +173,7 @@ SettingsScene::SettingsScene() : MenuBase() {
 
     // keyboard settings
     {
+        auto keyboard = container->getChild<Container>("container-keyboard");
         Vec2f const elementSize = {keyboard->getWidth() - keyboard->getBorderWidth() * 4, 40.f};
 
         auto keysContainer = std::make_shared<Container>();
@@ -172,89 +182,45 @@ SettingsScene::SettingsScene() : MenuBase() {
         keysContainer->setSize({elementSize.x, keyboard->getHeight() - keysContainer->getY() - keyboard->getBorderWidth() * 2});
         keyboard->addChild(keysContainer);
 
+        auto y = 30.f;
+
+        for(auto& action : stm->getKeyActions()) {
+            auto text = std::make_shared<Text>("font", action, 40.f);
+            text->setSize({keyboard->getWidth() / 2, 40.f});
+            text->setPos({10.f, y});
+            text->setAnchorX(0.f);
+            text->setAlignH(TextAlignmentH::H_LEFT);
+            keysContainer->addChild(text);
+
+            auto button = std::make_shared<Button>(SettingsManager::getKeyName(stm->getKeybind(action)), [this](Button* btn) { 
+                m_keySelect = btn; 
+                btn->setText("...");
+            });
+            button->setTag(action);
+            button->setSize({200.f, 40.f});
+            button->setAnchorX(1.f);
+            button->setPos({keysContainer->getWidth() - 10.f, y});
+            keysContainer->addChild(button);
+
+            y += 45.f;
+        }
     }
 }
 
 void SettingsScene::update() {
+    auto key = GetKeyPressed();
+    auto stm = SettingsManager::get();
+
+    if(m_keySelect != nullptr && key == KEY_ESCAPE) {
+        m_keySelect->setText(SettingsManager::getKeyName(stm->getKeybind(m_keySelect->getTag())));
+        m_keySelect = nullptr;
+    }
+
+    if(m_keySelect != nullptr && key > 0) {
+        stm->setKeybind(m_keySelect->getTag(), key);
+        m_keySelect->setText(SettingsManager::getKeyName(key));
+        m_keySelect = nullptr;
+    }
+
     MenuBase::update();
-    // auto stm = SettingsManager::get();
-    // auto key = GetKeyPressed();
-
-    // if (m_selectMode && key > 0) {
-    //     stm->setKeybind(m_selectKey, key);
-    //     m_selectMode = false;
-    // }
-}
-
-void SettingsScene::draw() {
-    MenuBase::draw();
-
-    // auto sm = SoundManager::get();
-    // auto stm = SettingsManager::get();
-    // auto game = Game::get();
-    // auto player = Game::get()->getPlayer();
-    // Vec2f const scr = {static_cast<float>(GetScreenWidth()), static_cast<float>(GetScreenHeight())};
-    // Vec2f const container = {1235.f, 400.f};
-    // float const x = scr.x / 2 - container.x / 2;
-    // float const y = 100 + scr.y / 2 - container.y / 2;
-
-    // auto volume = stm->getValue<float>("Audio/volume", 0.5f);
-    // drawSlider({x + 150, y + 50, 200, 25}, "Master volume", volume, 0.f, 1.f, true, [stm](float value) {
-    //     stm->setValue("Audio/volume", value);
-    //     SetMasterVolume(value);
-    // });
-
-    // auto music = stm->getValue<float>("Audio/music", 0.5f);
-    // drawSlider({x + 150, y + 85, 200, 25}, "Music volume", music, 0.f, 1.f, true, [sm](float value) {
-    //     sm->setMusicVolume(value);
-    // });
-
-    // auto sound = stm->getValue<float>("Audio/sound", 0.5f);
-    // drawSlider({x + 150, y + 125, 200, 25}, "Sound volume", sound, 0.f, 1.f, true, [sm](float value) {
-    //     sm->setSoundVolume(value);
-    // });
-
-    // drawButton(std::format("Fullscreen: {}", IsWindowFullscreen() ? "ON" : "OFF"), {m_container.x + 10, 500, 200, 50}, [&]() {
-    //     int display = GetCurrentMonitor();
-    //     if (!IsWindowFullscreen()) {
-    //         SetWindowSize(GetMonitorWidth(display), GetMonitorHeight(display));
-    //         ToggleFullscreen();
-    //     } else {
-    //         ToggleFullscreen();
-    //         SetWindowSize(1280, 720);
-    //     }
-    // });
-
-    // drawButton("V-Sync", {m_container.x + 10, 570, 200, 50}, [&]() {
-    //     if (IsWindowState(FLAG_VSYNC_HINT))
-    //         ClearWindowState(FLAG_VSYNC_HINT);
-    //     else
-    //         SetWindowState(FLAG_VSYNC_HINT);
-    // });
-    // static int m_count = 0;
-    // drawSliderBar({m_container.x + 350, 280, 200, 50}, "", "GUI Scale", &m_soundVolume, 0, 1);
-    // DrawText("Resolutions", m_container.x + 430, 350, 25, WHITE);
-    // GuiListView({m_container.x + 350, 370, 300, 250}, m_dropText.c_str(), &m_count, &m_isActive);
-
-    // // drawDropDownBox(m_dropText, {0, 0, 200, 20}, m_count, m_isActive);
-    // // if(CheckCollisionPointRec(GetMousePosition(), {0, 0, 200, 20}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-    // //     m_isActive = !m_isActive;
-    // // }
-    // if (IsKeyPressed(KEY_SPACE) && m_isActive != -1) {
-    //     SetWindowSize(stm->getModes().at(m_isActive).width, stm->getModes().at(m_isActive).height);
-    // }
-    // for (int i = 0; i < stm->getBindings().size(); i++) {
-    //     static int test = 0;
-    //     logD("X {}", m_keyX);
-    //     logD("Y {}", m_keyY);
-    //     DrawText(TextFormat("%d", stm->getKeyFromID(KeyID(i))), m_keyX + 120, m_container.y + 55 * i, 40, WHITE);
-    //     drawButton(stm->getKeyNameFromID(KeyID(i)), {m_keyX, m_container.y + 55 * i, 100, 50}, [&]() {
-    //         m_selectMode = true;
-    //         m_selectKey = KeyID(i);
-    //     });
-    //     count++;
-    // }
-    // for(auto& bind : stm->getBindings()) {
-
-    // }
 }

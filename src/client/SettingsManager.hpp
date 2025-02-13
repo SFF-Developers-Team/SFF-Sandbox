@@ -6,6 +6,7 @@
 #include <map>
 #include <glfw3.h>
 #include <toml.hpp>
+#include <Logger.hpp>
 
 struct VideoMode {
     int width;
@@ -27,17 +28,19 @@ public:
 
     template<typename T>
     void setValue(std::string const& path, T value) {
-        auto tpath = toml::path(path);
-        auto lastdot = path.find_last_of('.');
+        toml::table* current = &m_settings;
+        toml::path tomlPath(path);
 
-        if(lastdot != std::string::npos) {
-            auto last = path.substr(lastdot + 1);
-            auto table = m_settings[tpath.parent()].as_table();
+        for (size_t i = 0; i < tomlPath.size() - 1; ++i) {
+            std::string const& part = tomlPath[i].key();
+            if (!current->contains(part)) {
+                current->insert(part, toml::table{});
+            }
 
-            table->insert_or_assign(last, value);
-        } else {
-            m_settings.insert_or_assign(path, value);
+            current = (*current)[part].as_table();
         }
+
+        current->insert_or_assign(tomlPath[tomlPath.size() - 1].key(), value);
     }
 
     template<typename T>
@@ -51,8 +54,14 @@ public:
 
     int getKeybind(std::string const& action);
     void setKeybind(std::string const& action, int key);
-    void registerKeybind(std::string const& action);
+
+    /// @brief Creates keyboard.action if it doesn't exists
+    void registerKeybind(std::string const& action, int key);
+
+    void save();
+
+    static std::string const getKeyName(int key);
     
-    std::vector<std::string> const getKeyList();
+    std::vector<std::string> const getKeyActions();
     std::vector<VideoMode> const& getModes();
 };

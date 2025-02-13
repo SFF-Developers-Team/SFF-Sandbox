@@ -80,7 +80,7 @@ void Text::draw() {
             if (textpos.y + lineHeight > m_bounds.height) return;
         }
     } else {
-       auto size = rm->getTextSize(m_text, m_font, m_fontSize);
+        auto size = rm->getTextSize(m_text, m_font, m_fontSize);
 
         if(m_alignHorizontal == H_CENTER) textpos.x += m_bounds.width * 0.5f - size.x * 0.5f;
         if(m_alignHorizontal == H_RIGHT) textpos.x += m_bounds.width - size.x;

@@ -12,13 +12,11 @@
 class SettingsScene : public MenuBase {
 private:
     std::string m_dropText;
-    std::string m_selectKey;
-    bool m_selectMode = false;
-    bool m_autoResolution = true;
+    Button* m_keySelect;
+    bool m_autoResolution;
     
 public:
     SettingsScene();
 
-    void draw();
     void update();
 };
