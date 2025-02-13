@@ -3,17 +3,13 @@
 #include <ui/MultiplayerScene.hpp>
 #include <ui/CreditsScene.hpp>
 #include <ui/SettingsScene.hpp>
-#include <RenderManager.hpp>
-#include <TextureManager.hpp>
-#include <Game.hpp>
 #include <ui/nodes/Button.hpp>
+#include <StyleManager.hpp>
+#include <Game.hpp>
 #include <list>
-#include <ui/nodes/Slider.hpp>
 
 MainMenuScene::MainMenuScene() : MenuBase() {
     auto game = Game::get();
-    auto y = 300.f;
-    auto const padding = 60.f;
 
     std::list<std::pair<std::string, MiniFunction<void(Button*)>>> const btns = {
         {"Singleplayer", [game](Button*) { game->pushScene(std::make_shared<PlayScene>()); }},
@@ -23,13 +19,22 @@ MainMenuScene::MainMenuScene() : MenuBase() {
         {"Quit", [game](Button*) { game->destroy(); }}
     };
 
+    auto elementSize = StyleManager::get()->getValue<Vec2f>(DEFAULT_ELEMENT_SIZE);
+    auto container = std::make_shared<Container>();
+    container->setTag("center-buttons");
+    container->setWidth(elementSize.x);
+    container->setColor({0, 0, 0, 0});
+    container->setBorderWidth(0.f);
+    addChild(container);
+
+    auto y = elementSize.y / 2;
     for(auto& [text, call] : btns) {
         auto btn = std::make_shared<Button>(text, call);
-        btn->setPos({getWidth() / 2, y});
-        btn->setSize({300.f, 40.f});
+        btn->setPos({container->getWidth() / 2, y});
+        container->addChild(btn);
         
-        addChild(btn);
-        
-        y += padding;
+        y += btn->getBorderWidth() + btn->getHeight();
     }
+    
+    container->setHeight(y);
 }

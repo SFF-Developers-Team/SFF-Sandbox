@@ -7,10 +7,14 @@
 Text::Text(std::string const& font, std::string const& text, float fontSize) : Node(), m_font(font), m_text(text), m_fontSize(fontSize), m_wordWrap(false) {
     auto sm = StyleManager::get();
     auto fnt = TextureManager::get()->getFont(m_font);
+
+    if(fontSize == 0.f) {
+        m_fontSize = fnt.baseSize;
+    }
+
     auto size = MeasureTextEx(fnt, m_text.c_str(), m_fontSize, 1.f);
     m_bounds.width = size.x;
     m_bounds.height = size.y;
-    m_color = sm->getValue<Col4u>(TEXT_COLOR_NORMAL);
     m_alignHorizontal = H_CENTER;
     m_alignVertical = V_CENTER;
 }

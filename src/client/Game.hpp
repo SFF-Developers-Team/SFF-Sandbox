@@ -22,6 +22,7 @@ private:
     std::deque<std::shared_ptr<Scene>> m_sceneHistory;
 
     Vec2i m_lastWindowSize;
+    int m_guiScale = 1;
     
 public:
     static Game* get() {
@@ -59,4 +60,7 @@ public:
     }
     
     Vec2i const getLastWindowSize() { return m_lastWindowSize; }
+
+    int getGuiScale() { return m_guiScale; }
+    void setGuiScale(int scale) { m_guiScale = scale; }
 };

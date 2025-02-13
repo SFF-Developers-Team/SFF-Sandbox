@@ -2,10 +2,13 @@
 #include <raylib.h>
 #include <format>
 #include <RenderManager.hpp>
+#include <TextureManager.hpp>
 #include <StyleManager.hpp>
 
 ToggleButton::ToggleButton(std::string const& text, MiniFunction<void(ToggleButton*, bool)> const& callback) : 
-    Frame(), m_flag(false), m_callback(callback), m_text(text), m_fontSize(40.f) {}
+    Frame(), m_flag(false), m_callback(callback), m_text(text) {
+    m_fontSize = TextureManager::get()->getFontBaseSize("boldfont");
+}
 
 void ToggleButton::draw() {
     Frame::draw();
@@ -22,7 +25,7 @@ void ToggleButton::update() {
     auto sm = StyleManager::get();
     auto mouse = GetMousePosition();
     auto rect = getWorldBounds();
-    m_color = sm->getValue<Col4u>(FIRST_COLOR_NORMAL);
+    m_color = sm->getValue<Col4u>(DEFAULT_UI_COLOR);
 
     if(rect.contains({mouse.x, mouse.y})) {
         m_color.brightness(-0.3f * (IsMouseButtonDown(MOUSE_BUTTON_LEFT) + 1));

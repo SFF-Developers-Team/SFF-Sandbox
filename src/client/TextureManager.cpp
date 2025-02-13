@@ -63,3 +63,7 @@ bool TextureManager::textureLoaded(std::string const& key) {
 std::shared_ptr<TileMap> TextureManager::getTileMap(std::string const& key) {
     return m_tilemaps[key];
 }
+
+float TextureManager::getFontBaseSize(std::string const& fontKey) {
+    return m_fonts[fontKey].baseSize;
+}

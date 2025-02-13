@@ -1,5 +1,6 @@
 #include <ui/nodes/List.hpp>
 #include <RenderManager.hpp>
+#include <TextureManager.hpp>
 #include <raylib.h>
 #include <algorithm>
 
@@ -11,7 +12,8 @@ void List::draw() {
 
     auto bounds = getWorldBounds();
     auto rm = RenderManager::get();
-    auto const totalHeight = 40.f * m_elements.size() + m_border * m_elements.size();
+    auto const fontSize = TextureManager::get()->getFontBaseSize("boldfont");
+    auto const totalHeight = fontSize * m_elements.size() + m_border * m_elements.size();
     auto const conHeight = bounds.height - m_border * 2;
     auto const borderColor = m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F};
     auto const scrollBar = totalHeight > bounds.height;
@@ -20,15 +22,15 @@ void List::draw() {
         for(auto i = 0; i < m_elements.size(); i++) {
             auto rect = Rectf {
                 m_border * 2.f, 
-                m_border * 2 + 40.f * i + m_border * i - m_scrollOffset, 
+                m_border * 2 + fontSize * i + m_border * i - m_scrollOffset, 
                 bounds.width - m_border * (scrollBar ? 5.f : 4.f), 
-                40.f
+                fontSize
             };
-            auto size = rm->getTextSize(m_elements[i], "boldfont", 40.f);
+            auto size = rm->getTextSize(m_elements[i], "boldfont", fontSize);
 
             rm->drawRect(rect, m_color);
             rm->drawRectLines(rect, borderColor, m_border);
-            rm->drawText("boldfont", m_elements[i], {(rect.width - size.x) / 2, rect.y + (rect.height - size.y) / 2}, COL_WHITE, 40.f);
+            rm->drawText("boldfont", m_elements[i], {(rect.width - size.x) / 2, rect.y + (rect.height - size.y) / 2}, COL_WHITE, fontSize);
         }
 
         if(scrollBar) {
@@ -40,7 +42,8 @@ void List::draw() {
 void List::update() {
     auto bounds = getWorldBounds();
     auto mouse = GetMousePosition();
-    auto totalHeight = m_border * 2 + 40.f * m_elements.size() + m_border * m_elements.size();
+    auto fontSize = TextureManager::get()->getFontBaseSize("boldfont");
+    auto totalHeight = m_border * 2 + fontSize * m_elements.size() + m_border * m_elements.size();
 
     if(totalHeight > m_bounds.height) {
         if(bounds.contains({mouse.x, mouse.y}) && GetMouseWheelMove() != 0.f) {
@@ -51,7 +54,7 @@ void List::update() {
     }
 
     for(auto i = 0; i < m_elements.size(); i++) {
-        auto rect = Rectf {bounds.x + m_border * 2, bounds.y + m_border * 2 + 40.f * i + m_border * i - m_scrollOffset, bounds.width - m_border * 4, 40.f};
+        auto rect = Rectf {bounds.x + m_border * 2, bounds.y + m_border * 2 + fontSize * i + m_border * i - m_scrollOffset, bounds.width - m_border * 4, fontSize};
         auto const isVisible = rect.y + rect.height > bounds.y + m_border && rect.y < bounds.y + bounds.height - m_border;
 
         if(isVisible && rect.contains({mouse.x, mouse.y}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {

@@ -5,27 +5,31 @@
 #include <ui/nodes/Button.hpp>
 #include <ui/nodes/Text.hpp>
 #include <ui/nodes/TextInput.hpp>
+#include <StyleManager.hpp>
 
 MultiplayerScene::MultiplayerScene() : MenuBase() {
-    auto const btnSize = Vec2f {300.f, 40.f};
-    auto const inpSize = Vec2f {300.f, 50.f};
-    auto const btnPos = Vec2f {getWidth() / 2.f, 460.f};
+    // TODO: Optimize it
     auto const game = Game::get();
-    auto const padding = 60.f;
+
+    auto elementSize = StyleManager::get()->getValue<Vec2f>(DEFAULT_ELEMENT_SIZE);
+    auto container = std::make_shared<Container>();
+    container->setTag("center-buttons");
+    container->setWidth(elementSize.x);
+    container->setColor({0, 0, 0, 0});
+    container->setBorderWidth(0.f);
+    addChild(container);
 
     auto usernameInput = std::make_shared<TextInput>("font", "Username");
-    usernameInput->setPos({getWidth() / 2, 300.f});
-    usernameInput->setSize(inpSize);
+    usernameInput->setPos({container->getWidth() / 2, usernameInput->getHeight() / 2.f});
     usernameInput->setTag("username-input");
-    addChild(usernameInput);
-
+    container->addChild(usernameInput);
 
     auto hostnameInput = std::make_shared<TextInput>("font", "Server IP");
-    hostnameInput->setPos({getWidth() / 2, 380.f});
-    hostnameInput->setSize(inpSize);
+    hostnameInput->setX(usernameInput->getX());
+    hostnameInput->setY(usernameInput->getY() + usernameInput->getHeight() + usernameInput->getBorderWidth());
     hostnameInput->setTag("hostname-input");
     hostnameInput->setAllowedChars(URL_ALLOWED_CHARS);
-    addChild(hostnameInput);
+    container->addChild(hostnameInput);
     
     auto joinBtn = std::make_shared<Button>("Join", [this, game](Button*) {
         auto usernameInput = this->getChild<TextInput>("username-input");
@@ -44,13 +48,12 @@ MultiplayerScene::MultiplayerScene() : MenuBase() {
         }
     });
 
-    joinBtn->setPos(btnPos);
-    joinBtn->setSize(btnSize);
-    addChild(joinBtn);
+    joinBtn->setX(hostnameInput->getX());
+    joinBtn->setY(hostnameInput->getY() + hostnameInput->getHeight() * 2.f + hostnameInput->getBorderWidth());
+    container->addChild(joinBtn);
 
     auto backBtn = std::make_shared<Button>("Back", [this](Button*) { destroy(); });
-    backBtn->setX(btnPos.x);
-    backBtn->setY(btnPos.y + padding);
-    backBtn->setSize(btnSize);
-    addChild(backBtn);
+    backBtn->setX(joinBtn->getX());
+    backBtn->setY(joinBtn->getY() + joinBtn->getHeight() + joinBtn->getBorderWidth());
+    container->addChild(backBtn);
 }

@@ -48,7 +48,7 @@ void RenderManager::drawText(std::string const& fontKey, std::string const& text
         pos.y -= size.y * origin.y;
     }
 
-    DrawTextEx(font, text.c_str(), pos.to<Vector2>(), fontSize, spacing, color.to<Color>());
+    DrawTextEx(font, text.c_str(), {roundf(pos.x), roundf(pos.y)}, fontSize, spacing, color.to<Color>());
 }
 
 void RenderManager::drawRect(Rectf rect, Col4u col) {

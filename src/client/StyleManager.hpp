@@ -1,28 +1,16 @@
 #pragma once
 #include <unordered_map>
 #include <variant>
+#include <string>
 #include <Types.hpp>
 
 enum StyleKey : uint8_t {
-    FIRST_COLOR_NORMAL,
-    SECOND_COLOR_NORMAL,
-    TEXT_COLOR_NORMAL,
-
-    FIRST_COLOR_FOCUS,
-    SECOND_COLOR_FOCUS,
-    TEXT_COLOR_FOCUS,
-
-    FIRST_COLOR_PRESS,
-    SECOND_COLOR_PRESS,
-    TEXT_COLOR_PRESS,
-
-    TEXT_COLOR_PLACEHOLDER,
-
-    TEXT_SIZE,
-    BORDER_WIDTH
+    DEFAULT_UI_COLOR,
+    DEFAULT_BORDER_WIDTH,
+    DEFAULT_ELEMENT_SIZE
 };
 
-using StyleValue = std::variant<Col4u, float>;
+using StyleValue = std::variant<Col4u, Vec2f, float>;
 
 class StyleManager {
 private:
