@@ -106,10 +106,7 @@ void Game::render() {
     BeginDrawing();
         ClearBackground((m_scene ? m_scene->getColor().to<Color>() : WHITE));
         if(m_scene != nullptr) {
-            rlPushMatrix();
-                rlScalef(m_guiScale, m_guiScale, 0.f);
-                m_scene->draw();
-            rlPopMatrix();
+            m_scene->draw();
         }
     EndDrawing();
 }

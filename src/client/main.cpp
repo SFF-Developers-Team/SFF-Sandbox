@@ -1,6 +1,3 @@
-#define RAYGUI_IMPLEMENTATION
-#include <raygui.h>
-
 #ifdef _WIN32
     #define NOGDI
     #define NOUSER

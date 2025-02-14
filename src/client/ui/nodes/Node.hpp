@@ -10,17 +10,18 @@ class Container;
 class Node {
     friend class Container;
 
-protected:
+private:
     Container* m_parent = nullptr;
-    std::string m_tag;
     Rectf m_bounds;
+    int m_zOrder;
+
+protected:
+    std::string m_tag;
     Vec2f m_anchor;
+    Vec2f m_scale;
     Col4u m_color;
     bool m_visible;
     bool m_enabled;
-    int m_zOrder;
-
-    Rectf getWorldBounds();
 
 public:
     Node();
@@ -68,4 +69,14 @@ public:
     bool isEnabled();
 
     Container* getParent();
+    Rectf getWorldBounds();
+
+    void setScale(Vec2f scale);
+    Vec2f getScale();
+
+    void setScaleX(float x);
+    float getScaleX();
+
+    void setScaleY(float y);
+    float getScaleY();
 };

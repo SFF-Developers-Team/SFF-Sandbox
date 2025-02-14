@@ -9,7 +9,7 @@
 #include <format>
 #include <thread>
 
-JoinServerScene::JoinServerScene(std::string const& hostname, uint16_t port) : m_startTime((float)GetTime()) {
+JoinServerScene::JoinServerScene(std::string const& hostname, uint16_t port) : m_startTime(GetTime()) {
     auto mp = Multiplayer::get();
     std::thread(&Multiplayer::connect, mp, hostname, port).detach();
 
@@ -17,9 +17,10 @@ JoinServerScene::JoinServerScene(std::string const& hostname, uint16_t port) : m
     auto const screenH = static_cast<float>(GetScreenHeight());
     auto const inputW = 200.f;
 
-    m_state = std::make_shared<Text>("font", "", 32.f);
-    m_state->setPos({screenW / 2, 300.f});
-    m_state->setSize({screenW, 30.f});
+    m_state = std::make_shared<Text>("font", "");
+    m_state->setFontSize(m_state->getFontSize() * 2);
+    m_state->setPos({screenW / 2, screenH / 2});
+    m_state->setWidth(screenW);
     m_state->setTag("state");
     addChild(m_state);
 }
@@ -65,9 +66,8 @@ void JoinServerScene::update() {
             m_cancelBtn = std::make_shared<Button>("Cancel", [&] (Button*) {
                 mp->destroy();
             });
-            m_cancelBtn->setPos({GetScreenWidth() / 2.f, 460.f});
-            m_cancelBtn->setSize({200.f, 40.f});
 
+            m_cancelBtn->setPos({getWidth() / 2.f, getHeight() / 2 + 100.f});
             addChild(m_cancelBtn);
         }
     }

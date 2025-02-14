@@ -104,9 +104,16 @@ void Container::draw() {
                 rlPushMatrix();
                     rlTranslatef(node->getX(), node->getY() - m_scrollOffset, 0.f);
                     rlTranslatef(-(node->getAnchorX() * node->getWidth()), -(node->getAnchorY() * node->getHeight()), 0.f);
+                    rlTranslatef(node->getScaleX(), node->getScaleY(), 0.f);
                     
                     node->draw();
                 rlPopMatrix();
+                
+                auto nodeb = node->getWorldBounds();
+                auto myb = getWorldBounds();
+                nodeb.x -= myb.x;
+                nodeb.y -= myb.y; 
+                DrawRectangleLinesEx(nodeb.to<Rectangle>(), 1.f, GREEN);
             }
         }
 

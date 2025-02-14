@@ -21,17 +21,17 @@ void TextInput::draw() {
 
     if(m_text.empty()) color.a = 0x7F;
 
-    auto textPos = Vec2f {m_border + 4.f, (m_bounds.height - fontsize) / 2};
-    if(cursorpos > m_bounds.width - m_border * 2) {
-        textPos.x -= cursorpos - m_bounds.width + m_border * 2.f + 8.f; 
+    auto textX = m_border + 4.f;
+    if(cursorpos > getWidth() - m_border * 2) {
+        textX -= cursorpos - getWidth() + m_border * 2.f + 8.f; 
     }
 
     auto bounds = getWorldBounds().to<Rectangle>();
     BeginScissorMode(bounds.x + m_border, bounds.y + m_border, bounds.width - m_border * 2.f, bounds.height - m_border * 2.f);
-        rm->drawText(m_font, (m_text.empty() ? m_placeholder : m_text), textPos, color, fontsize);
+        rm->drawText(m_font, (m_text.empty() ? m_placeholder : m_text), {textX, getHeight() / 2}, color, fontsize, {0.0f, 0.5f});
         
         if(m_active) {
-            rm->drawRect({textPos.x + cursorpos, textPos.y, 1.f, fontsize}, COL_WHITE);
+            rm->drawRect({textX + cursorpos, (getHeight() - textsize.y) / 2, 1.f, fontsize}, COL_WHITE);
         }
     EndScissorMode();
 }

@@ -5,8 +5,10 @@ Scene::Scene() : Container() {
     auto scrW = static_cast<float>(GetScreenWidth());
     auto scrH = static_cast<float>(GetScreenHeight());
 
-    m_bounds = {scrW / 2.f, scrH / 2.f, scrW, scrH};
-    m_border = 0.f;
+    setScale({1.f, 1.f});
+    setPos({scrW / 2.f, scrH / 2.f});
+    setSize({scrW / m_scale.x, scrH / m_scale.y});
+    setBorderWidth(0.f);
 }
 
 void Scene::update() {
@@ -18,7 +20,8 @@ void Scene::update() {
         auto scrW = static_cast<float>(GetScreenWidth());
         auto scrH = static_cast<float>(GetScreenHeight());
 
-        m_bounds = {scrW / 2.f, scrH / 2.f, scrW, scrH};
+        setPos({scrW / 2.f, scrH / 2.f});
+        setSize({scrW, scrH});
     }
 
     Container::update();
@@ -37,10 +40,14 @@ void Scene::draw() {
         if(node->isVisible()) {
             rlPushMatrix();
                 rlTranslatef(node->getX(), node->getY(), 0.f);
-                rlTranslatef(-(node->getAnchorX() * node->getWidth()), -(node->getAnchorY() * node->getHeight()), 0.f);
+                rlTranslatef(-(node->getAnchorX() * node->getScaleX() * node->getWidth()), -(node->getAnchorY() * node->getScaleY() * node->getHeight()), 0.f);
+                rlScalef(node->getScaleX(), node->getScaleY(), 0.f);
                 
                 node->draw();
             rlPopMatrix();
+
+            auto rect = node->getWorldBounds();
+            DrawRectangleLinesEx(rect.to<Rectangle>(), 1.f, GREEN);
         }
     }
 }

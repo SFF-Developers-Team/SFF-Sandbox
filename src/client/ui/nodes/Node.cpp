@@ -2,12 +2,12 @@
 #include <ui/nodes/Container.hpp>
 #include <raylib.h>
 
-Node::Node() : m_bounds({0.f, 0.f, 32.f, 32.f}), m_anchor({0.5f, 0.5f}), m_color(COL_WHITE), m_enabled(true), m_visible(true), m_zOrder(0) {}
+Node::Node() : m_bounds({0.f, 0.f, 32.f, 32.f}), m_anchor({0.5f, 0.5f}), m_scale({2.f, 2.f}), m_color(COL_WHITE), m_enabled(true), m_visible(true), m_zOrder(0) {}
 
 Rectf Node::getWorldBounds() {
     auto parent = getParent();
     Rectf ret = m_bounds;
-    
+
     while(parent != nullptr) {
         ret.x += parent->getX() - parent->getWidth() * parent->getAnchorX();
         ret.y += parent->getY() - parent->getHeight() * parent->getAnchorY();
@@ -55,7 +55,7 @@ void Node::setY(float y) {
 }
 
 Vec2f Node::getSize() {
-    return Vec2f {m_bounds.width, m_bounds.height}; 
+    return Vec2f {m_bounds.width * m_scale.x, m_bounds.height * m_scale.y}; 
 }
 
 float Node::getWidth() {
@@ -143,4 +143,28 @@ void Node::setZOrder(int z) {
 
 int Node::getZOrder() {
     return m_zOrder;
+}
+
+void Node::setScale(Vec2f scale) {
+    m_scale = scale;
+}
+
+Vec2f Node::getScale() {
+    return m_scale;
+}
+
+void Node::setScaleX(float x) {
+    m_scale.x = x;
+}
+
+float Node::getScaleX() {
+    return m_scale.x;
+}
+
+void Node::setScaleY(float y) {
+    m_scale.y = y;
+}
+
+float Node::getScaleY() {
+    return m_scale.y;
 }

@@ -43,7 +43,6 @@ file(GLOB SERVER_SOURCES CONFIGURE_DEPENDS
 
 add_subdirectory(libs/raylib)
 add_subdirectory(libs/GitHash)
-# add_subdirectory(libs/zlib)
 add_subdirectory(libs/miniz)
 add_subdirectory(libs/enet)
 

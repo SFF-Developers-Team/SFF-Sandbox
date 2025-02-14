@@ -5,5 +5,5 @@ Tile::Tile(std::string const& tilemapKey, int index) : m_tilemapKey(tilemapKey),
 
 void Tile::draw() {
     Node::draw();
-    RenderManager::get()->drawTile(m_tilemapKey, m_index, {0, 0, m_bounds.width, m_bounds.height}, m_color);
+    RenderManager::get()->drawTile(m_tilemapKey, m_index, {0, 0, getWidth(), getHeight()}, m_color);
 }

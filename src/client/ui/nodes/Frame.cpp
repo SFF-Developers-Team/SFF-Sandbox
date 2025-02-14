@@ -12,7 +12,7 @@ Frame::Frame() : Node() {
 
 void Frame::draw() {
     auto rm = RenderManager::get();
-    auto rect = Rectf {0.f, 0.f, m_bounds.width, m_bounds.height};
+    auto rect = Rectf {0.f, 0.f, getWidth(), getHeight()};
 
     rm->drawRect(rect, m_color);
     

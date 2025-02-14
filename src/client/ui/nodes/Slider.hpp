@@ -31,10 +31,10 @@ public:
         auto fontSize = TextureManager::get()->getFontBaseSize("font");
     
         auto percent = static_cast<float>(m_value - m_min) / static_cast<float>(m_max - m_min);
-        auto thumb = Rectf {m_border + (m_bounds.width - m_border * 5) * percent, m_border, m_border * 3, m_bounds.height - m_border * 2};
+        auto thumb = Rectf {m_border + (getWidth() - m_border * 5) * percent, m_border, m_border * 3, getHeight() - m_border * 2};
     
         auto rm = RenderManager::get();
-        rm->drawText("font", std::format((std::is_floating_point_v<T> ? "{}{:.2f}" : "{}{}"), m_text, m_value), {m_bounds.width / 2, m_bounds.height / 2}, COL_WHITE, fontSize, {0.5f, 0.5f});
+        rm->drawText("font", std::format((std::is_floating_point_v<T> ? "{}{:.2f}" : "{}{}"), m_text, m_value), {getWidth() / 2, getHeight() / 2}, COL_WHITE, fontSize, {0.5f, 0.5f});
         rm->drawRect(thumb, m_color);
         rm->drawRectLines(thumb, m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F}, m_border);
     }

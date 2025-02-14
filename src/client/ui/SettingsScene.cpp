@@ -1,9 +1,8 @@
 #include <ui/SettingsScene.hpp>
-#include <raygui.h>
-#include <format>
-#include <ui/nodes/DropDown.hpp>
 #include <ui/nodes/ToggleButton.hpp>
+#include <ui/nodes/DropDown.hpp>
 #include <ui/nodes/Slider.hpp>
+#include <format>
 
 SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolution(true) {
     auto stm = SettingsManager::get();
@@ -17,11 +16,12 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
         stm->save();
     });
 
-    apply->setPos({container->getWidth() / 2, container->getHeight() - container->getBorderWidth() - apply->getHeight()});
+    apply->setPos({container->getWidth() / 2, container->getHeight() - container->getBorderWidth()});
+    apply->setAnchorY(1.f);
     container->addChild(apply);
 
     std::vector<std::string> containers{"Video", "Audio", "Keyboard"};
-    Vec2f categorySize = {container->getWidth() / containers.size(), container->getHeight() - apply->getY() - apply->getHeight()};
+    Vec2f categorySize = {container->getWidth() / containers.size(), container->getHeight() - apply->getHeight() - apply->getBorderWidth() * 2};
     float x = 0.f;
 
     for(auto& s : containers) {
@@ -34,9 +34,8 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
         x += categorySize.x;
 
         auto title = std::make_shared<Text>("boldfont", s);
-        title->setWidth(categorySize.x);
         title->setAnchorY(0.f);
-        title->setPos({categorySize.x / 2, 0.f});
+        title->setPos({categorySize.x / 2, container->getBorderWidth()});
         cat->addChild(title);
 
         std::transform(s.begin(), s.end(), s.begin(), [](auto c) { 
@@ -179,18 +178,18 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
         auto const elementWidth = keyboard->getWidth() - keyboard->getBorderWidth() * 4;
 
         auto keysContainer = std::make_shared<Container>();
-        keysContainer->setPos({keyboard->getWidth() / 2, 50.f});
+        keysContainer->setPos({keyboard->getWidth() / 2, 40.f});
         keysContainer->setAnchorY(0.f);
         keysContainer->setSize({elementWidth, keyboard->getHeight() - keysContainer->getY() - keyboard->getBorderWidth() * 2});
         keyboard->addChild(keysContainer);
 
-        auto y = 0.f;
+        auto y = keysContainer->getBorderWidth() * 2;
 
         for(auto& action : stm->getKeyActions()) {
             auto text = std::make_shared<Text>("font", action);
-            text->setSize({keyboard->getWidth() / 2});
-            text->setPos({10.f, y});
-            text->setAnchorX(0.f);
+            text->setWidth(keyboard->getWidth() / 2);
+            text->setPos({keyboard->getBorderWidth() * 2, y});
+            text->setAnchor({0.f, 0.f});
             text->setAlignH(TextAlignmentH::H_LEFT);
             keysContainer->addChild(text);
 
@@ -200,9 +199,11 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
             });
             button->setTag(action);
             button->setWidth(100.f);
-            button->setAnchorX(1.f);
-            button->setPos({keysContainer->getWidth() - 10.f, y});
+            button->setAnchor({1.f, 0.f});
+            button->setPos({keysContainer->getWidth() - keyboard->getBorderWidth() * 2, y});
             keysContainer->addChild(button);
+
+            text->setHeight(button->getHeight());
 
             y += button->getHeight() + button->getBorderWidth();
         }

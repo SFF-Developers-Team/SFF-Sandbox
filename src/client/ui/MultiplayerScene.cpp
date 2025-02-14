@@ -29,7 +29,7 @@ MultiplayerScene::MultiplayerScene() : MenuBase() {
     hostnameInput->setY(usernameInput->getY() + usernameInput->getHeight() + usernameInput->getBorderWidth());
     hostnameInput->setTag("hostname-input");
     hostnameInput->setAllowedChars(URL_ALLOWED_CHARS);
-    container->addChild(hostnameInput);
+    // container->addChild(hostnameInput);
     
     auto joinBtn = std::make_shared<Button>("Join", [this, game](Button*) {
         auto usernameInput = this->getChild<TextInput>("username-input");
@@ -50,10 +50,12 @@ MultiplayerScene::MultiplayerScene() : MenuBase() {
 
     joinBtn->setX(hostnameInput->getX());
     joinBtn->setY(hostnameInput->getY() + hostnameInput->getHeight() * 2.f + hostnameInput->getBorderWidth());
-    container->addChild(joinBtn);
+    // container->addChild(joinBtn);
 
     auto backBtn = std::make_shared<Button>("Back", [this](Button*) { destroy(); });
     backBtn->setX(joinBtn->getX());
     backBtn->setY(joinBtn->getY() + joinBtn->getHeight() + joinBtn->getBorderWidth());
-    container->addChild(backBtn);
+    // container->addChild(backBtn);
+
+    container->setHeight(100.f);
 }

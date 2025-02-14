@@ -14,11 +14,7 @@ void ToggleButton::draw() {
     Frame::draw();
 
     auto text = m_text + (m_flag ? ": ON" : ": OFF");
-
-    auto rm = RenderManager::get();
-    auto textsize = rm->getTextSize(text, "boldfont", m_fontSize);
-
-    rm->drawText("boldfont", text, {(m_bounds.width - textsize.x) * 0.5f, (m_bounds.height - m_fontSize) * 0.5f}, COL_WHITE, m_fontSize);
+    RenderManager::get()->drawText("boldfont", text, {getWidth() / 2, getHeight() / 2}, COL_WHITE, m_fontSize, {0.5f, 0.5f});
 }
 
 void ToggleButton::update() {

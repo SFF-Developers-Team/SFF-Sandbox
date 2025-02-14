@@ -12,17 +12,16 @@ DropDown::DropDown(std::vector<std::string> const& elements, MiniFunction<void(D
 void DropDown::draw() {
     Frame::draw();
 
+    auto bounds = getWorldBounds();
     auto rm = RenderManager::get();
     auto fontsize = TextureManager::get()->getFontBaseSize("boldfont");
     auto selected = std::vformat(m_mask, std::make_format_args(m_elements[m_selected]));
     auto size = rm->getTextSize(selected, "boldfont", fontsize);
     auto arrowsize = rm->getTextSize("^", "boldfont", fontsize);
-    auto textpos = Vec2f {(m_bounds.width - size.x) / 2, (m_bounds.height - size.y) / 2};
-    auto bounds = getWorldBounds();
 
-    rm->drawText("boldfont", selected, textpos, COL_WHITE, fontsize);
+    rm->drawText("boldfont", selected, {bounds.width / 2, bounds.height / 2}, COL_WHITE, fontsize, {0.5f, 0.5f});
     rlPushMatrix();
-        rlTranslatef(m_bounds.width - m_border - m_bounds.height / 2, m_bounds.height / 2, 0);
+        rlTranslatef(bounds.width - m_border - bounds.height / 2, bounds.height / 2, 0);
         rlRotatef((!m_opened ? 180 : 0), 0, 0, 1);
         rm->drawText("boldfont", "^", {-arrowsize.x / 2, -arrowsize.y / 3}, COL_WHITE, fontsize);
     rlPopMatrix();
@@ -32,7 +31,7 @@ void DropDown::draw() {
         auto const conHeight = std::min(totalHeight, m_maxHeight);
         auto const borderColor = m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F};
         auto const scrollBar = totalHeight > m_maxHeight;
-        auto const rect = Rectf {0.f, m_bounds.height + m_border, m_bounds.width, conHeight};
+        auto const rect = Rectf {0.f, bounds.height + m_border, bounds.width, conHeight};
 
         rm->drawRect(rect, m_color);
         rm->drawRectLines(rect, m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F}, m_border);

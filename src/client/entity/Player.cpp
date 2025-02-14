@@ -210,7 +210,7 @@ void Player::updateControls() {
         forward--;
     }
 
-    if ((IsKeyDown(stm->getKeybind("right")) || IsKeyDown(KEY_UP)) && (m_onGround || m_fly)) {
+    if ((IsKeyDown(stm->getKeybind("jump")) || IsKeyDown(KEY_UP)) && (m_onGround || m_fly)) {
         m_speedY = ((!m_fly) ? -0.3f : -0.25f);
     }
 

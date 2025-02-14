@@ -26,7 +26,7 @@ void Button::update() {
 
 void Button::draw() {
     Frame::draw();
-    RenderManager::get()->drawText("boldfont", m_text, {m_bounds.width / 2, m_bounds.height / 2}, COL_WHITE, m_fontSize, {0.5f, 0.5f});
+    RenderManager::get()->drawText("boldfont", m_text, {getWidth() / 2, getHeight() / 2}, COL_WHITE, m_fontSize, {0.5f, 0.5f});
 }
 
 void Button::setText(std::string const& text) {

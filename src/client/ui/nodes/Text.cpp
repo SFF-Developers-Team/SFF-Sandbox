@@ -13,8 +13,7 @@ Text::Text(std::string const& font, std::string const& text, float fontSize) : N
     }
 
     auto size = MeasureTextEx(fnt, m_text.c_str(), m_fontSize, 1.f);
-    m_bounds.width = size.x;
-    m_bounds.height = size.y;
+    setSize({size.x, size.y});
     m_alignHorizontal = H_CENTER;
     m_alignVertical = V_CENTER;
 }
@@ -30,7 +29,7 @@ std::vector<std::string> Text::wrapText() {
             // Проверяем, помещается ли текущее слово в текущую строку
             auto wordWidth = rm->getTextSize(currentLine + currentWord, m_font, m_fontSize).x;
             
-            if (wordWidth > m_bounds.width) {
+            if (wordWidth > getWidth()) {
                 // Если слово не помещается, начинаем новую строку
                 lines.push_back(currentLine);
                 currentLine = currentWord + " ";
@@ -46,7 +45,7 @@ std::vector<std::string> Text::wrapText() {
 
     // Добавляем последнее слово
     auto wordWidth = rm->getTextSize(currentLine + currentWord, m_font, m_fontSize).x;
-    if (wordWidth > m_bounds.width) {
+    if (wordWidth > getWidth()) {
         lines.push_back(currentLine);
         lines.push_back(currentWord);
     } else {
@@ -69,28 +68,28 @@ void Text::draw() {
         float lineHeight = m_fontSize + 2;
         float totalHeight = lineHeight * lines.size();
 
-        if(m_alignVertical == V_CENTER) textpos.y += m_bounds.height * 0.5f - totalHeight * 0.5f;
-        if(m_alignVertical == V_BOTTOM) textpos.y += m_bounds.height - totalHeight;
+        if(m_alignVertical == V_CENTER) textpos.y += getHeight() * 0.5f - totalHeight * 0.5f;
+        if(m_alignVertical == V_BOTTOM) textpos.y += getHeight()- totalHeight;
 
         for (const auto& line : lines) {
             auto size = rm->getTextSize(line, m_font, m_fontSize);
 
-            if(m_alignHorizontal == H_CENTER) textpos.x = m_bounds.width * 0.5f - size.x * 0.5f;
-            if(m_alignHorizontal == H_RIGHT) textpos.x = m_bounds.width - size.x;
+            if(m_alignHorizontal == H_CENTER) textpos.x = getWidth() * 0.5f - size.x * 0.5f;
+            if(m_alignHorizontal == H_RIGHT) textpos.x = getWidth() - size.x;
 
             rm->drawText(m_font, line, textpos, m_color, m_fontSize);
             textpos.y += size.y + 2.f;
 
-            if (textpos.y + lineHeight > m_bounds.height) return;
+            if (textpos.y + lineHeight > getHeight()) return;
         }
     } else {
         auto size = rm->getTextSize(m_text, m_font, m_fontSize);
 
-        if(m_alignHorizontal == H_CENTER) textpos.x += m_bounds.width * 0.5f - size.x * 0.5f;
-        if(m_alignHorizontal == H_RIGHT) textpos.x += m_bounds.width - size.x;
+        if(m_alignHorizontal == H_CENTER) textpos.x += getWidth() * 0.5f - size.x * 0.5f;
+        if(m_alignHorizontal == H_RIGHT) textpos.x += getWidth() - size.x;
 
-        if(m_alignVertical == V_CENTER) textpos.y += m_bounds.height * 0.5f - size.y * 0.5f;
-        if(m_alignVertical == V_BOTTOM) textpos.y += m_bounds.height - size.y;
+        if(m_alignVertical == V_CENTER) textpos.y += getHeight() * 0.5f - size.y * 0.5f;
+        if(m_alignVertical == V_BOTTOM) textpos.y += getHeight() - size.y;
 
         rm->drawText(m_font, m_text, textpos, m_color, m_fontSize);
     }

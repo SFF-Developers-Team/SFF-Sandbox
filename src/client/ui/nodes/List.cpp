@@ -45,7 +45,7 @@ void List::update() {
     auto fontSize = TextureManager::get()->getFontBaseSize("boldfont");
     auto totalHeight = m_border * 2 + fontSize * m_elements.size() + m_border * m_elements.size();
 
-    if(totalHeight > m_bounds.height) {
+    if(totalHeight > bounds.height) {
         if(bounds.contains({mouse.x, mouse.y}) && GetMouseWheelMove() != 0.f) {
             m_scrollOffset -= GetMouseWheelMove() * 10.f;
         }
