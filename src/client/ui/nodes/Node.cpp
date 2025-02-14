@@ -114,7 +114,7 @@ void Node::setColor(Col4u color) {
 void Node::update() {}
 
 void Node::draw() {
-    // DrawRectangleLinesEx({0, 0, m_bounds.width, m_bounds.height}, 1.f, RED);
+    DrawRectangleLinesEx({0, 0, getWidth(), getHeight()}, 1.f, RED);
 }
 
 void Node::setVisible(bool flag) {

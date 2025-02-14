@@ -34,6 +34,7 @@ SettingsManager::SettingsManager() {
         m_settings = toml::parse_file("settings.toml");
     } catch(toml::parse_error const& e) {
         logE("Failed to init settings! {}", e.description());
+        m_settings = toml::table{};
     }
 
     for(auto const& [action, key] : keybinds) {

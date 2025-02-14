@@ -1,3 +1,4 @@
+#include <SettingsManager.hpp>
 #include <entity/Player.hpp>
 #include <world/Block.hpp>
 #include <world/Chunk.hpp>
@@ -157,6 +158,7 @@ void Player::updateControls() {
     auto forward = 0.0f;
     auto mp = Multiplayer::get();
     auto dbg = Debug::get();
+    auto stm = SettingsManager::get();
 
     m_sneak = false;
 
@@ -198,25 +200,25 @@ void Player::updateControls() {
         }
     }
 
-    if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
+    if (IsKeyDown(stm->getKeybind("right")) || IsKeyDown(KEY_RIGHT)) {
         m_direction = RIGHT;
         forward++;
     }
 
-    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
+    if (IsKeyDown(stm->getKeybind("left")) || IsKeyDown(KEY_LEFT)) {
         m_direction = LEFT;
         forward--;
     }
 
-    if ((IsKeyDown(KEY_W) || IsKeyDown(KEY_UP) || IsKeyDown(KEY_SPACE)) && (m_onGround || m_fly)) {
+    if ((IsKeyDown(stm->getKeybind("right")) || IsKeyDown(KEY_UP)) && (m_onGround || m_fly)) {
         m_speedY = ((!m_fly) ? -0.3f : -0.25f);
     }
 
-    if ((IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)) && m_fly && !m_onGround) {
+    if ((IsKeyDown(stm->getKeybind("duck"))) || IsKeyDown(KEY_DOWN) && m_fly && !m_onGround) {
         m_speedY = 0.25f;
     }
 
-    if ((IsKeyDown(KEY_S) || IsKeyDown(KEY_LEFT_SHIFT)) && !m_fly && m_onGround) {
+    if ((IsKeyDown(stm->getKeybind("duck")) || IsKeyDown(KEY_LEFT_SHIFT)) && !m_fly && m_onGround) {
         m_sneak = true;
     }
 
@@ -303,6 +305,8 @@ void Player::onTick() {
 }
 
 void Player::update() {
+    auto stm = SettingsManager::get();
+
     for (int i = 0; i < 9; i++) {
         if (IsKeyDown(KEY_ONE + i)) {
             m_selectedBlock = (Block::ID)(i + 1);
@@ -310,10 +314,9 @@ void Player::update() {
     }
 
     auto wheel = GetMouseWheelMove();
-    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0)
-        m_camera.zoom -= 1.0f;
-    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0)
-        m_camera.zoom += 1.0f;
+    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.f) {
+        m_camera.zoom -= wheel * 10.f;
+    }
 
     if (!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
         m_selectedBlock += (wheel > 0 ? -1 : 1);
@@ -323,10 +326,9 @@ void Player::update() {
             m_selectedBlock = static_cast<uint8_t>(m_inventory.size()) - 1;
     }
 
-    if (IsKeyPressed(KEY_R))
-        resetPosition();
-    if (IsKeyPressed(KEY_F))
+    if (IsKeyPressed(stm->getKeybind("fly"))) {
         m_fly = !m_fly;
+    }
 
     updateCamera();
     updateAnimation();

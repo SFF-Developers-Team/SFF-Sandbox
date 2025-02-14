@@ -17,6 +17,8 @@ void Frame::draw() {
     if(m_border > 0) {
         rm->drawRectLines(rect, m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F}, m_border);
     }
+
+    Node::draw();
 }
 
 void Frame::setBorderWidth(float width) {
