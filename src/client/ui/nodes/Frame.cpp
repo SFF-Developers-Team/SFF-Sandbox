@@ -4,8 +4,10 @@
 
 Frame::Frame() : Node() {
     auto sm = StyleManager::get();
-    m_border = sm->getValue<float>(BORDER_WIDTH);
-    m_color = sm->getValue<Col4u>(FIRST_COLOR_NORMAL);
+    
+    setBorderWidth(sm->getValue<float>(DEFAULT_BORDER_WIDTH));
+    setColor(sm->getValue<Col4u>(DEFAULT_UI_COLOR));
+    setSize(StyleManager::get()->getValue<Vec2f>(DEFAULT_ELEMENT_SIZE));
 }
 
 void Frame::draw() {

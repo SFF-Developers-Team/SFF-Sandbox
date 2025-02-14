@@ -1,9 +1,10 @@
 #include <ui/nodes/DropDown.hpp>
 #include <RenderManager.hpp>
-#include <raylib.h>
-#include <rlgl.h>
-#include <Logger.hpp>
+#include <TextureManager.hpp>
 #include <algorithm>
+#include <raylib.h>
+#include <format>
+#include <rlgl.h>
 
 DropDown::DropDown(std::vector<std::string> const& elements, MiniFunction<void(DropDown*, int)> callback) : 
     Frame(), m_elements(elements), m_callback(callback), m_selected(0), m_opened(false), m_maxHeight(200.f), m_scrollOffset(0.f), m_mask("{}") {}
@@ -12,21 +13,22 @@ void DropDown::draw() {
     Frame::draw();
 
     auto rm = RenderManager::get();
+    auto fontsize = TextureManager::get()->getFontBaseSize("boldfont");
     auto selected = std::vformat(m_mask, std::make_format_args(m_elements[m_selected]));
-    auto size = rm->getTextSize(selected, "boldfont", 40.f);
-    auto arrowsize = rm->getTextSize("^", "boldfont", 40.f);
+    auto size = rm->getTextSize(selected, "boldfont", fontsize);
+    auto arrowsize = rm->getTextSize("^", "boldfont", fontsize);
     auto textpos = Vec2f {(m_bounds.width - size.x) / 2, (m_bounds.height - size.y) / 2};
     auto bounds = getWorldBounds();
 
-    rm->drawText("boldfont", selected, textpos, COL_WHITE, 40.f);
+    rm->drawText("boldfont", selected, textpos, COL_WHITE, fontsize);
     rlPushMatrix();
         rlTranslatef(m_bounds.width - m_border - m_bounds.height / 2, m_bounds.height / 2, 0);
         rlRotatef((!m_opened ? 180 : 0), 0, 0, 1);
-        rm->drawText("boldfont", "^", {-arrowsize.x / 2, -arrowsize.y / 3}, COL_WHITE, 40.f);
+        rm->drawText("boldfont", "^", {-arrowsize.x / 2, -arrowsize.y / 3}, COL_WHITE, fontsize);
     rlPopMatrix();
 
     if(m_opened) {
-        auto const totalHeight = 40.f * m_elements.size() + m_border * m_elements.size();
+        auto const totalHeight = fontsize * m_elements.size() + m_border * m_elements.size();
         auto const conHeight = std::min(totalHeight, m_maxHeight);
         auto const borderColor = m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F};
         auto const scrollBar = totalHeight > m_maxHeight;
@@ -39,15 +41,15 @@ void DropDown::draw() {
             for(auto i = 0; i < m_elements.size(); i++) {
                 auto cell = Rectf {
                     m_border * 2.f, 
-                    rect.y + m_border * 2.f + 40.f * i + m_border * i - m_scrollOffset, 
+                    rect.y + m_border * 2.f + fontsize * i + m_border * i - m_scrollOffset, 
                     bounds.width - m_border * (scrollBar ? 5.f : 4.f), 
-                    40.f
+                    fontsize
                 };
-                auto size = rm->getTextSize(m_elements[i], "boldfont", 40.f);
+                auto size = rm->getTextSize(m_elements[i], "boldfont", fontsize);
 
                 rm->drawRect(cell, m_color);
                 rm->drawRectLines(cell, borderColor, m_border);
-                rm->drawText("boldfont", m_elements[i], {(cell.width - size.x) / 2, cell.y + (cell.height - size.y) / 2}, COL_WHITE, 40.f);
+                rm->drawText("boldfont", m_elements[i], {(cell.width - size.x) / 2, cell.y + (cell.height - size.y) / 2}, COL_WHITE, fontsize);
             }
 
             if(scrollBar) {

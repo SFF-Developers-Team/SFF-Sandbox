@@ -54,16 +54,17 @@ void MenuBase::update() {
     Scene::update();
     
     for(auto& child : m_childs) {
-        child->setX(GetScreenWidth() / 2.f);
+        if(child->getTag().find("center") != std::string::npos) {
+            child->setPos({getWidth() / 2, getHeight() / 2});
+        }
     }
 }
 
 void MenuBase::draw() {
-    // Legacy code warning
     auto rm = RenderManager::get();
     auto tm = TextureManager::get();
-    auto w = static_cast<float>(m_bgRender.texture.width) * 5.05f;
-    auto h = static_cast<float>(m_bgRender.texture.height) * 5.05f;
+    auto w = static_cast<float>(m_bgRender.texture.width) * 2.5f;
+    auto h = static_cast<float>(m_bgRender.texture.height) * 2.5f;
 
     DrawTexturePro(
         m_bgRender.texture, 
@@ -71,12 +72,12 @@ void MenuBase::draw() {
         {-32.f, getHeight() - h, w, h}, {0.f, 0.f}, 0, WHITE
     );
 
-    auto sff = tm->getTexture("sff.png");
-    auto sffY = 40.f + ((float)sin(GetTime()) * 30);
-    rm->drawTexture("sff.png", {(getWidth() - sff.width) / 2, sffY, static_cast<float>(sff.width), static_cast<float>(sff.height)});
+    // auto sff = tm->getTexture("sff.png");
+    // auto sffY = 40.f + ((float)sin(GetTime()) * 30);
+    // rm->drawTexture("sff.png", {(getWidth() - sff.width) / 2, sffY, static_cast<float>(sff.width), static_cast<float>(sff.height)});
 
-    auto textsize = rm->getTextSize("Sandbox", "boldfont", 35.f);
-    rm->drawText("boldfont", "Sandbox", {(getWidth() - textsize.x) / 2, sffY + sff.height * 0.7f}, COL_WHITE, 35.f);
+    // auto textsize = rm->getTextSize("Sandbox", "boldfont", 35.f);
+    // rm->drawText("boldfont", "Sandbox", {(getWidth() - textsize.x) / 2, sffY + sff.height * 0.7f}, COL_WHITE, 35.f);
 
     Scene::draw();
 }

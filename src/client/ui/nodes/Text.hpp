@@ -22,7 +22,7 @@ protected:
     std::vector<std::string> wrapText();
 
 public:
-    Text(std::string const& font, std::string const& text, float size = 11.f);
+    Text(std::string const& font, std::string const& text, float size = 0.f);
 
     void draw();
 

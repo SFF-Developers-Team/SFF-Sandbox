@@ -32,4 +32,6 @@ public:
     std::shared_ptr<TileMap> getTileMap(std::string const& key);
 
     bool textureLoaded(std::string const& key);
+
+    float getFontBaseSize(std::string const& fontKey);
 };

@@ -13,7 +13,7 @@ void TextInput::draw() {
     auto sm = StyleManager::get();
     auto tm = TextureManager::get();
     auto rm = RenderManager::get();
-    auto fontsize = sm->getValue<float>(TEXT_SIZE);
+    auto fontsize = tm->getFontBaseSize("font");
     auto textsize = rm->getTextSize(m_text, m_font, fontsize);
     auto cursorpos = rm->getTextSize(m_text.substr(0, m_cursorX), m_font, fontsize).x;
     auto mouse = GetMousePosition();
@@ -21,7 +21,7 @@ void TextInput::draw() {
 
     if(m_text.empty()) color.a = 0x7F;
 
-    auto textPos = Vec2f {m_border + 4.f, (m_bounds.height - fontsize) * 0.5f};
+    auto textPos = Vec2f {m_border + 4.f, (m_bounds.height - fontsize) / 2};
     if(cursorpos > m_bounds.width - m_border * 2) {
         textPos.x -= cursorpos - m_bounds.width + m_border * 2.f + 8.f; 
     }
@@ -40,7 +40,7 @@ void TextInput::update() {
     auto mouse = GetMousePosition();
     auto sm = StyleManager::get();
     auto cursorhover = getWorldBounds().contains({mouse.x, mouse.y});
-    m_color = sm->getValue<Col4u>(FIRST_COLOR_NORMAL);
+    m_color = sm->getValue<Col4u>(DEFAULT_UI_COLOR);
 
     if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         m_active = cursorhover;
