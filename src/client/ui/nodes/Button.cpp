@@ -14,11 +14,15 @@ void Button::update() {
     auto mouse = getLocalMousePosition();
     m_color = sm->getValue<Col4u>(DEFAULT_UI_COLOR);
 
-    if(m_bounds.contains({mouse.x, mouse.y})) {
+    // printf("%f %f | %f %f %f %f\n", mouse.x, mouse.y, m_bounds.x, m_bounds.y, m_bounds.width, m_bounds.height);
+
+    const auto localRect = Rectf {0.f, 0.f, m_bounds.width, m_bounds.height};
+
+    if(localRect.contains({mouse.x, mouse.y})) {
         m_color.brightness(-0.3f * (IsMouseButtonDown(MOUSE_BUTTON_LEFT) + 1));
     }
 
-    if(m_bounds.contains({mouse.x, mouse.y}) && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+    if(localRect.contains({mouse.x, mouse.y}) && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
         m_callback(this);
     }
 }

@@ -70,7 +70,13 @@ float Container::calculateTotalHeight() {
 void Container::update() {
     for(auto& node : m_childs) {
         if(node->isEnabled()) {
-            node->update();
+            rlPushMatrix();
+                rlTranslatef(node->getX(), node->getY() - m_scrollOffset, 0.f);
+                rlTranslatef(-(node->getAnchorX() * node->getWidth()), -(node->getAnchorY() * node->getHeight()), 0.f);
+                rlScalef(node->getScaleX(), node->getScaleY(), 0.f);
+                
+                node->update();
+            rlPopMatrix();
         }
     }
 

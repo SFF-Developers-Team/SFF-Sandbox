@@ -8,25 +8,23 @@ Node::Node() : m_bounds({0.f, 0.f, 32.f, 32.f}), m_anchor({0.5f, 0.5f}), m_scale
 
 Rectf Node::getWorldBounds() {
     Rectf ret;
-    Matrix mat = rlGetMatrixModelview();
-    auto globalPos = Vector2Transform({m_bounds.x, m_bounds.y}, mat);
+    Matrix mat = rlGetMatrixTransform();
+    auto globalPos = Vector2Transform({0, 0}, mat);
 
     ret.x = globalPos.x;
     ret.y = globalPos.y;
     ret.width = m_bounds.width * m_scale.x;
     ret.height = m_bounds.height * m_scale.y;
 
-    return ret.anchor(m_anchor);
+    return ret;
 }
 
 Vec2f Node::getLocalMousePosition() {
-    Matrix mat = rlGetMatrixModelview();
+    Matrix mat = rlGetMatrixTransform();
     auto globalPos = Vector2Transform({0.f, 0.f}, mat);
     auto mouse = GetMousePosition();
-    globalPos.x -= mouse.x;
-    globalPos.y -= mouse.y;
 
-    return {globalPos.x, globalPos.y};
+    return {mouse.x - globalPos.x, mouse.y - globalPos.y};
 }
 
 Container* Node::getParent() {
