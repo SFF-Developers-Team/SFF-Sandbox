@@ -12,11 +12,11 @@ class Node {
 
 private:
     Container* m_parent = nullptr;
-    Rectf m_bounds;
     int m_zOrder;
 
 protected:
     std::string m_tag;
+    Rectf m_bounds;
     Vec2f m_anchor;
     Vec2f m_scale;
     Col4u m_color;
@@ -70,6 +70,7 @@ public:
 
     Container* getParent();
     Rectf getWorldBounds();
+    Vec2f getLocalMousePosition();
 
     void setScale(Vec2f scale);
     Vec2f getScale();

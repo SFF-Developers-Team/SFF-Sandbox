@@ -11,22 +11,26 @@ Button::Button(std::string const& text, MiniFunction<void(Button*)> const& callb
 
 void Button::update() {
     auto sm = StyleManager::get();
-    auto mouse = GetMousePosition();
-    auto rect = getWorldBounds();
+    auto mouse = getLocalMousePosition();
     m_color = sm->getValue<Col4u>(DEFAULT_UI_COLOR);
 
-    if(rect.contains({mouse.x, mouse.y})) {
+    if(m_bounds.contains({mouse.x, mouse.y})) {
         m_color.brightness(-0.3f * (IsMouseButtonDown(MOUSE_BUTTON_LEFT) + 1));
     }
 
-    if(rect.contains({mouse.x, mouse.y}) && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+    if(m_bounds.contains({mouse.x, mouse.y}) && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
         m_callback(this);
     }
 }
 
 void Button::draw() {
     Frame::draw();
-    RenderManager::get()->drawText("boldfont", m_text, {getWidth() / 2, getHeight() / 2}, COL_WHITE, m_fontSize, {0.5f, 0.5f});
+    auto rm = RenderManager::get();
+
+    // debug
+    auto mouse = getLocalMousePosition();
+    rm->drawRect({mouse.x, mouse.y, 5.f, 5.f}, COL_YELLOW);
+    rm->drawText("boldfont", m_text, {getWidth() / 2, getHeight() / 2}, COL_WHITE, m_fontSize, {0.5f, 0.5f});
 }
 
 void Button::setText(std::string const& text) {

@@ -5,6 +5,7 @@
 #include <rlgl.h>
 #include <Logger.hpp>
 #include <Game.hpp>
+#include <raymath.h>
 
 Container::Container() : Frame(), m_scrollOffset(0.f), m_scrollable(false) {}
 
@@ -91,12 +92,15 @@ void Container::update() {
 void Container::draw() {
     Frame::draw();
     auto rm = RenderManager::get();
-
     auto const bounds = getWorldBounds();
     auto const totalHeight = calculateTotalHeight();
     auto const contentHeight = bounds.height - m_border * 2;
     auto const borderColor = m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F};
     auto const scrollBar = totalHeight > bounds.height && m_scrollable;
+
+    // debug
+    auto mouse = getLocalMousePosition();
+    rm->drawRect({mouse.x, mouse.y, 5.f, 5.f}, COL_YELLOW);
 
     BeginScissorMode(bounds.x + m_border, bounds.y + m_border, bounds.width - m_border * 2, contentHeight);
         for(auto& node : m_childs) {
@@ -104,16 +108,10 @@ void Container::draw() {
                 rlPushMatrix();
                     rlTranslatef(node->getX(), node->getY() - m_scrollOffset, 0.f);
                     rlTranslatef(-(node->getAnchorX() * node->getWidth()), -(node->getAnchorY() * node->getHeight()), 0.f);
-                    rlTranslatef(node->getScaleX(), node->getScaleY(), 0.f);
+                    rlScalef(node->getScaleX(), node->getScaleY(), 0.f);
                     
                     node->draw();
                 rlPopMatrix();
-                
-                auto nodeb = node->getWorldBounds();
-                auto myb = getWorldBounds();
-                nodeb.x -= myb.x;
-                nodeb.y -= myb.y; 
-                DrawRectangleLinesEx(nodeb.to<Rectangle>(), 1.f, GREEN);
             }
         }
 

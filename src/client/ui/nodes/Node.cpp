@@ -1,20 +1,32 @@
 #include <ui/nodes/Node.hpp>
 #include <ui/nodes/Container.hpp>
 #include <raylib.h>
+#include <rlgl.h>
+#include <raymath.h>
 
-Node::Node() : m_bounds({0.f, 0.f, 32.f, 32.f}), m_anchor({0.5f, 0.5f}), m_scale({2.f, 2.f}), m_color(COL_WHITE), m_enabled(true), m_visible(true), m_zOrder(0) {}
+Node::Node() : m_bounds({0.f, 0.f, 32.f, 32.f}), m_anchor({0.5f, 0.5f}), m_scale({1.f, 1.f}), m_color(COL_WHITE), m_enabled(true), m_visible(true), m_zOrder(0) {}
 
 Rectf Node::getWorldBounds() {
-    auto parent = getParent();
-    Rectf ret = m_bounds;
+    Rectf ret;
+    Matrix mat = rlGetMatrixModelview();
+    auto globalPos = Vector2Transform({m_bounds.x, m_bounds.y}, mat);
 
-    while(parent != nullptr) {
-        ret.x += parent->getX() - parent->getWidth() * parent->getAnchorX();
-        ret.y += parent->getY() - parent->getHeight() * parent->getAnchorY();
-        parent = parent->getParent();
-    }
+    ret.x = globalPos.x;
+    ret.y = globalPos.y;
+    ret.width = m_bounds.width * m_scale.x;
+    ret.height = m_bounds.height * m_scale.y;
 
     return ret.anchor(m_anchor);
+}
+
+Vec2f Node::getLocalMousePosition() {
+    Matrix mat = rlGetMatrixModelview();
+    auto globalPos = Vector2Transform({0.f, 0.f}, mat);
+    auto mouse = GetMousePosition();
+    globalPos.x -= mouse.x;
+    globalPos.y -= mouse.y;
+
+    return {globalPos.x, globalPos.y};
 }
 
 Container* Node::getParent() {
