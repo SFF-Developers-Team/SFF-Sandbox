@@ -10,11 +10,13 @@ Rectf Node::getWorldBounds() {
     Rectf ret;
     Matrix mat = rlGetMatrixTransform();
     auto globalPos = Vector2Transform({0, 0}, mat);
+    auto scaleX = sqrtf(mat.m0 * mat.m0 + mat.m1 * mat.m1 + mat.m2 * mat.m2);
+    auto scaleY = sqrtf(mat.m4 * mat.m4 + mat.m5 * mat.m5 + mat.m6 * mat.m6);
 
     ret.x = globalPos.x;
     ret.y = globalPos.y;
-    ret.width = m_bounds.width * m_scale.x;
-    ret.height = m_bounds.height * m_scale.y;
+    ret.width = m_bounds.width * scaleX;
+    ret.height = m_bounds.height * scaleY;
 
     return ret;
 }
@@ -24,7 +26,10 @@ Vec2f Node::getLocalMousePosition() {
     auto globalPos = Vector2Transform({0.f, 0.f}, mat);
     auto mouse = GetMousePosition();
 
-    return {mouse.x - globalPos.x, mouse.y - globalPos.y};
+    auto scaleX = sqrtf(mat.m0 * mat.m0 + mat.m1 * mat.m1 + mat.m2 * mat.m2);
+    auto scaleY = sqrtf(mat.m4 * mat.m4 + mat.m5 * mat.m5 + mat.m6 * mat.m6);
+
+    return {(mouse.x - globalPos.x) / scaleX, (mouse.y - globalPos.y) / scaleY};
 }
 
 Container* Node::getParent() {
@@ -68,12 +73,24 @@ Vec2f Node::getSize() {
     return Vec2f {m_bounds.width * m_scale.x, m_bounds.height * m_scale.y}; 
 }
 
+Vec2f Node::getScaledSize() {
+    return {m_bounds.width * m_scale.x, m_bounds.height * m_scale.y};
+}
+
 float Node::getWidth() {
     return m_bounds.width;
 }
 
+float Node::getScaledWidth() {
+    return m_bounds.width * m_scale.x; 
+}
+
 float Node::getHeight() {
     return m_bounds.height;
+}
+
+float Node::getScaledHeight() {
+    return m_bounds.height * m_scale.y; 
 }
 
 void Node::setSize(Vec2f size) {
@@ -124,7 +141,7 @@ void Node::setColor(Col4u color) {
 void Node::update() {}
 
 void Node::draw() {
-    DrawRectangleLinesEx({0, 0, getWidth(), getHeight()}, 1.f, RED);
+    // DrawRectangleLinesEx({0, 0, getWidth(), getHeight()}, 1.f, RED);
 }
 
 void Node::setVisible(bool flag) {
@@ -155,8 +172,8 @@ int Node::getZOrder() {
     return m_zOrder;
 }
 
-void Node::setScale(Vec2f scale) {
-    m_scale = scale;
+void Node::setScale(float scale) {
+    m_scale = {scale, scale};
 }
 
 Vec2f Node::getScale() {
@@ -170,6 +187,19 @@ void Node::setScaleX(float x) {
 float Node::getScaleX() {
     return m_scale.x;
 }
+
+float Node::getGlobalScaleX() {
+    Matrix mat = rlGetMatrixTransform();
+
+    return sqrtf(mat.m0 * mat.m0 + mat.m1 * mat.m1 + mat.m2 * mat.m2);
+}
+
+float Node::getGlobalScaleY() {
+    Matrix mat = rlGetMatrixTransform();
+
+    return sqrtf(mat.m4 * mat.m4 + mat.m5 * mat.m5 + mat.m6 * mat.m6);
+}
+
 
 void Node::setScaleY(float y) {
     m_scale.y = y;

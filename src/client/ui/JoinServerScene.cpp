@@ -22,6 +22,7 @@ JoinServerScene::JoinServerScene(std::string const& hostname, uint16_t port) : m
     m_state->setPos({screenW / 2, screenH / 2});
     m_state->setWidth(screenW);
     m_state->setTag("state");
+    m_state->setScale(Game::get()->getGuiScale());
     addChild(m_state);
 }
 

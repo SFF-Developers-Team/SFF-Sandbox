@@ -72,7 +72,7 @@ void Container::update() {
         if(node->isEnabled()) {
             rlPushMatrix();
                 rlTranslatef(node->getX(), node->getY() - m_scrollOffset, 0.f);
-                rlTranslatef(-(node->getAnchorX() * node->getWidth()), -(node->getAnchorY() * node->getHeight()), 0.f);
+                rlTranslatef(-(node->getAnchorX() * node->getScaledWidth()), -(node->getAnchorY() * node->getScaledHeight()), 0.f);
                 rlScalef(node->getScaleX(), node->getScaleY(), 0.f);
                 
                 node->update();
@@ -97,16 +97,11 @@ void Container::update() {
 
 void Container::draw() {
     Frame::draw();
-    auto rm = RenderManager::get();
     auto const bounds = getWorldBounds();
     auto const totalHeight = calculateTotalHeight();
     auto const contentHeight = bounds.height - m_border * 2;
     auto const borderColor = m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F};
     auto const scrollBar = totalHeight > bounds.height && m_scrollable;
-
-    // debug
-    auto mouse = getLocalMousePosition();
-    rm->drawRect({mouse.x, mouse.y, 5.f, 5.f}, COL_YELLOW);
 
     BeginScissorMode(bounds.x + m_border, bounds.y + m_border, bounds.width - m_border * 2, contentHeight);
         for(auto& node : m_childs) {
@@ -122,7 +117,7 @@ void Container::draw() {
         }
 
         if(scrollBar) {
-            rm->drawRect({bounds.width - m_border * 2, m_border + (m_scrollOffset / totalHeight) * contentHeight, m_border, (contentHeight / totalHeight) * contentHeight}, borderColor);
+            RenderManager::drawRect({bounds.width - m_border * 2, m_border + (m_scrollOffset / totalHeight) * contentHeight, m_border, (contentHeight / totalHeight) * contentHeight}, borderColor);
         }
     EndScissorMode();
 }

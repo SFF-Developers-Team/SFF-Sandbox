@@ -14,9 +14,7 @@ void Button::update() {
     auto mouse = getLocalMousePosition();
     m_color = sm->getValue<Col4u>(DEFAULT_UI_COLOR);
 
-    // printf("%f %f | %f %f %f %f\n", mouse.x, mouse.y, m_bounds.x, m_bounds.y, m_bounds.width, m_bounds.height);
-
-    const auto localRect = Rectf {0.f, 0.f, m_bounds.width, m_bounds.height};
+    auto const localRect = Rectf {0.f, 0.f, m_bounds.width, m_bounds.height};
 
     if(localRect.contains({mouse.x, mouse.y})) {
         m_color.brightness(-0.3f * (IsMouseButtonDown(MOUSE_BUTTON_LEFT) + 1));
@@ -29,12 +27,7 @@ void Button::update() {
 
 void Button::draw() {
     Frame::draw();
-    auto rm = RenderManager::get();
-
-    // debug
-    auto mouse = getLocalMousePosition();
-    rm->drawRect({mouse.x, mouse.y, 5.f, 5.f}, COL_YELLOW);
-    rm->drawText("boldfont", m_text, {getWidth() / 2, getHeight() / 2}, COL_WHITE, m_fontSize, {0.5f, 0.5f});
+    RenderManager::drawText("boldfont", m_text, {getWidth() / 2, getHeight() / 2}, COL_WHITE, m_fontSize, {0.5f, 0.5f});
 }
 
 void Button::setText(std::string const& text) {

@@ -9,12 +9,9 @@
 #include <Game.hpp>
 #include <assert.h>
 #include <Utils.hpp>
-
 #include <string>
 
 int blocksDrawn = 0;
-
-RenderManager::RenderManager() {}
 
 void RenderManager::drawTexture(std::string const& key, Rectf dest, Col4u color, float rot, Vec2f origin) {
     auto texture = TextureManager::get()->getTexture(key);

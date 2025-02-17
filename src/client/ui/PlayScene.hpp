@@ -13,6 +13,7 @@ private:
     std::shared_ptr<Timer> m_timer;
 
     bool m_online = false;
+    bool m_paused = false;
 
 public:
     PlayScene(bool isOnline = false);
@@ -20,4 +21,7 @@ public:
 
     void draw() override;
     void update() override;
+
+    void pause();
+    void resume();
 };

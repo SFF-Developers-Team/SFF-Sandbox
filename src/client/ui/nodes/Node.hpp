@@ -41,8 +41,11 @@ public:
     void setY(float y);
 
     Vec2f getSize();
+    Vec2f getScaledSize();
     float getWidth();
+    float getScaledWidth();
     float getHeight();
+    float getScaledHeight();
 
     void setSize(Vec2f size);
     void setWidth(float w);
@@ -72,12 +75,14 @@ public:
     Rectf getWorldBounds();
     Vec2f getLocalMousePosition();
 
-    void setScale(Vec2f scale);
+    void setScale(float scale);
     Vec2f getScale();
 
     void setScaleX(float x);
     float getScaleX();
+    float getGlobalScaleX();
 
     void setScaleY(float y);
     float getScaleY();
+    float getGlobalScaleY();
 };

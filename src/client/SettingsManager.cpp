@@ -4,8 +4,8 @@
 #include <Logger.hpp>
 
 std::map<std::string, int> keybinds = {
-    {"jump", KEY_SPACE},
-    {"duck", KEY_LEFT_SHIFT},
+    {"jump", KEY_W},
+    {"duck", KEY_S},
     {"left", KEY_A},
     {"right", KEY_D},
     {"fly", KEY_F}

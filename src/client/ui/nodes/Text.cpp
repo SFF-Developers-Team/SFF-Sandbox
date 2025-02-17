@@ -19,7 +19,6 @@ Text::Text(std::string const& font, std::string const& text, float fontSize) : N
 }
 
 std::vector<std::string> Text::wrapText() {
-    auto rm = RenderManager::get();
     std::vector<std::string> lines;
     std::string currentLine;
     std::string currentWord;
@@ -27,7 +26,7 @@ std::vector<std::string> Text::wrapText() {
     for (char ch : m_text) {
         if (ch == ' ') {
             // Проверяем, помещается ли текущее слово в текущую строку
-            auto wordWidth = rm->getTextSize(currentLine + currentWord, m_font, m_fontSize).x;
+            auto wordWidth = RenderManager::getTextSize(currentLine + currentWord, m_font, m_fontSize).x;
             
             if (wordWidth > getWidth()) {
                 // Если слово не помещается, начинаем новую строку
@@ -44,7 +43,7 @@ std::vector<std::string> Text::wrapText() {
     }
 
     // Добавляем последнее слово
-    auto wordWidth = rm->getTextSize(currentLine + currentWord, m_font, m_fontSize).x;
+    auto wordWidth = RenderManager::getTextSize(currentLine + currentWord, m_font, m_fontSize).x;
     if (wordWidth > getWidth()) {
         lines.push_back(currentLine);
         lines.push_back(currentWord);
@@ -59,7 +58,6 @@ void Text::draw() {
     Node::draw();
     
     auto tm = TextureManager::get();
-    auto rm = RenderManager::get();
     auto textpos = Vec2f {0.f, 0.f};
 
     if(m_wordWrap) {
@@ -72,18 +70,18 @@ void Text::draw() {
         if(m_alignVertical == V_BOTTOM) textpos.y += getHeight()- totalHeight;
 
         for (const auto& line : lines) {
-            auto size = rm->getTextSize(line, m_font, m_fontSize);
+            auto size = RenderManager::getTextSize(line, m_font, m_fontSize);
 
             if(m_alignHorizontal == H_CENTER) textpos.x = getWidth() * 0.5f - size.x * 0.5f;
             if(m_alignHorizontal == H_RIGHT) textpos.x = getWidth() - size.x;
 
-            rm->drawText(m_font, line, textpos, m_color, m_fontSize);
+            RenderManager::drawText(m_font, line, textpos, m_color, m_fontSize);
             textpos.y += size.y + 2.f;
 
             if (textpos.y + lineHeight > getHeight()) return;
         }
     } else {
-        auto size = rm->getTextSize(m_text, m_font, m_fontSize);
+        auto size = RenderManager::getTextSize(m_text, m_font, m_fontSize);
 
         if(m_alignHorizontal == H_CENTER) textpos.x += getWidth() * 0.5f - size.x * 0.5f;
         if(m_alignHorizontal == H_RIGHT) textpos.x += getWidth() - size.x;
@@ -91,7 +89,7 @@ void Text::draw() {
         if(m_alignVertical == V_CENTER) textpos.y += getHeight() * 0.5f - size.y * 0.5f;
         if(m_alignVertical == V_BOTTOM) textpos.y += getHeight() - size.y;
 
-        rm->drawText(m_font, m_text, textpos, m_color, m_fontSize);
+        RenderManager::drawText(m_font, m_text, textpos, m_color, m_fontSize);
     }
 }
 
@@ -124,11 +122,10 @@ void Text::setWordWrap(bool flag, bool autoHeight) {
 
     if(autoHeight) {
         auto lines = wrapText();
-        auto rm = RenderManager::get();
         auto height = 0.f;
 
         for(auto& line : lines) {
-            auto size = rm->getTextSize(line, m_font, m_fontSize).y;
+            auto size = RenderManager::getTextSize(line, m_font, m_fontSize).y;
             height += size + 2.f;
         }
 

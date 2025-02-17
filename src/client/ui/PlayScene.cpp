@@ -5,18 +5,21 @@
 #include <ui/ErrorScene.hpp>
 #include <world/World.hpp>
 #include <Multiplayer.hpp>
+#include <StyleManager.hpp>
 #include <Types.hpp>
 #include <Debug.hpp>
 #include <Timer.hpp>
 #include <Game.hpp>
+#include <ui/MainMenuScene.hpp>
 
 #include <chrono>
 
-PlayScene::PlayScene(bool isOnline) : m_timer(std::make_shared<Timer>(60)), m_online(isOnline) {
+PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(60)), m_online(isOnline) {
     auto game = Game::get();
     m_world = game->getWorld();
     m_player = game->getPlayer();
     m_color = COL_SKYBLUE;
+    m_keyBack = false;
 
     if(!m_online) {
         if (!m_world->load()) {
@@ -28,6 +31,39 @@ PlayScene::PlayScene(bool isOnline) : m_timer(std::make_shared<Timer>(60)), m_on
     }
 
     HideCursor();
+
+    auto pauseLayer = std::make_shared<Container>();
+    pauseLayer->setBorderWidth(0.f);
+    pauseLayer->setColor({0, 0, 0, 127});
+    pauseLayer->setPos(getSize() / 2);
+    pauseLayer->setSize(getSize());
+    pauseLayer->setTag("center-pause-layer");
+    pauseLayer->setVisible(false);
+    pauseLayer->setEnabled(false);
+    addChild(pauseLayer);
+
+    auto btnSize = StyleManager::get()->getValue<Vec2f>(DEFAULT_ELEMENT_SIZE);
+    auto border = StyleManager::get()->getValue<float>(DEFAULT_BORDER_WIDTH);
+
+    std::list<std::pair<std::string, MiniFunction<void(Button*)>>> const btns = {
+        {"Resume game", [this, pauseLayer](auto) { resume(); }},
+        {"Back to main menu", [game](auto) {
+            game->clearSceneHistory();
+            game->pushScene(std::make_shared<MainMenuScene>());
+        }}
+    };
+
+    auto btnsHeight = btns.size() * btnSize.y + (btns.size() - 1) * border;
+    auto y = (pauseLayer->getHeight() - btnsHeight) / 2;
+
+    for(auto& [text, call] : btns) {
+        auto btn = std::make_shared<Button>(text, call);
+        btn->setPos({pauseLayer->getWidth() / 2, y});
+        btn->setAnchorY(0.f);
+        pauseLayer->addChild(btn);
+        
+        y += btnSize.y + border;
+    }
 }
 
 PlayScene::~PlayScene() {
@@ -37,40 +73,42 @@ PlayScene::~PlayScene() {
 }
 
 void PlayScene::draw() {
-    auto rm = RenderManager::get();
-
     BeginMode2D(m_player->getCamera());
-        rm->renderWorld(m_world, m_player);
+        RenderManager::renderWorld(m_world, m_player);
     EndMode2D();
 
     auto selectedBlock = m_player->getSelectedBlock();
 
     if (selectedBlock) {
-        rm->renderBlock({GetScreenWidth() - 42.f, 10.f, 32.f, 32.f}, selectedBlock);
+        RenderManager::renderBlock({GetScreenWidth() - 42.f, 10.f, 32.f, 32.f}, selectedBlock);
     }
 
     Debug::get()->draw();
 
     auto mouse = GetMousePosition();
-    rm->drawTile("gui.png", 0, {mouse.x, mouse.y, 16.f, 16.f}, COL_WHITE, 0.f, {8.f, 8.f});
+    RenderManager::drawTile("gui.png", 0, {mouse.x, mouse.y, 16.f, 16.f}, COL_WHITE, 0.f, {8.f, 8.f});
+
+    Scene::draw();
 }
 
 void PlayScene::update() {
     m_timer->advanceTime();
 
-    for (uint32_t i = 0; i < m_timer->getTicks(); i++) {
-        m_world->onTick();
+    if(!m_paused) {
+        for (uint32_t i = 0; i < m_timer->getTicks(); i++) {
+            m_world->onTick();
 
-        auto seconds = std::chrono::seconds(m_world->getSpentTime() + (std::time(NULL) - m_world->getLoadTime()));
-        auto hours = std::chrono::duration_cast<std::chrono::hours>(seconds);
-        seconds -= hours;
-        auto minutes = duration_cast<std::chrono::minutes>(seconds);
-        seconds -= minutes;
+            auto seconds = std::chrono::seconds(m_world->getSpentTime() + (std::time(NULL) - m_world->getLoadTime()));
+            auto hours = std::chrono::duration_cast<std::chrono::hours>(seconds);
+            seconds -= hours;
+            auto minutes = duration_cast<std::chrono::minutes>(seconds);
+            seconds -= minutes;
 
-        Debug::get()->setString(DebugID::WORLD_TIME_SPENT, "Time spent in world: {} {} {}", hours, minutes, seconds);
+            Debug::get()->setString(DebugID::WORLD_TIME_SPENT, "Time spent in world: {} {} {}", hours, minutes, seconds);
+        }
+
+        m_player->update();
     }
-
-    m_player->update();
 
     if(m_online) {
         auto mp = Multiplayer::get();
@@ -95,4 +133,26 @@ void PlayScene::update() {
     if(IsKeyPressed(KEY_F1)) {
         CloseWindow();
     }
+
+    if(IsKeyPressed(KEY_ESCAPE)) {
+        (m_paused ? resume() : pause());
+    }
+
+    Scene::update();
+}
+
+void PlayScene::pause() {
+    auto pauseLayer = getChild<Container>("center-pause-layer");
+    pauseLayer->setVisible(true);
+    pauseLayer->setEnabled(true);
+    m_paused = true;
+    ShowCursor();
+}
+
+void PlayScene::resume() {
+    auto pauseLayer = getChild<Container>("center-pause-layer");
+    pauseLayer->setVisible(false);
+    pauseLayer->setEnabled(false);
+    m_paused = false;
+    HideCursor();
 }

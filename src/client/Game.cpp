@@ -14,17 +14,20 @@ void Game::clearSceneHistory() {
 }
 
 void Game::pushScene(std::shared_ptr<Scene> scene) {
-    if(m_scene != nullptr) {
+    if(m_scene != nullptr) {    
         m_sceneHistory.push_back(m_scene);
+        m_scene->onHide();
     }
 
     m_scene = scene;
+    m_scene->onShow();
 }
 
 void Game::popScene() {
     if(!m_sceneHistory.empty()) {
         m_scene = m_sceneHistory.back();
         m_sceneHistory.pop_back();
+        m_scene->onShow();
     }
 }
 
@@ -92,8 +95,7 @@ void Game::update() {
         m_scene->update();
 
         if(m_scene->shouldDestroy()) {
-            m_scene = m_sceneHistory.back();
-            m_sceneHistory.pop_back();
+            popScene();
         }
     }
 

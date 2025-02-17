@@ -11,30 +11,36 @@ void List::draw() {
     Frame::draw();
 
     auto bounds = getWorldBounds();
-    auto rm = RenderManager::get();
     auto const fontSize = TextureManager::get()->getFontBaseSize("boldfont");
     auto const totalHeight = fontSize * m_elements.size() + m_border * m_elements.size();
     auto const conHeight = bounds.height - m_border * 2;
     auto const borderColor = m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F};
     auto const scrollBar = totalHeight > bounds.height;
+    auto const rect = Rectf {0.f, 0.f, m_bounds.width, conHeight};
 
-    BeginScissorMode(bounds.x + m_border, bounds.y + m_border, bounds.width - m_border * 2, conHeight);
+    Rectf cutList = {
+        bounds.x + m_border * getGlobalScaleX(),
+        bounds.y + (m_border * 2) * getGlobalScaleY(),
+        bounds.width - (m_border * 2) * getGlobalScaleX(),
+        (conHeight - m_border * 2) * getGlobalScaleY()
+    };
+
+    BeginScissorMode(cutList.x, cutList.y, cutList.width, cutList.height);
         for(auto i = 0; i < m_elements.size(); i++) {
-            auto rect = Rectf {
+            auto cell = Rectf {
                 m_border * 2.f, 
-                m_border * 2 + fontSize * i + m_border * i - m_scrollOffset, 
-                bounds.width - m_border * (scrollBar ? 5.f : 4.f), 
+                rect.y + m_border * 2.f + fontSize * i + m_border * i - m_scrollOffset, 
+                m_bounds.width - m_border * (scrollBar ? 5.f : 4.f), 
                 fontSize
             };
-            auto size = rm->getTextSize(m_elements[i], "boldfont", fontSize);
 
-            rm->drawRect(rect, m_color);
-            rm->drawRectLines(rect, borderColor, m_border);
-            rm->drawText("boldfont", m_elements[i], {(rect.width - size.x) / 2, rect.y + (rect.height - size.y) / 2}, COL_WHITE, fontSize);
+            RenderManager::drawRect(cell, m_color);
+            RenderManager::drawRectLines(cell, borderColor, m_border);
+            RenderManager::drawText("boldfont", m_elements[i], {cell.width / 2, cell.y + cell.height / 2}, COL_WHITE, fontSize, {0.5f, 0.5f});
         }
 
         if(scrollBar) {
-            rm->drawRect({bounds.width - m_border * 2, m_border + (m_scrollOffset / totalHeight) * conHeight, m_border, (conHeight / totalHeight) * conHeight}, borderColor);
+            RenderManager::drawRect({bounds.width - m_border * 2, rect.y + m_border + (m_scrollOffset / totalHeight) * conHeight, m_border, (conHeight / totalHeight) * conHeight}, borderColor);
         }
     EndScissorMode();
 }

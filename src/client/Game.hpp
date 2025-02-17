@@ -12,7 +12,6 @@ class TileMap;
 
 class Game {
 private:
-    uint8_t m_renderDistance = 3;
     std::string m_username;
 
     std::shared_ptr<Scene> m_scene;
@@ -39,28 +38,14 @@ public:
     void pushScene(std::shared_ptr<Scene> scene);
     void popScene();
 
-    void setUsername(std::string const& username) {
-        m_username = username;
-    }
+    void setUsername(std::string const& username) { m_username = username; }
+    std::string const& getUsername() { return m_username; }
 
-    auto getUsername() {
-        return m_username;
-    }
-
-    auto getRenderDistance() {
-        return m_renderDistance;
-    }
-    
-    auto getWorld() {
-        return m_world;
-    }
-
-    auto getPlayer() {
-        return m_player;
-    }
+    std::shared_ptr<World> getWorld() { return m_world; }
+    std::shared_ptr<Player> getPlayer() { return m_player; }
     
     Vec2i const getLastWindowSize() { return m_lastWindowSize; }
-
+    
     int getGuiScale() { return m_guiScale; }
     void setGuiScale(int scale) { m_guiScale = scale; }
 };

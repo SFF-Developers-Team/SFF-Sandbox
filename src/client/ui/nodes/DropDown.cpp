@@ -7,23 +7,23 @@
 #include <rlgl.h>
 
 DropDown::DropDown(std::vector<std::string> const& elements, MiniFunction<void(DropDown*, int)> callback) : 
-    Frame(), m_elements(elements), m_callback(callback), m_selected(0), m_opened(false), m_maxHeight(200.f), m_scrollOffset(0.f), m_mask("{}") {}
+    Frame(), m_elements(elements), m_callback(callback), m_selected(0), m_opened(false), m_maxHeight(100.f), m_scrollOffset(0.f), m_mask("{}") {}
 
 void DropDown::draw() {
     Frame::draw();
 
     auto bounds = getWorldBounds();
-    auto rm = RenderManager::get();
     auto fontsize = TextureManager::get()->getFontBaseSize("boldfont");
     auto selected = std::vformat(m_mask, std::make_format_args(m_elements[m_selected]));
-    auto size = rm->getTextSize(selected, "boldfont", fontsize);
-    auto arrowsize = rm->getTextSize("^", "boldfont", fontsize);
+    auto size = RenderManager::getTextSize(selected, "boldfont", fontsize);
+    auto arrowSize = RenderManager::getTextSize("^", "boldfont", fontsize);
 
-    rm->drawText("boldfont", selected, {bounds.width / 2, bounds.height / 2}, COL_WHITE, fontsize, {0.5f, 0.5f});
+    RenderManager::drawText("boldfont", selected, {m_bounds.width / 2, m_bounds.height / 2}, COL_WHITE, fontsize, {0.5f, 0.5f});
     rlPushMatrix();
-        rlTranslatef(bounds.width - m_border - bounds.height / 2, bounds.height / 2, 0);
+        rlTranslatef(m_bounds.width - m_border - m_bounds.height / 2, m_bounds.height / 2, 0);
         rlRotatef((!m_opened ? 180 : 0), 0, 0, 1);
-        rm->drawText("boldfont", "^", {-arrowsize.x / 2, -arrowsize.y / 3}, COL_WHITE, fontsize);
+
+        RenderManager::drawText("boldfont", "^", {-arrowSize.x / 2, -arrowSize.y / 3}, COL_WHITE, fontsize);
     rlPopMatrix();
 
     if(m_opened) {
@@ -31,28 +31,34 @@ void DropDown::draw() {
         auto const conHeight = std::min(totalHeight, m_maxHeight);
         auto const borderColor = m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F};
         auto const scrollBar = totalHeight > m_maxHeight;
-        auto const rect = Rectf {0.f, bounds.height + m_border, bounds.width, conHeight};
+        auto const rect = Rectf {0.f, m_bounds.height + m_border, m_bounds.width, conHeight};
 
-        rm->drawRect(rect, m_color);
-        rm->drawRectLines(rect, m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F}, m_border);
+        RenderManager::drawRect(rect, m_color);
+        RenderManager::drawRectLines(rect, m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F}, m_border);
 
-        BeginScissorMode(bounds.x + m_border, bounds.y + bounds.height + m_border * 2, rect.width, conHeight - m_border * 2);
+        Rectf cutList = {
+            bounds.x + m_border * getGlobalScaleX(),
+            bounds.y + bounds.height + m_border * 2 * getGlobalScaleY(),
+            bounds.width - m_border * 2 * getGlobalScaleX(),
+            (conHeight - m_border * 2) * getGlobalScaleY()
+        };
+
+        BeginScissorMode(cutList.x, cutList.y, cutList.width, cutList.height);
             for(auto i = 0; i < m_elements.size(); i++) {
                 auto cell = Rectf {
                     m_border * 2.f, 
                     rect.y + m_border * 2.f + fontsize * i + m_border * i - m_scrollOffset, 
-                    bounds.width - m_border * (scrollBar ? 5.f : 4.f), 
+                    m_bounds.width - m_border * (scrollBar ? 5.f : 4.f), 
                     fontsize
                 };
-                auto size = rm->getTextSize(m_elements[i], "boldfont", fontsize);
 
-                rm->drawRect(cell, m_color);
-                rm->drawRectLines(cell, borderColor, m_border);
-                rm->drawText("boldfont", m_elements[i], {(cell.width - size.x) / 2, cell.y + (cell.height - size.y) / 2}, COL_WHITE, fontsize);
+                RenderManager::drawRect(cell, m_color);
+                RenderManager::drawRectLines(cell, borderColor, m_border);
+                RenderManager::drawText("boldfont", m_elements[i], {cell.width / 2, cell.y + cell.height / 2}, COL_WHITE, fontsize, {0.5f, 0.5f});
             }
 
             if(scrollBar) {
-                rm->drawRect({bounds.width - m_border * 2, rect.y + m_border + (m_scrollOffset / totalHeight) * conHeight, m_border, (conHeight / totalHeight) * conHeight}, borderColor);
+                RenderManager::drawRect({bounds.width - m_border * 2, rect.y + m_border + (m_scrollOffset / totalHeight) * conHeight, m_border, (conHeight / totalHeight) * conHeight}, borderColor);
             }
         EndScissorMode();
     }
@@ -72,15 +78,21 @@ void DropDown::update() {
     }
 
     if(m_opened) {
-        auto const totalHeight = m_border * 4 + 40.f * m_elements.size() + m_border * m_elements.size();
-        auto const listBounds = Rectf {bounds.x, bounds.y + bounds.height + m_border, bounds.width, std::min(totalHeight, m_maxHeight)};
+        auto const totalHeight = m_border * 4 + 20.f * m_elements.size() + m_border * m_elements.size();
+        
+        auto const listBounds = Rectf {
+            bounds.x, 
+            bounds.y + bounds.height + m_border, 
+            bounds.width, 
+            std::min(totalHeight, m_maxHeight)
+        };
 
         if(totalHeight > m_maxHeight) {
             if(listBounds.contains({mouse.x, mouse.y}) && GetMouseWheelMove() != 0.f) {
                 m_scrollOffset -= GetMouseWheelMove() * 30.f;
             }
 
-            m_scrollOffset = std::clamp(m_scrollOffset, 0.f, totalHeight - listBounds.height + m_border);
+            m_scrollOffset = std::clamp(m_scrollOffset, 0.f, totalHeight - listBounds.height - m_border);
         }
 
         for(auto i = 0; i < m_elements.size(); i++) {

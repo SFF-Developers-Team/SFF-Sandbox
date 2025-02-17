@@ -5,6 +5,9 @@
 #include <raylib.h>
 
 class Scene : public Container {
+protected:
+    bool m_keyBack = true;
+
 private:
     bool m_destroy = false;
 
@@ -16,6 +19,9 @@ public:
 
     virtual void onPush() {}
     virtual void onPop() {}
+
+    virtual void onShow();
+    virtual void onHide() {}
     
     void destroy();
     bool shouldDestroy();

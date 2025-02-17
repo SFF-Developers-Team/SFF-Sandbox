@@ -10,6 +10,8 @@ struct Vec2 {
     T x;
     T y;
 
+    Vec2<T> const operator/(T value) { return Vec2<T> {x / value, y / value}; }
+
     template <typename T2>
     inline T2 to() const {
         return T2 {x, y};

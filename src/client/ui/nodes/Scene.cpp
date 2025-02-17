@@ -2,29 +2,29 @@
 #include <rlgl.h>
 
 Scene::Scene() : Container() {
-    auto scrW = static_cast<float>(GetScreenWidth());
-    auto scrH = static_cast<float>(GetScreenHeight());
-
-    setScale({1.f, 1.f});
-    setPos({scrW / 2.f, scrH / 2.f});
-    setSize({scrW / m_scale.x, scrH / m_scale.y});
+    setScale(1.f);
     setBorderWidth(0.f);
+    onShow();
 }
 
 void Scene::update() {
-    if(IsKeyPressed(KEY_ESCAPE)) {
+    if(m_keyBack && IsKeyPressed(KEY_ESCAPE)) {
         m_destroy = true;
     }
 
     if(IsWindowResized()) {
-        auto scrW = static_cast<float>(GetScreenWidth());
-        auto scrH = static_cast<float>(GetScreenHeight());
-
-        setPos({scrW / 2.f, scrH / 2.f});
-        setSize({scrW, scrH});
+        onShow();
     }
 
     Container::update();
+}
+
+void Scene::onShow() {
+    auto scrW = static_cast<float>(GetScreenWidth());
+    auto scrH = static_cast<float>(GetScreenHeight());
+
+    setPos({scrW / 2.f, scrH / 2.f});
+    setSize({scrW, scrH});
 }
 
 void Scene::destroy() {
@@ -45,9 +45,6 @@ void Scene::draw() {
                 
                 node->draw();
             rlPopMatrix();
-
-            auto rect = node->getWorldBounds();
-            DrawRectangleLinesEx(rect.to<Rectangle>(), 1.f, GREEN);
         }
     }
 }

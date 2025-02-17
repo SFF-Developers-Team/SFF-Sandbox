@@ -19,8 +19,9 @@ CreditsScene::CreditsScene() {
     // clang-format on
 
     auto container = std::make_shared<Container>();
-    container->setSize({700, 300});
+    container->setSize({650, 300});
     container->setTag("center-credits");
+    container->setScale(Game::get()->getGuiScale());
     addChild(container);
 
     auto backBtn = std::make_shared<Button>("Back", [this](Button*) { destroy(); });
@@ -60,7 +61,7 @@ CreditsScene::CreditsScene() {
             m_developersBox->addChild(tile);
         }
 
-        m_developersBox->alignItemsHorizontal(32.f);
+        m_developersBox->alignItemsHorizontal(16.f);
 
         for(auto i = 0; i < devs.size(); i++) {
             auto child = m_developersBox->getChild(i);

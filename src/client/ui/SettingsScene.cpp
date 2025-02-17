@@ -6,22 +6,27 @@
 
 SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolution(true) {
     auto stm = SettingsManager::get();
+    auto game = Game::get();
+
+    std::vector<std::string> containers{"Video", "Audio", "Keyboard"};
 
     auto container = std::make_shared<Container>();
     container->setSize({500, 250});
     container->setTag("center-settings");
+    container->setScale(game->getGuiScale());
     addChild(container);
 
-    auto apply = std::make_shared<Button>("Apply", [stm](Button*) {
+    auto apply = std::make_shared<Button>("Apply", [stm, container, game](Button*) {
+        container->setScale(game->getGuiScale());
         stm->save();
     });
 
-    apply->setPos({container->getWidth() / 2, container->getHeight() - container->getBorderWidth()});
+    apply->setPos({container->getWidth() / 2, container->getHeight() - container->getBorderWidth() * 2});
     apply->setAnchorY(1.f);
+    apply->setWidth(container->getWidth() / containers.size());
     container->addChild(apply);
 
-    std::vector<std::string> containers{"Video", "Audio", "Keyboard"};
-    Vec2f categorySize = {container->getWidth() / containers.size(), container->getHeight() - apply->getHeight() - apply->getBorderWidth() * 2};
+    Vec2f categorySize = {container->getWidth() / containers.size(), container->getHeight() - apply->getHeight() - apply->getBorderWidth() * 3};
     float x = 0.f;
 
     for(auto& s : containers) {
@@ -128,9 +133,19 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
         vsync->setWidth(elementWidth);
         video->addChild(vsync);
 
-        auto scale = std::make_shared<Slider<int>>("GUI Scale: ", 1, 4, [stm](auto, auto value) {
-            stm->setValue("video.scale", value);
-            Game::get()->setGuiScale(value);
+        auto scale = std::make_shared<Button>("GUI Scale: " + std::to_string(game->getGuiScale()), [this, stm, game](Button* btn) {
+            int maxScale = std::min(getWidth() / 640, getHeight() / 360);
+            int curScale = game->getGuiScale();
+            
+            curScale++;
+
+            if(game->getGuiScale() >= maxScale) {
+                curScale = 1;
+            }
+
+            btn->setText("GUI Scale: " + std::to_string(curScale));
+            stm->setValue("video.scale", curScale);
+            game->setGuiScale(curScale);
         });
 
         scale->setPos({video->getWidth() / 2, vsync->getY() + vsync->getHeight() + vsync->getBorderWidth()});
@@ -193,7 +208,12 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
             text->setAlignH(TextAlignmentH::H_LEFT);
             keysContainer->addChild(text);
 
-            auto button = std::make_shared<Button>(SettingsManager::getKeyName(stm->getKeybind(action)), [this](Button* btn) { 
+            auto button = std::make_shared<Button>(SettingsManager::getKeyName(stm->getKeybind(action)), [this, stm](Button* btn) { 
+                if(m_keySelect != nullptr) {
+                    m_keySelect->setText(SettingsManager::getKeyName(stm->getKeybind(m_keySelect->getTag())));
+                    m_keySelect = btn;
+                }
+                
                 m_keySelect = btn; 
                 btn->setText("...");
             });

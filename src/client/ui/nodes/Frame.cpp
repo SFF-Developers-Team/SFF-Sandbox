@@ -11,13 +11,12 @@ Frame::Frame() : Node() {
 }
 
 void Frame::draw() {
-    auto rm = RenderManager::get();
     auto rect = Rectf {0.f, 0.f, getWidth(), getHeight()};
 
-    rm->drawRect(rect, m_color);
+    RenderManager::drawRect(rect, m_color);
     
-    if(m_border > 0) {
-        rm->drawRectLines(rect, m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F}, m_border);
+    if(m_border > 0.f) {
+        RenderManager::drawRectLines(rect, m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F}, m_border);
     }
 
     Node::draw();

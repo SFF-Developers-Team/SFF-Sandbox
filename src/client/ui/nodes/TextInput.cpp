@@ -12,10 +12,9 @@ void TextInput::draw() {
 
     auto sm = StyleManager::get();
     auto tm = TextureManager::get();
-    auto rm = RenderManager::get();
     auto fontsize = tm->getFontBaseSize("font");
-    auto textsize = rm->getTextSize(m_text, m_font, fontsize);
-    auto cursorpos = rm->getTextSize(m_text.substr(0, m_cursorX), m_font, fontsize).x;
+    auto textsize = RenderManager::getTextSize(m_text, m_font, fontsize);
+    auto cursorpos = RenderManager::getTextSize(m_text.substr(0, m_cursorX), m_font, fontsize).x;
     auto mouse = GetMousePosition();
     auto color = COL_WHITE;
 
@@ -28,10 +27,10 @@ void TextInput::draw() {
 
     auto bounds = getWorldBounds().to<Rectangle>();
     BeginScissorMode(bounds.x + m_border, bounds.y + m_border, bounds.width - m_border * 2.f, bounds.height - m_border * 2.f);
-        rm->drawText(m_font, (m_text.empty() ? m_placeholder : m_text), {textX, getHeight() / 2}, color, fontsize, {0.0f, 0.5f});
+        RenderManager::drawText(m_font, (m_text.empty() ? m_placeholder : m_text), {textX, getHeight() / 2}, color, fontsize, {0.0f, 0.5f});
         
         if(m_active) {
-            rm->drawRect({textX + cursorpos, (getHeight() - textsize.y) / 2, 1.f, fontsize}, COL_WHITE);
+            RenderManager::drawRect({textX + cursorpos, (getHeight() - fontsize) / 2, 1.f, fontsize}, COL_WHITE);
         }
     EndScissorMode();
 }
