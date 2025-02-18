@@ -16,7 +16,15 @@ public:
         PLANKS,
         WOOL,
         BEDROCK,
-        BRICKS
+        BRICKS,
+        OAK_LOG,
+        ANOTHER_OAK_LOG,
+        LEAVES,
+        COAL_ORE,
+        IRON_ORE,
+        GOLD_ORE,
+        DIAMOND_ORE,
+        LAPIZ_ORE
     };
 
     enum TagID : uint8_t {
