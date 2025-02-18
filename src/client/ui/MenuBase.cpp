@@ -49,15 +49,6 @@ MenuBase::MenuBase() : Scene() {
 
 void MenuBase::update() {
     Scene::update();
-
-    auto game = Game::get();
-    
-    for(auto& child : m_childs) {
-        if(child->getTag().find("center") != std::string::npos) {
-            child->setPos({getWidth() / 2, getHeight() / 2});
-            child->setScale(game->getGuiScale());
-        }
-    }
 }
 
 void MenuBase::draw() {

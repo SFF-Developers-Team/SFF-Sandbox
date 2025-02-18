@@ -10,21 +10,19 @@
 Container::Container() : Frame(), m_scrollOffset(0.f), m_scrollable(false) {}
 
 void Container::alignItemsHorizontal(float padding) {
-    if(m_childs.empty()) {
-        return;
-    }
-    
-    float width = 0.f;
+    if(!m_childs.empty()) {
+        float width = 0.f;
 
-    for(auto& child : m_childs) {
-        width += child->getWidth();
-    }
+        for(auto& child : m_childs) {
+            width += child->getWidth();
+        }
 
-    auto x = (getWidth() - width) / 2 + m_childs[0]->getWidth() * m_childs[0]->getAnchorX();
+        auto x = (getWidth() - width) / 2 + m_childs[0]->getWidth() * m_childs[0]->getAnchorX();
 
-    for(auto& child : m_childs) {
-        child->setPos({x, getHeight() / 2});
-        x += child->getWidth();
+        for(auto& child : m_childs) {
+            child->setPos({x, getHeight() / 2});
+            x += child->getWidth();
+        }
     }
 }
 
@@ -33,20 +31,12 @@ void Container::addChild(std::shared_ptr<Node> node) {
     m_childs.push_back(node);
 }
 
-std::shared_ptr<Node> Container::getChild(size_t index) {
-    return m_childs[index];
-}
-
 std::shared_ptr<Node> Container::getChild(std::string const& tag) {
     auto i = std::find_if(m_childs.begin(), m_childs.end(), [&tag](auto const& node) {
         return node->getTag() == tag;
     });
 
     return (i != m_childs.end() ? *i : nullptr);
-}
-
-bool Container::hasChild(size_t index) {
-    return index < m_childs.size();
 }
 
 bool Container::hasChild(std::string const& tag) {
@@ -122,24 +112,12 @@ void Container::draw() {
     EndScissorMode();
 }
 
-bool Container::isScrollable() {
-    return m_scrollable;
-}
-
 void Container::setScrollable(bool flag) {
     m_scrollable = flag;
 
     if(!m_scrollable) {
-        m_scrollOffset = false;
+        m_scrollOffset = 0.f;
     }
-}
-
-void Container::resetScroll() {
-    m_scrollOffset = 0.f;
-}
-
-std::vector<std::shared_ptr<Node>> const& Container::getChildren() {
-    return m_childs;
 }
 
 void Container::sortChildsZ() {

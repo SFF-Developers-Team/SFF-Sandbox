@@ -13,7 +13,7 @@ class Block;
 namespace RenderManager {
     void drawTexture(std::string const& key, Rectf dest, Col4u color = COL_WHITE, float rot = 0.f, Vec2f origin = {0.f, 0.f});
     void drawTile(std::string const& mapKey, uint16_t index, Rectf dest, Col4u color = COL_WHITE, float rot = 0.f, Vec2f origin = {0.f, 0.f});
-    void drawText(std::string const& font, std::string const& text, Vec2f pos, Col4u color = COL_WHITE, float fontSize = 16.f, Vec2f origin = {0.f, 0.f}, float spacing = 1.f);
+    void drawText(std::string const& font, std::string const& text, Vec2f pos, Col4u color = COL_WHITE, float fontSize = 0.f, Vec2f origin = {0.f, 0.f}, float spacing = 1.f);
     void drawRect(Rectf rect, Col4u col);
     void drawRectLines(Rectf rect, Col4u col, float thick);
 

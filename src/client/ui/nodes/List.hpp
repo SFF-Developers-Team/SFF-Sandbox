@@ -6,11 +6,11 @@
 class List : public Frame {
 protected:
     std::vector<std::string> m_elements;
-    MiniFunction<void(int)> m_callback;
+    MiniFunction<void(List*, int)> m_callback;
     float m_scrollOffset;
 
 public:
-    List(std::vector<std::string> const& elements, MiniFunction<void(int)> callback);
+    List(std::vector<std::string> const& elements, MiniFunction<void(List*, int)> callback);
 
     void update();
     void draw();

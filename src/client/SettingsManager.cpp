@@ -2,6 +2,8 @@
 #include <filesystem>
 #include <fstream>
 #include <Logger.hpp>
+#include <Game.hpp>
+#include <SoundManager.hpp>
 
 std::map<std::string, int> keybinds = {
     {"jump", KEY_W},
@@ -40,6 +42,13 @@ SettingsManager::SettingsManager() {
     for(auto const& [action, key] : keybinds) {
         registerKeybind(action, key);
     }
+
+    auto game = Game::get();
+    auto audio = SoundManager::get();
+    game->setGuiScale(getValue<int>("video.guiscale", 1));
+    audio->setMusicVolume(getValue<float>("audio.music", 0.5f));
+    audio->setSoundVolume(getValue<float>("audio.sound", 0.5f));
+    SetMasterVolume(getValue<float>("audio.volume", 1.f));
 }
 
 int SettingsManager::getKeybind(std::string const& action) {

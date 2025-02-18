@@ -20,8 +20,8 @@ CreditsScene::CreditsScene() {
 
     auto container = std::make_shared<Container>();
     container->setSize({650, 300});
-    container->setTag("center-credits");
-    container->setScale(Game::get()->getGuiScale());
+    container->setFlag(FLAG_ALWAYS_CENTER, true);
+    container->setFlag(FLAG_GUI_SCALE, true);
     addChild(container);
 
     auto backBtn = std::make_shared<Button>("Back", [this](Button*) { destroy(); });
@@ -94,7 +94,7 @@ CreditsScene::CreditsScene() {
         m_licensesBox->setEnabled(false);
         container->addChild(m_licensesBox);
 
-        auto libsList = std::make_shared<List>(std::vector<std::string>({"enet", "GitHash", "perlin-noise", "raylib", "toml", "miniz"}), [this](int i) {
+        auto libsList = std::make_shared<List>(std::vector<std::string>({"enet", "GitHash", "perlin-noise", "raylib", "toml", "miniz"}), [this](auto, int i) {
             m_licenseText->setText(licensesText[i]);
             m_licenseText->setWordWrap(true, true); // for auto-height
             m_licensesBox->resetScroll();

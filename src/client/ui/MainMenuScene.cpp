@@ -21,7 +21,8 @@ MainMenuScene::MainMenuScene() : MenuBase() {
 
     auto elementSize = StyleManager::get()->getValue<Vec2f>(DEFAULT_ELEMENT_SIZE);
     auto container = std::make_shared<Container>();
-    container->setTag("center-buttons");
+    container->setFlag(FLAG_ALWAYS_CENTER, true);
+    container->setFlag(FLAG_GUI_SCALE, true);
     container->setWidth(elementSize.x);
     container->setColor({0, 0, 0, 0});
     container->setBorderWidth(0.f);

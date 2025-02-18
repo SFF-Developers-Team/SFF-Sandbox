@@ -15,17 +15,17 @@ public:
     void draw();
 
     void alignItemsHorizontal(float padding);
-    bool isScrollable();
+    bool isScrollable() { return m_scrollable; }
     void setScrollable(bool flag);
 
-    void resetScroll();
+    void resetScroll() { m_scrollOffset = 0.f; }
 
     void addChild(std::shared_ptr<Node> node);
-    bool hasChild(size_t index);
+    bool hasChild(size_t index) { return index < m_childs.size(); }
     bool hasChild(std::string const& tag);
-    std::shared_ptr<Node> getChild(size_t index);
+    std::shared_ptr<Node> getChild(size_t index) { return m_childs[index]; }
     std::shared_ptr<Node> getChild(std::string const& tag);
-    std::vector<std::shared_ptr<Node>> const& getChildren();
+    std::vector<std::shared_ptr<Node>> const& getChildren() { return m_childs; }
 
     void sortChildsZ();
 

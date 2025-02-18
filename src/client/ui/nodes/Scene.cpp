@@ -1,5 +1,6 @@
 #include <ui/nodes/Scene.hpp>
 #include <rlgl.h>
+#include <MiniFunction.hpp>
 
 Scene::Scene() : Container() {
     setScale(1.f);

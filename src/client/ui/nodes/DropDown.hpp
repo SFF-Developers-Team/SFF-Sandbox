@@ -18,9 +18,9 @@ public:
     void draw();
     void update();
 
-    void setMaxHeight(float height);
-    float getMaxHeight();
+    void setMaxHeight(float height) { m_maxHeight = height; }
+    float getMaxHeight() { return m_maxHeight; }
 
-    void setMask(std::string const& mask);
-    std::string const& getMask();
+    void setMask(std::string const& mask) { m_mask = mask; }
+    std::string const& getMask() { return m_mask; }
 };

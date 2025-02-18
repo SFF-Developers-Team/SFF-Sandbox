@@ -12,8 +12,8 @@ private:
     std::shared_ptr<Player> m_player;
     std::shared_ptr<Timer> m_timer;
 
-    bool m_online = false;
-    bool m_paused = false;
+    bool m_online;
+    bool m_paused;
 
 public:
     PlayScene(bool isOnline = false);

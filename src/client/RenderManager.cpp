@@ -39,6 +39,10 @@ void RenderManager::drawText(std::string const& fontKey, std::string const& text
     auto tm = TextureManager::get();
     auto font = tm->getFont(fontKey);
 
+    if(fontSize == 0.f) {
+        fontSize = font.baseSize;
+    }
+
     if(origin.x != 0.f || origin.y != 0.f) { // Эта оптимизация направлена на пропуск подсчета размера текста, если точка опоры равна нулю
         auto size = getTextSize(text, fontKey, fontSize, spacing);
         pos.x -= size.x * origin.x;

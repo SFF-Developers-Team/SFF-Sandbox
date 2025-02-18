@@ -9,6 +9,7 @@ class Scene;
 class World;
 class Player;
 class TileMap;
+class Container;
 
 class Game {
 private:
@@ -37,6 +38,8 @@ public:
     void clearSceneHistory();
     void pushScene(std::shared_ptr<Scene> scene);
     void popScene();
+
+    void checkSceneFlags(std::shared_ptr<Container> root);
 
     void setUsername(std::string const& username) { m_username = username; }
     std::string const& getUsername() { return m_username; }

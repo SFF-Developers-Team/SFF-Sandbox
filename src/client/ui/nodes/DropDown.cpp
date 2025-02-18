@@ -112,19 +112,3 @@ void DropDown::update() {
         m_opened = (bounds.contains({mouse.x, mouse.y}) ? !m_opened : false);
     }
 }
-
-void DropDown::setMaxHeight(float height) {
-    m_maxHeight = height;
-}
-
-float DropDown::getMaxHeight() {
-    return m_maxHeight;
-}
-
-void DropDown::setMask(std::string const& mask) {
-    m_mask = mask;
-}
-
-std::string const& DropDown::getMask() {
-    return m_mask;
-}

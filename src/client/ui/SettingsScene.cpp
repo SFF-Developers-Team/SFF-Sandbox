@@ -11,9 +11,10 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
     std::vector<std::string> containers{"Video", "Audio", "Keyboard"};
 
     auto container = std::make_shared<Container>();
+    container->setPos(getSize() / 2);
     container->setSize({500, 250});
-    container->setTag("center-settings");
-    container->setScale(game->getGuiScale());
+    container->setFlag(FLAG_ALWAYS_CENTER, true);
+    container->setFlag(FLAG_GUI_SCALE, true);
     addChild(container);
 
     auto apply = std::make_shared<Button>("Apply", [stm, container, game](Button*) {

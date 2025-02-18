@@ -13,8 +13,9 @@
 #include <ui/MainMenuScene.hpp>
 
 #include <chrono>
+#include <list>
 
-PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(60)), m_online(isOnline) {
+PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(60)), m_online(isOnline), m_paused(false) {
     auto game = Game::get();
     m_world = game->getWorld();
     m_player = game->getPlayer();
@@ -48,8 +49,8 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     std::list<std::pair<std::string, MiniFunction<void(Button*)>>> const btns = {
         {"Resume game", [this, pauseLayer](auto) { resume(); }},
         {"Back to main menu", [game](auto) {
-            game->clearSceneHistory();
             game->pushScene(std::make_shared<MainMenuScene>());
+            game->clearSceneHistory();
         }}
     };
 

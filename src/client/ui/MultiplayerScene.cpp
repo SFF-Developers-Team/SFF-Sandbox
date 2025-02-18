@@ -17,7 +17,8 @@ MultiplayerScene::MultiplayerScene() : MenuBase() {
     container->setWidth(elementSize.x);
     container->setColor({0, 0, 0, 0});
     container->setBorderWidth(0.f);
-    container->setScale(game->getGuiScale());
+    container->setFlag(FLAG_ALWAYS_CENTER, true);
+    container->setFlag(FLAG_GUI_SCALE, true);
     addChild(container);
 
     auto usernameInput = std::make_shared<TextInput>("font", "Username");

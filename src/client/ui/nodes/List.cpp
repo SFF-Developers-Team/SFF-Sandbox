@@ -4,7 +4,7 @@
 #include <raylib.h>
 #include <algorithm>
 
-List::List(std::vector<std::string> const& elements, MiniFunction<void(int)> callback) 
+List::List(std::vector<std::string> const& elements, MiniFunction<void(List*, int)> callback) 
     : Frame(), m_elements(elements), m_callback(callback), m_scrollOffset(0.f) {}
 
 void List::draw() {
@@ -64,7 +64,7 @@ void List::update() {
         auto const isVisible = rect.y + rect.height > bounds.y + m_border && rect.y < bounds.y + bounds.height - m_border;
 
         if(isVisible && rect.contains({mouse.x, mouse.y}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            return m_callback(i);
+            return m_callback(this, i);
         }
     }
 }

@@ -31,6 +31,23 @@ void Game::popScene() {
     }
 }
 
+void Game::checkSceneFlags(std::shared_ptr<Container> scene) {
+    for(auto& child : scene->getChildren()) {
+        if(child->getFlag(FLAG_ALWAYS_CENTER)) {
+            child->setPos(scene->getSize() / 2);
+        }
+
+        if(child->getFlag(FLAG_GUI_SCALE)) {
+            child->setScale(m_guiScale);
+        }
+
+        auto container = std::dynamic_pointer_cast<Container>(child);
+        if(container != nullptr) {
+            checkSceneFlags(container);
+        }
+    }
+}
+
 void Game::init(std::vector<std::string>& args) {
     SetConfigFlags(FLAG_VSYNC_HINT);
     InitWindow(1280, 720, "SFF Sandbox");
@@ -92,6 +109,7 @@ void Game::update() {
     }
 
     if(m_scene != nullptr) {
+        checkSceneFlags(m_scene);
         m_scene->update();
 
         if(m_scene->shouldDestroy()) {
