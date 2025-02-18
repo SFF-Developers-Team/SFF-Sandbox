@@ -27,7 +27,7 @@ public:
     SettingsManager();
 
     template<typename T>
-    void setValue(std::string const& path, T value) {
+    void setValue(std::string const& path, T value, bool save = true) {
         toml::table* current = &m_settings;
         toml::path tomlPath(path);
 
@@ -41,6 +41,10 @@ public:
         }
 
         current->insert_or_assign(tomlPath[tomlPath.size() - 1].key(), value);
+        
+        if(save) {
+            this->save();
+        }
     }
 
     template<typename T>

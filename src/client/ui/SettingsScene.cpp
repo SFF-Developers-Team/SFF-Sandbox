@@ -17,10 +17,7 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
     container->setFlag(FLAG_GUI_SCALE, true);
     addChild(container);
 
-    auto apply = std::make_shared<Button>("Apply", [stm, container, game](Button*) {
-        container->setScale(game->getGuiScale());
-        stm->save();
-    });
+    auto apply = std::make_shared<Button>("Back", [this](Button*) { destroy(); });
 
     apply->setPos({container->getWidth() / 2, container->getHeight() - container->getBorderWidth() * 2});
     apply->setAnchorY(1.f);

@@ -33,38 +33,38 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
 
     HideCursor();
 
-    auto pauseLayer = std::make_shared<Container>();
-    pauseLayer->setBorderWidth(0.f);
-    pauseLayer->setColor({0, 0, 0, 127});
-    pauseLayer->setPos(getSize() / 2);
-    pauseLayer->setSize(getSize());
-    pauseLayer->setTag("center-pause-layer");
-    pauseLayer->setVisible(false);
-    pauseLayer->setEnabled(false);
-    addChild(pauseLayer);
+    auto pauseMenu = std::make_shared<Container>();
+    pauseMenu->setFlag(FLAG_ALWAYS_CENTER, true);
+    pauseMenu->setFlag(FLAG_GUI_SCALE, true);
+    pauseMenu->setColor({0, 0, 0, 0});
+    pauseMenu->setTag("pause-menu");
+    pauseMenu->setBorderWidth(0.f);
+    pauseMenu->setEnabled(false);
+    pauseMenu->setVisible(false);
+    addChild(pauseMenu);
 
     auto btnSize = StyleManager::get()->getValue<Vec2f>(DEFAULT_ELEMENT_SIZE);
     auto border = StyleManager::get()->getValue<float>(DEFAULT_BORDER_WIDTH);
 
     std::list<std::pair<std::string, MiniFunction<void(Button*)>>> const btns = {
-        {"Resume game", [this, pauseLayer](auto) { resume(); }},
+        {"Resume game", [this](auto) { resume(); }},
         {"Back to main menu", [game](auto) {
             game->pushScene(std::make_shared<MainMenuScene>());
             game->clearSceneHistory();
         }}
     };
 
-    auto btnsHeight = btns.size() * btnSize.y + (btns.size() - 1) * border;
-    auto y = (pauseLayer->getHeight() - btnsHeight) / 2;
-
+    auto y = 0.f;
     for(auto& [text, call] : btns) {
         auto btn = std::make_shared<Button>(text, call);
-        btn->setPos({pauseLayer->getWidth() / 2, y});
-        btn->setAnchorY(0.f);
-        pauseLayer->addChild(btn);
+        btn->setPos({0.f, y});
+        btn->setAnchor({0.f, 0.f});
+        pauseMenu->addChild(btn);
         
-        y += btnSize.y + border;
+        y += btn->getHeight() + btn->getBorderWidth();
     }
+
+    pauseMenu->hugContent(); 
 }
 
 PlayScene::~PlayScene() {
@@ -88,6 +88,10 @@ void PlayScene::draw() {
 
     auto mouse = GetMousePosition();
     RenderManager::drawTile("gui.png", 0, {mouse.x, mouse.y, 16.f, 16.f}, COL_WHITE, 0.f, {8.f, 8.f});
+
+    if(m_paused) {
+        RenderManager::drawRect({0.f, 0.f, getWidth(), getHeight()}, {0, 0, 0, 127});
+    }
 
     Scene::draw();
 }
@@ -143,17 +147,17 @@ void PlayScene::update() {
 }
 
 void PlayScene::pause() {
-    auto pauseLayer = getChild<Container>("center-pause-layer");
-    pauseLayer->setVisible(true);
-    pauseLayer->setEnabled(true);
+    auto pauseMenu = getChild<Container>("pause-menu");
+    pauseMenu->setVisible(true);
+    pauseMenu->setEnabled(true);
     m_paused = true;
     ShowCursor();
 }
 
 void PlayScene::resume() {
-    auto pauseLayer = getChild<Container>("center-pause-layer");
-    pauseLayer->setVisible(false);
-    pauseLayer->setEnabled(false);
+    auto pauseMenu = getChild<Container>("pause-menu");
+    pauseMenu->setVisible(false);
+    pauseMenu->setEnabled(false);
     m_paused = false;
     HideCursor();
 }

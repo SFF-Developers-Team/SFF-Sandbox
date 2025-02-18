@@ -11,18 +11,27 @@ Container::Container() : Frame(), m_scrollOffset(0.f), m_scrollable(false) {}
 
 void Container::alignItemsHorizontal(float padding) {
     if(!m_childs.empty()) {
-        float width = 0.f;
+        float width = padding * (m_childs.size() - 1);
 
         for(auto& child : m_childs) {
-            width += child->getWidth();
+            width += child->getScaledWidth();
         }
 
-        auto x = (getWidth() - width) / 2 + m_childs[0]->getWidth() * m_childs[0]->getAnchorX();
+        auto x = (getWidth() - width) / 2;
 
         for(auto& child : m_childs) {
             child->setPos({x, getHeight() / 2});
-            x += child->getWidth();
+            x += child->getScaledWidth() + padding;
         }
+    }
+}
+
+void Container::hugContent() {
+    setSize({0.f, 0.f});
+
+    for(auto& child : m_childs) {
+        m_bounds.width = std::max(m_bounds.width, child->getX() + child->getWidth()); 
+        m_bounds.height = std::max(m_bounds.height, child->getY() + child->getHeight()); 
     }
 }
 
@@ -71,16 +80,15 @@ void Container::update() {
     }
 
     if(m_scrollable) {
-        auto bounds = getWorldBounds();
-        auto mouse = GetMousePosition();
-        auto totalHeight = calculateTotalHeight();
+        auto const totalHeight = calculateTotalHeight();
+        auto const contentHeight = (m_bounds.height - m_border * 2);
 
         if(totalHeight > m_bounds.height) {
-            if(bounds.contains({mouse.x, mouse.y}) && GetMouseWheelMove() != 0.f) {
+            if(isMouseHover() && GetMouseWheelMove() != 0.f) {
                 m_scrollOffset -= GetMouseWheelMove() * 10.f;
             }
 
-            m_scrollOffset = std::clamp(m_scrollOffset, 0.f, totalHeight - bounds.height + m_border);
+            m_scrollOffset = std::clamp(m_scrollOffset, 0.f, totalHeight - contentHeight);
         }
     }
 }
@@ -89,11 +97,18 @@ void Container::draw() {
     Frame::draw();
     auto const bounds = getWorldBounds();
     auto const totalHeight = calculateTotalHeight();
-    auto const contentHeight = bounds.height - m_border * 2;
+    auto const contentHeight = m_bounds.height - m_border * 2;
     auto const borderColor = m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F};
     auto const scrollBar = totalHeight > bounds.height && m_scrollable;
 
-    BeginScissorMode(bounds.x + m_border, bounds.y + m_border, bounds.width - m_border * 2, contentHeight);
+    Rectf const cutRect = {
+        bounds.x + m_border * getGlobalScaleX(),
+        bounds.y + m_border * getGlobalScaleY(),
+        bounds.width - (m_border * 2) * getGlobalScaleX(),
+        contentHeight * getGlobalScaleY()
+    };
+
+    BeginScissorMode(cutRect.x, cutRect.y, cutRect.width, cutRect.height);
         for(auto& node : m_childs) {
             if(node->isVisible()) {
                 rlPushMatrix();
@@ -107,7 +122,7 @@ void Container::draw() {
         }
 
         if(scrollBar) {
-            RenderManager::drawRect({bounds.width - m_border * 2, m_border + (m_scrollOffset / totalHeight) * contentHeight, m_border, (contentHeight / totalHeight) * contentHeight}, borderColor);
+            RenderManager::drawRect({m_bounds.width - m_border * 2, m_border + (m_scrollOffset / totalHeight) * contentHeight, m_border, (contentHeight / totalHeight) * contentHeight}, borderColor);
         }
     EndScissorMode();
 }

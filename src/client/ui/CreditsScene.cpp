@@ -19,7 +19,7 @@ CreditsScene::CreditsScene() {
     // clang-format on
 
     auto container = std::make_shared<Container>();
-    container->setSize({650, 300});
+    container->setSize({500, 250});
     container->setFlag(FLAG_ALWAYS_CENTER, true);
     container->setFlag(FLAG_GUI_SCALE, true);
     addChild(container);
@@ -46,6 +46,13 @@ CreditsScene::CreditsScene() {
     m_developersBox = std::make_shared<Container>();
     m_licensesBox = std::make_shared<Container>();
 
+
+    auto raylib = std::make_shared<SpriteNode>("raylib");
+    raylib->setSize({128.f, 128.f});
+    raylib->setAnchor({0.f, 1.f});
+    raylib->setPos({5.f, container->getHeight() - 5.f});
+    container->addChild(raylib);
+
     // developers container
     {
         m_developersBox->setBorderWidth(0.f);
@@ -58,22 +65,24 @@ CreditsScene::CreditsScene() {
         for(auto i = 0; i < devs.size(); i++) {
             auto tile = std::make_shared<Tile>("developers.png", i);
             tile->setSize({128.f, 128.f});
+            tile->setAnchorX(0.f);
+            tile->setScale(0.5f);
             m_developersBox->addChild(tile);
         }
 
-        m_developersBox->alignItemsHorizontal(16.f);
+        m_developersBox->alignItemsHorizontal(32.f);
 
         for(auto i = 0; i < devs.size(); i++) {
             auto child = m_developersBox->getChild(i);
 
             auto name = std::make_shared<Text>("boldfont", devs[i].name);
-            name->setPos({child->getX(), child->getY() + 84.f});
-            name->setWidth(child->getWidth());
+            name->setPos({child->getX() + child->getScaledWidth() / 2, child->getY() + 20.f});
+            name->setWidth(child->getScaledWidth());
             m_developersBox->addChild(name);
 
             auto role = std::make_shared<Text>("font", devs[i].role);
-            role->setPos({child->getX(), name->getY() + 30.f});
-            name->setWidth(child->getWidth());
+            role->setPos({child->getX() + child->getScaledWidth() / 2, name->getY() + 20.f});
+            name->setWidth(child->getScaledWidth());
             m_developersBox->addChild(role);
         }
 
@@ -97,7 +106,7 @@ CreditsScene::CreditsScene() {
         auto libsList = std::make_shared<List>(std::vector<std::string>({"enet", "GitHash", "perlin-noise", "raylib", "toml", "miniz"}), [this](auto, int i) {
             m_licenseText->setText(licensesText[i]);
             m_licenseText->setWordWrap(true, true); // for auto-height
-            m_licensesBox->resetScroll();
+            m_textBox->resetScroll();
         });
 
         auto const borderw = libsList->getBorderWidth();
@@ -122,10 +131,4 @@ CreditsScene::CreditsScene() {
         m_licenseText->setWordWrap(true, true);
         m_textBox->addChild(m_licenseText);
     }
-
-    auto raylib = std::make_shared<SpriteNode>("raylib");
-    raylib->setSize({128.f, 128.f});
-    raylib->setAnchor({0.f, 1.f});
-    raylib->setPos({container->getWidth() * container->getAnchorX() + 5.f, container->getHeight() * container->getAnchorY() - 5.f});
-    container->addChild(raylib);
 }

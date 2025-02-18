@@ -28,6 +28,7 @@ public:
     std::vector<std::shared_ptr<Node>> const& getChildren() { return m_childs; }
 
     void sortChildsZ();
+    void hugContent();
 
     template<typename T>
     std::shared_ptr<T> getChild(size_t index) {

@@ -58,7 +58,7 @@ void DropDown::draw() {
             }
 
             if(scrollBar) {
-                RenderManager::drawRect({bounds.width - m_border * 2, rect.y + m_border + (m_scrollOffset / totalHeight) * conHeight, m_border, (conHeight / totalHeight) * conHeight}, borderColor);
+                RenderManager::drawRect({m_bounds.width - m_border * 2, rect.y + m_border + (m_scrollOffset / totalHeight) * conHeight, m_border, (conHeight / totalHeight) * conHeight}, borderColor);
             }
         EndScissorMode();
     }

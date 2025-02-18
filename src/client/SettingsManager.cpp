@@ -45,10 +45,11 @@ SettingsManager::SettingsManager() {
 
     auto game = Game::get();
     auto audio = SoundManager::get();
-    game->setGuiScale(getValue<int>("video.guiscale", 1));
-    audio->setMusicVolume(getValue<float>("audio.music", 0.5f));
-    audio->setSoundVolume(getValue<float>("audio.sound", 0.5f));
-    SetMasterVolume(getValue<float>("audio.volume", 1.f));
+    audio->setMusicVolume(getValue<float>("audio.volume.music", 0.5f));
+    audio->setSoundVolume(getValue<float>("audio.volume.sound", 0.5f));
+    SetMasterVolume(getValue<float>("audio.volume.general", 1.f));
+    game->setGuiScale(getValue<int>("video.scale", 1));
+    (getValue<bool>("video.vsync", true) ? SetWindowState(FLAG_VSYNC_HINT) : ClearWindowState(FLAG_VSYNC_HINT));
 }
 
 int SettingsManager::getKeybind(std::string const& action) {
