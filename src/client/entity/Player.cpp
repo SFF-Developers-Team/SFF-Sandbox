@@ -160,7 +160,6 @@ void Player::onTickControls() {
     auto gravitation = (!m_fly) ? 0.02f : 0.0f;
     auto layer = !IsKeyDown(KEY_LEFT_ALT);
     auto mp = Multiplayer::get();
-    auto stm = SettingsManager::get();
 
     if (canAccessBlock(target, layer)) {
         if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && canDestroyBlock(target, layer)) {
@@ -176,7 +175,6 @@ void Player::onTickControls() {
             }
 
             if (mp->connected()) {
-                // mp->onBlockChanged({target.x, target.y}, layer);
                 auto pak = Packet(Header::BLOCK_DESTROY);
                 pak.add<int32_t>(target.x);
                 pak.add<int32_t>(target.y);
