@@ -157,11 +157,8 @@ void Server::displayHelp() {
 void Server::displayList() {
     auto players = m_world->getPlayers();
     logD("{}/{} Players", players.size(), config["max-players"].value_or(32));
-    logD("{}", players[1]->getUsername());
-    for (int i = 0; i < players.size(); i++) {
-        if (i > 0) {
-            logD("{}", players[i]->getUsername());
-        }
+    for(auto& [id, player] : players) {
+        logD("{} | {}", id, player->getUsername());    
     }
 }
 

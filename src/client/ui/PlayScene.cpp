@@ -40,7 +40,6 @@ PlayScene::~PlayScene() {
 
 void PlayScene::draw() {
     auto rm = RenderManager::get();
-
     BeginMode2D(m_player->getCamera());
         rm->renderWorld(m_world, m_player);
     EndMode2D();
@@ -58,12 +57,14 @@ void PlayScene::draw() {
 
     if (IsKeyDown(KEY_TAB) && m_online) {
         auto players = m_world->getPlayers();
-        DrawRectangle(static_cast<float>(GetScreenWidth() - 32 * 16) / 2, 0, static_cast<float>(32 * 16), 32 *  players.size(), GRAY);
-        for (int i = 0; i < m_world->getPlayers().size(); i++) {
-            if (i != 0) {
-                logD("Username: {}", players[i]->getUsername());
-                DrawText(players[i]->getUsername().c_str(), static_cast<float>(GetScreenWidth() - 32 * 16) / 2, i * 36, 25, WHITE);
+        int playerCount = 0;
+        DrawRectangle(static_cast<float>(GetScreenWidth() - 32 * 16) / 2, 0, static_cast<float>(32 * 16), 32 * (players.size() + 1), {0, 0, 0, 100});
+        for(auto& [id, player] : players) {
+            DrawText(Game::get()->getUsername().c_str(), static_cast<float>(GetScreenWidth() - 32 * 16) / 2, 0, 25, WHITE);
+            if(player->getUsername() != Game::get()->getUsername()) {
+                DrawText(player->getUsername().c_str(), static_cast<float>(GetScreenWidth() - 32 * 16) / 2, playerCount * 25 + 25, 25, WHITE);
             }
+            playerCount++;
         }
     }
 }
