@@ -29,11 +29,12 @@ std::string const Block::idToString(ID id) {
         case DIAMOND_ORE: return "Diamond ore";
         case LAPIZ_ORE: return "Lapiz ore";
         case BOOKSHELF: return "Bookshelf";
+        case FLOWER_POT: return "Flower pot";
+        case FURHANCE:
+        case ACTIVE_FURHANCE: return "Furhance";
         default: return "Unknown";
     }
 }
-
-void Block::update() {}
 
 void Block::setPos(int32_t x, int32_t y, uint8_t layer) {
     m_x = x;

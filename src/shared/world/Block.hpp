@@ -26,7 +26,7 @@ public:
         DIAMOND_ORE,
         LAPIZ_ORE,
         BOOKSHELF,
-        FLOWER,
+        FLOWER_POT,
         FURHANCE,
         ACTIVE_FURHANCE
     };
@@ -54,7 +54,8 @@ public:
 
     Rectf getHitbox();
 
-    virtual void update();
+    virtual void onTick() {}
+    virtual void onRandomTick() {}
 
     void setPos(int32_t x, int32_t y, uint8_t layer);
     void setID(ID id) { m_id = id; }

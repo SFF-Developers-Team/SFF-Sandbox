@@ -24,15 +24,17 @@ private:
     Direction m_prevDir;
 
     float m_lastAnimFrameTime = 0.f;
+    float m_forward;
 
 public:
     Player(std::shared_ptr<World> world);
 
     void onTick() override;
     void update();
-    void updateControls();
+    void onTickControls();
     void updateCamera();
     void updateAnimation();
+    void updateControls();
 
     bool isChunkInView(std::shared_ptr<Chunk> chunk);
     bool isBlockInView(std::shared_ptr<Block> block);
@@ -46,4 +48,6 @@ public:
 
     Camera2D& getCamera() { return m_camera; }
     std::vector<std::shared_ptr<Block>>& getInventory() { return m_inventory; }
+
+    bool addToInventory(std::shared_ptr<Block> block);
 };

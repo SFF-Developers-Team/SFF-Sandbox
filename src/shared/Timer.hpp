@@ -2,12 +2,12 @@
 #include <chrono>
 
 class Timer {
-  public:
+public:
     Timer(float ticksPerSecond);
     void advanceTime();
     uint32_t getTicks();
 
-  private:
+private:
     int64_t getNanos();
 
     std::chrono::high_resolution_clock m_clock;

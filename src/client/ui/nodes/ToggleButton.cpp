@@ -32,15 +32,3 @@ void ToggleButton::update() {
         m_callback(this, m_flag);
     }
 }
-
-bool ToggleButton::getValue() {
-    return m_flag;
-}
-
-void ToggleButton::setValue(bool flag) {
-    m_flag = flag;
-}
-
-void ToggleButton::setText(std::string const& text) {
-    m_text = text;
-}

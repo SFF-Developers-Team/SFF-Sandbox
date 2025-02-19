@@ -12,10 +12,11 @@
 #include <Game.hpp>
 #include <ui/MainMenuScene.hpp>
 #include <ui/nodes/Hotbar.hpp>
+#include <ui/nodes/Inventory.hpp>
 #include <chrono>
 #include <list>
 
-PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(60)), m_online(isOnline), m_paused(false) {
+PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(60)), m_online(isOnline), m_paused(false), m_inventoryEnabled(false) {
     auto game = Game::get();
     m_world = game->getWorld();
     m_player = game->getPlayer();
@@ -47,7 +48,7 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     auto border = StyleManager::get()->getValue<float>(DEFAULT_BORDER_WIDTH);
 
     std::list<std::pair<std::string, MiniFunction<void(Button*)>>> const btns = {
-        {"Resume game", [this](auto) { resume(); }},
+        {"Resume game", [this](auto) { setPaused(false); }},
         {"Back to main menu", [game](auto) {
             game->pushScene(std::make_shared<MainMenuScene>());
             game->clearSceneHistory();
@@ -70,7 +71,16 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     hotbar->setAnchorY(0.f);
     hotbar->setPos({getWidth() / 2, 0.f});
     hotbar->setFlag(FLAG_GUI_SCALE, true);
+    // hotbar->setTag("hotbar");
     addChild(hotbar);
+
+    auto inventory = std::make_shared<Inventory>(m_player->getInventory());
+    inventory->setFlag(FLAG_GUI_SCALE, true);
+    inventory->setFlag(FLAG_ALWAYS_CENTER, true);
+    inventory->setVisible(false);
+    inventory->setEnabled(false);
+    inventory->setTag("inventory");
+    addChild(inventory);
 }
 
 PlayScene::~PlayScene() {
@@ -84,18 +94,11 @@ void PlayScene::draw() {
         RenderManager::renderWorld(m_world, m_player);
     EndMode2D();
 
-    auto selectedBlock = m_player->getSelectedBlock();
-
-    if (selectedBlock) {
-        RenderManager::renderBlock({GetScreenWidth() - 42.f, 10.f, 32.f, 32.f}, selectedBlock);
-    }
-
     if(m_paused) {
         RenderManager::drawRect({0.f, 0.f, getWidth(), getHeight()}, {0, 0, 0, 127});
     }
 
     Scene::draw();
-
 
     auto mouse = GetMousePosition();
     RenderManager::drawTile("gui.png", 0, {mouse.x, mouse.y, 16.f, 16.f}, COL_WHITE, 0.f, {8.f, 8.f});
@@ -117,6 +120,10 @@ void PlayScene::update() {
             seconds -= minutes;
 
             Debug::get()->setString(DebugID::WORLD_TIME_SPENT, "Time spent in world: {} {} {}", hours, minutes, seconds);
+        }
+
+        if(!m_inventoryEnabled) {
+            m_player->updateControls();
         }
 
         m_player->update();
@@ -146,25 +153,32 @@ void PlayScene::update() {
         CloseWindow();
     }
 
-    if(IsKeyPressed(KEY_ESCAPE)) {
-        (m_paused ? resume() : pause());
+    if(IsKeyPressed(KEY_ESCAPE) && !m_inventoryEnabled) {
+        setPaused(!m_paused);
+    }
+
+    if(IsKeyPressed(KEY_ESCAPE) && m_inventoryEnabled) {
+        setEnabledInventory(false);
+    }
+
+    if(IsKeyPressed(KEY_E)) {
+        setEnabledInventory(!m_inventoryEnabled);
     }
 
     Scene::update();
 }
 
-void PlayScene::pause() {
+void PlayScene::setPaused(bool paused) {
     auto pauseMenu = getChild<Container>("pause-menu");
-    pauseMenu->setVisible(true);
-    pauseMenu->setEnabled(true);
-    m_paused = true;
-    ShowCursor();
+    pauseMenu->setVisible(paused);
+    pauseMenu->setEnabled(paused);
+    m_paused = paused;
+    (paused ? ShowCursor() : HideCursor());
 }
 
-void PlayScene::resume() {
-    auto pauseMenu = getChild<Container>("pause-menu");
-    pauseMenu->setVisible(false);
-    pauseMenu->setEnabled(false);
-    m_paused = false;
-    HideCursor();
+void PlayScene::setEnabledInventory(bool isOpen) {
+    auto inventory = getChild<Inventory>("inventory");
+    inventory->setVisible(isOpen);
+    inventory->setEnabled(isOpen);
+    m_inventoryEnabled = isOpen;
 }

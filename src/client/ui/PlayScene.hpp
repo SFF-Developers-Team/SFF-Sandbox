@@ -14,6 +14,7 @@ private:
 
     bool m_online;
     bool m_paused;
+    bool m_inventoryEnabled;
 
 public:
     PlayScene(bool isOnline = false);
@@ -22,6 +23,6 @@ public:
     void draw() override;
     void update() override;
 
-    void pause();
-    void resume();
+    void setPaused(bool paused);
+    void setEnabledInventory(bool isOpen);
 };

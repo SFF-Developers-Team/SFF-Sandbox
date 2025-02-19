@@ -13,10 +13,8 @@ public:
     void draw();
     void update();
 
-    bool getValue();
-    void setValue(bool);
+    bool getValue() { return m_flag; }
+    void setValue(bool value) { m_flag = value; }
 
-    void triggerCallback();
-
-    void setText(std::string const& text);
+    void setText(std::string const& text) { m_text = text; }
 };

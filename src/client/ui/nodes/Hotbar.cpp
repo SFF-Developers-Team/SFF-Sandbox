@@ -22,7 +22,10 @@ void Hotbar::draw() {
         Rectf block = {cell.x + (cell.width - blockSize) / 2, cell.y + (cell.height - blockSize) / 2, blockSize, blockSize};
 
         RenderManager::drawFrame(cell, m_color, m_border);
-        RenderManager::renderBlock(block, inventory[i]);
+        
+        if(inventory[i] != nullptr) {
+            RenderManager::renderBlock(block, inventory[i]);
+        }
 
         if(i == selected) {
             RenderManager::drawRectLines(cell, COL_WHITE, m_border);
