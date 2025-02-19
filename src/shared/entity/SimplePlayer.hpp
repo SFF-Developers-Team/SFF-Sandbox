@@ -53,6 +53,6 @@ public:
     void setID(PlayerID id) { m_id = id; }
 
     auto getAnimCurrentFrame() { return m_animFrame; }
-    auto getUsername() { return m_username; }
+    std::string const& getUsername() { return m_username; }
     auto getID() { return m_id; }
 };

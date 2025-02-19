@@ -1,6 +1,8 @@
 #include <SettingsManager.hpp>
 #include <filesystem>
 #include <fstream>
+#include <sstream>
+#include <string>
 #include <Logger.hpp>
 #include <Game.hpp>
 #include <SoundManager.hpp>
@@ -55,7 +57,6 @@ SettingsManager::SettingsManager() {
 int SettingsManager::getKeybind(std::string const& action) {
     return getValue<int>("keyboard." + action, 0);
 }
-
 void SettingsManager::setKeybind(std::string const& action, int key) {
     setValue("keyboard." + action, key);
 }

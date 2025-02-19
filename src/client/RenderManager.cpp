@@ -213,7 +213,7 @@ void RenderManager::renderSimplePlayer(std::shared_ptr<SimplePlayer> player) {
     }
 }
 
- void RenderManager::renderPlayerTexture(Vec2f pos, std::string const& key, Vec2f size, int animFrame, Direction direction, std::string const& username, float nameHeight, float nameSpacing) {
+void RenderManager::renderPlayerTexture(Vec2f pos, std::string const& key, Vec2f size, int animFrame, Direction direction, std::string const& username, float nameHeight, float nameSpacing) {
     auto tex = TextureManager::get()->getTexture(key);
 
     float frameWidth = tex.width / 17;

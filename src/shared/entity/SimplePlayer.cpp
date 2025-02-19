@@ -19,7 +19,7 @@ const char* SimplePlayer::getAnimationName(AnimationType type) {
         case PLAYER_HURT: return "PLAYER_HURT";
         case PLAYER_SIT: return "PLAYER_SIT";
         case PLAYER_CART: return "PLAYER_CART";
-        default: return "PLAYER_UNKNOWN";
+        default: return "UNKNOWN";
     }
     //clang-format on
 }

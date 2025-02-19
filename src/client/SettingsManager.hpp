@@ -25,7 +25,6 @@ public:
     }
 
     SettingsManager();
-
     template<typename T>
     void setValue(std::string const& path, T value, bool save = true) {
         toml::table* current = &m_settings;
@@ -55,7 +54,7 @@ public:
 
         return *m_settings.at_path(path).value<T>();
     }
-
+    std::string getKeyName(int key);
     int getKeybind(std::string const& action);
     void setKeybind(std::string const& action, int key);
 

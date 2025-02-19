@@ -9,10 +9,6 @@
 #include <SettingsManager.hpp>
 #include <StyleManager.hpp>
 
-void Game::clearSceneHistory() {
-    m_sceneHistory.clear();
-}
-
 void Game::pushScene(std::shared_ptr<Scene> scene) {
     if(m_scene != nullptr) {    
         m_sceneHistory.push_back(m_scene);
@@ -49,7 +45,6 @@ void Game::checkSceneFlags(std::shared_ptr<Container> scene) {
 }
 
 void Game::init(std::vector<std::string>& args) {
-    SetConfigFlags(FLAG_VSYNC_HINT);
     InitWindow(1280, 720, "SFF Sandbox");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     InitAudioDevice();
@@ -60,12 +55,10 @@ void Game::init(std::vector<std::string>& args) {
     // Load assets
     auto sm = SoundManager::get();
     auto tm = TextureManager::get();
+    auto stm = SettingsManager::get();
 
     tm->loadTexture("assets/player.png");
     tm->loadTexture("assets/sff.png");
-    tm->loadTexture("assets/player.png");
-    tm->loadTexture("assets/crosshair.png");
-    tm->loadTexture("assets/selected.png");
     tm->loadTexture("assets/raylib.png");
     tm->loadTileMap("assets/blocks.png", {16, 16});
     tm->loadTileMap("assets/gui.png", {16, 16});

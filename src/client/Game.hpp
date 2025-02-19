@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <deque>
-#include <Types.hpp>
+
 
 class Scene;
 class World;
@@ -35,7 +35,7 @@ public:
     void update();
     void destroy();
     
-    void clearSceneHistory();
+    void clearSceneHistory() { m_sceneHistory.clear(); }
     void pushScene(std::shared_ptr<Scene> scene);
     void popScene();
 

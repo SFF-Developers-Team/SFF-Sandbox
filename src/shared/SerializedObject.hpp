@@ -25,7 +25,7 @@ public:
         LOAD_PLAYER, UNLOAD_PLAYER,
         BLOCK_PLACE, BLOCK_DESTROY,
 
-        NETWORK_ERROR, OK, KEEP_ALIVE, PACKET, ARRAY,
+        NETWORK_ERROR, ARRAY,
         NULL_PACKET = 0xFF
     };
 
@@ -56,8 +56,9 @@ public:
 
     template<typename T>
     void add(T value) {
-        for(int i = 0; i < sizeof(T); i++) push_back(((uint8_t*)&value)[i]);
-    }
+        for(int i = 0; i < sizeof(T); i++) {
+            push_back(((uint8_t*)&value)[i]);
+        }
 
     void add(std::string str) {
         return add(str.data(), str.size());
@@ -84,6 +85,23 @@ public:
         }
 
         m_offset += bytes.size();
+    }
+
+    void add(const char* str, size_t size) {
+        logD("Adding str {} | size {} | offset {}", str, size, m_offset);
+        resize(m_offset + size);
+        std::copy(str, str + size, begin() + m_offset);
+
+        if(str[size - 1] != 0) {
+            push_back(0);
+            size++;
+        }
+
+        m_offset += size;
+    }
+
+    void add(std::string const& str) {
+        return add(str.c_str(), str.size());
     }
 
     /// @brief Get N-count bytes from serialized object
@@ -123,8 +141,22 @@ public:
         
         if(m_offset + len > size()) return defaultVal;
 
-        auto ret = std::string(begin() + m_offset, begin() + m_offset + len);
-        m_offset += len;
+        while(m_offset < size() && at(m_offset) != 0) {
+            if(m_offset + 1 >= size()) {
+                return defaultVal;
+            }
+            
+            m_offset++;
+            len++;
+        }
+
+        logD("get const char {}", len);
+
+        auto ret = new char[len + 1];
+        std::memset(ret, 0, len + 1);
+        std::copy(begin() + m_offset - len, begin() + m_offset, ret);
+
+        logD("Parsed str len {}: {}", len, ret);
 
         return ret;
     }

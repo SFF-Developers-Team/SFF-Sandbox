@@ -12,6 +12,9 @@
 #include <fstream>
 
 using namespace std::string_view_literals;
+std::string_view const help = R"(help - display this message
+list - display players on server
+stop - stop server)";
 
 void Server::init() {
 #ifdef _WIN32
@@ -45,7 +48,7 @@ void Server::init() {
     auto maxclients = config["max-players"].value_or(32);
     auto inbandwidth = config["incoming-bandwidth"].value_or(0);
     auto outbandwidth = config["outcoming-bandwidth"].value_or(0);
-    m_server = enet_host_create(&address, maxclients, 4, inbandwidth, outbandwidth);
+    m_server = enet_host_create(&address, maxclients, Channel::LAST_CHANNEL, inbandwidth, outbandwidth);
 
     if(m_server == NULL) {
         logE("An error occurred while trying to create an ENet server host.");
@@ -93,6 +96,8 @@ void Server::inputThread() {
 
 
         if(args[0] == "stop") destroy();
+        if(args[0] == "help") displayHelp();
+        if(args[0] == "list") displayList();
     }
 }
 
@@ -144,6 +149,18 @@ void Server::destroy() {
     Server::get()->getWorld()->save();
 
     std::exit(0);
+}
+
+void Server::displayHelp() {
+    logM("{}", help);
+}
+
+void Server::displayList() {
+    auto players = m_world->getPlayers();
+    logD("{}/{} Players", players.size(), config["max-players"].value_or(32));
+    for(auto& [id, player] : players) {
+        logD("{} | {}", id, player->getUsername());    
+    }
 }
 
 void Server::broadcast(std::shared_ptr<SerializedObject> obj, Channel channel, bool reliable) {
@@ -201,7 +218,7 @@ PlayerID Server::joinPlayer(std::string const& username) {
     packet.add(playerId);
     packet.add(username);
 
-    broadcast(packet, NOTIFICATIONS, true);
+    broadcast(packet, EVERYTHING, true);
 
     return playerId;
 }
@@ -213,7 +230,7 @@ void Server::disconnectPlayer(std::shared_ptr<Client> client, DisconnectReasonID
     m_world->unloadPlayer(id);
 
     std::erase_if(m_clients, [&](auto& pair) { return pair.second->getPlayerID() == id; });
-    broadcast(Packet(Header::UNLOAD_PLAYER, id), NOTIFICATIONS);
+    broadcast(Packet(Header::UNLOAD_PLAYER, id), EVERYTHING);
 }
 
 std::string const Server::getDisconnectReasonByID(DisconnectReasonID id) {

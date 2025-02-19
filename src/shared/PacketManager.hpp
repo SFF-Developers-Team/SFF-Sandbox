@@ -11,7 +11,8 @@ using Header = SerializedObject::Header;
 enum Channel : uint8_t {
     EVERYTHING,
     BLOCKS,
-    NOTIFICATIONS
+    NOTIFICATIONS,
+    LAST_CHANNEL
 };
 
 class PacketManager {
