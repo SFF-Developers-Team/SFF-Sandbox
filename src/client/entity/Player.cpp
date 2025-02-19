@@ -8,7 +8,7 @@
 #include <Utils.hpp>
 #include <Game.hpp>
 
-Player::Player(std::shared_ptr<World> world) : SimplePlayer::SimplePlayer(world) {
+Player::Player(std::shared_ptr<World> world) : SimplePlayer::SimplePlayer(world), m_selectedBlock(0) {
     m_header = Header::PLAYER;
     m_camera.zoom = 50.0f;
     m_camera.rotation = 0.0f;
@@ -38,6 +38,10 @@ Player::Player(std::shared_ptr<World> world) : SimplePlayer::SimplePlayer(world)
     m_inventory.push_back(std::make_shared<Block>(Block::ID::COBLESTONE));
     m_inventory.push_back(std::make_shared<Block>(Block::ID::PLANKS));
     m_inventory.push_back(std::make_shared<Block>(Block::ID::BRICKS));
+    m_inventory.push_back(std::make_shared<Block>(Block::ID::BOOKSHELF));
+    m_inventory.push_back(std::make_shared<Block>(Block::ID::FLOWER));
+    m_inventory.push_back(std::make_shared<Block>(Block::ID::FURHANCE));
+    m_inventory.push_back(std::make_shared<Block>(Block::ID::ACTIVE_FURHANCE));
 
     for (auto& col : colors) {
         auto wool = std::make_shared<Block>(Block::ID::WOOL);
@@ -317,13 +321,12 @@ void Player::update() {
     if (IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.f) {
         m_camera.zoom -= wheel * 10.f;
     }
-
-    if (!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.0f) {
-        m_selectedBlock += (wheel > 0 ? -1 : 1);
-        if (m_selectedBlock >= m_inventory.size())
-            m_selectedBlock = 0;
-        if (m_selectedBlock < 0)
-            m_selectedBlock = static_cast<uint8_t>(m_inventory.size()) - 1;
+    
+    if(wheel != 0.f) {
+        (wheel > 0.f ? m_selectedBlock++ : m_selectedBlock--);
+        
+        if(m_selectedBlock < 0) m_selectedBlock = 8;
+        if(m_selectedBlock >= 9) m_selectedBlock = 0;
     }
 
     if (IsKeyPressed(stm->getKeybind("fly"))) {

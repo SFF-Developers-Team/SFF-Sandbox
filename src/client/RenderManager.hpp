@@ -16,6 +16,7 @@ namespace RenderManager {
     void drawText(std::string const& font, std::string const& text, Vec2f pos, Col4u color = COL_WHITE, float fontSize = 0.f, Vec2f origin = {0.f, 0.f}, float spacing = 1.f);
     void drawRect(Rectf rect, Col4u col);
     void drawRectLines(Rectf rect, Col4u col, float thick);
+    void drawFrame(Rectf rect, Col4u col, float borderSize);
 
     Vec2f getTextSize(std::string const& text, std::string const& font, float fontSize, float spacing = 1.f);
 

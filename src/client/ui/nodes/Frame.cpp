@@ -11,21 +11,6 @@ Frame::Frame() : Node() {
 }
 
 void Frame::draw() {
-    auto rect = Rectf {0.f, 0.f, getWidth(), getHeight()};
-
-    RenderManager::drawRect(rect, m_color);
-    
-    if(m_border > 0.f) {
-        RenderManager::drawRectLines(rect, m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F}, m_border);
-    }
-
     Node::draw();
-}
-
-void Frame::setBorderWidth(float width) {
-    m_border = width;
-}
-
-float Frame::getBorderWidth() {
-    return m_border;
+    RenderManager::drawFrame({0.f, 0.f, getWidth(), getHeight()}, m_color, m_border);
 }

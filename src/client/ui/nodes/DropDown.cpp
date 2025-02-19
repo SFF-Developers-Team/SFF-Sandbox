@@ -33,8 +33,7 @@ void DropDown::draw() {
         auto const scrollBar = totalHeight > m_maxHeight;
         auto const rect = Rectf {0.f, m_bounds.height + m_border, m_bounds.width, conHeight};
 
-        RenderManager::drawRect(rect, m_color);
-        RenderManager::drawRectLines(rect, m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F}, m_border);
+        RenderManager::drawFrame(rect, m_color, m_border);
 
         Rectf cutList = {
             bounds.x + m_border * getGlobalScaleX(),
@@ -52,8 +51,7 @@ void DropDown::draw() {
                     fontsize
                 };
 
-                RenderManager::drawRect(cell, m_color);
-                RenderManager::drawRectLines(cell, borderColor, m_border);
+                RenderManager::drawFrame(cell, m_color, m_border);
                 RenderManager::drawText("boldfont", m_elements[i], {cell.width / 2, cell.y + cell.height / 2}, COL_WHITE, fontsize, {0.5f, 0.5f});
             }
 

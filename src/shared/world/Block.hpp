@@ -24,7 +24,11 @@ public:
         IRON_ORE,
         GOLD_ORE,
         DIAMOND_ORE,
-        LAPIZ_ORE
+        LAPIZ_ORE,
+        BOOKSHELF,
+        FLOWER,
+        FURHANCE,
+        ACTIVE_FURHANCE
     };
 
     enum TagID : uint8_t {

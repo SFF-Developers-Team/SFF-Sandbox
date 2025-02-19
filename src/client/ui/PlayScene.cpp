@@ -11,7 +11,7 @@
 #include <Timer.hpp>
 #include <Game.hpp>
 #include <ui/MainMenuScene.hpp>
-
+#include <ui/nodes/Hotbar.hpp>
 #include <chrono>
 #include <list>
 
@@ -64,7 +64,13 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
         y += btn->getHeight() + btn->getBorderWidth();
     }
 
-    pauseMenu->hugContent(); 
+    pauseMenu->hugContent();
+
+    auto hotbar = std::make_shared<Hotbar>(m_player);
+    hotbar->setAnchorY(0.f);
+    hotbar->setPos({getWidth() / 2, 0.f});
+    hotbar->setFlag(FLAG_GUI_SCALE, true);
+    addChild(hotbar);
 }
 
 PlayScene::~PlayScene() {
@@ -84,16 +90,17 @@ void PlayScene::draw() {
         RenderManager::renderBlock({GetScreenWidth() - 42.f, 10.f, 32.f, 32.f}, selectedBlock);
     }
 
-    Debug::get()->draw();
-
-    auto mouse = GetMousePosition();
-    RenderManager::drawTile("gui.png", 0, {mouse.x, mouse.y, 16.f, 16.f}, COL_WHITE, 0.f, {8.f, 8.f});
-
     if(m_paused) {
         RenderManager::drawRect({0.f, 0.f, getWidth(), getHeight()}, {0, 0, 0, 127});
     }
 
     Scene::draw();
+
+
+    auto mouse = GetMousePosition();
+    RenderManager::drawTile("gui.png", 0, {mouse.x, mouse.y, 16.f, 16.f}, COL_WHITE, 0.f, {8.f, 8.f});
+
+    Debug::get()->draw();
 }
 
 void PlayScene::update() {

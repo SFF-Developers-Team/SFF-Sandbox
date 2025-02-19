@@ -21,6 +21,14 @@ std::string const Block::idToString(ID id) {
         case WOOL: return "Wool";
         case BEDROCK: return "Bedrock";
         case BRICKS: return "Bricks";
+        case OAK_LOG: return "Oak log";
+        case LEAVES: return "Leaves";
+        case COAL_ORE: return "Coal ore";
+        case IRON_ORE: return "Iron ore";
+        case GOLD_ORE: return "Gold ore";
+        case DIAMOND_ORE: return "Diamond ore";
+        case LAPIZ_ORE: return "Lapiz ore";
+        case BOOKSHELF: return "Bookshelf";
         default: return "Unknown";
     }
 }

@@ -12,6 +12,7 @@ CreditsScene::CreditsScene() {
     std::vector<Developer> const devs = {
         {"Del", "Artist"},
         {"e2e4", "Artist"},
+        {"eban1ss1mo", "Artist"},
         {"InviseDivine", "Programmer"},
         {"Kolyah35", "Programmer"},
         {"dogotrigger", "Programmer"},
@@ -19,7 +20,7 @@ CreditsScene::CreditsScene() {
     // clang-format on
 
     auto container = std::make_shared<Container>();
-    container->setSize({500, 250});
+    container->setSize({600, 250});
     container->setFlag(FLAG_ALWAYS_CENTER, true);
     container->setFlag(FLAG_GUI_SCALE, true);
     addChild(container);

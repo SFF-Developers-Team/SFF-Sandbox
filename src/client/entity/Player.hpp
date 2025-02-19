@@ -13,7 +13,7 @@ class Player : public SimplePlayer {
 private:
     Camera2D m_camera;
     std::vector<std::shared_ptr<Block>> m_inventory;
-    int8_t m_selectedBlock = 0;
+    int8_t m_selectedBlock;
 
     bool m_sneak = false;
     bool m_fly = false;
@@ -42,8 +42,8 @@ public:
     
     Vec2i getTargetBlock();
     std::shared_ptr<Block> getSelectedBlock();
+    int8_t getSelectedIndex() { return m_selectedBlock; }
 
-    Camera2D& getCamera() {
-        return m_camera;
-    }
+    Camera2D& getCamera() { return m_camera; }
+    std::vector<std::shared_ptr<Block>>& getInventory() { return m_inventory; }
 };
