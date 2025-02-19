@@ -299,7 +299,6 @@ void Player::updateControls() {
         if(m_selectedBlock < 0) m_selectedBlock = 8;
         if(m_selectedBlock >= 9) m_selectedBlock = 0;
     }
-    auto stm = SettingsManager::get();
 
     if (IsKeyPressed(stm->getKeybind("fly"))) {
         m_fly = !m_fly;

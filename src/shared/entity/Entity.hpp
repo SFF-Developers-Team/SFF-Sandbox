@@ -1,8 +1,8 @@
 #pragma once
-#include <vector>
-#include <Types.hpp>
-#include <Hitbox.hpp>
 #include <SerializedObject.hpp>
+#include <Hitbox.hpp>
+#include <Types.hpp>
+#include <vector>
 #include <memory>
 
 class World;

@@ -59,9 +59,6 @@ public:
         for(int i = 0; i < sizeof(T); i++) {
             push_back(((uint8_t*)&value)[i]);
         }
-
-    void add(std::string str) {
-        return add(str.data(), str.size());
     }
 
     void add(const char* str, size_t size) {
@@ -85,19 +82,6 @@ public:
         }
 
         m_offset += bytes.size();
-    }
-
-    void add(const char* str, size_t size) {
-        logD("Adding str {} | size {} | offset {}", str, size, m_offset);
-        resize(m_offset + size);
-        std::copy(str, str + size, begin() + m_offset);
-
-        if(str[size - 1] != 0) {
-            push_back(0);
-            size++;
-        }
-
-        m_offset += size;
     }
 
     void add(std::string const& str) {
@@ -136,7 +120,7 @@ public:
         return ret;
     }
 
-    std::string get(std::string defaultVal) {
+    const char* get(const char* defaultVal) {
         auto len = std::strlen((char*)data() + m_offset);
         
         if(m_offset + len > size()) return defaultVal;
@@ -160,8 +144,6 @@ public:
 
         return ret;
     }
-
-    const char* get(const char* defaultVal) = delete;
 
     std::size_t offset() { return m_offset; }
     

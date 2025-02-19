@@ -6,6 +6,7 @@
 #include <Logger.hpp>
 #include <Game.hpp>
 #include <SoundManager.hpp>
+#include <glfw3.h>
 
 std::map<std::string, int> keybinds = {
     {"jump", KEY_W},

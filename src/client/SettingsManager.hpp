@@ -1,12 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <raylib.h>
-#include <rlgl.h>
-#include <map>
-#include <glfw3.h>
 #include <toml.hpp>
-#include <Logger.hpp>
 
 struct VideoMode {
     int width;
@@ -54,7 +49,7 @@ public:
 
         return *m_settings.at_path(path).value<T>();
     }
-    std::string getKeyName(int key);
+    
     int getKeybind(std::string const& action);
     void setKeybind(std::string const& action, int key);
 

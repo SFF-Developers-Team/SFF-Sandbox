@@ -1,6 +1,6 @@
 #include <world/Block.hpp>
 #include <SerializedObject.hpp>
-#include <assert.h>
+#include <cassert>
 
 Block::Block(ID id, int32_t x, int32_t y, uint8_t layer) : m_id(id), m_x(x), m_y(y), m_layer(layer) {
     m_header = Header::BLOCK;
