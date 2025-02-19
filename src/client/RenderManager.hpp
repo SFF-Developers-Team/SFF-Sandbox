@@ -10,17 +10,15 @@ class Chunk;
 class SimplePlayer;
 class Block;
 
-class RenderManager {
-public:
-    RenderManager();
+namespace RenderManager {
+    void drawTexture(std::string const& key, Rectf dest, Col4u color = COL_WHITE, float rot = 0.f, Vec2f origin = {0.f, 0.f});
+    void drawTile(std::string const& mapKey, uint16_t index, Rectf dest, Col4u color = COL_WHITE, float rot = 0.f, Vec2f origin = {0.f, 0.f});
+    void drawText(std::string const& font, std::string const& text, Vec2f pos, Col4u color = COL_WHITE, float fontSize = 0.f, Vec2f origin = {0.f, 0.f}, float spacing = 1.f);
+    void drawRect(Rectf rect, Col4u col);
+    void drawRectLines(Rectf rect, Col4u col, float thick);
+    void drawFrame(Rectf rect, Col4u col, float borderSize);
 
-    static RenderManager* get() {
-        static auto rm = new RenderManager();
-        return rm;
-    }
-
-    void drawTexture(std::string const& key, Rectf dest, Col4u color = COL_WHITE, float rot = 0.f, Vec2f origin = {0, 0});
-    void drawTile(std::string const& mapKey, uint16_t index, Rectf dest, Col4u color = COL_WHITE, float rot = 0.f, Vec2f origin = {0, 0});
+    Vec2f getTextSize(std::string const& text, std::string const& font, float fontSize, float spacing = 1.f);
 
     void renderWorld(std::shared_ptr<World> world, std::shared_ptr<Player> player);
     void renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Player> player);

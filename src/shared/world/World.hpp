@@ -69,8 +69,8 @@ public:
     bool isUsernameAlreadyTaken(std::string const& username);
     bool isOutOfBound(int32_t x, int32_t y, uint8_t layer);
 
-    inline Chunk::Position xToChunk(int32_t x) {
-        return floorf(static_cast<float>(x) / CHUNK_WIDTH);
+    Chunk::Position xToChunk(int32_t x) {
+        return static_cast<Chunk::Position>(floor(static_cast<float>(x) / CHUNK_WIDTH));
     }
 
     void setGenerator(std::shared_ptr<WorldGen> generator) {

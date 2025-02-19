@@ -9,12 +9,9 @@
 #include <Game.hpp>
 #include <assert.h>
 #include <Utils.hpp>
-
 #include <string>
 
 int blocksDrawn = 0;
-
-RenderManager::RenderManager() {}
 
 void RenderManager::drawTexture(std::string const& key, Rectf dest, Col4u color, float rot, Vec2f origin) {
     auto texture = TextureManager::get()->getTexture(key);
@@ -36,6 +33,47 @@ void RenderManager::drawTile(std::string const& mapKey, uint16_t index, Rectf de
         origin.to<Vector2>(), rot, 
         color.to<Color>()
     );
+}
+
+void RenderManager::drawText(std::string const& fontKey, std::string const& text, Vec2f pos, Col4u color, float fontSize, Vec2f origin, float spacing) {
+    auto tm = TextureManager::get();
+    auto font = tm->getFont(fontKey);
+
+    if(fontSize == 0.f) {
+        fontSize = font.baseSize;
+    }
+
+    if(origin.x != 0.f || origin.y != 0.f) { // Эта оптимизация направлена на пропуск подсчета размера текста, если точка опоры равна нулю
+        auto size = getTextSize(text, fontKey, fontSize, spacing);
+        pos.x -= size.x * origin.x;
+        pos.y -= size.y * origin.y;
+    }
+
+    DrawTextEx(font, text.c_str(), {roundf(pos.x), roundf(pos.y)}, fontSize, spacing, color.to<Color>());
+}
+
+void RenderManager::drawRect(Rectf rect, Col4u col) {
+    DrawRectangleRec(rect.to<Rectangle>(), col.to<Color>());
+}
+
+void RenderManager::drawRectLines(Rectf rect, Col4u col, float thick) {
+    DrawRectangleLinesEx(rect.to<Rectangle>(), thick, col.to<Color>());
+}
+
+void RenderManager::drawFrame(Rectf rect, Col4u col, float borderSize) {
+    drawRect(rect, col);
+    
+    if(borderSize > 0.f) {
+        drawRectLines(rect, col - Col4u {0x7F, 0x7F, 0x7F, 0x7F}, borderSize);
+    }
+}
+
+Vec2f RenderManager::getTextSize(std::string const& text, std::string const& fontKey, float fontSize, float spacing) {
+    auto tm = TextureManager::get();
+    auto font = tm->getFont(fontKey);
+    auto size = MeasureTextEx(font, text.c_str(), fontSize, spacing);
+
+    return Vec2f {size.x, size.y}; 
 }
 
 void RenderManager::renderWorld(std::shared_ptr<World> world, std::shared_ptr<Player> player) {

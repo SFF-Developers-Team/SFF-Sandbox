@@ -1,6 +1,6 @@
 #include <world/Block.hpp>
 #include <SerializedObject.hpp>
-#include <assert.h>
+#include <cassert>
 
 Block::Block(ID id, int32_t x, int32_t y, uint8_t layer) : m_id(id), m_x(x), m_y(y), m_layer(layer) {
     m_header = Header::BLOCK;
@@ -21,11 +21,20 @@ std::string const Block::idToString(ID id) {
         case WOOL: return "Wool";
         case BEDROCK: return "Bedrock";
         case BRICKS: return "Bricks";
+        case OAK_LOG: return "Oak log";
+        case LEAVES: return "Leaves";
+        case COAL_ORE: return "Coal ore";
+        case IRON_ORE: return "Iron ore";
+        case GOLD_ORE: return "Gold ore";
+        case DIAMOND_ORE: return "Diamond ore";
+        case LAPIZ_ORE: return "Lapiz ore";
+        case BOOKSHELF: return "Bookshelf";
+        case FLOWER_POT: return "Flower pot";
+        case FURHANCE:
+        case ACTIVE_FURHANCE: return "Furhance";
         default: return "Unknown";
     }
 }
-
-void Block::update() {}
 
 void Block::setPos(int32_t x, int32_t y, uint8_t layer) {
     m_x = x;

@@ -59,8 +59,13 @@ public:
         for(int i = 0; i < sizeof(T); i++) {
             push_back(((uint8_t*)&value)[i]);
         }
+    }
 
-        m_offset += sizeof(T);
+    void add(const char* str, size_t size) {
+        resize(m_offset + size);
+        std::copy(str, str + size, &at(m_offset));
+
+        m_offset += size;
     }
 
     /// @brief Append other ByteVector to serialized object
@@ -77,19 +82,6 @@ public:
         }
 
         m_offset += bytes.size();
-    }
-
-    void add(const char* str, size_t size) {
-        logD("Adding str {} | size {} | offset {}", str, size, m_offset);
-        resize(m_offset + size);
-        std::copy(str, str + size, begin() + m_offset);
-
-        if(str[size - 1] != 0) {
-            push_back(0);
-            size++;
-        }
-
-        m_offset += size;
     }
 
     void add(std::string const& str) {
@@ -129,7 +121,9 @@ public:
     }
 
     const char* get(const char* defaultVal) {
-        auto len = 0;
+        auto len = std::strlen((char*)data() + m_offset);
+        
+        if(m_offset + len > size()) return defaultVal;
 
         while(m_offset < size() && at(m_offset) != 0) {
             if(m_offset + 1 >= size()) {
@@ -149,10 +143,6 @@ public:
         logD("Parsed str len {}: {}", len, ret);
 
         return ret;
-    }
-
-    std::string get(std::string const& defaultVal) {
-        return std::string(get(defaultVal.c_str()));
     }
 
     std::size_t offset() { return m_offset; }

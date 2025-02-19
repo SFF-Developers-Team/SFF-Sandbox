@@ -29,5 +29,4 @@ public:
 
     virtual void handle(Packet& packet);
     void handleArray(Packet& packet);
-    // void handlePacket(Packet& packet);
 };

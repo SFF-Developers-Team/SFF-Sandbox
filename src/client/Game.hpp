@@ -1,4 +1,5 @@
 #pragma once
+#include <Types.hpp>
 #include <memory>
 #include <string>
 #include <vector>
@@ -8,10 +9,10 @@ class Scene;
 class World;
 class Player;
 class TileMap;
+class Container;
 
 class Game {
 private:
-    uint8_t m_renderDistance = 3;
     std::string m_username;
 
     std::shared_ptr<Scene> m_scene;
@@ -19,6 +20,9 @@ private:
     std::shared_ptr<Player> m_player;
 
     std::deque<std::shared_ptr<Scene>> m_sceneHistory;
+
+    Vec2i m_lastWindowSize;
+    int m_guiScale = 1;
     
 public:
     static Game* get() {
@@ -29,28 +33,22 @@ public:
     void init(std::vector<std::string>& args);
     void render();
     void update();
+    void destroy();
     
-    void clearSceneHistory();
+    void clearSceneHistory() { m_sceneHistory.clear(); }
     void pushScene(std::shared_ptr<Scene> scene);
     void popScene();
 
-    void setUsername(std::string const& username) {
-        m_username = username;
-    }
+    void checkSceneFlags(std::shared_ptr<Container> root);
 
-    std::string const& getUsername() {
-        return m_username;
-    }
+    void setUsername(std::string const& username) { m_username = username; }
+    std::string const& getUsername() { return m_username; }
 
-    auto getRenderDistance() {
-        return m_renderDistance;
-    }
+    std::shared_ptr<World> getWorld() { return m_world; }
+    std::shared_ptr<Player> getPlayer() { return m_player; }
     
-    auto getWorld() {
-        return m_world;
-    }
-
-    auto getPlayer() {
-        return m_player;
-    }
+    Vec2i const getLastWindowSize() { return m_lastWindowSize; }
+    
+    int getGuiScale() { return m_guiScale; }
+    void setGuiScale(int scale) { m_guiScale = scale; }
 };

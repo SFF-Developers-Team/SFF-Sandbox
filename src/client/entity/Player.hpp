@@ -13,7 +13,7 @@ class Player : public SimplePlayer {
 private:
     Camera2D m_camera;
     std::vector<std::shared_ptr<Block>> m_inventory;
-    int8_t m_selectedBlock = 0;
+    int8_t m_selectedBlock;
 
     bool m_sneak = false;
     bool m_fly = false;
@@ -25,15 +25,17 @@ private:
     Direction m_prevDir;
 
     float m_lastAnimFrameTime = 0.f;
+    float m_forward;
 
 public:
     Player(std::shared_ptr<World> world);
 
     void onTick() override;
     void update();
-    void updateControls();
+    void onTickControls();
     void updateCamera();
     void updateAnimation();
+    void updateControls();
 
     bool isChunkInView(std::shared_ptr<Chunk> chunk);
     bool isBlockInView(std::shared_ptr<Block> block);
@@ -43,8 +45,10 @@ public:
     
     Vec2i getTargetBlock();
     std::shared_ptr<Block> getSelectedBlock();
+    int8_t getSelectedIndex() { return m_selectedBlock; }
 
-    Camera2D& getCamera() {
-        return m_camera;
-    }
+    Camera2D& getCamera() { return m_camera; }
+    std::vector<std::shared_ptr<Block>>& getInventory() { return m_inventory; }
+
+    bool addToInventory(std::shared_ptr<Block> block);
 };

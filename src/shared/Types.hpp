@@ -1,13 +1,15 @@
 #pragma once
 #include <type_traits>
-#include <stdint.h>
-#include <math.h>
+#include <cstdint>
+
 template <typename T>
 struct Vec2 {
     static_assert(std::is_arithmetic_v<T>, "Unsupported type for Vec2");
 
     T x;
     T y;
+
+    Vec2<T> const operator/(T value) { return Vec2<T> {x / value, y / value}; }
 
     template <typename T2>
     inline T2 to() const {
@@ -49,10 +51,7 @@ struct Rect {
 
     bool contains(const Vec2<T>& other) const { return other.x >= x && other.x <= x + width && other.y >= y && other.y <= y + height; }
 
-    template <typename T2>
-    inline Rect<T2> toType() const {
-        return {static_cast<T2>(x), static_cast<T2>(y), static_cast<T2>(width), static_cast<T2>(height)};
-    }
+    Rect<T> const anchor(Vec2<T> const& point) { return Rect<T> {x - width * point.x, y - height * point.y, width, height}; }
 
     template <typename T2>
     inline T2 to() const {
@@ -116,12 +115,12 @@ struct Col4 {
     T b;
     T a;
 
-    Col4<T> operator+(const Col4<T>& other) { return {r + other.r, g + other.g, b + other.b, a + other.a}; }
-    Col4<T> operator-(const Col4<T>& other) { return {r - other.r, g - other.g, b - other.b, a - other.a}; }
-    Col4<T> operator*(const Col4<T>& other) { return {r * other.r, g * other.g, b * other.b, a * other.a}; }
-    Col4<T> operator/(const Col4<T>& other) { return {r / other.r, g / other.g, b / other.b, a / other.a}; }
-    Col4<T> operator*(T other) { return {r * other, g * other, b * other, a * other}; }
-    Col4<T> operator/(T other) { return {r / other, g / other, b / other, a / other}; }
+    Col4<T> operator+(const Col4<T>& other) { return {static_cast<T>(r + other.r), static_cast<T>(g + other.g), static_cast<T>(b + other.b), static_cast<T>(a + other.a)}; }
+    Col4<T> operator-(const Col4<T>& other) { return {static_cast<T>(r - other.r), static_cast<T>(g - other.g), static_cast<T>(b - other.b), static_cast<T>(a - other.a)}; }
+    Col4<T> operator*(const Col4<T>& other) { return {static_cast<T>(r * other.r), static_cast<T>(g * other.g), static_cast<T>(b * other.b), static_cast<T>(a * other.a)}; }
+    Col4<T> operator/(const Col4<T>& other) { return {static_cast<T>(r / other.r), static_cast<T>(g / other.g), static_cast<T>(b / other.b), static_cast<T>(a / other.a)}; }
+    Col4<T> operator*(T other) { return {static_cast<T>(r * other), static_cast<T>(g * other), static_cast<T>(b * other), static_cast<T>(a * other)}; }
+    Col4<T> operator/(T other) { return {static_cast<T>(r / other), static_cast<T>(g / other), static_cast<T>(b / other), static_cast<T>(a / other)}; }
 
     void operator+=(const Col4<T>& other) { *this = *this + other; }
     void operator-=(const Col4<T>& other) { *this = *this - other; }
@@ -134,6 +133,27 @@ struct Col4 {
     inline T2 to() const {
         return T2 {r, g, b, a};
     }
+
+    // bruh i hate it
+    void brightness(float factor) {
+        float tr = static_cast<float>(r);
+        float tg = static_cast<float>(g);
+        float tb = static_cast<float>(b);
+
+        if (factor > 0) {
+            tr += (255.f - tr) * factor;
+            tg += (255.f - tg) * factor;
+            tb += (255.f - tb) * factor;
+        } else {
+            tr *= (1.0f + factor);
+            tg *= (1.0f + factor);
+            tb *= (1.0f + factor);
+        }
+
+        r = static_cast<uint8_t>(tr);
+        g = static_cast<uint8_t>(tg);
+        b = static_cast<uint8_t>(tb);
+    }
 };
 
 using Vec2f = Vec2<float>;
@@ -145,39 +165,36 @@ using Vec3i = Vec3<int>;
 using Rectf = Rect<float>;
 using Recti = Rect<int>;
 
-using Col3f = Col3<float>;
 using Col3u = Col3<unsigned char>;
-
-using Col4f = Col4<float>;
 using Col4u = Col4<unsigned char>;
 
 // Custom raylib color palette for amazing visuals on WHITE background
-#define COL_LIGHTGRAY  { 200, 200, 200, 255 }   // Light Gray
-#define COL_GRAY       { 130, 130, 130, 255 }   // Gray
-#define COL_DARKGRAY   { 80, 80, 80, 255 }      // Dark Gray
-#define COL_YELLOW     { 253, 249, 0, 255 }     // Yellow
-#define COL_GOLD       { 255, 203, 0, 255 }     // Gold
-#define COL_ORANGE     { 255, 161, 0, 255 }     // Orange
-#define COL_PINK       { 255, 109, 194, 255 }   // Pink
-#define COL_RED        { 230, 41, 55, 255 }     // Red
-#define COL_MAROON     { 190, 33, 55, 255 }     // Maroon
-#define COL_GREEN      { 0, 228, 48, 255 }      // Green
-#define COL_LIME       { 0, 158, 47, 255 }      // Lime
-#define COL_DARKGREEN  { 0, 117, 44, 255 }      // Dark Green
-#define COL_SKYBLUE    { 102, 191, 255, 255 }   // Sky Blue
-#define COL_BLUE       { 0, 121, 241, 255 }     // Blue
-#define COL_DARKBLUE   { 0, 82, 172, 255 }      // Dark Blue
-#define COL_PURPLE     { 200, 122, 255, 255 }   // Purple
-#define COL_VIOLET     { 135, 60, 190, 255 }    // Violet
-#define COL_DARKPURPLE { 112, 31, 126, 255 }    // Dark Purple
-#define COL_BEIGE      { 211, 176, 131, 255 }   // Beige
-#define COL_BROWN      { 127, 106, 79, 255 }    // Brown
-#define COL_DARKBROWN  { 76, 63, 47, 255 }      // Dark Brown
-#define COL_WHITE      { 255, 255, 255, 255 }   // White
-#define COL_BLACK      { 0, 0, 0, 255 }         // Black
-#define COL_BLANK      { 0, 0, 0, 0 }           // Blank (Transparent)
-#define COL_MAGENTA    { 255, 0, 255, 255 }     // Magenta
-#define COL_RAYWHITE   { 245, 245, 245, 255 }   // My own White (raylib logo)
+#define COL_LIGHTGRAY  Col4u { 200, 200, 200, 255 }   // Light Gray
+#define COL_GRAY       Col4u { 130, 130, 130, 255 }   // Gray
+#define COL_DARKGRAY   Col4u { 80, 80, 80, 255 }      // Dark Gray
+#define COL_YELLOW     Col4u { 253, 249, 0, 255 }     // Yellow
+#define COL_GOLD       Col4u { 255, 203, 0, 255 }     // Gold
+#define COL_ORANGE     Col4u { 255, 161, 0, 255 }     // Orange
+#define COL_PINK       Col4u { 255, 109, 194, 255 }   // Pink
+#define COL_RED        Col4u { 230, 41, 55, 255 }     // Red
+#define COL_MAROON     Col4u { 190, 33, 55, 255 }     // Maroon
+#define COL_GREEN      Col4u { 0, 228, 48, 255 }      // Green
+#define COL_LIME       Col4u { 0, 158, 47, 255 }      // Lime
+#define COL_DARKGREEN  Col4u { 0, 117, 44, 255 }      // Dark Green
+#define COL_SKYBLUE    Col4u { 102, 191, 255, 255 }   // Sky Blue
+#define COL_BLUE       Col4u { 0, 121, 241, 255 }     // Blue
+#define COL_DARKBLUE   Col4u { 0, 82, 172, 255 }      // Dark Blue
+#define COL_PURPLE     Col4u { 200, 122, 255, 255 }   // Purple
+#define COL_VIOLET     Col4u { 135, 60, 190, 255 }    // Violet
+#define COL_DARKPURPLE Col4u { 112, 31, 126, 255 }    // Dark Purple
+#define COL_BEIGE      Col4u { 211, 176, 131, 255 }   // Beige
+#define COL_BROWN      Col4u { 127, 106, 79, 255 }    // Brown
+#define COL_DARKBROWN  Col4u { 76, 63, 47, 255 }      // Dark Brown
+#define COL_WHITE      Col4u { 255, 255, 255, 255 }   // White
+#define COL_BLACK      Col4u { 0, 0, 0, 255 }         // Black
+#define COL_BLANK      Col4u { 0, 0, 0, 0 }           // Blank (Transparent)
+#define COL_MAGENTA    Col4u { 255, 0, 255, 255 }     // Magenta
+#define COL_RAYWHITE   Col4u { 245, 245, 245, 255 }   // My own White (raylib logo)
 
 enum DisconnectReasonID : uint32_t {
     INVALID_FIRST_PACKET,

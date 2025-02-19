@@ -2,3 +2,5 @@
 /.vscode
 out
 .vs
+
+/libs/enet/package.json

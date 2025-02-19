@@ -1,37 +1,135 @@
 #include <ui/CreditsScene.hpp>
+#include <StyleManager.hpp>
 #include <RenderManager.hpp>
-#include <raylib.h>
+#include <TextureManager.hpp>
+#include <ui/nodes/Tile.hpp>
+#include <ui/nodes/SpriteNode.hpp>
+#include <ui/nodes/List.hpp>
+#include <Licenses.hpp>
+
 CreditsScene::CreditsScene() {
-    m_bgColor = COL_SKYBLUE;
+    // clang-format off
+    std::vector<Developer> const devs = {
+        {"Del", "Artist"},
+        {"e2e4", "Artist"},
+        {"eban1ss1mo", "Artist"},
+        {"InviseDivine", "Programmer"},
+        {"Kolyah35", "Programmer"},
+        {"dogotrigger", "Programmer"},
+    };
+    // clang-format on
 
-}
-void CreditsScene::draw() {
-    MenuBase::draw();
+    auto container = std::make_shared<Container>();
+    container->setSize({600, 250});
+    container->setFlag(FLAG_ALWAYS_CENTER, true);
+    container->setFlag(FLAG_GUI_SCALE, true);
+    addChild(container);
 
-    DrawRectangleLinesEx({(float)(GetScreenWidth() - 1000) / 2 - 10, 290, 1020, 420}, 10.f, GREEN);
-    DrawRectangle((GetScreenWidth() - 1000) / 2, 300, 1000, 400, DARKGREEN);
-    auto const sw = static_cast<float>(GetScreenWidth());
+    auto backBtn = std::make_shared<Button>("Back", [this](Button*) { destroy(); });
+    backBtn->setPos({container->getWidth() / 2, container->getHeight() - backBtn->getHeight() / 2 - container->getBorderWidth() * 2.f});
+    container->addChild(backBtn);
 
-    Vector2 offset = {sw / 2 - (picsize.x * devs.size() + 50 * devs.size()) / 2 + 10, 350};
-    for (int i = 0; i < devs.size(); i++) {
-        auto rm = RenderManager::get();
-        auto namewidth = MeasureText(devs[i].name.c_str(), textheight);
-        auto rolewidth = MeasureText(devs[i].role.c_str(), textheight);
+    auto licensesBtn = std::make_shared<Button>("Licenses", [this](Button* sender) {
+        bool licenses = m_licensesBox->isVisible();
 
-        rm->drawTile("developers.png", i, {offset.x, offset.y, picsize.x, picsize.y});
-        DrawText(devs[i].name.c_str(), offset.x + picsize.x / 2 - namewidth / 2, offset.y + textoffset + 120, textheight, RAYWHITE);
-        DrawText(devs[i].role.c_str(), offset.x + picsize.x / 2 - rolewidth / 2, offset.y + textoffset * 2 + textheight + 120, textheight, RAYWHITE);
-        offset.x += picsize.x + 50;
-    }   
-    drawButton("Special Thanks", {(float)(GetScreenWidth() - 200) / 2, 600, 200, 40}, [&]() {
-
+        sender->setText(licenses ? "Licenses" : "Developers");
+        m_licensesBox->setVisible(!licenses);
+        m_licensesBox->setEnabled(!licenses);
+        m_developersBox->setVisible(licenses);
+        m_developersBox->setEnabled(licenses);
     });
-    drawButton("Back", {(float)(GetScreenWidth() - 200) / 2, 650, 200, 40}, [&]() {
-        Game::get()->popScene();
-    });
-    // if(GuiButton((Rectangle){ (float)(GetScreenWidth() - 200) / 2,   650, 200, 40 }, "Back") || IsKeyPressed(KEY_Q)) {
-    //     auto game = Game::get();
-    //     game->pushScene(std::make_shared<MainScene>());
-    //     count = 0;
-    // }
+
+    licensesBtn->setPos({container->getWidth() / 2, backBtn->getY() - licensesBtn->getHeight() - licensesBtn->getBorderWidth()});
+    container->addChild(licensesBtn);
+
+    auto const subcontainersHeight = licensesBtn->getY() - licensesBtn->getHeight();
+
+    m_developersBox = std::make_shared<Container>();
+    m_licensesBox = std::make_shared<Container>();
+
+
+    auto raylib = std::make_shared<SpriteNode>("raylib");
+    raylib->setSize({128.f, 128.f});
+    raylib->setAnchor({0.f, 1.f});
+    raylib->setPos({5.f, container->getHeight() - 5.f});
+    container->addChild(raylib);
+
+    // developers container
+    {
+        m_developersBox->setBorderWidth(0.f);
+        m_developersBox->setAnchor({0.5f, 0.f});
+        m_developersBox->setColor({0, 0, 0, 0});
+        m_developersBox->setSize({container->getWidth(), subcontainersHeight});
+        m_developersBox->setPos({container->getWidth() / 2, 0.f});
+        container->addChild(m_developersBox);
+
+        for(auto i = 0; i < devs.size(); i++) {
+            auto tile = std::make_shared<Tile>("developers.png", i);
+            tile->setSize({128.f, 128.f});
+            tile->setAnchorX(0.f);
+            tile->setScale(0.5f);
+            m_developersBox->addChild(tile);
+        }
+
+        m_developersBox->alignItemsHorizontal(32.f);
+
+        for(auto i = 0; i < devs.size(); i++) {
+            auto child = m_developersBox->getChild(i);
+
+            auto name = std::make_shared<Text>("boldfont", devs[i].name);
+            name->setPos({child->getX() + child->getScaledWidth() / 2, child->getY() + 20.f});
+            name->setWidth(child->getScaledWidth());
+            m_developersBox->addChild(name);
+
+            auto role = std::make_shared<Text>("font", devs[i].role);
+            role->setPos({child->getX() + child->getScaledWidth() / 2, name->getY() + 20.f});
+            name->setWidth(child->getScaledWidth());
+            m_developersBox->addChild(role);
+        }
+
+        auto title = std::make_shared<Text>("boldfont", "Developers");
+        title->setPos({m_developersBox->getWidth() / 2, 0.f});
+        title->setAnchorY(0.f);
+        m_developersBox->addChild(title);
+    }
+
+    // licenses container
+    {
+        m_licensesBox->setBorderWidth(0.f);
+        m_licensesBox->setAnchor({0.5f, 0.f});
+        m_licensesBox->setColor({0, 0, 0, 0});
+        m_licensesBox->setSize({container->getWidth(), subcontainersHeight});
+        m_licensesBox->setPos({container->getWidth() / 2, 0.f});
+        m_licensesBox->setVisible(false);
+        m_licensesBox->setEnabled(false);
+        container->addChild(m_licensesBox);
+
+        auto libsList = std::make_shared<List>(std::vector<std::string>({"enet", "GitHash", "perlin-noise", "raylib", "toml", "miniz"}), [this](auto, int i) {
+            m_licenseText->setText(licensesText[i]);
+            m_licenseText->setWordWrap(true, true); // for auto-height
+            m_textBox->resetScroll();
+        });
+
+        auto const borderw = libsList->getBorderWidth();
+
+        libsList->setSize({m_licensesBox->getWidth() / 4, m_licensesBox->getHeight() - borderw * 2});
+        libsList->setPos({libsList->getWidth() / 2 + borderw * 2, m_licensesBox->getHeight() / 2 + borderw});
+        m_licensesBox->addChild(libsList);
+
+        m_textBox = std::make_shared<Container>();
+        m_textBox->setAnchor({0.f, 0.5f});
+        m_textBox->setPos({libsList->getX() + libsList->getWidth() * libsList->getAnchorX() + borderw, libsList->getY()});
+        m_textBox->setSize({m_licensesBox->getWidth() - libsList->getWidth() - borderw * 5, libsList->getHeight()});
+        m_textBox->setScrollable(true);
+        m_licensesBox->addChild(m_textBox);
+
+        m_licenseText = std::make_shared<Text>("font", licensesText[0]);
+        m_licenseText->setAnchor({0.5f, 0.f});
+        m_licenseText->setPos({m_textBox->getWidth() / 2, 0.f});
+        m_licenseText->setSize({m_textBox->getWidth() - m_textBox->getBorderWidth() * 2, 0.f});
+        m_licenseText->setAlignH(TextAlignmentH::H_LEFT);
+        m_licenseText->setAlignV(TextAlignmentV::V_TOP);
+        m_licenseText->setWordWrap(true, true);
+        m_textBox->addChild(m_licenseText);
+    }
 }

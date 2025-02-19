@@ -41,7 +41,7 @@ public:
 
     void print() {
         std::string res;
-        for(int i = 0; i < size(); i++) { 
+        for(auto i = 0; i < size(); i++) { 
             res.append(std::format("{:02X} ", data()[i]));
         }
 

@@ -15,6 +15,7 @@ using namespace std::string_view_literals;
 std::string_view const help = R"(help - display this message
 list - display players on server
 stop - stop server)";
+
 void Server::init() {
 #ifdef _WIN32
     setlocale(LOCALE_ALL, "ru");
@@ -238,6 +239,6 @@ std::string const Server::getDisconnectReasonByID(DisconnectReasonID id) {
         case TOO_SHORT_USERNAME: return "Too short username!";
         case TOO_LONG_USERNAME: return "Too long username!";
         case USERNAME_ALREADY_TAKEN: return "Username already taken!";
-        default: return "What?!";
+        default: return "Unknown";
     }
 }

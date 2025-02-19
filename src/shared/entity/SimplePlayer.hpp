@@ -40,6 +40,9 @@ public:
 
     uint8_t animationClamp(uint8_t value, uint8_t min, uint8_t max);
     void setAnimation(AnimationType type);
+
+    /// @brief For debug
+    /// @return Animation name as string
     static const char* getAnimationName(AnimationType type);
 
     ByteVector serialize() override;

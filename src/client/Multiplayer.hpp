@@ -2,6 +2,9 @@
 #ifdef _WIN32
     #define NOGDI
     #define NOUSER
+
+    // Type required before windows.h inclusion
+    typedef struct tagMSG *LPMSG;
 #endif
 
 #include <PacketManager.hpp>

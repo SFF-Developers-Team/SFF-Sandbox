@@ -1,0 +1,77 @@
+#include <ui/nodes/List.hpp>
+#include <RenderManager.hpp>
+#include <TextureManager.hpp>
+#include <StyleManager.hpp>
+#include <raylib.h>
+#include <algorithm>
+
+List::List(std::vector<std::string> const& elements, MiniFunction<void(List*, int)> callback) 
+    : Frame(), m_elements(elements), m_callback(callback), m_scrollOffset(0.f) {}
+
+void List::draw() {
+    Frame::draw();
+
+    auto bounds = getWorldBounds();
+    auto const elementHeight = StyleManager::get()->getValue<Vec2f>(DEFAULT_ELEMENT_SIZE).y;
+    auto const totalHeight = elementHeight * m_elements.size() + m_border * m_elements.size();
+    auto const conHeight = bounds.height - m_border * 2;
+    auto const borderColor = m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F};
+    auto const scrollBar = totalHeight > bounds.height;
+    auto const rect = Rectf {0.f, 0.f, m_bounds.width, conHeight};
+
+    Rectf cutList = {
+        bounds.x + m_border * getGlobalScaleX(),
+        bounds.y + (m_border * 2) * getGlobalScaleY(),
+        bounds.width - (m_border * 2) * getGlobalScaleX(),
+        (conHeight - m_border * 2) * getGlobalScaleY()
+    };
+
+    BeginScissorMode(cutList.x, cutList.y, cutList.width, cutList.height);
+        for(auto i = 0; i < m_elements.size(); i++) {
+            auto cell = Rectf {
+                m_border * 2, 
+                m_border * 2 + (elementHeight * i + m_border * i) - m_scrollOffset, 
+                m_bounds.width - m_border * (scrollBar ? 5.f : 4.f), 
+                elementHeight
+            };
+
+            RenderManager::drawRect(cell, m_color);
+            RenderManager::drawRectLines(cell, borderColor, m_border);
+            RenderManager::drawText("boldfont", m_elements[i], {cell.width / 2, cell.y + cell.height / 2}, COL_WHITE, 0.f, {0.5f, 0.5f});
+        }
+
+        if(scrollBar) {
+            RenderManager::drawRect({bounds.width - m_border * 2, rect.y + m_border + (m_scrollOffset / totalHeight) * conHeight, m_border, (conHeight / totalHeight) * conHeight}, borderColor);
+        }
+    EndScissorMode();
+}
+
+void List::update() {
+    auto mouse = getLocalMousePosition();
+    auto elementHeight = StyleManager::get()->getValue<Vec2f>(DEFAULT_ELEMENT_SIZE).y;
+    auto fontSize = TextureManager::get()->getFontBaseSize("boldfont");
+    auto totalHeight = m_border * 2 + elementHeight * m_elements.size() + m_border * m_elements.size();
+
+    if(totalHeight > m_bounds.height) {
+        if(isMouseHover() && GetMouseWheelMove() != 0.f) {
+            m_scrollOffset -= GetMouseWheelMove() * 10.f;
+        }
+
+        m_scrollOffset = std::clamp(m_scrollOffset, 0.f, totalHeight - m_bounds.height + m_border * 2);
+    }
+
+    for(auto i = 0; i < m_elements.size(); i++) {
+        Rectf rect = {
+            m_border * 2, 
+            m_border * 2 + (elementHeight * i + m_border * i) - m_scrollOffset, 
+            m_bounds.width - m_border * 4, 
+            elementHeight
+        };
+
+        bool isVisible = rect.y + rect.height > m_border && rect.y < m_bounds.height - m_border;
+
+        if(isVisible && rect.contains({mouse.x, mouse.y}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            return m_callback(this, i);
+        }
+    }
+}

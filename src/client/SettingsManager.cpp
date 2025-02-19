@@ -4,70 +4,106 @@
 #include <sstream>
 #include <string>
 #include <Logger.hpp>
+#include <Game.hpp>
+#include <SoundManager.hpp>
+#include <glfw3.h>
 
-std::string_view const defaultConfig = R"('Video/fullscreen' = false
-'Video/vsync' = 1
-'Video/resolution' = 0
-'Video/guiscale' = 1
-
-'Audio/volume' = 0.5
-'Audio/music' = 0.5
-'Audio/sound' = 0.5
-
-'Keyboard/Duck' = 340
-'Keyboard/Fly' = 70
-'Keyboard/Jump' = 32
-'Keyboard/Left' = 65
-'Keyboard/Right' = 68)";
+std::map<std::string, int> keybinds = {
+    {"jump", KEY_W},
+    {"duck", KEY_S},
+    {"left", KEY_A},
+    {"right", KEY_D},
+    {"fly", KEY_F}
+};
 
 SettingsManager::SettingsManager() {
-    auto monitor = 	glfwGetPrimaryMonitor();
+    // shitcode
+    auto monitorI = GetCurrentMonitor();
+    auto monitor = glfwGetPrimaryMonitor();
     auto modeCount = 0;
-    auto modes = glfwGetVideoModes(monitor, &modeCount);
-    m_modes = std::vector(modes, modes +  modeCount);
-    
-    std::fstream file("settings.toml", std::ios::out | std::ios::in);
-    std::string settings;
-    std::string strConf;
-    strConf = defaultConfig;
 
-    if(file.is_open()) {
-        logD("Opened");
-        std::stringstream buffer;
-        auto size = file.tellg();
-        file.seekg(0, std::ios::beg);
-        settings.resize(size);
-        buffer << file.rdbuf();
-        settings = buffer.str();
-    } else {    
-        logE("Failed to init settings!");
-        settings = defaultConfig;
+    auto modes = glfwGetVideoModes(monitor, &modeCount);
+    for(auto i = 0; i < modeCount; i++) {
+        if(modes[i].width <= GetMonitorWidth(monitorI) && modes[i].height <= GetMonitorHeight(monitorI)) {
+            auto it = std::find_if(m_modes.begin(), m_modes.end(), [&](auto const& mode) { 
+                return modes[i].width == mode.width && modes[i].height == mode.height; 
+            });
+
+            if(it == m_modes.end()) {
+                m_modes.push_back(VideoMode {modes[i].width, modes[i].height});
+            }
+        }
     }
-    logD("{}", settings);
-    m_settings = toml::parse(settings);
-    m_defconf = toml::parse(strConf);
-    
-    logD("{}", m_settings.size());
+
+    try {
+        m_settings = toml::parse_file("settings.toml");
+    } catch(toml::parse_error const& e) {
+        logE("Failed to init settings! {}", e.description());
+        m_settings = toml::table{};
+    }
+
+    for(auto const& [action, key] : keybinds) {
+        registerKeybind(action, key);
+    }
+
+    auto game = Game::get();
+    auto audio = SoundManager::get();
+    audio->setMusicVolume(getValue<float>("audio.volume.music", 0.5f));
+    audio->setSoundVolume(getValue<float>("audio.volume.sound", 0.5f));
+    SetMasterVolume(getValue<float>("audio.volume.general", 1.f));
+    game->setGuiScale(getValue<int>("video.scale", 1));
+    (getValue<bool>("video.vsync", true) ? SetWindowState(FLAG_VSYNC_HINT) : ClearWindowState(FLAG_VSYNC_HINT));
+}
+
+int SettingsManager::getKeybind(std::string const& action) {
+    return getValue<int>("keyboard." + action, 0);
+}
+void SettingsManager::setKeybind(std::string const& action, int key) {
+    setValue("keyboard." + action, key);
+}
+
+void SettingsManager::registerKeybind(std::string const& action, int key) {
+    if(!m_settings.contains("keyboard")) {
+        m_settings.insert("keyboard", toml::table{});
+    }
+
+    auto keyboard = m_settings["keyboard"].as_table();
+
+    if(!keyboard->contains(action)) {
+        keyboard->insert(action, key);
+    }
 }
 
 void SettingsManager::save() {
     std::ofstream file("settings.toml");
-    logD("{}", m_settings.size());
     if(file.is_open()) {
         file << m_settings;
-        logD("Successfully written");
-    } else {
-        logE("Failed to init config!");
+        return file.close();
     }
+
+    logE("Failed to save settings!");
 }
 
-int SettingsManager::getKeybind(std::string const& action) {
-    return getValue<int>("Keyboard/" + action, *m_defconf["Keyboard/" + action].value<int>());
+std::vector<std::string> const SettingsManager::getKeyActions() {
+    auto table = m_settings["keyboard"].as_table();
+    std::vector<std::string> ret;
+    
+    for(auto const& [action, key] : *table) {
+        ret.push_back(action.str().data());
+    }
+
+    return ret;
 }
-std::string SettingsManager::getKeyName(int key) {
-    if (key >= 39 && key <= 125) return std::to_string((char)key);
+
+std::vector<VideoMode> const& SettingsManager::getModes() {
+    return m_modes;
+}
+
+std::string const SettingsManager::getKeyName(int key) {
+    if (key >= 39 && key <= 125) return std::string((char*)&key);
     
     switch (key) {
+        case KEY_SPACE: return "Space";
         case KEY_ESCAPE: return "Escape";
         case KEY_ENTER: return "Enter";
         case KEY_TAB: return "Tab";
@@ -127,15 +163,4 @@ std::string SettingsManager::getKeyName(int key) {
         case KEY_KP_EQUAL: return "KP =";
         default: return "Unknown";
     }
-}
-void SettingsManager::setKeybind(std::string const& action, int key) {
-    setValue("Keyboard/" + action, key);
-}
-
-std::vector<std::string> const& SettingsManager::getKeyList() {
-    return m_keylist;
-}
-
-std::vector<GLFWvidmode> const& SettingsManager::getModes() {
-    return m_modes;
 }
