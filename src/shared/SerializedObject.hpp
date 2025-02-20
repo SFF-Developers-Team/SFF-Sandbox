@@ -3,7 +3,6 @@
 #include <cstring>
 #include <vector>
 #include <algorithm>
-#include <Logger.hpp>
 #include <string.h>
 #include <mutex>
 
@@ -134,13 +133,9 @@ public:
             len++;
         }
 
-        logD("get const char {}", len);
-
         auto ret = new char[len + 1];
         std::memset(ret, 0, len + 1);
         std::copy(begin() + m_offset - len, begin() + m_offset, ret);
-
-        logD("Parsed str len {}: {}", len, ret);
 
         return ret;
     }

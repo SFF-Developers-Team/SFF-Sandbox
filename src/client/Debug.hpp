@@ -3,7 +3,6 @@
 #include <map>
 #include <memory>
 
-
 enum DebugID : uint8_t {
     GAME_VERSION,
     FPS,
