@@ -1,5 +1,6 @@
 #pragma once
 #include <SerializedObject.hpp>
+#include <Logger.hpp>
 #include <enet.h>
 
 #define CREATE_PACKET std::make_shared<Packet>
