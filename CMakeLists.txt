@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.5.0)
-project(SFFSandbox)
+project(SFFSandbox 
+    DESCRIPTION "SFF Sandbox Game"
+    HOMEPAGE_URL "https://github.com/Kolyah35/SFF-Sandbox"
+    LANGUAGES C CXX
+)
+
 project(SFFSandbox-server)
 
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW) 
@@ -46,13 +51,8 @@ add_subdirectory(libs/GitHash)
 add_subdirectory(libs/miniz)
 add_subdirectory(libs/enet)
 
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/zconf.h.included)
-    file(RENAME ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/zconf.h.included ${CMAKE_CURRENT_SOURCE_DIR}/libs/zlib/zconf.h)
-endif()
-
 add_executable(SFFSandbox ${SHARED_SOURCES} ${CLIENT_SOURCES})
 add_executable(SFFSandbox-server ${SHARED_SOURCES} ${SERVER_SOURCES})
-
 
 target_link_libraries(SFFSandbox raylib enet_static ${GITHASH_LIBRARIES} miniz)
 target_link_libraries(SFFSandbox-server enet_static ${GITHASH_LIBRARIES} miniz)
@@ -70,3 +70,24 @@ target_include_directories(SFFSandbox-server PRIVATE
 )
 
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR}/)
+
+if(${PLATFORM} STREQUAL "Android")
+    set(ANDROID_APK_DIR ${CMAKE_BINARY_DIR}/apk)
+
+    file(MAKE_DIRECTORY ${ANDROID_APK_DIR}/lib/${CMAKE_ANDROID_ARCH_ABI})
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/obj)
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+    file(COPY assets DESTINATION ${ANDROID_APK_DIR}/)
+    file(COPY android/res DESTINATION ${ANDROID_APK_DIR}/)
+    file(COPY android/src DESTINATION ${ANDROID_APK_DIR}/)
+    file(COPY android/AndroidManifest.xml DESTINATION ${ANDROID_APK_DIR}/)
+
+    set_target_properties(SFFSandbox
+        PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY "${ANDROID_APK_DIR}/lib/${CMAKE_ANDROID_ARCH_ABI}"
+        LIBRARY_OUTPUT_DIRECTORY "${ANDROID_APK_DIR}/lib/${CMAKE_ANDROID_ARCH_ABI}"
+        RUNTIME_OUTPUT_DIRECTORY "${ANDROID_APK_DIR}/lib/${CMAKE_ANDROID_ARCH_ABI}"
+        PREFIX "lib"
+        SUFFIX ".so"
+    )
+endif()

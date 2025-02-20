@@ -6,7 +6,10 @@
 #include <Logger.hpp>
 #include <Game.hpp>
 #include <SoundManager.hpp>
+
+#ifdef PLATFORM_DESKTOP
 #include <glfw3.h>
+#endif
 
 std::map<std::string, int> keybinds = {
     {"jump", KEY_W},
@@ -17,7 +20,7 @@ std::map<std::string, int> keybinds = {
 };
 
 SettingsManager::SettingsManager() {
-    // shitcode
+    #ifdef PLATFORM_DESKTOP
     auto monitorI = GetCurrentMonitor();
     auto monitor = glfwGetPrimaryMonitor();
     auto modeCount = 0;
@@ -34,6 +37,7 @@ SettingsManager::SettingsManager() {
             }
         }
     }
+    #endif
 
     try {
         m_settings = toml::parse_file("settings.toml");
