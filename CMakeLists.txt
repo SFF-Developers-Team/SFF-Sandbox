@@ -13,9 +13,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 set(BUILD_SHARED_LIBS OFF)
-
-set(ZLIB_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(RENAME_ZCONF OFF CACHE BOOL "" FORCE)
 set(ENET_STATIC ON CACHE BOOL "" FORCE)
 
 set(SHARED_HEADERS 
@@ -51,11 +48,19 @@ add_subdirectory(libs/GitHash)
 add_subdirectory(libs/miniz)
 add_subdirectory(libs/enet)
 
-add_executable(SFFSandbox ${SHARED_SOURCES} ${CLIENT_SOURCES})
-add_executable(SFFSandbox-server ${SHARED_SOURCES} ${SERVER_SOURCES})
+if(${PLATFORM} STREQUAL "Android")
+    set(PLATFORM_LIBS m c log android EGL GLESv2 OpenSLES dl unwind c++_static)
+    add_library(SFFSandbox SHARED ${SHARED_SOURCES} ${CLIENT_SOURCES})
+else()
+    add_executable(SFFSandbox ${SHARED_SOURCES} ${CLIENT_SOURCES})
+    add_executable(SFFSandbox-server ${SHARED_SOURCES} ${SERVER_SOURCES})
+endif()
 
-target_link_libraries(SFFSandbox raylib enet_static ${GITHASH_LIBRARIES} miniz)
-target_link_libraries(SFFSandbox-server enet_static ${GITHASH_LIBRARIES} miniz)
+target_link_libraries(SFFSandbox raylib enet_static ${GITHASH_LIBRARIES} miniz ${PLATFORM_LIBS})
+
+if(NOT ${PLATFORM} STREQUAL "Android")
+    target_link_libraries(SFFSandbox-server enet_static ${GITHASH_LIBRARIES} miniz)
+endif()
 
 target_include_directories(SFFSandbox PRIVATE
     ${SHARED_HEADERS}
@@ -64,26 +69,42 @@ target_include_directories(SFFSandbox PRIVATE
     "libs/raylib/src/external/glfw/include/GLFW/"
 )
 
-target_include_directories(SFFSandbox-server PRIVATE
-    ${SHARED_HEADERS}
-    "src/server/"
-)
+if(NOT ${PLATFORM} STREQUAL "Android")
+    target_include_directories(SFFSandbox-server PRIVATE
+        ${SHARED_HEADERS}
+        "src/server/"
+    )
+endif()
 
 file(COPY assets DESTINATION ${CMAKE_BINARY_DIR}/)
 
 if(${PLATFORM} STREQUAL "Android")
-    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/lib/${CMAKE_ANDROID_ARCH_ABI})
-    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/obj)
-    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-    file(COPY android/res DESTINATION ${CMAKE_BINARY_DIR}/)
-    file(COPY android/src DESTINATION ${CMAKE_BINARY_DIR}/)
-    file(COPY android/AndroidManifest.xml DESTINATION ${CMAKE_BINARY_DIR}/)
+    set(VERSION_NUMBER 1)
+    set(VERSION_NAME "1.0.0")
 
-    set_target_properties(SFFSandbox
-        PROPERTIES
-        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/${CMAKE_ANDROID_ARCH_ABI}"
-        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/${CMAKE_ANDROID_ARCH_ABI}"
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/${CMAKE_ANDROID_ARCH_ABI}"
-        OUTPUT_NAME "libsffsandbox.so"
+    set(OUT_DIR ${CMAKE_BINARY_DIR}/${OUT_DIR})
+    file(MAKE_DIRECTORY ${OUT_DIR}/lib/${CMAKE_ANDROID_ARCH_ABI})
+    file(MAKE_DIRECTORY ${OUT_DIR}/obj)
+    file(MAKE_DIRECTORY ${OUT_DIR}/bin)
+    file(COPY android/res DESTINATION ${OUT_DIR})
+    configure_file(android/AndroidManifest.xml ${OUT_DIR}/AndroidManifest.xml)
+
+    write_file(${OUT_DIR}/src/com/${DEV_NAME}/${PACKAGE_NAME}/NativeLoader.java 
+        "package com.${DEV_NAME}.${PACKAGE_NAME};\n\n"
+        "public class NativeLoader extends android.app.NativeActivity {\n"
+        "   static {\n"
+        "       System.loadLibrary(\"${LIB_NAME}\");\n"
+        "   }\n"
+        "}\n"
     )
+
+    set(OUT_LIB_DIR ${OUT_DIR}/lib/${CMAKE_ANDROID_ARCH_ABI})
+    set_target_properties(SFFSandbox PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${OUT_LIB_DIR} OUTPUT_NAME "${LIB_NAME}")
+    add_compile_options(${ABI_FLAGS})
+
+    # Fix java.lang.UnsatisfiedLinkError: dlopen failed: cannot locate symbol "_Unwind_Resume"
+    add_compile_options("-ffunction-sections -funwind-tables -fstack-protector-strong -fPIC")
+    add_compile_options("-Wa,--noexecstack -Wformat -Werror=format-security -Wunused-function -no-canonical-prefixes")
+    add_link_options("-Wl,--exclude-libs,libatomic.a -Wl,--build-id -Wl,--no-undefined -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now -Wl,--warn-shared-textrel -Wl,--fatal-warnings")
+    add_link_options("-u ANativeActivity_onCreate")
 endif()
