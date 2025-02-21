@@ -3,6 +3,7 @@
 #include <ui/MultiplayerScene.hpp>
 #include <ui/CreditsScene.hpp>
 #include <ui/SettingsScene.hpp>
+#include <ui/TestScene.hpp>
 #include <ui/nodes/Button.hpp>
 #include <StyleManager.hpp>
 #include <Game.hpp>
@@ -16,6 +17,7 @@ MainMenuScene::MainMenuScene() : MenuBase() {
         {"Multiplayer", [game](Button*) { game->pushScene(std::make_shared<MultiplayerScene>()); }},
         {"Credits", [game](Button*) { game->pushScene(std::make_shared<CreditsScene>()); }},
         {"Settings", [game](Button*) { game->pushScene(std::make_shared<SettingsScene>()); }},
+        {"Test", [game](Button*) { game->pushScene(std::make_shared<TestScene>()); }},
         {"Quit", [game](Button*) { game->destroy(); }}
     };
 

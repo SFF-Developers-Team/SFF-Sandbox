@@ -48,7 +48,7 @@ CreditsScene::CreditsScene() {
     m_licensesBox = std::make_shared<Container>();
 
 
-    auto raylib = std::make_shared<SpriteNode>("raylib");
+    auto raylib = std::make_shared<SpriteNode>("raylib.png");
     raylib->setSize({128.f, 128.f});
     raylib->setAnchor({0.f, 1.f});
     raylib->setPos({5.f, container->getHeight() - 5.f});

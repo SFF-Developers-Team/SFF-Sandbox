@@ -2,7 +2,7 @@
 #include <format>
 #include <iostream>
 
-#ifdef PLATFORM_DESKTOP
+#ifdef PLATFORM_DESKTOP_GLFW
 template <typename... Args>
 void logD(std::format_string<Args...> s, Args&&... args) {
     std::printf("[DBG] %s\n", std::format(s, std::forward<Args>(args)...).c_str());
@@ -22,7 +22,7 @@ template <typename... Args>
 void logM(std::format_string<Args...> s, Args&&... args) {
     std::printf("%s\n", std::format(s, std::forward<Args>(args)...).c_str());
 }
-#elif defined(PLATFORM_ANDROID)
+#else
 template <typename... Args>
 void logD(Args&&... args) { /*NOT IMPLEMENTED*/ }
 
