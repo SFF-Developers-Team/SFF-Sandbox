@@ -7,8 +7,12 @@
 #include <Debug.hpp>
 #include <Utils.hpp>
 #include <Game.hpp>
+#include <algorithm>
+#include <Types.hpp>
 
-Player::Player(std::shared_ptr<World> world) : SimplePlayer::SimplePlayer(world), m_selectedBlock(0), m_inventory(36), m_forward(0.f) {
+Player::Player(std::shared_ptr<World> world) 
+    : SimplePlayer::SimplePlayer(world), m_selectedBlock(0), m_inventory(36), m_forward(0.f), m_gamemode(GAMEMODE_SURVIVAL), 
+    m_id(0), m_lastAnimFrameTime(0.f), m_lastDestroyedBlock(0.f), m_lastPlacedBlock(0.f) {
     m_header = Header::PLAYER;
     m_camera.zoom = 50.0f;
     m_camera.rotation = 0.0f;
@@ -32,21 +36,20 @@ Player::Player(std::shared_ptr<World> world) : SimplePlayer::SimplePlayer(world)
     };
     // clang-format on
 
-    addToInventory(std::make_shared<Block>(Block::ID::GRASS));
-    addToInventory(std::make_shared<Block>(Block::ID::DIRT));
-    addToInventory(std::make_shared<Block>(Block::ID::STONE));
-    addToInventory(std::make_shared<Block>(Block::ID::COBLESTONE));
-    addToInventory(std::make_shared<Block>(Block::ID::PLANKS));
-    addToInventory(std::make_shared<Block>(Block::ID::BRICKS));
-    addToInventory(std::make_shared<Block>(Block::ID::BOOKSHELF));
-    addToInventory(std::make_shared<Block>(Block::ID::FLOWER_POT));
-    addToInventory(std::make_shared<Block>(Block::ID::FURHANCE));
-    addToInventory(std::make_shared<Block>(Block::ID::ACTIVE_FURHANCE));
+    if(m_gamemode == GAMEMODE_CREATIVE) {
+        for(int i = 1; i < 20; i++) {
+            if(i == BlockID::BEDROCK) {
+                continue;
+            }
 
-    for (auto& col : colors) {
-        auto wool = std::make_shared<Block>(Block::ID::WOOL);
-        wool->setTag(Block::TagID::COLOR, col);
-        addToInventory(wool);
+            addToInventory(std::make_shared<Block>(static_cast<BlockID>(i)), 64);
+        }
+
+        for (auto& col : colors) {
+            auto wool = std::make_shared<Block>(BlockID::WOOL);
+            wool->setTag(TagID::TAG_COLOR, col);
+            addToInventory(wool, 64);
+        }
     }
 
     updateCamera();
@@ -55,10 +58,8 @@ Player::Player(std::shared_ptr<World> world) : SimplePlayer::SimplePlayer(world)
 void Player::updateCamera() {
     auto wheel = GetMouseWheelMove();
 
-    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0)
-        m_camera.zoom -= 1.0f;
-    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0)
-        m_camera.zoom += 1.0f;
+    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel > 0) m_camera.zoom -= 1.0f;
+    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel < 0) m_camera.zoom += 1.0f;
 
     m_camera.target.x = m_hitbox.x + m_hitbox.width / 2;
     m_camera.target.y = m_hitbox.y - m_hitbox.height / 2;
@@ -105,70 +106,72 @@ void Player::updateAnimation() {
     }
 }
 
-Vec2i Player::getTargetBlock() {
+TargetBlock Player::getTargetBlock() {
     Vector2 cur = TO_CAMERA_POS(m_camera, GetMousePosition());
+    auto layer = !IsKeyDown(KEY_LEFT_ALT);
 
-    return {static_cast<int>(floorl(cur.x)), static_cast<int>(floorl(cur.y))};
+    return {static_cast<int>(floorl(cur.x)), static_cast<int>(floorl(cur.y)), layer};
 }
 
-bool Player::canAccessBlock(Vec2i target, uint8_t layer) {
-    bool result = target.distance(Vec2f {m_hitbox.x, m_hitbox.y}) <= 4;
+bool Player::canAccessBlock(TargetBlock target) {
+    Vec2f playerPos{m_hitbox.x, m_hitbox.y};
+
+    bool result = playerPos.distance(Vec2f {static_cast<float>(target.x), static_cast<float>(target.y)}) <= 4.f;
 
     return result;
 }
 
-bool Player::canDestroyBlock(Vec2i pos, uint8_t layer) {
-    if (m_world->isOutOfBound(pos.x, pos.y, layer)) {
+bool Player::canDestroyBlock(TargetBlock target) {
+    if (m_world->isOutOfBound(target.x, target.y, target.layer)) {
         return false;
     }
 
-    if (auto block = m_world->getBlock(pos.x, pos.y, layer)) {
+    if (auto block = m_world->getBlock(target.x, target.y, target.layer)) {
         if(block == nullptr) return false;
 
-        Block::ID type = block->getID();
+        BlockID type = block->getID();
 
-        return type != Block::ID::BEDROCK && type > 0;
+        return type != BlockID::BEDROCK && type > 0;
     }
 
     return false;
 }
 
-bool Player::canPlaceBlock(Vec2i pos, uint8_t layer) {
-    if (m_world->isOutOfBound(pos.x, pos.y, layer)) {
+bool Player::canPlaceBlock(TargetBlock target) {
+    if (m_world->isOutOfBound(target.x, target.y, target.layer)) {
         return false;
     }
 
     bool blockAround = (
-        m_world->getBlock(pos.x - 1, pos.y, layer) || 
-        m_world->getBlock(pos.x + 1, pos.y, layer) ||
-        m_world->getBlock(pos.x, pos.y - 1, layer) || 
-        m_world->getBlock(pos.x, pos.y + 1, layer) ||
-        m_world->getBlock(pos.x, pos.y, !layer)
+        m_world->getBlock(target.x - 1, target.y, target.layer) || 
+        m_world->getBlock(target.x + 1, target.y, target.layer) ||
+        m_world->getBlock(target.x, target.y - 1, target.layer) || 
+        m_world->getBlock(target.x, target.y + 1, target.layer) ||
+        m_world->getBlock(target.x, target.y, !target.layer)
     );
 
     bool overlap = false;
 
     for(auto& [_, player] : m_world->getPlayers()) {
-        overlap |= (layer == 1 && CheckCollisionRecs(player->getHitbox().getRect().to<Rectangle>(), BLOCK_RECT(pos.x, pos.y)));
+        overlap |= (target.layer == 1 && CheckCollisionRecs(player->getHitbox().getRect().to<Rectangle>(), BLOCK_RECT(target.x, target.y)));
     }
 
-    return !m_world->getBlock(pos.x, pos.y, layer) && blockAround && !overlap;
+    return !m_world->getBlock(target.x, target.y, target.layer) && blockAround && !overlap;
 }
 
 void Player::onTickControls() {
     auto target = getTargetBlock();
     auto gravitation = (!m_fly) ? 0.02f : 0.0f;
-    auto layer = !IsKeyDown(KEY_LEFT_ALT);
     auto mp = Multiplayer::get();
     auto ct = Game::get()->getControlType();
 
-    if (canAccessBlock(target, layer)) {
+    if (canAccessBlock(target)) {
         bool wantPlaceBlock = false;
         bool wantDestroyBlock = false;
 
         if(ct == CONTROL_KEYBOARD_MOUSE) {
-            wantPlaceBlock = IsMouseButtonDown(MOUSE_LEFT_BUTTON);
-            wantDestroyBlock = IsMouseButtonDown(MOUSE_RIGHT_BUTTON);
+            wantPlaceBlock = IsMouseButtonDown(MOUSE_RIGHT_BUTTON);
+            wantDestroyBlock = IsMouseButtonDown(MOUSE_LEFT_BUTTON);
         }
 
         if(ct == CONTROL_TOUCH) {
@@ -176,39 +179,24 @@ void Player::onTickControls() {
             wantPlaceBlock = !wantDestroyBlock && IsGestureDetected(GESTURE_TAP);
         }
 
-        if (wantPlaceBlock && canDestroyBlock(target, layer)) {
-            m_world->destroyBlock(target.x, target.y, layer);
-            
-            if(IsKeyDown(KEY_LEFT_CONTROL)) {
-                auto block = std::make_shared<Block>(*m_inventory[m_selectedBlock]);
-                m_world->placeBlock(target.x, target.y, layer, block);
-            }
-
+        if (wantDestroyBlock && GetTime() >= m_lastDestroyedBlock + 0.1f && canDestroyBlock(target)) {
             if (m_onGround) {
                 setAnimation(PLAYER_HIT);
             }
 
-            if (mp->connected()) {
-                auto pak = Packet(Header::BLOCK_DESTROY);
-                pak.add<int32_t>(target.x);
-                pak.add<int32_t>(target.y);
-                pak.add<uint8_t>(layer);
-                
-                mp->sendPacket(pak, BLOCKS);
-            }
+            destroyBlock();
         }
 
-        if (wantDestroyBlock && canPlaceBlock(target, layer)) {
-            auto block = std::make_shared<Block>(*m_inventory[m_selectedBlock]);
-            m_world->placeBlock(target.x, target.y, layer, block);
+        if (wantPlaceBlock && GetTime() >= m_lastPlacedBlock + 0.05f && canPlaceBlock(target)) {
+            if(IsKeyDown(KEY_LEFT_CONTROL)) {
+                destroyBlock();
+            }
 
             if (m_onGround) {
                 setAnimation(PLAYER_HIT);
             }
 
-            if (mp->connected()) {
-                mp->sendPacket(Packet(Header::BLOCK_PLACE, block->serialize()), BLOCKS);
-            }
+            placeBlock();
         }
     }
 
@@ -338,10 +326,9 @@ void Player::update() {
 
     auto dbg = Debug::get();
     auto target = getTargetBlock();
-    auto layer = !IsKeyDown(KEY_LEFT_ALT);
-    auto block = m_world->getBlock(target.x, target.y, layer);
+    auto block = m_world->getBlock(target.x, target.y, target.layer);
 
-    dbg->setString(PLAYER_TARGET_BLOCK, "Target block: [{}, {}] ({})", target.x, target.y, (block ? Block::idToString(block->getID()) : "nullptr"));
+    // dbg->setString(PLAYER_TARGET_BLOCK, "Target block: [{}, {}] ({})", target.x, target.y, (block ? Block::idToString(block->getID()) : "nullptr"));
     dbg->setString(PLAYER_POSITION, "Position: [{:.2f}, {:.2f}]", m_hitbox.x, m_hitbox.y);
 }
 
@@ -371,23 +358,29 @@ bool Player::isBlockInView(std::shared_ptr<Block> block) {
     return false;
 }
 
-std::shared_ptr<Block> Player::getSelectedBlock() {
-    if (m_selectedBlock < 9) {
-        return m_inventory[m_selectedBlock];
-    }
-
-    return nullptr;
+std::shared_ptr<InventoryItem> Player::getSelectedItem() {
+    return m_inventory[m_selectedBlock % 9];
 }
 
-bool Player::addToInventory(std::shared_ptr<Block> block) {
-    for(auto& slot : m_inventory) {
-        if(slot == nullptr) {
-            slot = block;
-            return true;
-        }
-    } 
+int Player::addToInventory(std::shared_ptr<ItemBase> item, int count) {
+    if(count <= 0) return 0;
 
-    return false;
+    for (auto& slot : m_inventory) {
+        if (slot == nullptr || *slot == item) {  
+            int add = min(count, (slot != nullptr ? 64 - slot->getCount() : 64));
+
+            if (slot == nullptr) {
+                slot = std::make_shared<InventoryItem>(item, 0);
+            }
+
+            slot->setCount(slot->getCount() + add);
+            count -= add;
+
+            if (count <= 0) return 0;
+        }
+    }
+
+    return count;
 }
 
 void Player::triggerMove(Direction dir) {
@@ -404,7 +397,9 @@ void Player::triggerJump() {
 }
 
 void Player::toggleFly() {
-    m_fly = !m_fly;
+    if(m_gamemode == GAMEMODE_CREATIVE) {
+        m_fly = !m_fly;
+    }
 }
 
 void Player::triggerDuck(bool toggle) {
@@ -419,5 +414,74 @@ void Player::triggerDuck(bool toggle) {
             m_sneakToggled = !m_sneakToggled;
             m_sneak = m_sneakToggled;
         }
+    }
+}
+
+void Player::setGameMode(GameMode gamemode) {
+    if(gamemode == GAMEMODE_SURVIVAL) {
+        m_fly = false;
+    }
+
+    m_gamemode = gamemode;
+}
+
+void Player::placeBlock() {
+    if(m_inventory[m_selectedBlock] != nullptr) {
+        auto block = std::make_shared<Block>(*m_inventory[m_selectedBlock]);
+        auto target = getTargetBlock();
+        auto mp = Multiplayer::get();
+
+        m_world->placeBlock(target.x, target.y, target.layer, block);
+        
+        if(m_gamemode == GAMEMODE_SURVIVAL) {
+            m_inventory[m_selectedBlock]->decrementCount();
+
+            if(m_inventory[m_selectedBlock]->getCount() <= 0) {
+                m_inventory[m_selectedBlock] = nullptr;
+            }
+        }
+
+        m_lastPlacedBlock = GetTime();
+
+        if (mp->connected()) {
+            mp->sendPacket(Packet(Header::BLOCK_PLACE, block->serialize()), BLOCKS);
+        }
+    }
+}
+
+void Player::destroyBlock() {
+    auto mp = Multiplayer::get();
+    auto target = getTargetBlock();
+    auto targetBlock = m_world->getBlock(target.x, target.y, target.layer);
+
+    if (m_breakingBlock != target) {
+        m_breakingBlock = target;
+        m_breakingBlockDurability = (targetBlock != nullptr ? targetBlock->getDurability() : 0.f);
+        m_lastPunch = GetTime();
+    }
+
+    if (m_gamemode == GAMEMODE_SURVIVAL && targetBlock != nullptr) {
+        if (GetTime() > m_lastPunch + 0.1f) {
+            m_breakingBlockDurability--;
+            m_lastPunch = GetTime();
+        }
+
+        if (m_breakingBlockDurability > 0) {
+            return;
+        }
+
+        addToInventory(targetBlock);
+    }
+    
+    m_world->destroyBlock(target.x, target.y, target.layer);
+    m_lastDestroyedBlock = GetTime();
+
+    if (mp->connected()) {
+        auto pak = Packet(Header::BLOCK_DESTROY);
+        pak.add<int32_t>(target.x);
+        pak.add<int32_t>(target.y);
+        pak.add<uint8_t>(target.layer);
+        
+        mp->sendPacket(pak, BLOCKS);
     }
 }

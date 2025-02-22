@@ -2,6 +2,7 @@
 #include <RenderManager.hpp>
 #include <raylib.h>
 #include <entity/Player.hpp>
+#include <world/Block.hpp>
 
 float constexpr cellSize = 32.f;
 float constexpr blockSize = cellSize / 2.f;
@@ -18,22 +19,23 @@ void Hotbar::draw() {
     auto selected = m_player->getSelectedIndex();
 
     for (auto i = 0; i <= cellsCount; i++) {
-        Rectf cell = {m_border * 2 + cellSize * i + m_border * i, m_border * 2, cellSize, cellSize};
-        Rectf block = {cell.x + (cell.width - blockSize) / 2, cell.y + (cell.height - blockSize) / 2, blockSize, blockSize};
+        Rectf cellRect = {m_border * 2 + cellSize * i + m_border * i, m_border * 2, cellSize, cellSize};
+        Rectf itemRect = {cellRect.x + (cellRect.width - blockSize) / 2, cellRect.y + (cellRect.height - blockSize) / 2, blockSize, blockSize};
 
-        RenderManager::drawFrame(cell, m_color, m_border);
+        RenderManager::drawFrame(cellRect, m_color, m_border);
 
         if(i == cellsCount) {
-            RenderManager::drawText("boldfont", "...", {cell.x + cell.width / 2, cell.y + cell.width / 2}, COL_WHITE, 0.f, {0.5f, 0.5f});
+            RenderManager::drawText("boldfont", "...", {cellRect.x + cellRect.width / 2, cellRect.y + cellRect.width / 2}, COL_WHITE, 0.f, {0.5f, 0.5f});
             break;
         }
-        
+
         if(inventory[i] != nullptr) {
-            RenderManager::renderBlock(block, inventory[i]);
+            RenderManager::renderInventoryItem(itemRect, inventory[i]);
+            RenderManager::drawText("font", std::to_string(inventory[i]->getCount()), {cellRect.x + cellRect.width, cellRect.y + cellRect.height}, COL_WHITE, 0.f, {1.f, 1.f});
         }
 
         if(i == selected) {
-            RenderManager::drawRectLines(cell, COL_WHITE, m_border);
+            RenderManager::drawRectLines(cellRect, COL_WHITE, m_border);
         }
     }
 }

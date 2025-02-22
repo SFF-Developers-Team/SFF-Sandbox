@@ -17,6 +17,7 @@ public:
         CHUNK,
         WORLD,
         ENTITY,
+        INVENTORY_ITEM,
 
         // Multiplayer headers
         IDENTIFICATION, DISCONNECT,
@@ -36,6 +37,9 @@ protected:
     Header m_header;
 
 public:
+    SerializedObject() {}
+    SerializedObject(Header header) : m_header(header) {}
+
     virtual ByteVector serialize() {
         clear();
         add(m_header);

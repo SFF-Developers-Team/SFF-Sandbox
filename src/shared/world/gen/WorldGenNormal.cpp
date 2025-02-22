@@ -5,17 +5,17 @@
 #include <stdlib.h>
 
 struct Ore {
-    Block::ID type;
+    BlockID type;
     int maxHeight;
     int veinSize;
     float density;
 };
 
 std::vector<Ore> ores = {
-    {Block::ID::COAL_ORE, 128, 6, 0.025f},
-    {Block::ID::IRON_ORE, 64, 6, 0.012f},
-    {Block::ID::GOLD_ORE, 16, 4, 0.01f},
-    {Block::ID::DIAMOND_ORE, 12, 2, 0.01f}
+    {BlockID::COAL_ORE, 128, 6, 0.025f},
+    {BlockID::IRON_ORE, 64, 6, 0.012f},
+    {BlockID::GOLD_ORE, 16, 4, 0.01f},
+    {BlockID::DIAMOND_ORE, 12, 2, 0.01f}
 };
 
 WorldGenNormal::WorldGenNormal(std::shared_ptr<World> world, uint64_t seed) : WorldGen(world, seed), m_perlinNoise(seed) {
@@ -36,22 +36,22 @@ std::shared_ptr<Chunk> WorldGenNormal::generateChunk(int32_t position) {
 
             for (auto y = 0u; y < m_world->getHeight(); y++) {
                 if (y == m_world->getHeight() - 1) {
-                    ret->setBlock(x, y, z, Block::ID::BEDROCK);
+                    ret->setBlock(x, y, z, BlockID::BEDROCK);
                     continue;
                 }
 
                 if (y == grassLevel) {
-                    ret->setBlock(x, y, z, Block::ID::GRASS);
+                    ret->setBlock(x, y, z, BlockID::GRASS);
                     continue;
                 }
 
                 if (y > grassLevel && y < stoneLevel) {
-                    ret->setBlock(x, y, z, Block::ID::DIRT);
+                    ret->setBlock(x, y, z, BlockID::DIRT);
                     continue;
                 }
 
                 if (y >= stoneLevel) {
-                    ret->setBlock(x, y, z, Block::ID::STONE);
+                    ret->setBlock(x, y, z, BlockID::STONE);
                     continue;
                 }
             }
@@ -72,7 +72,7 @@ std::shared_ptr<Chunk> WorldGenNormal::generateChunk(int32_t position) {
                             continue;
                         }
 
-                        if(block->getID() == Block::ID::STONE) {
+                        if(block->getID() == BlockID::STONE) {
                             ret->setBlock(veinX, veinY, 1, ore.type);
                         }
                     }

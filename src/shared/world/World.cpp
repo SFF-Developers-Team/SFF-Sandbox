@@ -82,7 +82,7 @@ std::shared_ptr<Block> World::getBlock(int32_t x, int32_t y, uint8_t layer) {
 }
 
 void World::setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block) {
-    if (isOutOfBound(x, y, layer) || (block && block->getID() == Block::ID::AIR)) {
+    if (isOutOfBound(x, y, layer) || (block && block->getID() == BlockID::AIR)) {
         return;
     }
 

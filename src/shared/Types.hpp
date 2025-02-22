@@ -1,6 +1,8 @@
 #pragma once
 #include <type_traits>
 #include <cstdint>
+#include <variant>
+#include <map>
 
 template <typename T>
 struct Vec2 {
@@ -79,6 +81,8 @@ struct Col3 {
     void operator/=(const Col3<T>& other) { *this = *this / other; }
     void operator*=(T other) { *this = *this * other; }
     void operator/=(T other) { *this = *this / other; }
+
+    bool operator==(Col3<T> const& other) const { return r == other.r && g == other.g && b == other.b; }
 
     template <typename T2>
     inline T2 to() const {
@@ -196,6 +200,8 @@ using Col4u = Col4<unsigned char>;
 #define COL_MAGENTA    Col4u { 255, 0, 255, 255 }     // Magenta
 #define COL_RAYWHITE   Col4u { 245, 245, 245, 255 }   // My own White (raylib logo)
 
+// Enums
+
 enum DisconnectReasonID : uint32_t {
     INVALID_FIRST_PACKET,
     TOO_SHORT_USERNAME,
@@ -212,4 +218,61 @@ enum ControlType : uint8_t {
     CONTROL_KEYBOARD_MOUSE,
     CONTROL_GAMEPAD,
     CONTROL_TOUCH
+};
+
+enum GameMode : uint8_t {
+    GAMEMODE_CREATIVE,
+    GAMEMODE_SURVIVAL
+};
+
+enum BlockID : uint8_t {
+    AIR = 0,
+    GRASS,
+    DIRT,
+    STONE,
+    COBLESTONE,
+    PLANKS,
+    WOOL,
+    BEDROCK,
+    BRICKS,
+    OAK_LOG,
+    ANOTHER_OAK_LOG,
+    LEAVES,
+    COAL_ORE,
+    IRON_ORE,
+    GOLD_ORE,
+    DIAMOND_ORE,
+    LAPIZ_ORE,
+    BOOKSHELF,
+    FLOWER_POT,
+    FURHANCE,
+    ACTIVE_FURHANCE
+};
+
+enum InventoryItemType : uint8_t {
+    INVENTORY_TYPE_BLOCK,
+    INVENTORY_TYPE_ITEM
+};
+
+enum TagID : uint8_t {
+    TAG_COLOR,
+    TAG_GHOST
+};
+
+enum MaterialType : uint8_t {
+    MATERIAL_STONE,
+    MATERIAL_DIRT,
+    MATERIAL_WOOD,
+    MATERIAL_WOOL
+};
+
+using TagValue = std::variant<Col3u, bool>;
+using ItemTags = std::map<TagID, TagValue>;
+
+struct TargetBlock {
+    int x;
+    int y;
+    uint8_t layer;
+
+    bool operator==(TargetBlock const& other) const { return x == other.x && y == other.y && layer == other.layer; }
 };

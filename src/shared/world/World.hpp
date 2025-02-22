@@ -22,13 +22,11 @@ private:
     std::map<PlayerID, std::shared_ptr<SimplePlayer>> m_players;
     std::shared_ptr<WorldGen> m_worldGen;
     std::string m_worldName;
-
-    uint32_t m_height;
-    uint32_t m_version;
-    PlayerID m_lastPlayerID = 1;
-
+    PlayerID m_lastPlayerID;
     uint64_t m_spentTime;
     uint64_t m_loadTime;
+    uint32_t m_version;
+    uint32_t m_height;
 
 public:
     uint32_t const WORLD_VERSION = WORLDVER;

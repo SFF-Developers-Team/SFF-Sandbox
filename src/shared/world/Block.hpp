@@ -1,56 +1,24 @@
 #pragma once
 #include <SerializedObject.hpp>
+#include <ItemBase.hpp>
 #include <Types.hpp>
 #include <cstddef>
-#include <map>
-#include <variant>
 
-class Block : public SerializedObject {
-public:
-    enum ID : uint8_t {
-        AIR = 0,
-        GRASS,
-        DIRT,
-        STONE,
-        COBLESTONE,
-        PLANKS,
-        WOOL,
-        BEDROCK,
-        BRICKS,
-        OAK_LOG,
-        ANOTHER_OAK_LOG,
-        LEAVES,
-        COAL_ORE,
-        IRON_ORE,
-        GOLD_ORE,
-        DIAMOND_ORE,
-        LAPIZ_ORE,
-        BOOKSHELF,
-        FLOWER_POT,
-        FURHANCE,
-        ACTIVE_FURHANCE
-    };
-
-    enum TagID : uint8_t {
-        COLOR,
-        GHOST
-    };
-
-    typedef std::variant<Col3u, bool> TagValue;
-
+class Block : public ItemBase, public SerializedObject {
 protected:
-    ID m_id;
     int32_t m_x;
     int32_t m_y;
     uint8_t m_layer;
-    std::map<TagID, std::variant<Col3u, bool>> m_tags;
-    std::mutex m_mutex;
-    
-public:
-    static std::string const idToString(ID id);
 
-    Block(ID id = ID::AIR, int32_t x = 0, int32_t y = 0, uint8_t layer = 1);
+    std::mutex m_mutex;
+    MaterialType m_materialType;
+
+public:
+    static std::string const idToString(BlockID id);
+
+    Block(BlockID id = BlockID::AIR, int32_t x = 0, int32_t y = 0, uint8_t layer = 1);
     Block(Block& block);
+    Block(ItemBase& item);
 
     Rectf getHitbox();
 
@@ -58,19 +26,14 @@ public:
     virtual void onRandomTick() {}
 
     void setPos(int32_t x, int32_t y, uint8_t layer);
-    void setID(ID id) { m_id = id; }
-
-    void setTag(TagID key, TagValue value);
-    void removeTag(TagID key);
-    bool hasTag(TagID key);
-    
-    template <typename T>
-    T getTag(TagID key) { return std::get<T>(m_tags[key]); }
+    void setID(BlockID id) { m_id = id; }
+    BlockID getID() { return static_cast<BlockID>(m_id); }
 
     ByteVector serialize() override;
     size_t deserialize(ByteVector const& bytes) override;
 
-    auto const getID() { return m_id; }
     auto const getPos() { return Vec2i {m_x, m_y}; }
     auto const getLayer() { return m_layer; };
+
+    float getDurability();
 };

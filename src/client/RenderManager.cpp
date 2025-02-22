@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <Utils.hpp>
 #include <string>
+#include <InventoryItem.hpp>
 
 int blocksDrawn = 0;
 
@@ -90,16 +91,15 @@ void RenderManager::renderWorld(std::shared_ptr<World> world, std::shared_ptr<Pl
             chunksCount++;
         }
 
-        auto layer = !IsKeyDown(KEY_LEFT_ALT);
         auto target = player->getTargetBlock();
 
         // Selected block
-        if (player->canAccessBlock(target, layer)) {
-            if(player->canPlaceBlock(target, layer)) {
+        if (player->canAccessBlock(target)) {
+            if(player->canPlaceBlock(target)) {
                 drawTile("gui.png", 1, BLOCK_RECT(target.x, target.y));
             }
 
-            if(player->canDestroyBlock(target, layer)) {
+            if(player->canDestroyBlock(target)) {
                 drawTile("gui.png", 2 + IsKeyDown(KEY_LEFT_CONTROL), BLOCK_RECT(target.x, target.y));
             }
         }
@@ -125,7 +125,6 @@ void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Pl
     auto dbg = Debug::get();
     auto world = chunk->getWorld();
     auto target = player->getTargetBlock();
-    auto layer = IsKeyDown(KEY_LEFT_ALT);
     auto cpos = chunk->getPosition();
 
     for (int x = 0; x < CHUNK_WIDTH; x++) {
@@ -140,7 +139,7 @@ void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Pl
                     target.x == blockX && 
                     target.y == y && 
                     IsKeyDown(KEY_LEFT_ALT) && 
-                    player->canAccessBlock(target, layer);
+                    player->canAccessBlock(target);
 
                 if (block0 != nullptr && (block1 == nullptr || watchAltBlock)) {
                     renderBlock(BLOCK_RECT(blockX, y), block0);
@@ -166,8 +165,8 @@ void RenderManager::renderBlock(Rectf dest, std::shared_ptr<Block> block, uint8_
     auto index = static_cast<uint16_t>(block->getID() - 1);
     Col3u col = {255, 255, 255};
 
-    if (block->hasTag(Block::TagID::COLOR)) { 
-        col = block->getTag<Col3u>(Block::TagID::COLOR);
+    if (block->hasTag(TagID::TAG_COLOR)) { 
+        col = block->getTag<Col3u>(TagID::TAG_COLOR);
     }
 
     if(!block->getLayer()) {
@@ -175,6 +174,19 @@ void RenderManager::renderBlock(Rectf dest, std::shared_ptr<Block> block, uint8_
     }
 
     drawTile("blocks.png", index, dest, {col.r, col.g, col.b, alpha});
+}
+
+void RenderManager::renderInventoryItem(Rectf dest, std::shared_ptr<InventoryItem> item) {
+    auto index = static_cast<uint16_t>(item->getID() - 1);
+    Col3u col = {255, 255, 255};
+
+    if (item->hasTag(TagID::TAG_COLOR)) { 
+        col = item->getTag<Col3u>(TagID::TAG_COLOR);
+    }
+
+    if(item->isBlock()) {
+        drawTile("blocks.png", index, dest, {col.r, col.g, col.b, 255});
+    }
 }
 
 void RenderManager::renderEntity(std::string& textureKey, std::shared_ptr<Entity> entity) {
