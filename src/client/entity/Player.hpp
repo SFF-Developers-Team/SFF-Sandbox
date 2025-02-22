@@ -15,6 +15,7 @@ private:
     std::vector<std::shared_ptr<Block>> m_inventory;
     int8_t m_selectedBlock;
 
+    bool m_sneakToggled = false;
     bool m_sneak = false;
     bool m_fly = false;
     bool m_inv = false;
@@ -45,10 +46,17 @@ public:
     
     Vec2i getTargetBlock();
     std::shared_ptr<Block> getSelectedBlock();
+    
     int8_t getSelectedIndex() { return m_selectedBlock; }
+    void setSelectedIndex(int8_t i) { m_selectedBlock = i; } 
 
     Camera2D& getCamera() { return m_camera; }
     std::vector<std::shared_ptr<Block>>& getInventory() { return m_inventory; }
 
     bool addToInventory(std::shared_ptr<Block> block);
+
+    void triggerMove(Direction dir);
+    void triggerJump();
+    void triggerDuck(bool toggle);
+    void toggleFly();
 };

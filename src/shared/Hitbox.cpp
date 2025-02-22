@@ -1,5 +1,5 @@
 #include <Hitbox.hpp>
-#include <Logger.hpp>
+#include <algorithm>
 
 Hitbox::Hitbox(Rectf rec) : x(rec.x), y(rec.y), width(rec.width), height(rec.height) {}
 

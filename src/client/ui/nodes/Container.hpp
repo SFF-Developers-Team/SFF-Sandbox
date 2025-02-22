@@ -4,21 +4,16 @@
 class Container : public Frame {
 protected:
     std::vector<std::shared_ptr<Node>> m_childs;
-    float m_scrollOffset;
-    bool m_scrollable;
+    Vec2f m_offset;
+    bool m_frame;
 
-    float calculateTotalHeight();
 public:
     Container();
 
-    void update();
-    void draw();
+    virtual void update();
+    virtual void draw();
 
     void alignItemsHorizontal(float padding);
-    bool isScrollable() { return m_scrollable; }
-    void setScrollable(bool flag);
-
-    void resetScroll() { m_scrollOffset = 0.f; }
 
     void addChild(std::shared_ptr<Node> node);
     bool hasChild(size_t index) { return index < m_childs.size(); }
@@ -51,4 +46,7 @@ public:
 
         return ptr;
     }
+
+    bool isFrameVisible() { return m_frame; }
+    void setFrameVisible(bool frame) { m_frame = frame; }
 };

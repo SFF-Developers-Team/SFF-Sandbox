@@ -1,33 +1,51 @@
 #include <TextureManager.hpp>
 
 bool TextureManager::loadTexture(std::filesystem::path const& filepath) {
-    if(!std::filesystem::exists(filepath)) {
+#ifndef PLATFORM_ANDROID
+    auto fullPath = (!filepath.is_absolute()) ? "assets" / filepath : filepath;
+
+    if(!std::filesystem::exists(fullPath)) {
         return false;
     }
+#else
+    auto fullPath = filepath;
+#endif
 
-    auto key = filepath.filename().string();
-    m_textures[key] = LoadTexture(filepath.string().c_str());
+    auto key = fullPath.filename().string();
+    m_textures[key] = LoadTexture(fullPath.string().c_str());
 
     return true;
 }
 
 bool TextureManager::loadTileMap(std::filesystem::path const& filepath, Vec2i tileSize) {
-    if(!std::filesystem::exists(filepath)) {
+#ifndef PLATFORM_ANDROID
+    auto fullPath = (!filepath.is_absolute()) ? "assets" / filepath : filepath;
+
+    if(!std::filesystem::exists(fullPath)) {
         return false;
     }
+#else
+    auto fullPath = filepath;
+#endif
 
-    auto key = filepath.filename().string();
-    m_tilemaps[key] = std::make_shared<TileMap>(filepath, tileSize); 
+    auto key = fullPath.filename().string();
+    m_tilemaps[key] = std::make_shared<TileMap>(fullPath, tileSize); 
     return true;
 }
 
 bool TextureManager::loadFont(std::filesystem::path const& filepath)  {
-    if(!std::filesystem::exists(filepath)) {
+#ifndef PLATFORM_ANDROID
+    auto fullPath = (!filepath.is_absolute()) ? "assets" / filepath : filepath;
+
+    if(!std::filesystem::exists(fullPath)) {
         return false;
     }
+#else
+    auto fullPath = filepath;
+#endif
 
-    auto key = filepath.filename().stem().string();
-    m_fonts[key] = LoadFont(filepath.string().c_str());
+    auto key = fullPath.filename().stem().string();
+    m_fonts[key] = LoadFont(fullPath.string().c_str());
 
     return true;
 }

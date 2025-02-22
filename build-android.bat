@@ -2,8 +2,8 @@
 setlocal enabledelayedexpansion
 
 set ANDROID_ARCH=arm64-v8a
-set MIN_API_VERSION=29
-set API_VERSION=31
+set MIN_API_VERSION=21
+set API_VERSION=29
 set DEV_NAME=sff
 set PACKAGE_NAME=sandbox
 set PROJECT_NAME=SFFSandbox
@@ -96,7 +96,7 @@ cmake . ^
   -DANDROID_PLATFORM=android-%API_VERSION% ^
   -DANDROID_API_VERSION=%API_VERSION% ^
   -DANDROID_API_VERSION_MIN=%MIN_API_VERSION% ^
-  -DANDROID_STL=c++_static ^
+  -DCMAKE_ANDROID_STL_TYPE=c++_static ^
   -DOUT_DIR=%OUT_DIR% ^
   -DLIB_NAME=%LIB_NAME% ^
   -DDEV_NAME=%DEV_NAME% ^
@@ -118,7 +118,11 @@ if not exist %BUILD_DIR%/%PROJECT_NAME%.keystore %JAVA_HOME%/bin/keytool ^
   -storepass %STOREPASS% -keypass %STOREPASS% -alias %PROJECT_NAME%Key -keyalg RSA
 
 @REM Config project package and resource using AndroidManifest.xml and res/values/strings.xml
-call %BUILD_TOOLS%/aapt package -f -m -S %OUT_PATH%/res -J %OUT_PATH%/src -M %OUT_PATH%/AndroidManifest.xml -I %ANDROID_SDK%/platforms/android-%API_VERSION%/android.jar
+call %BUILD_TOOLS%/aapt package -f -m ^
+  -S %OUT_PATH%/res ^
+  -J %OUT_PATH%/src ^
+  -M %OUT_PATH%/AndroidManifest.xml ^
+  -I %ANDROID_SDK%/platforms/android-%API_VERSION%/android.jar
 
 
 @REM Compile NativeLoader.java
@@ -134,7 +138,11 @@ call %BUILD_TOOLS%/d8 ^
   --lib %ANDROID_SDK%/platforms/android-%API_VERSION%/android.jar
 
 @REM Add resources and assets to APK
-call %BUILD_TOOLS%/aapt package -f -M %OUT_PATH%/AndroidManifest.xml -S %OUT_PATH%/res -A %BUILD_DIR%/assets -I %ANDROID_SDK%/platforms/android-%API_VERSION%/android.jar -F %OUT_PATH%/bin/%PROJECT_NAME%.unaligned.apk %OUT_PATH%/bin
+call %BUILD_TOOLS%/aapt package -f ^
+  -M %OUT_PATH%/AndroidManifest.xml ^
+  -S %OUT_PATH%/res -A %BUILD_DIR%/assets ^
+  -I %ANDROID_SDK%/platforms/android-%API_VERSION%/android.jar ^
+  -F %OUT_PATH%/bin/%PROJECT_NAME%.unaligned.apk %OUT_PATH%/bin
 
 @REM Add library to APK
 set CURRENT_DIR=%~dp0
@@ -146,8 +154,10 @@ cd "%CURRENT_DIR%"
 %JAVA_HOME%/bin/jarsigner -keystore %BUILD_DIR%/%PROJECT_NAME%.keystore -storepass %STOREPASS% -keypass %STOREPASS% ^
 	-signedjar %OUT_PATH%/bin/%PROJECT_NAME%.signed.apk %OUT_PATH%/bin/%PROJECT_NAME%.unaligned.apk %PROJECT_NAME%Key
 
-
 call %BUILD_TOOLS%/zipalign -f 4 %OUT_PATH%/bin/%PROJECT_NAME%.signed.apk %BUILD_DIR%/%PROJECT_NAME%.apk
 
 @REM Install to device or emulator if -deploy was specified
-if %%1 == "-deploy" %PLATFORM_TOOLS%/adb install -r %BUILD_DIR%/%PROJECT_NAME%.apk
+@REM if %%1 == "-deploy" (
+  %PLATFORM_TOOLS%/adb uninstall com.sff.sandbox 
+  %PLATFORM_TOOLS%/adb install %BUILD_DIR%/%PROJECT_NAME%.apk
+@REM )

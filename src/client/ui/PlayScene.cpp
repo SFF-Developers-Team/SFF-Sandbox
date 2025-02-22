@@ -13,6 +13,8 @@
 #include <ui/MainMenuScene.hpp>
 #include <ui/nodes/Hotbar.hpp>
 #include <ui/nodes/Inventory.hpp>
+#include <ui/nodes/ListContainer.hpp>
+#include <ui/nodes/TouchControlButton.hpp>
 #include <chrono>
 #include <list>
 
@@ -35,8 +37,7 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     HideCursor();
 
     auto pauseMenu = std::make_shared<Container>();
-    pauseMenu->setFlag(FLAG_ALWAYS_CENTER, true);
-    pauseMenu->setFlag(FLAG_GUI_SCALE, true);
+    pauseMenu->setFlags(FLAG_ALWAYS_CENTER | FLAG_GUI_SCALE);
     pauseMenu->setColor({0, 0, 0, 0});
     pauseMenu->setTag("pause-menu");
     pauseMenu->setBorderWidth(0.f);
@@ -67,16 +68,15 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
 
     pauseMenu->hugContent();
 
-    auto hotbar = std::make_shared<Hotbar>(m_player);
+    auto hotbar = std::make_shared<Hotbar>(m_player, [this]() { setInventoryOpened(true); });
     hotbar->setAnchorY(0.f);
     hotbar->setPos({getWidth() / 2, 0.f});
-    hotbar->setFlag(FLAG_GUI_SCALE, true);
+    hotbar->setFlags(FLAG_GUI_SCALE);
     // hotbar->setTag("hotbar");
     addChild(hotbar);
 
     auto inventory = std::make_shared<Inventory>(m_player->getInventory());
-    inventory->setFlag(FLAG_GUI_SCALE, true);
-    inventory->setFlag(FLAG_ALWAYS_CENTER, true);
+    inventory->setFlags(FLAG_GUI_SCALE | FLAG_ALWAYS_CENTER);
     inventory->setVisible(false);
     inventory->setEnabled(false);
     inventory->setTag("inventory");
@@ -94,6 +94,9 @@ void PlayScene::draw() {
         RenderManager::renderWorld(m_world, m_player);
     EndMode2D();
 
+    auto game = Game::get();
+    auto scale = game->getGuiScale();
+
     if(m_paused) {
         RenderManager::drawRect({0.f, 0.f, getWidth(), getHeight()}, {0, 0, 0, 127});
     }
@@ -101,7 +104,7 @@ void PlayScene::draw() {
     Scene::draw();
 
     auto mouse = GetMousePosition();
-    RenderManager::drawTile("gui.png", 0, {mouse.x, mouse.y, 16.f, 16.f}, COL_WHITE, 0.f, {8.f, 8.f});
+    RenderManager::drawTile("gui.png", 0, {mouse.x, mouse.y, 16.f, 16.f}, COL_WHITE, 0.f, {0.5f, 0.5f});
 
     Debug::get()->draw();
 }
@@ -141,8 +144,7 @@ void PlayScene::update() {
     }
 
     if(IsKeyPressed(KEY_F3)) {
-        auto dbg = Debug::get();
-        dbg->setVisible(!dbg->isVisible());
+        Debug::get()->toggleVisibility();
     }
 
     if(IsKeyPressed(KEY_F6)) {
@@ -158,11 +160,11 @@ void PlayScene::update() {
     }
 
     if(IsKeyPressed(KEY_ESCAPE) && m_inventoryEnabled) {
-        setEnabledInventory(false);
+        setInventoryOpened(false);
     }
 
     if(IsKeyPressed(KEY_E)) {
-        setEnabledInventory(!m_inventoryEnabled);
+        setInventoryOpened(!m_inventoryEnabled);
     }
 
     Scene::update();
@@ -176,7 +178,7 @@ void PlayScene::setPaused(bool paused) {
     (paused ? ShowCursor() : HideCursor());
 }
 
-void PlayScene::setEnabledInventory(bool isOpen) {
+void PlayScene::setInventoryOpened(bool isOpen) {
     auto inventory = getChild<Inventory>("inventory");
     inventory->setVisible(isOpen);
     inventory->setEnabled(isOpen);

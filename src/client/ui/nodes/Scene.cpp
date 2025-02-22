@@ -5,17 +5,26 @@
 Scene::Scene() : Container() {
     setScale(1.f);
     setBorderWidth(0.f);
+    setFrameVisible(false);
+    setPos({0.f, 0.f});
+    setAnchor({0.f, 0.f});
+    setColor({0, 0, 0, 0});
+
     onShow();
 }
 
-void Scene::update() {
-    if(m_keyBack && IsKeyPressed(KEY_ESCAPE)) {
+void Scene::keyBackClicked() {
+    if(m_keyBack) {
         m_destroy = true;
     }
+}
 
+void Scene::update() {
+#ifndef PLATFORM_ANDROID
     if(IsWindowResized()) {
         onShow();
     }
+#endif
 
     Container::update();
 }
@@ -24,28 +33,5 @@ void Scene::onShow() {
     auto scrW = static_cast<float>(GetScreenWidth());
     auto scrH = static_cast<float>(GetScreenHeight());
 
-    setPos({scrW / 2.f, scrH / 2.f});
     setSize({scrW, scrH});
-}
-
-void Scene::destroy() {
-    m_destroy = true;
-}
-
-bool Scene::shouldDestroy() {
-    return m_destroy;
-}
-
-void Scene::draw() {
-    for(auto& node : m_childs) {
-        if(node->isVisible()) {
-            rlPushMatrix();
-                rlTranslatef(node->getX(), node->getY(), 0.f);
-                rlTranslatef(-(node->getAnchorX() * node->getScaleX() * node->getWidth()), -(node->getAnchorY() * node->getScaleY() * node->getHeight()), 0.f);
-                rlScalef(node->getScaleX(), node->getScaleY(), 0.f);
-                
-                node->draw();
-            rlPopMatrix();
-        }
-    }
 }

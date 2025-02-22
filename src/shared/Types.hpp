@@ -207,3 +207,9 @@ enum Direction : uint8_t {
     LEFT = 0,
     RIGHT = 1
 };
+
+enum ControlType : uint8_t {
+    CONTROL_KEYBOARD_MOUSE,
+    CONTROL_GAMEPAD,
+    CONTROL_TOUCH
+};

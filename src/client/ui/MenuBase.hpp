@@ -6,6 +6,5 @@ class MenuBase : public Scene {
 public:
     MenuBase();
     
-    virtual void update();
-    virtual void draw();
+    virtual void draw() override;
 };

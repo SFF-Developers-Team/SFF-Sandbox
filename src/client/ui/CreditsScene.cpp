@@ -21,8 +21,7 @@ CreditsScene::CreditsScene() {
 
     auto container = std::make_shared<Container>();
     container->setSize({600, 250});
-    container->setFlag(FLAG_ALWAYS_CENTER, true);
-    container->setFlag(FLAG_GUI_SCALE, true);
+    container->setFlags(FLAG_ALWAYS_CENTER | FLAG_GUI_SCALE);
     addChild(container);
 
     auto backBtn = std::make_shared<Button>("Back", [this](Button*) { destroy(); });
@@ -51,6 +50,7 @@ CreditsScene::CreditsScene() {
     auto raylib = std::make_shared<SpriteNode>("raylib.png");
     raylib->setSize({128.f, 128.f});
     raylib->setAnchor({0.f, 1.f});
+    raylib->setScale(0.25f);
     raylib->setPos({5.f, container->getHeight() - 5.f});
     container->addChild(raylib);
 
@@ -116,11 +116,10 @@ CreditsScene::CreditsScene() {
         libsList->setPos({libsList->getWidth() / 2 + borderw * 2, m_licensesBox->getHeight() / 2 + borderw});
         m_licensesBox->addChild(libsList);
 
-        m_textBox = std::make_shared<Container>();
+        m_textBox = std::make_shared<ScrollableContainer>();
         m_textBox->setAnchor({0.f, 0.5f});
         m_textBox->setPos({libsList->getX() + libsList->getWidth() * libsList->getAnchorX() + borderw, libsList->getY()});
         m_textBox->setSize({m_licensesBox->getWidth() - libsList->getWidth() - borderw * 5, libsList->getHeight()});
-        m_textBox->setScrollable(true);
         m_licensesBox->addChild(m_textBox);
 
         m_licenseText = std::make_shared<Text>("font", licensesText[0]);

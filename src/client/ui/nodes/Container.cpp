@@ -7,7 +7,7 @@
 #include <Game.hpp>
 #include <raymath.h>
 
-Container::Container() : Frame(), m_scrollOffset(0.f), m_scrollable(false) {}
+Container::Container() : Frame(), m_offset({0.f, 0.f}), m_frame(true) {}
 
 void Container::alignItemsHorizontal(float padding) {
     if(!m_childs.empty()) {
@@ -56,82 +56,42 @@ bool Container::hasChild(std::string const& tag) {
     return i != m_childs.end();
 }
 
-float Container::calculateTotalHeight() {
-    float ret = 0.f;
-    
-    for(auto& node : m_childs) {
-        ret = std::max(ret, node->getY() + node->getHeight());
-    }
-
-    return ret;
-}
-
 void Container::update() {
+    Frame::update();
+
     for(auto& node : m_childs) {
         if(node->isEnabled()) {
             rlPushMatrix();
-                rlTranslatef(node->getX(), node->getY() - m_scrollOffset, 0.f);
+                rlTranslatef(node->getX() - m_offset.x, node->getY() - m_offset.y, 0.f);
+                // rlRotatef(node->getRotation(), 0.f, 0.f, 1.f);
+                // rlScalef((m_flipX ? -1.f : 1.f), (m_flipY ? -1.f : 1.f), 1.f);
                 rlTranslatef(-(node->getAnchorX() * node->getScaledWidth()), -(node->getAnchorY() * node->getScaledHeight()), 0.f);
-                rlScalef(node->getScaleX(), node->getScaleY(), 0.f);
+                rlScalef(node->getScaleX(), node->getScaleY(), 1.f);
                 
                 node->update();
             rlPopMatrix();
         }
     }
-
-    if(m_scrollable) {
-        auto const totalHeight = calculateTotalHeight();
-        auto const contentHeight = (m_bounds.height - m_border * 2);
-
-        if(totalHeight > m_bounds.height) {
-            if(isMouseHover() && GetMouseWheelMove() != 0.f) {
-                m_scrollOffset -= GetMouseWheelMove() * 10.f;
-            }
-
-            m_scrollOffset = std::clamp(m_scrollOffset, 0.f, totalHeight - contentHeight);
-        }
-    }
 }
 
 void Container::draw() {
-    Frame::draw();
-    auto const bounds = getWorldBounds();
-    auto const totalHeight = calculateTotalHeight();
-    auto const contentHeight = m_bounds.height - m_border * 2;
-    auto const borderColor = m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F};
-    auto const scrollBar = totalHeight > bounds.height && m_scrollable;
+    if(m_frame) {
+        Frame::draw();
+    }
 
-    Rectf const cutRect = {
-        bounds.x + m_border * getGlobalScaleX(),
-        bounds.y + m_border * getGlobalScaleY(),
-        bounds.width - (m_border * 2) * getGlobalScaleX(),
-        contentHeight * getGlobalScaleY()
-    };
-
-    BeginScissorMode(cutRect.x, cutRect.y, cutRect.width, cutRect.height);
-        for(auto& node : m_childs) {
-            if(node->isVisible()) {
-                rlPushMatrix();
-                    rlTranslatef(node->getX(), node->getY() - m_scrollOffset, 0.f);
-                    rlTranslatef(-(node->getAnchorX() * node->getWidth()), -(node->getAnchorY() * node->getHeight()), 0.f);
-                    rlScalef(node->getScaleX(), node->getScaleY(), 0.f);
-                    
-                    node->draw();
-                rlPopMatrix();
-            }
+    for(auto& node : m_childs) {
+        if(node->isVisible()) {
+            rlPushMatrix();
+                rlTranslatef(node->getX() - m_offset.x, node->getY() - m_offset.y, 0.f);
+                rlRotatef(node->getRotation(), 0.f, 0.f, 1.f);
+                rlScalef((m_flipX ? -1.f : 1.f), (m_flipY ? -1.f : 1.f), 1.f);
+                rlTranslatef(-(node->getAnchorX() * node->getScaledWidth()), -(node->getAnchorY() * node->getScaledHeight()), 0.f);
+                rlScalef(node->getScaleX(), node->getScaleY(), 1.f);
+                
+                
+                node->draw();
+            rlPopMatrix();
         }
-
-        if(scrollBar) {
-            RenderManager::drawRect({m_bounds.width - m_border * 2, m_border + (m_scrollOffset / totalHeight) * contentHeight, m_border, (contentHeight / totalHeight) * contentHeight}, borderColor);
-        }
-    EndScissorMode();
-}
-
-void Container::setScrollable(bool flag) {
-    m_scrollable = flag;
-
-    if(!m_scrollable) {
-        m_scrollOffset = 0.f;
     }
 }
 

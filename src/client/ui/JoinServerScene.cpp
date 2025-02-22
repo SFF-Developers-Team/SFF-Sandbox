@@ -20,8 +20,7 @@ JoinServerScene::JoinServerScene(std::string const& hostname, uint16_t port) : m
     m_state = std::make_shared<Text>("font", "");
     m_state->setFontSize(m_state->getFontSize() * 2);
     m_state->setPos({screenW / 2, screenH / 2});
-    m_state->setFlag(FLAG_GUI_SCALE, true);
-    m_state->setFlag(FLAG_ALWAYS_CENTER, true);
+    m_state->setFlags(FLAG_GUI_SCALE | FLAG_ALWAYS_CENTER);
     m_state->setWidth(screenW);
     m_state->setTag("state");
     m_state->setScale(Game::get()->getGuiScale());

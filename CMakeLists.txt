@@ -103,8 +103,7 @@ if(${PLATFORM} STREQUAL "Android")
     add_compile_options(${ABI_FLAGS})
 
     # Fix java.lang.UnsatisfiedLinkError: dlopen failed: cannot locate symbol "_Unwind_Resume"
-    add_compile_options("-ffunction-sections -funwind-tables -fstack-protector-strong -fPIC")
-    add_compile_options("-Wa,--noexecstack -Wformat -Werror=format-security -Wunused-function -no-canonical-prefixes")
-    add_link_options("-Wl,--exclude-libs,libatomic.a -Wl,--build-id -Wl,--no-undefined -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now -Wl,--warn-shared-textrel -Wl,--fatal-warnings")
-    add_link_options("-u ANativeActivity_onCreate")
+    add_compile_options(-ffunction-sections -funwind-tables -fstack-protector-strong -fPIC)
+    add_compile_options(-Wa,--noexecstack -Wformat -Werror=format-security -Wunused-function -no-canonical-prefixes)
+    target_link_options(SFFSandbox PUBLIC -Wl,--exclude-libs,libatomic.a -Wl,--build-id -Wl,--no-undefined -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now -Wl,--warn-shared-textrel -Wl,--fatal-warnings -u ANativeActivity_onCreate)
 endif()

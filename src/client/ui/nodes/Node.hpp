@@ -5,7 +5,7 @@
 #include <memory>
 #include <vector>
 
-enum NodeFlag : uint8_t {
+enum NodeFlags : uint8_t {
     FLAG_GUI_SCALE = 1 << 0,
     FLAG_ALWAYS_CENTER = 1 << 1
 };
@@ -25,9 +25,12 @@ protected:
     Vec2f m_anchor;
     Vec2f m_scale;
     Col4u m_color;
+    uint8_t m_flags;
+    float m_rotation;
     bool m_visible;
     bool m_enabled;
-    uint8_t m_flags;
+    bool m_flipX;
+    bool m_flipY;
 
 public:
     Node();
@@ -92,8 +95,18 @@ public:
     float getGlobalScaleX();
     float getGlobalScaleY();
 
-    void setFlag(NodeFlag flag, bool value) { (value ? m_flags |= flag : m_flags &= ~flag); }
-    bool getFlag(NodeFlag flag) { return m_flags & flag; }
+    void setFlags(uint8_t flags) { m_flags |= flags; }
+    void clearFlags(uint8_t flags) { m_flags &= ~flags; }
+    bool getFlag(uint8_t flag) { return m_flags & flag; }
+    NodeFlags getFlags(uint8_t flag) { return static_cast<NodeFlags>(m_flags); }
 
     bool isMouseHover();
+
+    void setFlipX(bool flag) { m_flipX = flag; }
+    void setFlipY(bool flag) { m_flipY = flag; }
+    float getFlipX() { return m_flipX; }
+    float getFlipY() { return m_flipY; }
+
+    float getRotation() { return m_rotation; }
+    void setRotation(float degrees) { m_rotation = degrees; }
 };

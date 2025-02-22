@@ -13,8 +13,7 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
     auto container = std::make_shared<Container>();
     container->setPos(getSize() / 2);
     container->setSize({500, 250});
-    container->setFlag(FLAG_ALWAYS_CENTER, true);
-    container->setFlag(FLAG_GUI_SCALE, true);
+    container->setFlags(FLAG_ALWAYS_CENTER | FLAG_GUI_SCALE);
     addChild(container);
 
     auto apply = std::make_shared<Button>("Back", [this](Button*) { destroy(); });

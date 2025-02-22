@@ -26,11 +26,12 @@ void RenderManager::drawTexture(std::string const& key, Rectf dest, Col4u color,
 void RenderManager::drawTile(std::string const& mapKey, uint16_t index, Rectf dest, Col4u color, float rot, Vec2f origin) {
     auto tm = TextureManager::get();
     auto tilemap = tm->getTileMap(mapKey);
+    Vector2 anchor = {dest.width * origin.x, dest.height * origin.y};
 
     DrawTexturePro(tilemap->getMap(), 
         tilemap->getRectForTile(index), 
         dest.to<Rectangle>(), 
-        origin.to<Vector2>(), rot, 
+        anchor, rot, 
         color.to<Color>()
     );
 }

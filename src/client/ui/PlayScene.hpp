@@ -24,5 +24,5 @@ public:
     void update() override;
 
     void setPaused(bool paused);
-    void setEnabledInventory(bool isOpen);
+    void setInventoryOpened(bool isOpen);
 };

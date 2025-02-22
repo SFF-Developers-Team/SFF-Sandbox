@@ -22,15 +22,3 @@ void Debug::draw() {
         }
     }
 }
-
-void Debug::setVisible(bool v) {
-    m_visible = v;
-}
-
-bool Debug::isVisible() {
-    return m_visible;
-}
-
-void Debug::removeString(DebugID id) {
-    m_debugList.erase(id);
-}

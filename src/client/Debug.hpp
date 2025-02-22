@@ -31,13 +31,14 @@ public:
     Debug();
 
     void draw();
-    void setVisible(bool);
-    bool isVisible();
+    void setVisible(bool flag) { m_visible = flag; }
+    bool isVisible() { return m_visible; }
+    void toggleVisibility() { m_visible = !m_visible; }
 
     template <typename... Args>
     void setString(DebugID id, std::format_string<Args...> s, Args&&... args) {
         m_debugList[id] = std::format(s, std::forward<Args>(args)...);
     }
 
-    void removeString(DebugID id);
+    void removeString(DebugID id) { m_debugList.erase(id); }
 };

@@ -18,12 +18,11 @@ MainMenuScene::MainMenuScene() : MenuBase() {
         {"Credits", [game](Button*) { game->pushScene(std::make_shared<CreditsScene>()); }},
         {"Settings", [game](Button*) { game->pushScene(std::make_shared<SettingsScene>()); }},
         {"Test", [game](Button*) { game->pushScene(std::make_shared<TestScene>()); }},
-        {"Quit", [game](Button*) { game->destroy(); }}
+        {"Quit", [game](Button*) { game->close(); }}
     };
 
     auto container = std::make_shared<Container>();
-    container->setFlag(FLAG_ALWAYS_CENTER, true);
-    container->setFlag(FLAG_GUI_SCALE, true);
+    container->setFlags(FLAG_ALWAYS_CENTER | FLAG_GUI_SCALE);
     container->setColor({0, 0, 0, 0});
     container->setBorderWidth(0.f);
     addChild(container);

@@ -160,9 +160,23 @@ void Player::onTickControls() {
     auto gravitation = (!m_fly) ? 0.02f : 0.0f;
     auto layer = !IsKeyDown(KEY_LEFT_ALT);
     auto mp = Multiplayer::get();
+    auto ct = Game::get()->getControlType();
 
     if (canAccessBlock(target, layer)) {
-        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && canDestroyBlock(target, layer)) {
+        bool wantPlaceBlock = false;
+        bool wantDestroyBlock = false;
+
+        if(ct == CONTROL_KEYBOARD_MOUSE) {
+            wantPlaceBlock = IsMouseButtonDown(MOUSE_LEFT_BUTTON);
+            wantDestroyBlock = IsMouseButtonDown(MOUSE_RIGHT_BUTTON);
+        }
+
+        if(ct == CONTROL_TOUCH) {
+            wantDestroyBlock = IsGestureDetected(GESTURE_HOLD);
+            wantPlaceBlock = !wantDestroyBlock && IsGestureDetected(GESTURE_TAP);
+        }
+
+        if (wantPlaceBlock && canDestroyBlock(target, layer)) {
             m_world->destroyBlock(target.x, target.y, layer);
             
             if(IsKeyDown(KEY_LEFT_CONTROL)) {
@@ -184,7 +198,7 @@ void Player::onTickControls() {
             }
         }
 
-        if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && canPlaceBlock(target, layer)) {
+        if (wantDestroyBlock && canPlaceBlock(target, layer)) {
             auto block = std::make_shared<Block>(*m_inventory[m_selectedBlock]);
             m_world->placeBlock(target.x, target.y, layer, block);
 
@@ -216,7 +230,6 @@ void Player::onTickControls() {
     }
 
     m_forward = 0.f;
-    m_sneak = false;
 }
 
 void Player::onTick() {
@@ -233,14 +246,14 @@ void Player::onTick() {
         setAnimation(PLAYER_IDLE);
     }
 
-    if (m_sneak) {
-        setAnimation(PLAYER_SNEAK);
-        m_animFps = 4;
-    }
-
     if (m_onGround && (m_speedX > 0.025f || m_speedX < -0.025f)) {
         m_animFps = (m_sneak ? 7 : 10);
         setAnimation((m_sneak ? PLAYER_SNEAK : PLAYER_MOVE));
+    }
+
+    if (m_sneak) {
+        setAnimation(PLAYER_SNEAK);
+        m_animFps = (m_speedX != 0.f ? 4 : 0);
     }
 
     if (!m_onGround) {
@@ -263,6 +276,10 @@ void Player::onTick() {
         }
     }
 
+    if(!m_sneakToggled) {
+        m_sneak = false;
+    }
+
     // clang-format off
     bool shouldupd = (
         m_prevX != m_hitbox.x || 
@@ -280,53 +297,39 @@ void Player::onTick() {
 
 void Player::updateControls() {
     auto stm = SettingsManager::get();
-
-    for (int i = 0; i < 9; i++) {
-        if (IsKeyDown(KEY_ONE + i)) {
-            m_selectedBlock = i;
-        }
-    }
-
     auto wheel = GetMouseWheelMove();
 
     if (IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.f) {
         m_camera.zoom -= wheel * 10.f;
     }
-    
-    if(!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.f) {
-        (wheel > 0.f ? m_selectedBlock-- : m_selectedBlock++);
-        
-        if(m_selectedBlock < 0) m_selectedBlock = 8;
-        if(m_selectedBlock >= 9) m_selectedBlock = 0;
+
+    if(IsGestureDetected(GESTURE_PINCH_IN) || IsGestureDetected(GESTURE_PINCH_OUT)) {
+        m_camera.zoom += GetGesturePinchAngle();
     }
 
     if (IsKeyPressed(stm->getKeybind("fly"))) {
-        m_fly = !m_fly;
+        toggleFly();
     }
 
     if (IsKeyDown(stm->getKeybind("right")) || IsKeyDown(KEY_RIGHT)) {
-        m_direction = RIGHT;
-        m_forward++;
+        triggerMove(RIGHT);
     }
 
     if (IsKeyDown(stm->getKeybind("left")) || IsKeyDown(KEY_LEFT)) {
-        m_direction = LEFT;
-        m_forward--;
+        triggerMove(LEFT);
     }
 
-    if ((IsKeyDown(stm->getKeybind("jump")) || IsKeyDown(KEY_UP)) && (m_onGround || m_fly)) {
-        m_speedY = ((!m_fly) ? -0.3f : -0.25f);
+    if ((IsKeyDown(stm->getKeybind("jump")) || IsKeyDown(KEY_UP))) {
+        triggerJump();
     }
 
-    if ((IsKeyDown(stm->getKeybind("duck"))) || IsKeyDown(KEY_DOWN) && m_fly && !m_onGround) {
-        m_speedY = 0.25f;
+    if ((IsKeyDown(stm->getKeybind("duck"))) || IsKeyDown(KEY_DOWN)) {
+        triggerDuck(false);
     }
 
-    if ((IsKeyDown(stm->getKeybind("duck")) || IsKeyDown(KEY_LEFT_SHIFT)) && !m_fly && m_onGround) {
-        m_sneak = true;
+    if ((IsKeyReleased(stm->getKeybind("duck"))) || IsKeyReleased(KEY_DOWN)) {
+        m_sneak = false;
     }
-
-    m_forward = std::clamp(m_forward, -1.f, 1.f);
 }
 
 void Player::update() {
@@ -385,4 +388,36 @@ bool Player::addToInventory(std::shared_ptr<Block> block) {
     } 
 
     return false;
+}
+
+void Player::triggerMove(Direction dir) {
+    m_direction = dir;
+    (dir == RIGHT) ? m_forward++ : m_forward--;
+
+    m_forward = std::clamp(m_forward, -1.f, 1.f);
+}
+
+void Player::triggerJump() {
+    if(m_onGround || m_fly) {
+        m_speedY = ((!m_fly) ? -0.3f : -0.25f);
+    }
+}
+
+void Player::toggleFly() {
+    m_fly = !m_fly;
+}
+
+void Player::triggerDuck(bool toggle) {
+    if (m_fly && !m_onGround) {
+        m_speedY = 0.25f;
+    }
+
+    if(!m_fly && m_onGround) {
+        m_sneak = true;
+        
+        if (toggle) {
+            m_sneakToggled = !m_sneakToggled;
+            m_sneak = m_sneakToggled;
+        }
+    }
 }

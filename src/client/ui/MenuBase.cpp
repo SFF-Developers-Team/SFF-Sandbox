@@ -47,14 +47,11 @@ MenuBase::MenuBase() : Scene() {
     }
 }
 
-void MenuBase::update() {
-    Scene::update();
-}
-
 void MenuBase::draw() {
     auto tm = TextureManager::get();
-    auto w = static_cast<float>(m_bgRender.texture.width) * 2.5f * getGlobalScaleX();
-    auto h = static_cast<float>(m_bgRender.texture.height) * 2.5f * getGlobalScaleY();
+    auto scale = Game::get()->getGuiScale();
+    auto w = static_cast<float>(m_bgRender.texture.width) * 2.5f * scale;
+    auto h = static_cast<float>(m_bgRender.texture.height) * 2.5f * scale;
 
     DrawTexturePro(
         m_bgRender.texture, 

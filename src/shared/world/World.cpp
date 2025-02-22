@@ -26,17 +26,6 @@ void World::generate() {
     }
 }
 
-void World::reset() {
-    m_chunks.clear();
-    m_players.clear();
-    m_worldName.clear();
-    m_worldGen = nullptr;
-    m_version = WORLDVER;
-    m_lastPlayerID = 1;
-    m_spentTime = 0;
-    m_loadTime = 0;
-}
-
 void World::onTick() {
     for (auto& [id, player] : m_players) {
         player->onTick();

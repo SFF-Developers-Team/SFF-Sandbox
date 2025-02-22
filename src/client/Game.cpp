@@ -45,33 +45,41 @@ void Game::checkSceneFlags(std::shared_ptr<Container> scene) {
 }
 
 void Game::init(std::vector<std::string>& args) {
-    InitWindow(1280, 720, "SFF Sandbox");
-    SetWindowState(FLAG_WINDOW_RESIZABLE);
+    InitWindow(GetScreenWidth(), GetScreenHeight(), "SFF Sandbox");
+#ifndef PLATFORM_ANDROID
+    SetWindowState(FLAG_WINDOW_RESIZABLE | FLAG_FULLSCREEN_MODE);
+#endif
     InitAudioDevice();
-
     SetExitKey(-1);
-    SetWindowState(FLAG_WINDOW_RESIZABLE);
 
     // Load assets
     auto sm = SoundManager::get();
     auto tm = TextureManager::get();
     auto stm = SettingsManager::get();
 
-    tm->loadTexture("assets/player.png");
-    tm->loadTexture("assets/sff.png");
-    tm->loadTexture("assets/raylib.png");
-    tm->loadTileMap("assets/blocks.png", {16, 16});
-    tm->loadTileMap("assets/gui.png", {16, 16});
-    tm->loadTileMap("assets/developers.png", {128, 128});
-    tm->loadFont("assets/boldfont.fnt");
-    tm->loadFont("assets/font.fnt");
-    sm->loadMusic("assets/menu.mp3");
+    tm->loadTexture("player.png");
+    tm->loadTexture("sff.png");
+    tm->loadTexture("raylib.png");
+    tm->loadTileMap("blocks.png", {16, 16});
+    tm->loadTileMap("gui.png", {16, 16});
+    tm->loadTileMap("developers.png", {128, 128});
+    tm->loadFont("fonts/boldfont.fnt");
+    tm->loadFont("fonts/font.fnt");
+    sm->loadMusic("menu.mp3");
     
     // Load main classes
     m_world = std::make_shared<World>("world1");
     m_player = std::make_shared<Player>(m_world);
 
     m_lastWindowSize = {1280, 720};
+    m_guiScale = getMaximumGuiScale();
+    m_close = false;
+
+#ifdef PLATFORM_ANDROID
+    m_controlType = CONTROL_TOUCH;
+#else
+    m_controlType = CONTROL_KEYBOARD_MOUSE;
+#endif
     
     // Load settings
     SettingsManager::get();
@@ -81,43 +89,63 @@ void Game::init(std::vector<std::string>& args) {
     pushScene(std::make_shared<MainMenuScene>());
     PlayMusicStream(sm->getMusic("menu.mp3"));
 
-    while (!WindowShouldClose()) {
+    while (!m_close) {
+        if(WindowShouldClose()) {
+            m_close = true;
+        }
+
         update();
         render();
     }
 
     destroy();
-
-    // if (!m_isMultiplayer && !IsKeyPressed(KEY_F1)) {
-    //     m_world->save();
-    // }
 }
 
 void Game::update() {
     auto sm = SoundManager::get();
+    
     UpdateMusicStream(sm->getMusic("menu.mp3"));
     if(GetMusicTimePlayed(sm->getMusic("menu.mp3")) >= GetMusicTimeLength(sm->getMusic("menu.mp3"))) {
         StopMusicStream(sm->getMusic("menu.mp3"));
         PlayMusicStream(sm->getMusic("menu.mp3"));
     }
 
+    if(GetKeyPressed() > 0 || IsMouseButtonPressed(MOUSE_LEFT_BUTTON) || IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)) {
+        m_controlType = CONTROL_KEYBOARD_MOUSE;
+    }
+
+    if(GetTouchPointCount() > 0) {
+        m_controlType = CONTROL_TOUCH;
+    }
+
+    if(GetGamepadButtonPressed() > 0) {
+        m_controlType = CONTROL_GAMEPAD;
+    }
+
     if(m_scene != nullptr) {
         checkSceneFlags(m_scene);
         m_scene->update();
+
+        if(IsKeyPressed(KEY_BACK)) {
+            m_scene->keyBackClicked();
+        }
 
         if(m_scene->shouldDestroy()) {
             popScene();
         }
     }
 
+#ifndef PLATFORM_ANDROID
     if(IsWindowResized()) {
         m_lastWindowSize = {GetScreenWidth(), GetScreenHeight()};
     }
+#endif
 }
 
 void Game::render() {
     BeginDrawing();
         ClearBackground((m_scene ? m_scene->getColor().to<Color>() : WHITE));
+        
         if(m_scene != nullptr) {
             m_scene->draw();
         }
@@ -127,4 +155,8 @@ void Game::render() {
 void Game::destroy() {
     CloseAudioDevice();
     CloseWindow();
+}
+
+int Game::getMaximumGuiScale() { 
+    return std::min(GetScreenWidth() / 640, GetScreenHeight() / 360); 
 }

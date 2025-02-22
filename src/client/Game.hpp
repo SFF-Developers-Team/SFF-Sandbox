@@ -22,7 +22,10 @@ private:
     std::deque<std::shared_ptr<Scene>> m_sceneHistory;
 
     Vec2i m_lastWindowSize;
-    int m_guiScale = 1;
+    int m_guiScale;
+    bool m_close;
+
+    ControlType m_controlType;
     
 public:
     static Game* get() {
@@ -34,6 +37,7 @@ public:
     void render();
     void update();
     void destroy();
+    void close() { m_close = true; }
     
     void clearSceneHistory() { m_sceneHistory.clear(); }
     void pushScene(std::shared_ptr<Scene> scene);
@@ -51,4 +55,7 @@ public:
     
     int getGuiScale() { return m_guiScale; }
     void setGuiScale(int scale) { m_guiScale = scale; }
+    static int getMaximumGuiScale();
+
+    ControlType getControlType() { return m_controlType; }
 };

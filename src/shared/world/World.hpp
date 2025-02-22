@@ -36,9 +36,6 @@ public:
     World(uint32_t height, std::string const& worldName);
     World(std::string const& worldName);
 
-    // I hope you saved world before this...
-    void reset();
-
     void generate();
     void onTick();
 
@@ -69,35 +66,15 @@ public:
     bool isUsernameAlreadyTaken(std::string const& username);
     bool isOutOfBound(int32_t x, int32_t y, uint8_t layer);
 
-    Chunk::Position xToChunk(int32_t x) {
-        return static_cast<Chunk::Position>(floor(static_cast<float>(x) / CHUNK_WIDTH));
-    }
+    Chunk::Position xToChunk(int32_t x) { return static_cast<Chunk::Position>(floor(static_cast<float>(x) / CHUNK_WIDTH)); }
 
-    void setGenerator(std::shared_ptr<WorldGen> generator) {
-        m_worldGen = generator;
-    }
+    void setGenerator(std::shared_ptr<WorldGen> generator) { m_worldGen = generator; }
 
-    auto getHeight() {
-        return m_height;
-    }
-    auto getGenerator() {
-        return m_worldGen;
-    }
-    auto& getPlayers() {
-        return m_players;
-    }
-    auto& getChunks() {
-        return m_chunks;
-    }
-    auto getVersion() {
-        return m_version;
-    }
-
-    auto getLoadTime() {
-        return m_loadTime;
-    }
-
-    auto getSpentTime() {
-        return m_spentTime;
-    }
+    uint32_t getHeight() { return m_height; }
+    uint32_t getVersion() { return m_version; }
+    uint64_t getLoadTime() { return m_loadTime; }
+    uint64_t getSpentTime() { return m_spentTime; }
+    auto const& getGenerator() { return m_worldGen; }
+    auto const& getPlayers() { return m_players; }
+    auto const& getChunks() { return m_chunks; }
 };
