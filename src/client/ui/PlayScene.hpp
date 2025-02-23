@@ -25,4 +25,6 @@ public:
 
     void setPaused(bool paused);
     void setInventoryOpened(bool isOpen);
+
+    void keyBackClicked();
 };

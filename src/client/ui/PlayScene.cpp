@@ -51,10 +51,7 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
 
     std::list<std::pair<std::string, MiniFunction<void(Button*)>>> const btns = {
         {"Resume game", [this](auto) { setPaused(false); }},
-        {"Back to main menu", [game](auto) {
-            game->pushScene(std::make_shared<MainMenuScene>());
-            game->clearSceneHistory();
-        }}
+        {"Back to main menu", [game, this](auto) { destroy(); }}
     };
 
     auto y = 0.f;
@@ -84,7 +81,7 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     addChild(inventory);
 
     auto blockInfo = std::make_shared<BlockInfo>();
-    blockInfo->setFlag(FLAG_GUI_SCALE, true);
+    blockInfo->setFlags(FLAG_GUI_SCALE);
     blockInfo->setVisible(false);
     blockInfo->setEnabled(false);
     blockInfo->setWidth(140);
@@ -142,17 +139,14 @@ void PlayScene::update() {
 
         m_player->update();
     }
+
     auto target = Game::get()->getPlayer()->getTargetBlock();
-    auto layer = !IsKeyDown(KEY_LEFT_ALT);
-    auto block = Game::get()->getWorld()->getBlock(target.x, target.y, layer);
+    auto block = Game::get()->getWorld()->getBlock(target.x, target.y, target.layer);
     auto blockInfo = getChild<BlockInfo>("blockinfo");
-    if(block != nullptr) {
-        blockInfo->setVisible(true);
-        blockInfo->setEnabled(true);
-    } else {
-        blockInfo->setVisible(false);
-        blockInfo->setEnabled(false);
-    }
+
+    blockInfo->setVisible(block != nullptr);
+    blockInfo->setEnabled(block != nullptr);
+
     if(m_online) {
         auto mp = Multiplayer::get();
         mp->update();
@@ -185,11 +179,9 @@ void PlayScene::update() {
     }
 
     if(IsKeyPressed(KEY_E)) {
-        setEnabledInventory(!m_inventoryEnabled);
+        setInventoryOpened(!m_inventoryEnabled);
     }
 
-    if(IsKeyDown(KEY_TAB)) {
-    }
     Scene::update();
 }
 
@@ -206,4 +198,8 @@ void PlayScene::setInventoryOpened(bool isOpen) {
     inventory->setVisible(isOpen);
     inventory->setEnabled(isOpen);
     m_inventoryEnabled = isOpen;
+}
+
+void PlayScene::keyBackClicked() {
+    (!m_inventoryEnabled) ? setPaused(!m_paused) : setInventoryOpened(false);
 }

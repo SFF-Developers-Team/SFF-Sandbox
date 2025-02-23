@@ -126,7 +126,7 @@ void Game::update() {
         checkSceneFlags(m_scene);
         m_scene->update();
 
-        if(IsKeyPressed(KEY_BACK)) {
+        if(IsKeyPressed(KEY_BACK) || IsKeyPressed(KEY_ESCAPE)) {
             m_scene->keyBackClicked();
         }
 

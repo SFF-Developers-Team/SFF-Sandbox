@@ -10,5 +10,4 @@ public:
     BlockInfo() {};
     
     void draw();
-    void update();
 };

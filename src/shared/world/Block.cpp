@@ -37,7 +37,7 @@ Block::Block(ItemBase& item) : Block(static_cast<BlockID>(item.getID())) {
     m_tags = item.getTags();
 }
 
-std::string const idToString(BlockID id) {
+std::string const Block::idToString(BlockID id) {
     switch(id) {
         case AIR: return "Air";
         case GRASS: return "Grass";
