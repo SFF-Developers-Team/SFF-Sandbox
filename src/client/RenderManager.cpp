@@ -64,15 +64,22 @@ void RenderManager::drawRectLines(Rectf rect, Col4u col, float thick) {
 
 void RenderManager::drawFrame(Rectf rect, Col4u col, float borderSize) {
     drawRect(rect, col);
+
+    TO_BORDER_COLOR(col);
     
     if(borderSize > 0.f) {
-        drawRectLines(rect, col - Col4u {0x7F, 0x7F, 0x7F, 0x7F}, borderSize);
+        drawRectLines(rect, col, borderSize);
     }
 }
 
 Vec2f RenderManager::getTextSize(std::string const& text, std::string const& fontKey, float fontSize, float spacing) {
     auto tm = TextureManager::get();
     auto font = tm->getFont(fontKey);
+
+    if(fontSize == 0.f) {
+        fontSize = font.baseSize;
+    }
+    
     auto size = MeasureTextEx(font, text.c_str(), fontSize, spacing);
 
     return Vec2f {size.x, size.y}; 

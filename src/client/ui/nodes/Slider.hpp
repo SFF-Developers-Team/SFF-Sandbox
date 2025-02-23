@@ -34,8 +34,7 @@ public:
         auto thumb = Rectf {m_border + (getWidth() - m_border * 5) * percent, m_border, m_border * 3, getHeight() - m_border * 2};
     
         RenderManager::drawText("font", std::format((std::is_floating_point_v<T> ? "{}{:.2f}" : "{}{}"), m_text, m_value), {getWidth() / 2, getHeight() / 2}, COL_WHITE, fontSize, {0.5f, 0.5f});
-        RenderManager::drawRect(thumb, m_color);
-        RenderManager::drawRectLines(thumb, m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F}, m_border);
+        RenderManager::drawFrame(thumb, m_color, m_border);
     }
         
     void update() {

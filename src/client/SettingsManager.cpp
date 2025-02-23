@@ -62,6 +62,7 @@ SettingsManager::SettingsManager() {
 int SettingsManager::getKeybind(std::string const& action) {
     return getValue<int>("keyboard." + action, 0);
 }
+
 void SettingsManager::setKeybind(std::string const& action, int key) {
     setValue("keyboard." + action, key);
 }
@@ -101,6 +102,13 @@ std::vector<std::string> const SettingsManager::getKeyActions() {
 
 std::vector<VideoMode> const& SettingsManager::getModes() {
     return m_modes;
+}
+
+VideoMode SettingsManager::getFullscreenSize() { 
+    auto mode = getValue<int>("video.resolution", m_modes.size());
+    auto mon = GetCurrentMonitor();
+
+    return (mode > 0) ? m_modes[mode - 1] : VideoMode {GetMonitorWidth(mon), GetMonitorHeight(mon)}; 
 }
 
 std::string const SettingsManager::getKeyName(int key) {

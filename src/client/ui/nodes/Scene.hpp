@@ -36,5 +36,8 @@ public:
     void destroy() { m_destroy = true; }
     bool shouldDestroy() { return m_destroy; }
 
+    void setKeyBackEnabled(bool flag) { m_keyBack = flag; }
+    bool isKeyBackEnabled() { return m_keyBack; }
+
     void keyBackClicked();
 };

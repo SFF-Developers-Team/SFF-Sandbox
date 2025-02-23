@@ -46,9 +46,13 @@ void Game::checkSceneFlags(std::shared_ptr<Container> scene) {
 
 void Game::init(std::vector<std::string>& args) {
     InitWindow(GetScreenWidth(), GetScreenHeight(), "SFF Sandbox");
+
 #ifndef PLATFORM_ANDROID
-    SetWindowState(FLAG_WINDOW_RESIZABLE | FLAG_FULLSCREEN_MODE);
+    auto mon = GetCurrentMonitor();
+    SetWindowState(FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_RESIZABLE);
+    SetWindowSize(GetMonitorWidth(mon), GetMonitorHeight(mon));
 #endif
+
     InitAudioDevice();
     SetExitKey(-1);
 
@@ -110,6 +114,20 @@ void Game::update() {
         PlayMusicStream(sm->getMusic("menu.mp3"));
     }
 
+    if(m_scene != nullptr) {
+        checkSceneFlags(m_scene);
+
+        if(IsKeyPressed(KEY_BACK) || IsKeyPressed(KEY_ESCAPE) && m_scene->isKeyBackEnabled()) {
+            m_scene->keyBackClicked();
+        }
+
+        m_scene->update();
+
+        if(m_scene->shouldDestroy()) {
+            popScene();
+        }
+    }
+
     if(GetKeyPressed() > 0 || IsMouseButtonPressed(MOUSE_LEFT_BUTTON) || IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)) {
         m_controlType = CONTROL_KEYBOARD_MOUSE;
     }
@@ -120,19 +138,6 @@ void Game::update() {
 
     if(GetGamepadButtonPressed() > 0) {
         m_controlType = CONTROL_GAMEPAD;
-    }
-
-    if(m_scene != nullptr) {
-        checkSceneFlags(m_scene);
-        m_scene->update();
-
-        if(IsKeyPressed(KEY_BACK) || IsKeyPressed(KEY_ESCAPE)) {
-            m_scene->keyBackClicked();
-        }
-
-        if(m_scene->shouldDestroy()) {
-            popScene();
-        }
     }
 
 #ifndef PLATFORM_ANDROID

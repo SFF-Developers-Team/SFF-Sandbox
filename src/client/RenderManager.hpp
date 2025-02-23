@@ -19,7 +19,7 @@ namespace RenderManager {
     void drawRectLines(Rectf rect, Col4u col, float thick);
     void drawFrame(Rectf rect, Col4u col, float borderSize);
 
-    Vec2f getTextSize(std::string const& text, std::string const& font, float fontSize, float spacing = 1.f);
+    Vec2f getTextSize(std::string const& text, std::string const& font, float fontSize = 0.f, float spacing = 1.f);
 
     void renderWorld(std::shared_ptr<World> world, std::shared_ptr<Player> player);
     void renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Player> player);

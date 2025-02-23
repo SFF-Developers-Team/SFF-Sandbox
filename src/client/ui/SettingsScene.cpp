@@ -2,6 +2,7 @@
 #include <ui/nodes/ToggleButton.hpp>
 #include <ui/nodes/DropDown.hpp>
 #include <ui/nodes/Slider.hpp>
+#include <ui/nodes/ListContainer.hpp>
 #include <format>
 
 SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolution(true) {
@@ -60,57 +61,48 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
             modesList.push_back(std::format("{}x{}", mode.width, mode.height));
         }
 
-        auto resolutions = std::make_shared<DropDown>(modesList, [stm, this](DropDown*, int i) {
-            auto monitor = GetCurrentMonitor();
+        // auto resolutions = std::make_shared<DropDown>(modesList, [stm, this](DropDown*, int i) {
+        //     auto monitor = GetCurrentMonitor();
+        //     auto modes = stm->getModes();
+        //     auto game = Game::get();
+        //     auto ws = game->getLastWindowSize();
+        //     auto mode = (IsWindowState(FLAG_FULLSCREEN_MODE) ? VideoMode {GetMonitorWidth(monitor), GetMonitorHeight(monitor)} : ws.to<VideoMode>());
+
+        //     if(i > 0) {
+        //         mode = modes[i - 1];
+        //     }
+        
+        //     m_autoResolution = i == 0;
+
+        //     SetWindowSize(mode.width, mode.height);
+        //     SetWindowPosition((GetMonitorWidth(monitor) - mode.width) / 2, (GetMonitorHeight(monitor) - mode.height) / 2);
+
+        //     stm->setValue("video.resolution", i);
+        // });
+        
+        // resolutions->setPos({video->getWidth() / 2, 50.f});
+        // resolutions->setWidth(elementWidth);
+        // video->addChild(resolutions);
+
+        auto fullscreen = std::make_shared<ToggleButton>("Fullscreen", [stm, this](ToggleButton*, bool flag) {
             auto modes = stm->getModes();
-            auto game = Game::get();
-            auto ws = game->getLastWindowSize();
-            auto mode = (IsWindowState(FLAG_FULLSCREEN_MODE) ? VideoMode {GetMonitorWidth(monitor), GetMonitorHeight(monitor)} : ws.to<VideoMode>());
-
-            if(i > 0) {
-                mode = modes[i - 1];
-            }
-        
-            m_autoResolution = i == 0;
-
-            SetWindowSize(mode.width, mode.height);
-            SetWindowPosition((GetMonitorWidth(monitor) - mode.width) / 2, (GetMonitorHeight(monitor) - mode.height) / 2);
-
-            stm->setValue("video.resolution", i);
-        });
-        
-        resolutions->setPos({video->getWidth() / 2, 50.f});
-        resolutions->setWidth(elementWidth);
-        video->addChild(resolutions);
-
-        auto fullscreen = std::make_shared<DropDown>(std::vector<std::string>{"Window", "Fullscreen", "Borderless"}, [stm, this](DropDown*, int i) {
-            auto size = Game::get()->getLastWindowSize();
             auto mon = GetCurrentMonitor();
+            auto mode = stm->getValue<int>("video.resolution", modes.size());
 
-            switch (i) {
-                case 0:
-                    ClearWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
-                    ClearWindowState(FLAG_FULLSCREEN_MODE);
-                    SetWindowSize(size.x, size.y);
-                    break;
-                case 1:
-                    ClearWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
-                    SetWindowState(FLAG_FULLSCREEN_MODE);
-                    
-                    if(m_autoResolution) {
-                        SetWindowSize(GetMonitorWidth(mon), GetMonitorHeight(mon));
-                    }
-                    break;
-                case 2:
-                    ClearWindowState(FLAG_FULLSCREEN_MODE);
-                    SetWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
-                    break;
-            }
+            Vec2i windowSize = {1280, 720};
+            Vec2i fullscreenSize = {GetMonitorWidth(mon), GetMonitorHeight(mon)};
 
-            stm->setValue("video.fullscreen", i);
+            auto states = FLAG_WINDOW_UNDECORATED;
+
+            (flag) ? SetWindowState(states) : ClearWindowState(states);
+            SetWindowSize((flag) ? fullscreenSize.x : windowSize.x, (flag) ? fullscreenSize.x : windowSize.y);
+            SetWindowPosition((flag) ? 0 : (GetMonitorWidth(mon) - windowSize.x) / 2, (flag) ? 0 : (GetMonitorHeight(mon) - windowSize.y) / 2);
+        
+
+            stm->setValue("video.fullscreen", flag);
         });
         
-        fullscreen->setPos({video->getWidth() / 2, resolutions->getY() + resolutions->getHeight() + resolutions->getBorderWidth()});
+        fullscreen->setPos({video->getWidth() / 2, 50.f});
         fullscreen->setWidth(elementWidth);
         video->addChild(fullscreen);
 
@@ -208,12 +200,14 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
             auto button = std::make_shared<Button>(SettingsManager::getKeyName(stm->getKeybind(action)), [this, stm](Button* btn) { 
                 if(m_keySelect != nullptr) {
                     m_keySelect->setText(SettingsManager::getKeyName(stm->getKeybind(m_keySelect->getTag())));
-                    m_keySelect = btn;
                 }
                 
                 m_keySelect = btn; 
                 btn->setText("...");
+
+                setKeyBackEnabled(false);
             });
+
             button->setTag(action);
             button->setWidth(100.f);
             button->setAnchor({1.f, 0.f});
@@ -228,20 +222,21 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
 }
 
 void SettingsScene::update() {
+    MenuBase::update();
+
     auto key = GetKeyPressed();
     auto stm = SettingsManager::get();
 
-    if(m_keySelect != nullptr && key == KEY_ESCAPE) {
-        m_keySelect->setText(SettingsManager::getKeyName(stm->getKeybind(m_keySelect->getTag())));
-        m_keySelect = nullptr;
-        return;
-    }
-
     if(m_keySelect != nullptr && key > 0) {
-        stm->setKeybind(m_keySelect->getTag(), key);
+        if(key == KEY_ESCAPE) {
+            key = stm->getKeybind(m_keySelect->getTag());
+        } else {
+            stm->setKeybind(m_keySelect->getTag(), key);
+        }
+
         m_keySelect->setText(SettingsManager::getKeyName(key));
         m_keySelect = nullptr;
-    }
 
-    MenuBase::update();
+        setKeyBackEnabled(true);
+    }
 }

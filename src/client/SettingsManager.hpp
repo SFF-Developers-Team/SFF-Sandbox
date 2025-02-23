@@ -62,4 +62,6 @@ public:
     
     std::vector<std::string> const getKeyActions();
     std::vector<VideoMode> const& getModes();
+
+    VideoMode getFullscreenSize();
 };

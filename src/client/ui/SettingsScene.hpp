@@ -18,5 +18,5 @@ private:
 public:
     SettingsScene();
 
-    void update();
+    void update() override;
 };
