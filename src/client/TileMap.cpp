@@ -1,12 +1,12 @@
 #include <TileMap.hpp>
 
 TileMap::TileMap(std::filesystem::path const& path, Vec2i v) {
-    this->m_map = LoadTexture(path.string().c_str());
-    this->m_tileSize = v;
+    m_map = LoadTexture(path.string().c_str());
+    m_tileSize = v;
 }
 
 TileMap::~TileMap() {
-    UnloadTexture(this->m_map);
+    UnloadTexture(m_map);
 
     for (auto& [k, v] : m_cachedTextures) {
         UnloadTexture(m_cachedTextures[k]);
@@ -21,12 +21,14 @@ Vec2i TileMap::getPositionByIndex(uint16_t index) {
 }
 
 Rectangle TileMap::getRectForTile(Vec2i position) {
-    Rectangle r;
+    float epsilon = 0.5f / m_map.width;
 
-    r.width = floor(m_tileSize.x);
-    r.height = floor(m_tileSize.y);
-    r.x = ceil(position.x * floor(m_tileSize.x));
-    r.y = ceil(position.y * floor(m_tileSize.y));
+    Rectangle r{
+        position.x * m_tileSize.x + epsilon,
+        position.y * m_tileSize.y + epsilon,
+        m_tileSize.x - 2 * epsilon,
+        m_tileSize.y - 2 * epsilon
+    };
 
     return r;
 }
