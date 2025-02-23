@@ -16,6 +16,7 @@
 #include <ui/nodes/ListContainer.hpp>
 #include <ui/nodes/TouchControlButton.hpp>
 #include <ui/nodes/BlockInfo.hpp>
+#include <ui/nodes/HeartsIndicator.hpp>
 #include <chrono>
 #include <list>
 
@@ -88,6 +89,11 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     blockInfo->setPos({getWidth() / 2, hotbar->getHeight() * getGlobalScaleY() + 10.f});
     blockInfo->setTag("blockinfo");
     addChild(blockInfo);
+
+    auto hp = std::make_shared<HeartsIndicator>(m_player);
+    hp->setAnchor({1.f, 0.f});
+    hp->setPos({getWidth() - 5.f, 5.f});
+    addChild(hp); 
 }
 
 PlayScene::~PlayScene() {

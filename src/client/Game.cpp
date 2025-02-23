@@ -66,6 +66,7 @@ void Game::init(std::vector<std::string>& args) {
     tm->loadTileMap("blocks.png", {16, 16});
     tm->loadTileMap("gui.png", {16, 16});
     tm->loadTileMap("developers.png", {128, 128});
+    tm->loadTileMap("indicators.png", {8, 7});
     tm->loadFont("fonts/boldfont.fnt");
     tm->loadFont("fonts/font.fnt");
     sm->loadMusic("menu.mp3");

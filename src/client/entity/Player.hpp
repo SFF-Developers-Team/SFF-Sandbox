@@ -26,6 +26,7 @@ private:
     bool m_inv = false;
     bool m_isBreakingBlock = false;
     bool m_isBreakingBlockPrev = false;
+    bool m_onGroundPrev = false;
     
     PlayerID m_id;
     AnimationType m_prevAnimType;
@@ -40,6 +41,7 @@ private:
     float m_lastDestroyedBlock;
     float m_lastPlacedBlock;
     float m_forward;
+    float m_fallY;
     
 public:
     Player(std::shared_ptr<World> world);

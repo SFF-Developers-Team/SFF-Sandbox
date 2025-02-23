@@ -14,7 +14,8 @@ enum DebugID : uint8_t {
     WORLD_TIME_SPENT,
 
     PLAYER_POSITION,
-    PLAYER_TARGET_BLOCK
+    PLAYER_TARGET_BLOCK,
+    PLAYER_HEALTH
 };
 
 class Debug {

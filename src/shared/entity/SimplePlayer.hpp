@@ -35,6 +35,9 @@ protected:
     std::string m_username;
     std::mutex mutex;
 
+    float m_health;
+    float m_lastHurtTime;
+
 public:
     SimplePlayer(std::shared_ptr<World> world);
 
@@ -55,4 +58,8 @@ public:
     auto getAnimCurrentFrame() { return m_animFrame; }
     std::string const& getUsername() { return m_username; }
     auto getID() { return m_id; }
+
+    float getHealth() { return m_health; }
+    float getMaxHealth() { return 20.f; }
+    float getLastHeartTime() { return m_lastHurtTime; }
 };

@@ -12,7 +12,7 @@
 
 Player::Player(std::shared_ptr<World> world) 
     : SimplePlayer::SimplePlayer(world), m_selectedBlock(0), m_inventory(36), m_forward(0.f), m_gamemode(GAMEMODE_SURVIVAL), 
-    m_id(0), m_lastAnimFrameTime(0.f), m_lastDestroyedBlock(0.f), m_lastPlacedBlock(0.f) {
+    m_id(0), m_lastAnimFrameTime(0.f), m_lastDestroyedBlock(0.f), m_lastPlacedBlock(0.f), m_fallY(m_hitbox.y) {
     m_header = Header::PLAYER;
     m_camera.zoom = 50.0f;
     m_camera.rotation = 0.0f;
@@ -36,7 +36,7 @@ Player::Player(std::shared_ptr<World> world)
     };
     // clang-format on
 
-    if(m_gamemode == GAMEMODE_CREATIVE) {
+    // if(m_gamemode == GAMEMODE_CREATIVE) {
         for(int i = 1; i < 20; i++) {
             if(i == BlockID::BEDROCK) {
                 continue;
@@ -50,7 +50,7 @@ Player::Player(std::shared_ptr<World> world)
             wool->setTag(TagID::TAG_COLOR, col);
             addToInventory({wool, INVENTORY_TYPE_BLOCK, 64});
         }
-    }
+    // }
 
     updateCamera();
 }
@@ -208,6 +208,19 @@ void Player::onTickControls() {
         }
     }
 
+    if (m_onGroundPrev && !m_onGround) {
+        m_fallY = m_hitbox.y;
+    }
+
+    auto fallenBlocks = m_hitbox.y - m_fallY;
+
+    if(!m_onGroundPrev && m_onGround && fallenBlocks > 4.f) {
+        m_health -= (fallenBlocks - 4.f) / 2.f;
+        m_lastHurtTime = GetTime();
+    }
+
+    m_onGroundPrev = m_onGround;
+
     m_speedX += (m_onGround ? (m_sneak ? 0.0025f : 0.06f) : 0.02f) * m_forward;
     m_speedY += gravitation;
 
@@ -254,6 +267,10 @@ void Player::onTick() {
 
     if (!m_onGround) {
         setAnimation(PLAYER_JUMP);
+    }
+
+    if (GetTime() < m_lastHurtTime + 0.25f) {
+        setAnimation(PLAYER_HURT);
     }
 
     auto mp = Multiplayer::get();
@@ -336,8 +353,9 @@ void Player::update() {
     auto target = getTargetBlock();
     auto block = m_world->getBlock(target.x, target.y, target.layer);
 
-    // dbg->setString(PLAYER_TARGET_BLOCK, "Target block: [{}, {}] ({})", target.x, target.y, (block ? Block::idToString(block->getID()) : "nullptr"));
+    dbg->setString(PLAYER_TARGET_BLOCK, "Target block: [{}, {}] ({})", target.x, target.y, (block ? Block::idToString(block->getID()) : "nullptr"));
     dbg->setString(PLAYER_POSITION, "Position: [{:.2f}, {:.2f}]", m_hitbox.x, m_hitbox.y);
+    dbg->setString(PLAYER_HEALTH, "Health: {:.2f}", m_health);
 }
 
 bool Player::isChunkInView(std::shared_ptr<Chunk> chunk) {

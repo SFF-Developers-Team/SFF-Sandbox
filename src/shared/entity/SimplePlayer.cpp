@@ -4,7 +4,7 @@
 #include <world/World.hpp>
 #include <world/Chunk.hpp>
 
-SimplePlayer::SimplePlayer(std::shared_ptr<World> world) : Entity::Entity(world) {
+SimplePlayer::SimplePlayer(std::shared_ptr<World> world) : Entity::Entity(world), m_health(40.f), m_lastHurtTime(0.f) {
     m_header = Header::PLAYER;
 }
 
