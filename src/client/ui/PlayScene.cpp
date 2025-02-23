@@ -15,6 +15,7 @@
 #include <ui/nodes/Inventory.hpp>
 #include <ui/nodes/ListContainer.hpp>
 #include <ui/nodes/TouchControlButton.hpp>
+#include <ui/nodes/BlockInfo.hpp>
 #include <chrono>
 #include <list>
 
@@ -81,6 +82,16 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     inventory->setEnabled(false);
     inventory->setTag("inventory");
     addChild(inventory);
+
+    auto blockInfo = std::make_shared<BlockInfo>();
+    blockInfo->setFlag(FLAG_GUI_SCALE, true);
+    blockInfo->setVisible(false);
+    blockInfo->setEnabled(false);
+    blockInfo->setWidth(140);
+    blockInfo->setHeight(40);
+    blockInfo->setPos({getWidth() / 2, hotbar->getSize().y + blockInfo->getSize().y + 50});
+    blockInfo->setTag("blockinfo");
+    addChild(blockInfo);
 }
 
 PlayScene::~PlayScene() {
@@ -131,7 +142,17 @@ void PlayScene::update() {
 
         m_player->update();
     }
-
+    auto target = Game::get()->getPlayer()->getTargetBlock();
+    auto layer = !IsKeyDown(KEY_LEFT_ALT);
+    auto block = Game::get()->getWorld()->getBlock(target.x, target.y, layer);
+    auto blockInfo = getChild<BlockInfo>("blockinfo");
+    if(block != nullptr) {
+        blockInfo->setVisible(true);
+        blockInfo->setEnabled(true);
+    } else {
+        blockInfo->setVisible(false);
+        blockInfo->setEnabled(false);
+    }
     if(m_online) {
         auto mp = Multiplayer::get();
         mp->update();
@@ -164,9 +185,11 @@ void PlayScene::update() {
     }
 
     if(IsKeyPressed(KEY_E)) {
-        setInventoryOpened(!m_inventoryEnabled);
+        setEnabledInventory(!m_inventoryEnabled);
     }
 
+    if(IsKeyDown(KEY_TAB)) {
+    }
     Scene::update();
 }
 

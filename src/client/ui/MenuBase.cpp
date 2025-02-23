@@ -7,7 +7,7 @@
 #include <array>
 
 auto const bgwidth = 11;
-auto const bgheight = 6;
+auto const bgheight = 10;
 RenderTexture2D m_bgRender;
 
 MenuBase::MenuBase() : Scene() {
@@ -20,8 +20,12 @@ MenuBase::MenuBase() : Scene() {
     
         // 0 - AIR; 1 - GRASS; 2 - DIRT; 3 - STONE
         std::array<uint8_t, bgwidth * bgheight> blocks = {
-            1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 11, 11, 11, 0, 0, 0, 0, 0, 0,
+            0, 11, 11, 9, 11, 11, 0, 0, 0, 0, 0,
+            0, 0, 11, 9, 11, 0, 0, 0, 0, 0, 0,
+            1, 1, 0, 9, 0, 0, 0, 0, 0, 0, 0,
+            2, 2, 1, 9, 0, 0, 0, 0, 0, 0, 0,
             2, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0,
             2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0,
             2, 2, 2, 2, 2, 2, 2, 1, 1, 0, 0,
@@ -33,16 +37,22 @@ MenuBase::MenuBase() : Scene() {
 
             for(int i = 0; i < blocks.size(); i++) {
                 if(blocks[i] != 0) {
+                    Col4u color;
+                    if(blocks[i] == 11) {
+                        color = COL_GREEN;
+                    } else {
+                        color = COL_WHITE;
+                    }
                     auto x = static_cast<float>(i % bgwidth);
                     auto y = static_cast<float>(i / bgwidth);
 
-                    RenderManager::drawTile("blocks.png", blocks[i] - 1, {x * 16, y * 16, 16, 16}, COL_WHITE);
+                    RenderManager::drawTile("blocks.png", blocks[i] - 1, {x * 16, y * 16, 16, 16}, color);
                 }
             }
 
             auto player = TextureManager::get()->getTexture("player.png");
 
-            RenderManager::renderPlayerTexture({70, 14}, "player.png", {16.f, 22.f}, 15, RIGHT);
+            RenderManager::renderPlayerTexture({70, 78}, "player.png", {16.f, 22.f}, 15, RIGHT);
         EndTextureMode();
     }
 }
@@ -59,12 +69,12 @@ void MenuBase::draw() {
         {-32.f, getHeight() - h, w, h}, {0.f, 0.f}, 0, WHITE
     );
 
-    // auto sff = tm->getTexture("sff.png");
-    // auto sffY = 40.f + ((float)sin(GetTime()) * 30);
-    // RenderManager::drawTexture("sff.png", {(getWidth() - sff.width) / 2, sffY, static_cast<float>(sff.width), static_cast<float>(sff.height)});
+    auto sff = tm->getTexture("sff.png");
+    auto sffY = 40.f + ((float)sin(GetTime()) * 30);
+    RenderManager::drawTexture("sff.png", {(getWidth() - sff.width) / 2, sffY, static_cast<float>(sff.width), static_cast<float>(sff.height)});
 
-    // auto textsize = RenderManager::getTextSize("Sandbox", "boldfont", 35.f);
-    // RenderManager::drawText("boldfont", "Sandbox", {(getWidth() - textsize.x) / 2, sffY + sff.height * 0.7f}, COL_WHITE, 35.f);
+    auto textsize = RenderManager::getTextSize("Sandbox", "boldfont", 35.f);
+    RenderManager::drawText("boldfont", "Sandbox", {(getWidth() - textsize.x) / 2, sffY + sff.height * 0.7f}, COL_WHITE, 35.f);
 
     Scene::draw();
 }

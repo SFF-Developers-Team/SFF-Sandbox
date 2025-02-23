@@ -2,8 +2,7 @@
 #include <format>
 #include <iostream>
 
-#ifdef PLATFORM_DESKTOP
-
+#ifndef PLATFORM_ANDROID
 template <typename... Args>
 void logD(std::format_string<Args...> s, Args&&... args) {
     std::printf("[DBG] %s\n", std::format(s, std::forward<Args>(args)...).c_str());

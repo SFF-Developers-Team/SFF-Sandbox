@@ -15,7 +15,7 @@ private:
     bool m_online;
     bool m_paused;
     bool m_inventoryEnabled;
-
+    
 public:
     PlayScene(bool isOnline = false);
     ~PlayScene();
