@@ -42,13 +42,13 @@ Player::Player(std::shared_ptr<World> world)
                 continue;
             }
 
-            addToInventory(std::make_shared<Block>(static_cast<BlockID>(i)), 64);
+            addToInventory({std::make_shared<ItemBase>(i), INVENTORY_TYPE_BLOCK, 64});
         }
 
         for (auto& col : colors) {
             auto wool = std::make_shared<Block>(BlockID::WOOL);
             wool->setTag(TagID::TAG_COLOR, col);
-            addToInventory(wool, 64);
+            addToInventory({wool, INVENTORY_TYPE_BLOCK, 64});
         }
     }
 
@@ -175,9 +175,17 @@ void Player::onTickControls() {
         }
 
         if(ct == CONTROL_TOUCH) {
-            wantDestroyBlock = IsGestureDetected(GESTURE_HOLD);
+            wantDestroyBlock = IsGestureDetected(GESTURE_HOLD) && GetGestureHoldDuration() > 0.5f;
             wantPlaceBlock = !wantDestroyBlock && IsGestureDetected(GESTURE_TAP);
         }
+
+        m_isBreakingBlock = wantDestroyBlock && m_world->getBlock(target.x, target.y, target.layer);
+
+        if(m_isBreakingBlockPrev && !m_isBreakingBlock) {
+            m_breakingBlock = {0, -1};
+        }
+
+        m_isBreakingBlockPrev = m_isBreakingBlock;
 
         if (wantDestroyBlock && GetTime() >= m_lastDestroyedBlock + 0.1f && canDestroyBlock(target)) {
             if (m_onGround) {
@@ -358,29 +366,31 @@ bool Player::isBlockInView(std::shared_ptr<Block> block) {
     return false;
 }
 
-std::shared_ptr<InventoryItem> Player::getSelectedItem() {
+InventoryItem const& Player::getSelectedItem() {
     return m_inventory[m_selectedBlock % 9];
 }
 
-int Player::addToInventory(std::shared_ptr<ItemBase> item, int count) {
-    if(count <= 0) return 0;
+int Player::addToInventory(InventoryItem item) {
+    if(item.count <= 0) return 0;
+
+    auto isBlock = std::dynamic_pointer_cast<Block>(item.pointer) != nullptr;
 
     for (auto& slot : m_inventory) {
-        if (slot == nullptr || *slot == item) {  
-            int add = min(count, (slot != nullptr ? 64 - slot->getCount() : 64));
+        if (slot.pointer == nullptr || *slot.pointer == item.pointer) {  
+            uint16_t add = min(item.count, (slot.pointer != nullptr ? 64 - slot.count : 64));
 
-            if (slot == nullptr) {
-                slot = std::make_shared<InventoryItem>(item, 0);
+            if (slot.pointer == nullptr) {
+                slot = InventoryItem {item.pointer, item.type, 0};  
             }
 
-            slot->setCount(slot->getCount() + add);
-            count -= add;
+            slot.count += add;
+            item.count -= add;
 
-            if (count <= 0) return 0;
+            if (item.count <= 0) return 0;
         }
     }
 
-    return count;
+    return item.count;
 }
 
 void Player::triggerMove(Direction dir) {
@@ -426,18 +436,18 @@ void Player::setGameMode(GameMode gamemode) {
 }
 
 void Player::placeBlock() {
-    if(m_inventory[m_selectedBlock] != nullptr) {
-        auto block = std::make_shared<Block>(*m_inventory[m_selectedBlock]);
+    if(m_inventory[m_selectedBlock].pointer != nullptr) {
+        auto block = std::make_shared<Block>(*m_inventory[m_selectedBlock].pointer);
         auto target = getTargetBlock();
         auto mp = Multiplayer::get();
 
         m_world->placeBlock(target.x, target.y, target.layer, block);
         
         if(m_gamemode == GAMEMODE_SURVIVAL) {
-            m_inventory[m_selectedBlock]->decrementCount();
+            m_inventory[m_selectedBlock].count--;
 
-            if(m_inventory[m_selectedBlock]->getCount() <= 0) {
-                m_inventory[m_selectedBlock] = nullptr;
+            if(m_inventory[m_selectedBlock].count <= 0) {
+                m_inventory[m_selectedBlock].pointer = nullptr;
             }
         }
 
@@ -470,7 +480,7 @@ void Player::destroyBlock() {
             return;
         }
 
-        addToInventory(targetBlock);
+        addToInventory(targetBlock->dropItem());
     }
     
     m_world->destroyBlock(target.x, target.y, target.layer);
@@ -484,4 +494,15 @@ void Player::destroyBlock() {
         
         mp->sendPacket(pak, BLOCKS);
     }
+}
+
+BreakingBlockInfo Player::getBreakingBlockInfo() {
+    auto target = getTargetBlock();
+    auto targetBlock = m_world->getBlock(target.x, target.y, target.layer);
+
+    if (!targetBlock || !m_isBreakingBlock) {
+        return {0, 1};
+    }
+
+    return {targetBlock->getDurability(), m_breakingBlockDurability};
 }

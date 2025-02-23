@@ -3,46 +3,65 @@
 #include <ui/nodes/DropDown.hpp>
 #include <ui/nodes/SettingsSlider.hpp>
 #include <ui/nodes/ListContainer.hpp>
+#include <SoundManager.hpp>
+#include <SettingsManager.hpp>
+#include <ui/nodes/List.hpp>
 #include <format>
+#include <Logger.hpp>
 
 SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolution(true) {
     auto stm = SettingsManager::get();
     auto game = Game::get();
 
-    std::vector<std::string> containers{"Video", "Audio", "Keyboard"};
-
     auto container = std::make_shared<Container>();
     container->setPos(getSize() / 2);
-    container->setSize({500, 250});
+    container->setSize({350, 200});
     container->setFlags(FLAG_ALWAYS_CENTER | FLAG_GUI_SCALE);
     addChild(container);
 
-    auto apply = std::make_shared<Button>("Back", [this](Button*) { destroy(); });
+    // auto back = std::make_shared<Button>("Back", [this](Button*) { destroy(); });
+    // back->setPos({container->getWidth() / 2, container->getHeight() - container->getBorderWidth() * 2});
+    // back->setAnchorY(1.f);
+    // back->setWidth(container->getWidth() / containers.size());
+    // container->addChild(back);
 
-    apply->setPos({container->getWidth() / 2, container->getHeight() - container->getBorderWidth() * 2});
-    apply->setAnchorY(1.f);
-    apply->setWidth(container->getWidth() / containers.size());
-    container->addChild(apply);
+    // Vec2f categorySize = {container->getWidth() / containers.size(), container->getHeight() - back->getHeight() - back->getBorderWidth() * 3};
+    // float x = 0.f;
 
-    Vec2f categorySize = {container->getWidth() / containers.size(), container->getHeight() - apply->getHeight() - apply->getBorderWidth() * 3};
-    float x = 0.f;
+    std::vector<std::string> containers{"Video", "Audio", "Keyboard"};
+
+    auto categoryList = std::make_shared<List>(containers, [this](auto, int selected) {
+        for (auto i = 0; i < m_categories.size(); i++) {
+            m_categories[i]->setVisible(i == selected);
+            m_categories[i]->setEnabled(i == selected);
+        }
+    });
+
+    categoryList->setPos({container->getBorderWidth() * 2, container->getHeight() / 2});
+    categoryList->setSize({container->getWidth() / 3 - container->getBorderWidth() * 4, container->getHeight() - container->getBorderWidth() * 4});
+    categoryList->setAnchor({0.f, 0.5f});
+    container->addChild(categoryList);
 
     for(auto& s : containers) {
         auto cat = std::make_shared<ListContainer>(false);
-        cat->setAnchor({0.f, 0.f});
-        cat->setPos({x, 0.f});
-        cat->setSize(categorySize);
+        cat->setAnchor({0.f, 0.5f});
+        cat->setPos({container->getBorderWidth() * 3 + categoryList->getWidth(), container->getHeight() / 2});
+        cat->setSize({container->getWidth() - cat->getX() - container->getBorderWidth() * 2, categoryList->getHeight()});
         cat->addChild(std::make_shared<Text>("boldfont", s));
+        cat->setVisible(false);
+        cat->setEnabled(false);
+        container->addChild(cat);
+        m_categories.push_back(cat);
 
         std::transform(s.begin(), s.end(), s.begin(), [](auto c) { 
             return std::tolower(c); 
         });
 
         cat->setTag("container-" + s);
-
-        container->addChild(cat);
-        x += categorySize.x;
     }
+
+    m_categories[0]->setVisible(true);
+    m_categories[0]->setEnabled(true);
 
     // video settings
     {
@@ -83,21 +102,25 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
 
 #ifdef PLATFORM_DESKTOP
         video->addChild(std::make_shared<ToggleButton>("Fullscreen", [stm, this](ToggleButton*, bool flag) {
-            auto modes = stm->getModes();
+            // auto modes = stm->getModes();
             auto mon = GetCurrentMonitor();
-            auto mode = stm->getValue<int>("video.resolution", modes.size());
+            auto game =  Game::get();
+            // auto mode = stm->getValue<int>("video.resolution", modes.size());
 
-            Vec2i windowSize = {1280, 720};
+            Vec2i windowSize = game->getLastWindowSize();
             Vec2i fullscreenSize = {GetMonitorWidth(mon), GetMonitorHeight(mon)};
 
             auto states = FLAG_WINDOW_UNDECORATED;
 
             (flag) ? SetWindowState(states) : ClearWindowState(states);
-            SetWindowSize((flag) ? fullscreenSize.x : windowSize.x, (flag) ? fullscreenSize.x : windowSize.y);
+            SetWindowSize((flag) ? fullscreenSize.x : windowSize.x, (flag) ? fullscreenSize.y : windowSize.y);
             SetWindowPosition((flag) ? 0 : (GetMonitorWidth(mon) - windowSize.x) / 2, (flag) ? 0 : (GetMonitorHeight(mon) - windowSize.y) / 2);
         
 
             stm->setValue("video.fullscreen", flag);
+            game->updateGuiScale();
+            game->checkSceneFlags(game->getScene());
+            onShow();
         }));
 
         video->addChild(std::make_shared<ToggleButton>("VSYNC", [stm](ToggleButton*, bool flag) {

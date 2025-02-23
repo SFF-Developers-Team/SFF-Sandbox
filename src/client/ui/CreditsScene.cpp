@@ -77,7 +77,7 @@ CreditsScene::CreditsScene() {
             auto child = m_developersBox->getChild(i);
 
             auto name = std::make_shared<Text>("boldfont", devs[i].name);
-            name->setPos({child->getX() + child->getScaledWidth() / 2, child->getY() + 20.f});
+            name->setPos({child->getX() + child->getScaledWidth() / 2, child->getY() + child->getScaledHeight()});
             name->setWidth(child->getScaledWidth());
             m_developersBox->addChild(name);
 

@@ -4,7 +4,7 @@
 #include <Types.hpp>
 #include <cstddef>
 
-class Block : public ItemBase, public SerializedObject {
+class Block : public ItemBase {
 protected:
     int32_t m_x;
     int32_t m_y;
@@ -26,7 +26,7 @@ public:
     virtual void onRandomTick() {}
 
     void setPos(int32_t x, int32_t y, uint8_t layer);
-    void setID(BlockID id) { m_id = id; }
+    void setID(BlockID id);
     BlockID getID() { return static_cast<BlockID>(m_id); }
 
     ByteVector serialize() override;
@@ -36,4 +36,7 @@ public:
     auto const getLayer() { return m_layer; };
 
     float getDurability();
+    void updateMaterial();
+
+    InventoryItem dropItem();
 };

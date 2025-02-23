@@ -10,7 +10,6 @@
 #include <assert.h>
 #include <Utils.hpp>
 #include <string>
-#include <InventoryItem.hpp>
 
 int blocksDrawn = 0;
 
@@ -100,6 +99,12 @@ void RenderManager::renderWorld(std::shared_ptr<World> world, std::shared_ptr<Pl
 
         auto target = player->getTargetBlock();
 
+        if (player->isBreakingBlock()) {
+            auto breakingBlock = player->getBreakingBlockInfo();
+    
+            RenderManager::drawTile("gui.png", 8 + (5.f - (breakingBlock.currentDurability / breakingBlock.totalDurability) * 5.f), BLOCK_RECT(target.x, target.y));
+        }
+
         // Selected block
         if (player->canAccessBlock(target)) {
             if(player->canPlaceBlock(target)) {
@@ -183,15 +188,15 @@ void RenderManager::renderBlock(Rectf dest, std::shared_ptr<Block> block, uint8_
     drawTile("blocks.png", index, dest, {col.r, col.g, col.b, alpha});
 }
 
-void RenderManager::renderInventoryItem(Rectf dest, std::shared_ptr<InventoryItem> item) {
-    auto index = static_cast<uint16_t>(item->getID() - 1);
+void RenderManager::renderInventoryItem(Rectf dest, InventoryItem const& item) {
+    auto index = static_cast<uint16_t>(item.pointer->getID() - 1);
     Col3u col = {255, 255, 255};
 
-    if (item->hasTag(TagID::TAG_COLOR)) { 
-        col = item->getTag<Col3u>(TagID::TAG_COLOR);
+    if (item.pointer->hasTag(TagID::TAG_COLOR)) { 
+        col = item.pointer->getTag<Col3u>(TagID::TAG_COLOR);
     }
 
-    if(item->isBlock()) {
+    if(item.type == INVENTORY_TYPE_BLOCK) {
         drawTile("blocks.png", index, dest, {col.r, col.g, col.b, 255});
     }
 }

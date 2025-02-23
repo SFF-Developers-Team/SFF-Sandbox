@@ -57,6 +57,15 @@ SettingsManager::SettingsManager() {
     SetMasterVolume(getValue<float>("audio.volume.general", 1.f));
     game->setGuiScale(getValue<int>("video.scale", 1));
     (getValue<bool>("video.vsync", true) ? SetWindowState(FLAG_VSYNC_HINT) : ClearWindowState(FLAG_VSYNC_HINT));
+
+    if (getValue<bool>("video.fullscreen", true)) {
+        auto mon = GetCurrentMonitor();
+        SetWindowState(FLAG_WINDOW_UNDECORATED);
+        SetWindowSize(GetMonitorWidth(mon), GetMonitorHeight(mon));
+    } else {
+        auto wSize = Game::get()->getLastWindowSize();
+        SetWindowSize(wSize.x, wSize.y);
+    }
 }
 
 int SettingsManager::getKeybind(std::string const& action) {

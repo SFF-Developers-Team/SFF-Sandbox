@@ -7,7 +7,7 @@ float constexpr blockSize = cellSize / 2.f;
 int const columnCount = 9;
 int const rowCount = 4;
 
-Inventory::Inventory(std::vector<std::shared_ptr<InventoryItem>>& inventory) : Frame(), m_inventory(inventory), m_selected(-1) {
+Inventory::Inventory(std::vector<InventoryItem>& inventory) : Frame(), m_inventory(inventory), m_selected(-1) {
     setSize({
         cellSize * columnCount + m_border * (columnCount + 3), 
         cellSize * rowCount + m_border * (rowCount + 5)
@@ -36,9 +36,9 @@ void Inventory::draw() {
 
         RenderManager::drawFrame(cellRect, m_color, m_border);
             
-        if(m_inventory[i] != nullptr && i != m_selected) {
+        if(m_inventory[i].pointer != nullptr && i != m_selected) {
             RenderManager::renderInventoryItem(itemRect, m_inventory[i]);
-            RenderManager::drawText("font", std::to_string(m_inventory[i]->getCount()), {cellRect.x + cellRect.width, cellRect.y + cellRect.height}, COL_WHITE, 0.f, {1.f, 1.f});
+            RenderManager::drawText("font", std::to_string(m_inventory[i].count), {cellRect.x + cellRect.width, cellRect.y + cellRect.height}, COL_WHITE, 0.f, {1.f, 1.f});
         }
     }
 
@@ -57,15 +57,15 @@ void Inventory::update() {
         auto cell = getCellPosition(i);
         auto click = IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
 
-        if(click && cell.contains(mouse) && m_selected < 0 && m_inventory[i] != nullptr) {
+        if(click && cell.contains(mouse) && m_selected < 0 && m_inventory[i].pointer != nullptr) {
             m_selected = i;
 
             continue;
         }
 
         if(click && cell.contains(mouse) && m_selected >= 0) {
-            if (m_inventory[i] == nullptr) {
-                m_inventory[i] = std::move(m_inventory[m_selected]);
+            if (m_inventory[i].pointer == nullptr) {
+                m_inventory[i].pointer = std::move(m_inventory[m_selected].pointer);
             } else {
                 std::swap(m_inventory[i], m_inventory[m_selected]);
             }

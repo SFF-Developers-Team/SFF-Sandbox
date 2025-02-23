@@ -48,15 +48,12 @@ void Game::checkSceneFlags(std::shared_ptr<Container> scene) {
 
 void Game::init(std::vector<std::string>& args) {
     InitWindow(GetScreenWidth(), GetScreenHeight(), "SFF Sandbox");
-
-#ifndef PLATFORM_ANDROID
-    auto mon = GetCurrentMonitor();
-    SetWindowState(FLAG_WINDOW_UNDECORATED | FLAG_WINDOW_RESIZABLE);
-    SetWindowSize(GetMonitorWidth(mon), GetMonitorHeight(mon));
-#endif
-
+    SetWindowState(FLAG_WINDOW_RESIZABLE);
     InitAudioDevice();
     SetExitKey(-1);
+
+    m_lastWindowSize = {1280, 720};
+    m_close = false;
 
     // Load assets
     auto sm = SoundManager::get();
@@ -76,10 +73,7 @@ void Game::init(std::vector<std::string>& args) {
     // Load main classes
     m_world = std::make_shared<World>("world1");
     m_player = std::make_shared<Player>(m_world);
-
-    m_lastWindowSize = {1280, 720};
     m_guiScale = getMaximumGuiScale();
-    m_close = false;
 
 #ifdef PLATFORM_ANDROID
     m_controlType = CONTROL_TOUCH;
@@ -146,11 +140,11 @@ void Game::update() {
         m_controlType = CONTROL_GAMEPAD;
     }
 
-#ifndef PLATFORM_ANDROID
-    if(IsWindowResized()) {
-        m_lastWindowSize = {GetScreenWidth(), GetScreenHeight()};
-    }
-#endif
+// #ifndef PLATFORM_ANDROID
+//     if(IsWindowResized()) {
+//         m_lastWindowSize = {GetScreenWidth(), GetScreenHeight()};
+//     }
+// #endif
 }
 
 void Game::render() {
@@ -170,4 +164,12 @@ void Game::destroy() {
 
 int Game::getMaximumGuiScale() { 
     return std::min(GetScreenWidth() / 640, GetScreenHeight() / 360); 
+}
+
+void Game::updateGuiScale() {
+    auto maxScale = getMaximumGuiScale();
+
+    if(m_guiScale > maxScale) {
+        m_guiScale = maxScale;
+    }
 }

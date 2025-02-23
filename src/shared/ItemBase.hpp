@@ -4,13 +4,14 @@
 
 class Block;
 
-class ItemBase {
+class ItemBase : public SerializedObject {
 protected:
     ItemTags m_tags;
     uint8_t m_id;
 
 public:
     ItemBase(uint8_t id);
+    ItemBase(std::shared_ptr<ItemBase> itemPointer);
 
     uint8_t getID() { return m_id; }
     void setID(uint8_t id) { m_id = id; }

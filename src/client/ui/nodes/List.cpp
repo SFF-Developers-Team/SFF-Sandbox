@@ -6,7 +6,7 @@
 #include <algorithm>
 
 List::List(std::vector<std::string> const& elements, MiniFunction<void(List*, int)> callback) 
-    : Frame(), m_elements(elements), m_callback(callback), m_scrollOffset(0.f) {}
+    : Frame(), m_elements(elements), m_callback(callback), m_scrollOffset(0.f), m_selected(0) {}
 
 void List::draw() {
     Frame::draw();
@@ -18,6 +18,8 @@ void List::draw() {
     auto const borderColor = m_color - Col4u {0x7F, 0x7F, 0x7F, 0x7F};
     auto const scrollBar = totalHeight > bounds.height;
     auto const rect = Rectf {0.f, 0.f, m_bounds.width, conHeight};
+    auto selectedColor = m_color;
+    selectedColor.brightness(-0.3f);
 
     Rectf cutList = {
         bounds.x + m_border * getGlobalScaleX(),
@@ -35,8 +37,7 @@ void List::draw() {
                 elementHeight
             };
 
-            RenderManager::drawRect(cell, m_color);
-            RenderManager::drawRectLines(cell, borderColor, m_border);
+            RenderManager::drawFrame(cell, (i == m_selected) ? selectedColor : m_color, m_border);
             RenderManager::drawText("boldfont", m_elements[i], {cell.width / 2, cell.y + cell.height / 2}, COL_WHITE, 0.f, {0.5f, 0.5f});
         }
 
@@ -49,7 +50,6 @@ void List::draw() {
 void List::update() {
     auto mouse = getLocalMousePosition();
     auto elementHeight = StyleManager::get()->getValue<Vec2f>(DEFAULT_ELEMENT_SIZE).y;
-    auto fontSize = TextureManager::get()->getFontBaseSize("boldfont");
     auto totalHeight = m_border * 2 + elementHeight * m_elements.size() + m_border * m_elements.size();
 
     if(totalHeight > m_bounds.height) {
@@ -71,6 +71,7 @@ void List::update() {
         bool isVisible = rect.y + rect.height > m_border && rect.y < m_bounds.height - m_border;
 
         if(isVisible && rect.contains({mouse.x, mouse.y}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            m_selected = i;
             return m_callback(this, i);
         }
     }

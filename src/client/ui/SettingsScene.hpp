@@ -1,16 +1,12 @@
 #pragma once
+#include <ui/nodes/ListContainer.hpp>
 #include <ui/MenuBase.hpp>
-#include <entity/Player.hpp>
-#include <SoundManager.hpp>
-#include <SettingsManager.hpp>
-#include <string_view>
-#include <filesystem>
-#include <fstream>
-#include <toml.hpp>
 #include <string>
+#include <vector>
 
 class SettingsScene : public MenuBase {
 private:
+    std::vector<std::shared_ptr<ListContainer>> m_categories;
     std::string m_dropText;
     Button* m_keySelect;
     bool m_autoResolution;

@@ -3,30 +3,10 @@
 #include <cassert>
 
 Block::Block(BlockID id, int32_t x, int32_t y, uint8_t layer) 
-    : ItemBase(id), SerializedObject(Header::BLOCK), m_x(x), m_y(y), m_layer(layer) {
-
-    switch(id) {
-        case GRASS:
-        case DIRT:
-            m_materialType = MATERIAL_DIRT;
-            break;
-        case STONE:
-        case COBLESTONE:
-        case BRICKS:
-        case COAL_ORE:
-        case IRON_ORE:
-        case GOLD_ORE:
-        case DIAMOND_ORE:
-        case LAPIZ_ORE:
-        case FURHANCE:
-            m_materialType = MATERIAL_STONE;
-            break;
-        case PLANKS:
-        case OAK_LOG:
-        case BOOKSHELF:
-            m_materialType = MATERIAL_WOOD;
-            break;
-    };
+    : ItemBase(id), m_x(x), m_y(y), m_layer(layer) { 
+    
+    m_header = BLOCK;
+    updateMaterial();
 }
 
 Block::Block(Block& block) : Block(static_cast<BlockID>(block.m_id), block.m_x, block.m_y, block.m_layer) {
@@ -67,6 +47,12 @@ void Block::setPos(int32_t x, int32_t y, uint8_t layer) {
     m_x = x;
     m_y = y;
     m_layer = layer;
+}
+
+void Block::setID(BlockID id) {
+    m_id = id;
+
+    updateMaterial();
 }
 
 ByteVector Block::serialize() {
@@ -118,6 +104,8 @@ size_t Block::deserialize(ByteVector const& bytes) {
         }
     }
 
+    updateMaterial();
+
     return m_offset;
 }
 
@@ -137,4 +125,37 @@ float Block::getDurability() {
         case MATERIAL_WOOD: return 25.f;
         case MATERIAL_STONE: return 50.f;
     }
+}
+
+void Block::updateMaterial() {
+    switch(m_id) {
+        case GRASS:
+        case DIRT:
+            m_materialType = MATERIAL_DIRT;
+            break;
+        case STONE:
+        case COBLESTONE:
+        case BRICKS:
+        case COAL_ORE:
+        case IRON_ORE:
+        case GOLD_ORE:
+        case DIAMOND_ORE:
+        case LAPIZ_ORE:
+        case FURHANCE:
+            m_materialType = MATERIAL_STONE;
+            break;
+        case PLANKS:
+        case OAK_LOG:
+        case BOOKSHELF:
+            m_materialType = MATERIAL_WOOD;
+            break;
+    };
+}
+
+InventoryItem Block::dropItem() {
+    switch (m_id) {
+        case GRASS: return {std::make_shared<ItemBase>(DIRT), INVENTORY_TYPE_BLOCK, 1};
+        case STONE: return {std::make_shared<ItemBase>(COBLESTONE), INVENTORY_TYPE_BLOCK, 1};
+        default: return {std::make_shared<ItemBase>(m_id), INVENTORY_TYPE_BLOCK, 1};
+    };
 }

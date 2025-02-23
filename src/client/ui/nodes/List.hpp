@@ -8,6 +8,7 @@ protected:
     std::vector<std::string> m_elements;
     MiniFunction<void(List*, int)> m_callback;
     float m_scrollOffset;
+    int m_selected;
 
 public:
     List(std::vector<std::string> const& elements, MiniFunction<void(List*, int)> callback);

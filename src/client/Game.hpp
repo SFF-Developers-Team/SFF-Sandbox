@@ -39,6 +39,7 @@ public:
     void destroy();
     void close() { m_close = true; }
     
+    auto getScene() { return m_scene; }
     void clearSceneHistory() { m_sceneHistory.clear(); }
     void pushScene(std::shared_ptr<Scene> scene);
     void popScene();
@@ -56,6 +57,7 @@ public:
     int getGuiScale() { return m_guiScale; }
     void setGuiScale(int scale) { m_guiScale = scale; }
     static int getMaximumGuiScale();
+    void updateGuiScale();
 
     ControlType getControlType() { return m_controlType; }
 };

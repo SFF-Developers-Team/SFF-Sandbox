@@ -2,6 +2,7 @@
 #include <type_traits>
 #include <cstdint>
 #include <variant>
+#include <memory>
 #include <map>
 
 template <typename T>
@@ -275,4 +276,12 @@ struct TargetBlock {
     uint8_t layer;
 
     bool operator==(TargetBlock const& other) const { return x == other.x && y == other.y && layer == other.layer; }
+};
+
+class ItemBase;
+
+struct InventoryItem {
+    std::shared_ptr<ItemBase> pointer;
+    InventoryItemType type;
+    uint16_t count;
 };

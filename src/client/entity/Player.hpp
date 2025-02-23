@@ -1,6 +1,5 @@
 #pragma once
 #include <entity/SimplePlayer.hpp>
-#include <InventoryItem.hpp>
 #include <memory>
 #include <vector>
 #include <raylib.h>
@@ -10,16 +9,23 @@ class World;
 class Chunk;
 class Block;
 
+struct BreakingBlockInfo {
+    float totalDurability;
+    float currentDurability;
+};
+
 class Player : public SimplePlayer {
 private:
     Camera2D m_camera;
-    std::vector<std::shared_ptr<InventoryItem>> m_inventory;
+    std::vector<InventoryItem> m_inventory;
     int8_t m_selectedBlock;
 
     bool m_sneakToggled = false;
     bool m_sneak = false;
     bool m_fly = false;
     bool m_inv = false;
+    bool m_isBreakingBlock = false;
+    bool m_isBreakingBlockPrev = false;
     
     PlayerID m_id;
     AnimationType m_prevAnimType;
@@ -53,11 +59,11 @@ public:
     
     TargetBlock getTargetBlock();
     
-    std::shared_ptr<InventoryItem> getSelectedItem();
+    InventoryItem const& getSelectedItem();
     auto& getInventory() { return m_inventory; }
     int8_t getSelectedIndex() { return m_selectedBlock; }
     void setSelectedIndex(int8_t i) { m_selectedBlock = i; } 
-    int addToInventory(std::shared_ptr<ItemBase> item, int count = 1);
+    int addToInventory(InventoryItem item);
     
     void placeBlock();
     void destroyBlock();
@@ -71,4 +77,7 @@ public:
 
     GameMode getGameMode() { return m_gamemode; }
     void setGameMode(GameMode gamemode);
+
+    bool isBreakingBlock() { return m_isBreakingBlock; }
+    BreakingBlockInfo getBreakingBlockInfo();
 };
