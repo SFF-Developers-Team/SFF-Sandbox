@@ -10,7 +10,7 @@
 
 template <typename T>
 class Slider : public Frame {
-    static_assert(std::is_arithmetic_v<T>, "Unsupported type for Slider");
+    // static_assert(std::is_arithmetic_v<T>, "Unsupported type for Slider");
 
 protected:
     MiniFunction<void(Slider*, T)> m_callback;
@@ -20,6 +20,8 @@ protected:
     T m_prevValue;
     T m_value;
     bool m_selected;
+
+    void callback() { m_callback(this, m_value); }
 
 public:
     Slider(std::string const& text, T min, T max, MiniFunction<void(Slider*, T)> const& callback)
@@ -60,9 +62,7 @@ public:
             m_value = (mouse.x - bounds.x) / bounds.width * (m_max - m_min) + m_min;
             m_value = std::clamp(m_value, m_min, m_max);
     
-            if(m_prevValue != m_value) {
-                m_callback(this, m_value);
-            }
+            if(m_prevValue != m_value) callback();
         }
     }
 

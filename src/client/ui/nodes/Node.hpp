@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <Debug.hpp>
 
 enum NodeFlags : uint8_t {
     FLAG_GUI_SCALE = 1 << 0,
@@ -36,7 +37,7 @@ public:
     Node();
 
     virtual void update() {}
-    virtual void draw() {}
+    virtual void draw();
 
     void setTag(std::string const& tag) { m_tag = tag; }
     std::string const& getTag() { return m_tag; }

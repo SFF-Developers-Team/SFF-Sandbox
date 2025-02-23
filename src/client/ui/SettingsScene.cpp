@@ -1,7 +1,7 @@
 #include <ui/SettingsScene.hpp>
 #include <ui/nodes/ToggleButton.hpp>
 #include <ui/nodes/DropDown.hpp>
-#include <ui/nodes/Slider.hpp>
+#include <ui/nodes/SettingsSlider.hpp>
 #include <ui/nodes/ListContainer.hpp>
 #include <format>
 
@@ -28,63 +28,61 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
     float x = 0.f;
 
     for(auto& s : containers) {
-        auto cat = std::make_shared<Container>();
+        auto cat = std::make_shared<ListContainer>(false);
         cat->setAnchor({0.f, 0.f});
         cat->setPos({x, 0.f});
         cat->setSize(categorySize);
-        container->addChild(cat);
-
-        x += categorySize.x;
-
-        auto title = std::make_shared<Text>("boldfont", s);
-        title->setAnchorY(0.f);
-        title->setPos({categorySize.x / 2, container->getBorderWidth()});
-        cat->addChild(title);
+        cat->addChild(std::make_shared<Text>("boldfont", s));
 
         std::transform(s.begin(), s.end(), s.begin(), [](auto c) { 
             return std::tolower(c); 
         });
 
         cat->setTag("container-" + s);
-        title->setTag(s + "-title");
+
+        container->addChild(cat);
+        x += categorySize.x;
     }
 
     // video settings
     {
-        auto video = container->getChild<Container>("container-video");
-        auto const elementWidth = video->getWidth() - video->getBorderWidth() * 4;
+        auto video = container->getChild<ListContainer>("container-video");
+        float const elementWidth = video->getWidth() - video->getBorderWidth() * 4;
 
+        /*
         std::vector<std::string> modesList{"Auto"};
         auto modes = stm->getModes();
-
+        
         for(auto& mode : modes) {
             modesList.push_back(std::format("{}x{}", mode.width, mode.height));
         }
-
-        // auto resolutions = std::make_shared<DropDown>(modesList, [stm, this](DropDown*, int i) {
-        //     auto monitor = GetCurrentMonitor();
-        //     auto modes = stm->getModes();
-        //     auto game = Game::get();
-        //     auto ws = game->getLastWindowSize();
-        //     auto mode = (IsWindowState(FLAG_FULLSCREEN_MODE) ? VideoMode {GetMonitorWidth(monitor), GetMonitorHeight(monitor)} : ws.to<VideoMode>());
-
-        //     if(i > 0) {
-        //         mode = modes[i - 1];
-        //     }
         
-        //     m_autoResolution = i == 0;
-
-        //     SetWindowSize(mode.width, mode.height);
-        //     SetWindowPosition((GetMonitorWidth(monitor) - mode.width) / 2, (GetMonitorHeight(monitor) - mode.height) / 2);
-
-        //     stm->setValue("video.resolution", i);
-        // });
+        auto resolutions = std::make_shared<DropDown>(modesList, [stm, this](DropDown*, int i) {
+            auto monitor = GetCurrentMonitor();
+            auto modes = stm->getModes();
+            auto game = Game::get();
+            auto ws = game->getLastWindowSize();
+            auto mode = (IsWindowState(FLAG_FULLSCREEN_MODE) ? VideoMode {GetMonitorWidth(monitor), GetMonitorHeight(monitor)} : ws.to<VideoMode>());
         
-        // resolutions->setPos({video->getWidth() / 2, 50.f});
-        // resolutions->setWidth(elementWidth);
-        // video->addChild(resolutions);
+            if(i > 0) {
+                mode = modes[i - 1];
+            }
+        
+            m_autoResolution = i == 0;
 
-        auto fullscreen = std::make_shared<ToggleButton>("Fullscreen", [stm, this](ToggleButton*, bool flag) {
+            SetWindowSize(mode.width, mode.height);
+            SetWindowPosition((GetMonitorWidth(monitor) - mode.width) / 2, (GetMonitorHeight(monitor) - mode.height) / 2);
+
+            stm->setValue("video.resolution", i);
+        });
+        
+        resolutions->setPos({video->getWidth() / 2, 50.f});
+        resolutions->setWidth(elementWidth);
+        video->addChild(resolutions);
+        */
+
+#ifdef PLATFORM_DESKTOP
+        video->addChild(std::make_shared<ToggleButton>("Fullscreen", [stm, this](ToggleButton*, bool flag) {
             auto modes = stm->getModes();
             auto mon = GetCurrentMonitor();
             auto mode = stm->getValue<int>("video.resolution", modes.size());
@@ -100,13 +98,9 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
         
 
             stm->setValue("video.fullscreen", flag);
-        });
-        
-        fullscreen->setPos({video->getWidth() / 2, 50.f});
-        fullscreen->setWidth(elementWidth);
-        video->addChild(fullscreen);
+        }));
 
-        auto vsync = std::make_shared<ToggleButton>("VSYNC", [stm](ToggleButton*, bool flag) {
+        video->addChild(std::make_shared<ToggleButton>("VSYNC", [stm](ToggleButton*, bool flag) {
             if(!flag && IsWindowState(FLAG_VSYNC_HINT)) {
                 ClearWindowState(FLAG_VSYNC_HINT);
             }
@@ -116,13 +110,10 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
             }
 
             stm->setValue("video.vsync", flag);
-        });
+        }));
+#endif
 
-        vsync->setPos({video->getWidth() / 2, fullscreen->getY() + fullscreen->getHeight() + fullscreen->getBorderWidth()});
-        vsync->setWidth(elementWidth);
-        video->addChild(vsync);
-
-        auto scale = std::make_shared<Button>("GUI Scale: " + std::to_string(game->getGuiScale()), [this, stm, game](Button* btn) {
+        video->addChild(std::make_shared<Button>("GUI Scale: " + std::to_string(game->getGuiScale()), [this, stm, game](Button* btn) {
             int maxScale = std::min(getWidth() / 640, getHeight() / 360);
             int curScale = game->getGuiScale();
             
@@ -135,57 +126,36 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
             btn->setText("GUI Scale: " + std::to_string(curScale));
             stm->setValue("video.scale", curScale);
             game->setGuiScale(curScale);
-        });
-
-        scale->setPos({video->getWidth() / 2, vsync->getY() + vsync->getHeight() + vsync->getBorderWidth()});
-        scale->setWidth(elementWidth);
-        video->addChild(scale);
+        }));
     }
 
     // audio settings
     {
-        auto audio = container->getChild<Container>("container-audio");
+        auto audio = container->getChild<ListContainer>("container-audio");
         auto const elementWidth = audio->getWidth() - audio->getBorderWidth() * 4;
 
-        auto volume = std::make_shared<Slider<float>>("General volume: ", 0.f, 1.f, [stm](auto, auto value) {
+        audio->addChild(std::make_shared<SettingsSlider<float>>("audio.volume.general", "General volume: ", 0.f, 1.f, 0.5f, [stm](auto, auto value) {
             SetMasterVolume(value);
-            stm->setValue("audio.volume.general", value);
-        });
+        }));
 
-        volume->setValue(stm->getValue<float>("audio.volume.general", 0.5f));
-        volume->setPos({audio->getWidth() / 2, 50.f});
-        volume->setWidth(elementWidth);
-        audio->addChild(volume);
-
-        auto music = std::make_shared<Slider<float>>("Music volume: ", 0.f, 1.f, [stm](auto, auto value) {
+        audio->addChild(std::make_shared<SettingsSlider<float>>("audio.volume.music", "Music volume: ", 0.f, 1.f, 1.f, [stm](auto, auto value) {
             SoundManager::get()->setMusicVolume(value);
-            stm->setValue("audio.volume.music", value);
-        });
-        music->setValue(stm->getValue<float>("audio.volume.music", 0.5f));
-        music->setPos({audio->getWidth() / 2, volume->getY() + volume->getHeight() + volume->getBorderWidth()});
-        music->setWidth(elementWidth);
-        audio->addChild(music);
+        }));
 
-        auto sound = std::make_shared<Slider<float>>("Sound volume: ", 0.f, 1.f, [stm](auto, auto value) {
+        audio->addChild(std::make_shared<SettingsSlider<float>>("audio.volume.sound", "Sound volume: ", 0.f, 1.f, 1.f, [stm](auto, auto value) {
             SoundManager::get()->setSoundVolume(value);
-            stm->setValue("audio.volume.sound", value);
-        });
-        sound->setValue(stm->getValue<float>("audio.volume.sound", 0.5f));
-        sound->setPos({audio->getWidth() / 2, music->getY() + music->getHeight() + music->getBorderWidth()});
-        sound->setWidth(elementWidth);
-        audio->addChild(sound);
+        }));
     }
 
     // keyboard settings
     {
-        auto keyboard = container->getChild<Container>("container-keyboard");
+        auto keyboard = container->getChild<ListContainer>("container-keyboard");
         auto const elementWidth = keyboard->getWidth() - keyboard->getBorderWidth() * 4;
 
         auto keysContainer = std::make_shared<Container>();
-        keysContainer->setPos({keyboard->getWidth() / 2, 40.f});
         keysContainer->setAnchorY(0.f);
-        keysContainer->setSize({elementWidth, keyboard->getHeight() - keysContainer->getY() - keyboard->getBorderWidth() * 2});
         keyboard->addChild(keysContainer);
+        keysContainer->setHeight(keyboard->getHeight() - keysContainer->getY() - keyboard->getBorderWidth() * 2);
 
         auto y = keysContainer->getBorderWidth() * 2;
 

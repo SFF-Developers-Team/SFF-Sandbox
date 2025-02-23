@@ -31,6 +31,8 @@ void ScrollableContainer::draw() {
     };
 
 
+    Frame::draw();
+
     BeginScissorMode(cutRect.x, cutRect.y, cutRect.width, cutRect.height);
         Container::draw();
 

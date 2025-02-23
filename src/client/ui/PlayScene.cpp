@@ -157,10 +157,6 @@ void PlayScene::update() {
         }
     }
 
-    if(IsKeyPressed(KEY_F3)) {
-        Debug::get()->toggleVisibility();
-    }
-
     if(IsKeyPressed(KEY_F6)) {
         m_world->save();
     }

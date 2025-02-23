@@ -8,6 +8,8 @@
 #include <Game.hpp>
 #include <SettingsManager.hpp>
 #include <StyleManager.hpp>
+#include <RenderManager.hpp>
+#include <Debug.hpp>
 
 void Game::pushScene(std::shared_ptr<Scene> scene) {
     if(m_scene != nullptr) {    
@@ -119,6 +121,10 @@ void Game::update() {
 
         if(IsKeyPressed(KEY_BACK) || IsKeyPressed(KEY_ESCAPE) && m_scene->isKeyBackEnabled()) {
             m_scene->keyBackClicked();
+        }
+
+        if(IsKeyPressed(KEY_F3)) {
+            Debug::get()->toggleVisibility();
         }
 
         m_scene->update();
