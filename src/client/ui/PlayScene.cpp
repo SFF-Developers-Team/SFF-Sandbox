@@ -82,11 +82,10 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
 
     auto blockInfo = std::make_shared<BlockInfo>();
     blockInfo->setFlags(FLAG_GUI_SCALE);
+    blockInfo->setAnchorY(0.f);
     blockInfo->setVisible(false);
     blockInfo->setEnabled(false);
-    blockInfo->setWidth(140);
-    blockInfo->setHeight(40);
-    blockInfo->setPos({getWidth() / 2, hotbar->getSize().y + blockInfo->getSize().y + 50});
+    blockInfo->setPos({getWidth() / 2, hotbar->getHeight() * getGlobalScaleY() + 10.f});
     blockInfo->setTag("blockinfo");
     addChild(blockInfo);
 }
@@ -144,8 +143,8 @@ void PlayScene::update() {
     auto block = Game::get()->getWorld()->getBlock(target.x, target.y, target.layer);
     auto blockInfo = getChild<BlockInfo>("blockinfo");
 
-    blockInfo->setVisible(block != nullptr);
-    blockInfo->setEnabled(block != nullptr);
+    blockInfo->setVisible(block != nullptr && !m_inventoryEnabled);
+    blockInfo->setEnabled(block != nullptr && !m_inventoryEnabled);
 
     if(m_online) {
         auto mp = Multiplayer::get();
