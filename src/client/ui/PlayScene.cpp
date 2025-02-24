@@ -17,6 +17,7 @@
 #include <ui/nodes/TouchControlButton.hpp>
 #include <ui/nodes/BlockInfo.hpp>
 #include <ui/nodes/HeartsIndicator.hpp>
+#include <ui/nodes/List.hpp>
 #include <chrono>
 #include <list>
 
@@ -77,6 +78,7 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     blockInfo->setAnchorY(0.f);
     blockInfo->setVisible(false);
     blockInfo->setEnabled(false);
+    
     blockInfo->setPos({getWidth() / 2, hotbar->getHeight() * getGlobalScaleY() + 10.f});
     blockInfo->setTag("blockinfo");
     addChild(blockInfo);
@@ -86,6 +88,17 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     hp->setPos({getWidth() - 5.f, 5.f});
     hp->setFlags(FLAG_GUI_SCALE);
     addChild(hp); 
+
+    if(m_online) {
+        auto players = m_world->getPlayers();
+        std::vector<std::string> nickList;
+        for(auto& [id, player] : players) {
+            nickList.push_back(player->getUsername());
+        }
+        auto playerList = std::make_shared<List>(nickList, [](auto, auto) {});
+        playerList->setPos({static_cast<float>(GetScreenWidth() / 2), static_cast<float>(GetScreenHeight() / 2)});
+        addChild(playerList);
+    }
 }
 
 PlayScene::~PlayScene() {
@@ -141,8 +154,8 @@ void PlayScene::update() {
     auto block = Game::get()->getWorld()->getBlock(target.x, target.y, target.layer);
     auto blockInfo = getChild<BlockInfo>("blockinfo");
 
-    blockInfo->setVisible(block != nullptr && !m_inventoryEnabled);
-    blockInfo->setEnabled(block != nullptr && !m_inventoryEnabled);
+    blockInfo->setVisible(block != nullptr && !m_inventoryEnabled && !m_paused);
+    blockInfo->setEnabled(block != nullptr && !m_inventoryEnabled && !m_paused);
 
     if(m_online) {
         auto mp = Multiplayer::get();

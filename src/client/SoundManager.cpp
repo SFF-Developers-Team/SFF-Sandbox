@@ -3,12 +3,14 @@
 
 // Sounds
 bool SoundManager::loadSound(std::filesystem::path const& filepath) {
-    if(!std::filesystem::exists(filepath)) {
+    auto fullPath = (!filepath.is_absolute()) ? "assets" / filepath : filepath;
+
+    if(!std::filesystem::exists(fullPath)) {
         return false;
     }
 
-    auto key = filepath.filename().string();
-    auto sound = LoadSound(filepath.string().c_str());
+    auto key = fullPath.filename().string();
+    auto sound = LoadSound(fullPath.string().c_str());
     m_sounds[key] = sound;
 
     return true;
@@ -33,12 +35,14 @@ void SoundManager::setSoundVolume(float volume) {
 
 // Tracks
 bool SoundManager::loadMusic(std::filesystem::path const& filepath) {
-    if(!std::filesystem::exists(filepath)) {
+    auto fullPath = (!filepath.is_absolute()) ? "assets" / filepath : filepath;
+
+    if(!std::filesystem::exists(fullPath)) {
         return false;
     }
 
-    auto key = filepath.filename().string();
-    auto track = LoadMusicStream(filepath.string().c_str());
+    auto key = fullPath.filename().string();
+    auto track = LoadMusicStream(fullPath.string().c_str());
     m_tracks[key] = track;
 
     return true;
