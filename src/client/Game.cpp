@@ -71,9 +71,6 @@ void Game::init(std::vector<std::string>& args) {
     tm->loadFont("fonts/font.fnt");
     sm->loadMusic("menu.mp3");
     
-    // Load main classes
-    m_world = std::make_shared<World>("world1");
-    m_player = std::make_shared<Player>(m_world);
     m_guiScale = getMaximumGuiScale();
 
 #ifdef PLATFORM_ANDROID

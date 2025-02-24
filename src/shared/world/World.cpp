@@ -188,7 +188,7 @@ bool World::save() {
         return false;
     }
 
-    std::ofstream file("world.dat", std::ios::binary);
+    std::ofstream file(m_worldName + ".dat", std::ios::binary);
 
     if (!file.is_open()) {
         logE("Failed to open save file");
@@ -201,10 +201,10 @@ bool World::save() {
 }
 
 bool World::load() {
-    if (!std::filesystem::exists("world.dat"))
+    if (!std::filesystem::exists(m_worldName + ".dat"))
         return false;
 
-    std::ifstream file("world.dat", std::ios::in | std::ios::binary);
+    std::ifstream file(m_worldName + ".dat", std::ios::in | std::ios::binary);
     if (!file.is_open())
         return false;
 
@@ -250,7 +250,7 @@ void World::addPlayer(PlayerID id, std::shared_ptr<SimplePlayer> player, std::st
     player->setID(id);
     player->setUsername(username);
 
-    logD("Added player with id {}", player->getID());
+    logD("Added player with id {}", player->getPlayerID());
 }
 
 PlayerID World::addPlayer(std::shared_ptr<SimplePlayer> player, std::string const username) {

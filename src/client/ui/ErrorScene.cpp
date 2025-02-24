@@ -8,6 +8,7 @@ ErrorScene::ErrorScene(std::string const& message) : m_message(message) {
     auto const buttonW = 200.f;
 
     auto error = std::make_shared<Text>("font", "", 30.f);
+    error->setFlags(FLAG_GUI_SCALE | FLAG_ALWAYS_CENTER);
     error->setPos({getWidth() / 2, getHeight() / 2});
     addChild(error);
 
@@ -17,7 +18,7 @@ ErrorScene::ErrorScene(std::string const& message) : m_message(message) {
         game->pushScene(std::make_shared<MainMenuScene>());
     });
     
-    btn->setPos({getWidth() / 2, 460.f});
-    btn->setSize({200.f, 40.f});
+    btn->setPos({getWidth() / 2, error->getY() + error->getScaledHeight()});
+    btn->setFlags(FLAG_GUI_SCALE);
     addChild(btn);
 }

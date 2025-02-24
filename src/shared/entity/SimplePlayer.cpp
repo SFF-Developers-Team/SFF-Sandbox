@@ -4,7 +4,7 @@
 #include <world/World.hpp>
 #include <world/Chunk.hpp>
 
-SimplePlayer::SimplePlayer(std::shared_ptr<World> world) : Entity::Entity(world), m_health(40.f), m_lastHurtTime(0.f) {
+SimplePlayer::SimplePlayer(std::shared_ptr<World> world) : Mob(world) {
     m_header = Header::PLAYER;
 }
 
@@ -27,7 +27,7 @@ const char* SimplePlayer::getAnimationName(AnimationType type) {
 void SimplePlayer::setAnimation(AnimationType type) {
     m_animType = type;
 
-    if(m_animLimits.count(type)) {
+    if(m_animLimits.contains(type)) {
         auto limit = m_animLimits.at(type);
         m_animFrame = animationClamp(m_animFrame, limit.first, limit.second);
     }

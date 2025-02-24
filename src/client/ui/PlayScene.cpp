@@ -27,15 +27,6 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     m_color = COL_SKYBLUE;
     m_keyBack = false;
 
-    if(!m_online) {
-        if (!m_world->load()) {
-            m_world->setGenerator(std::make_shared<WorldGenNormal>(m_world, 1));
-            m_world->generate();
-        }
-
-        m_world->addPlayer(1, m_player);
-    }
-
     HideCursor();
 
     auto pauseMenu = std::make_shared<Container>();

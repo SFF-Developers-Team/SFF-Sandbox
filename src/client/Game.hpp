@@ -50,7 +50,10 @@ public:
     std::string const& getUsername() { return m_username; }
 
     std::shared_ptr<World> getWorld() { return m_world; }
+    void setWorld(std::shared_ptr<World> world) { m_world = world; };
+
     std::shared_ptr<Player> getPlayer() { return m_player; }
+    void setPlayer(std::shared_ptr<Player> player) { m_player = player; };
     
     Vec2i const getLastWindowSize() { return m_lastWindowSize; }
     

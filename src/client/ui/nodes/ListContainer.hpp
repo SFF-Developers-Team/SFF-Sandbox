@@ -8,9 +8,10 @@ protected:
     bool m_horizontal;
     bool m_autoResize;
     bool m_resizeElements;
+    bool m_selfAutoResize;
 
 public:
-    ListContainer(bool horizontal, bool resizeElements = true, float padding = 2.5f);
+    ListContainer(bool horizontal, bool resizeElements = true, bool selfAutoResize = false, float padding = 2.5f);
 
     void addChild(std::shared_ptr<Node> node);
 };

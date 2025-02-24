@@ -10,13 +10,14 @@
 
 using Header = SerializedObject::Header;
 
-Multiplayer::Multiplayer() : PacketManager(nullptr) {
+Multiplayer::Multiplayer() : PacketManager(nullptr), m_client(nullptr) {
     if (enet_initialize() != 0) {
         logE("An error occurred while initializing ENet.");
     }
 }
 
 Multiplayer::~Multiplayer() {
+    destroy();
     enet_deinitialize();
 }
 
@@ -124,8 +125,8 @@ void Multiplayer::update() {
 }
 
 void Multiplayer::destroy() {
-    enet_peer_reset(m_peer);
-    enet_host_destroy(m_client);
+    if(m_peer) enet_peer_reset(m_peer);
+    if(m_client) enet_host_destroy(m_client);
 }
 
 void Multiplayer::handle(Packet& packet) {
@@ -155,7 +156,7 @@ void Multiplayer::handlePlayer(Packet& packet) {
     auto id = packet.get<PlayerID>(0);
     
     if(id > 0) {
-        if(id == me->getID()) {
+        if(id == me->getPlayerID()) {
             me->deserialize(packet.bytes());
             return;
         }

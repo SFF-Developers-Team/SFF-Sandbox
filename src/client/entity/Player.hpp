@@ -41,7 +41,6 @@ private:
     float m_lastDestroyedBlock;
     float m_lastPlacedBlock;
     float m_forward;
-    float m_fallY;
     
 public:
     Player(std::shared_ptr<World> world);

@@ -1,10 +1,10 @@
 #pragma once
 #include <map>
-#include <entity/Entity.hpp>
+#include <entity/Mob.hpp>
 
 using PlayerID = uint32_t;
 
-class SimplePlayer : public Entity {
+class SimplePlayer : public Mob {
 public:
     enum AnimationType : uint8_t {
         PLAYER_IDLE,
@@ -35,8 +35,7 @@ protected:
     std::string m_username;
     std::mutex mutex;
 
-    float m_health;
-    float m_lastHurtTime;
+
 
 public:
     SimplePlayer(std::shared_ptr<World> world);
@@ -57,9 +56,5 @@ public:
 
     auto getAnimCurrentFrame() { return m_animFrame; }
     std::string const& getUsername() { return m_username; }
-    auto getID() { return m_id; }
-
-    float getHealth() { return m_health; }
-    float getMaxHealth() { return 20.f; }
-    float getLastHeartTime() { return m_lastHurtTime; }
+    auto getPlayerID() { return m_id; }
 };

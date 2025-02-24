@@ -32,9 +32,9 @@ MultiplayerScene::MultiplayerScene() : MenuBase() {
     hostnameInput->setAllowedChars(URL_ALLOWED_CHARS);
     container->addChild(hostnameInput);
     
-    auto joinBtn = std::make_shared<Button>("Join", [this, game](Button*) {
-        auto usernameInput = this->getChild<TextInput>("username-input");
-        auto hostnameInput = this->getChild<TextInput>("hostname-input");
+    auto joinBtn = std::make_shared<Button>("Join", [this, game, container](Button*) {
+        auto usernameInput = container->getChild<TextInput>("username-input");
+        auto hostnameInput = container->getChild<TextInput>("hostname-input");
 
         auto username = usernameInput->getText();
         auto hostname = hostnameInput->getText();
