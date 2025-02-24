@@ -17,7 +17,7 @@ public:
         std::copy(packet->data, packet->data + size(), data());
     }
 
-    Packet(Header header) : SerializedObject(header) { add(header); }
+    Packet(Header header) { add(header); }
 
     Packet(ByteVector const& bytes) : SerializedObject() {
         add(bytes);

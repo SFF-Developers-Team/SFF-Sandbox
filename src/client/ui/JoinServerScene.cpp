@@ -5,6 +5,7 @@
 #include <ui/ErrorScene.hpp>
 #include <ui/PlayScene.hpp>
 #include <Multiplayer.hpp>
+#include <world/World.hpp>
 #include <Game.hpp>
 #include <format>
 #include <thread>
@@ -47,6 +48,7 @@ void JoinServerScene::update() {
             return;
             
         case PLAYING:
+            
             game->clearSceneHistory();
             game->pushScene(std::make_shared<PlayScene>(true));
             break;

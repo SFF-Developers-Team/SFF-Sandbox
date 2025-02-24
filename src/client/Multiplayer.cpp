@@ -94,11 +94,15 @@ void Multiplayer::update() {
                     if(header != Header::IDENTIFICATION) break;
 
                     auto game = Game::get();
-                    auto player = game->getPlayer();
+                    auto world = std::make_shared<World>("mp");
+                    auto player = std::make_shared<Player>(world);
+                    game->setWorld(world);
+                    game->setPlayer(player);
+
                     auto id = packet.get<PlayerID>(0);
                     logD("Received PlayerID from server {}", id);
 
-                    game->getWorld()->addPlayer(id, player);
+                    world->addPlayer(id, player);
 
                     m_connected = true;
                     m_state = PLAYING;

@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <Types.hpp>
 
+#undef min
+
 Player::Player(std::shared_ptr<World> world) 
     : SimplePlayer(world), m_selectedBlock(0), m_inventory(36), m_forward(0.f), m_gamemode(GAMEMODE_SURVIVAL), 
     m_id(0), m_lastAnimFrameTime(0.f), m_lastDestroyedBlock(0.f), m_lastPlacedBlock(0.f) {

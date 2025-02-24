@@ -17,7 +17,7 @@ bool Client::accept(Packet& packet) {
         return false;
     }
 
-    std::string username = packet.get(std::string("Undefined"));
+    std::string username = packet.get("Undefined");
     
     if (username.size() < 3) {
         disconnect(TOO_SHORT_USERNAME);
