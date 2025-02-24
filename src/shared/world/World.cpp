@@ -9,7 +9,7 @@
 #include <assert.h>
 #include <Logger.hpp>
 
-World::World(uint32_t height, std::string const& worldName) : m_height(height), m_worldName(worldName), m_version(WORLDVER), m_spentTime(0), m_loadTime(0) {
+World::World(uint32_t height, std::string const& worldName) : m_height(height), m_worldName(worldName), m_version(WORLDVER), m_spentTime(0), m_loadTime(0), m_lastPlayerID(0) {
     m_header = WORLD;
 }
 

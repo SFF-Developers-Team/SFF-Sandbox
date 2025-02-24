@@ -12,6 +12,7 @@ bool Client::accept(Packet& packet) {
     auto srv = Server::get();
     auto head = packet.get<Header>();
     auto players = srv->getWorld()->getPlayers();
+    
     if (head != Header::IDENTIFICATION) {
         disconnect(INVALID_FIRST_PACKET);
         return false;
