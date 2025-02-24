@@ -395,7 +395,7 @@ int Player::addToInventory(InventoryItem item) {
 
     for (auto& slot : m_inventory) {
         if (slot.pointer == nullptr || *slot.pointer == item.pointer) {  
-            uint16_t add = min(item.count, (slot.pointer != nullptr ? 64 - slot.count : 64));
+            uint16_t add = std::min(item.count, (uint16_t)(slot.pointer != nullptr ? 64 - slot.count : 64));
 
             if (slot.pointer == nullptr) {
                 slot = InventoryItem {item.pointer, item.type, 0};  

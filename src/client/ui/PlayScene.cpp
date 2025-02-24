@@ -93,6 +93,7 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     auto hp = std::make_shared<HeartsIndicator>(m_player);
     hp->setAnchor({1.f, 0.f});
     hp->setPos({getWidth() - 5.f, 5.f});
+    hp->setFlags(FLAG_GUI_SCALE);
     addChild(hp); 
 }
 
