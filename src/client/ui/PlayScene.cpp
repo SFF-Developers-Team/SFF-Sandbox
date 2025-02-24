@@ -90,13 +90,11 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     addChild(hp); 
 
     if(m_online) {
-        auto players = m_world->getPlayers();
-        std::vector<std::string> nickList;
-        for(auto& [id, player] : players) {
-            nickList.push_back(player->getUsername());
-        }
         auto playerList = std::make_shared<List>(nickList, [](auto, auto) {});
         playerList->setPos({static_cast<float>(GetScreenWidth() / 2), static_cast<float>(GetScreenHeight() / 2)});
+        playerList->setVisible(false);
+        playerList->setEnabled(false);
+        playerList->setTag("playerlist");
         addChild(playerList);
     }
 }
@@ -148,14 +146,25 @@ void PlayScene::update() {
         }
 
         m_player->update();
+    } else {
+        auto players = m_world->getPlayers();
+        if(nickList.size() != players.size()) {
+            for(auto& [id, player] : players) {
+                nickList.push_back(player->getUsername());
+            }
+        }
     }
 
     auto target = Game::get()->getPlayer()->getTargetBlock();
     auto block = Game::get()->getWorld()->getBlock(target.x, target.y, target.layer);
     auto blockInfo = getChild<BlockInfo>("blockinfo");
+    auto playerList = getChild<List>("playerlist");
 
     blockInfo->setVisible(block != nullptr && !m_inventoryEnabled && !m_paused);
     blockInfo->setEnabled(block != nullptr && !m_inventoryEnabled && !m_paused);
+
+    playerList->setVisible(m_paused);
+    playerList->setEnabled(m_paused);
 
     if(m_online) {
         auto mp = Multiplayer::get();
