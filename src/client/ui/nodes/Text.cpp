@@ -25,15 +25,12 @@ std::vector<std::string> Text::wrapText() {
 
     for (char ch : m_text) {
         if (ch == ' ') {
-            // Проверяем, помещается ли текущее слово в текущую строку
             auto wordWidth = RenderManager::getTextSize(currentLine + currentWord, m_font, m_fontSize).x;
             
             if (wordWidth > getWidth()) {
-                // Если слово не помещается, начинаем новую строку
                 lines.push_back(currentLine);
                 currentLine = currentWord + " ";
             } else {
-                // Добавляем слово к текущей строке
                 currentLine += currentWord + " ";
             }
             currentWord.clear();
@@ -42,7 +39,6 @@ std::vector<std::string> Text::wrapText() {
         }
     }
 
-    // Добавляем последнее слово
     auto wordWidth = RenderManager::getTextSize(currentLine + currentWord, m_font, m_fontSize).x;
     if (wordWidth > getWidth()) {
         lines.push_back(currentLine);
@@ -93,30 +89,6 @@ void Text::draw() {
     }
 }
 
-float Text::getFontSize() {
-    return m_fontSize;
-}
-
-void Text::setFontSize(float fontSize) {
-    m_fontSize = fontSize;
-}
-
-std::string const& Text::getText() {
-    return m_text;
-}
-
-void Text::setText(std::string const& text) {
-    m_text = text;
-}
-
-std::string const& Text::getFont() {
-    return m_font;
-}
-
-void Text::setFont(std::string const& font) {
-    m_font = font;
-}
-
 void Text::setWordWrap(bool flag, bool autoHeight) {
     m_wordWrap = flag;
 
@@ -131,12 +103,4 @@ void Text::setWordWrap(bool flag, bool autoHeight) {
 
         setHeight(height);
     }
-}
-
-void Text::setAlignV(TextAlignmentV alignV) {
-    m_alignVertical = alignV;
-}
-
-void Text::setAlignH(TextAlignmentH alignH) {
-    m_alignHorizontal = alignH;
 }

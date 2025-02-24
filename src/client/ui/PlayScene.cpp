@@ -18,6 +18,7 @@
 #include <ui/nodes/BlockInfo.hpp>
 #include <ui/nodes/HeartsIndicator.hpp>
 #include <ui/nodes/List.hpp>
+#include <ui/nodes/Layer.hpp>
 #include <chrono>
 #include <list>
 
@@ -30,40 +31,11 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
 
     HideCursor();
 
-    auto pauseMenu = std::make_shared<Container>();
-    pauseMenu->setFlags(FLAG_ALWAYS_CENTER | FLAG_GUI_SCALE);
-    pauseMenu->setColor({0, 0, 0, 0});
-    pauseMenu->setTag("pause-menu");
-    pauseMenu->setBorderWidth(0.f);
-    pauseMenu->setEnabled(false);
-    pauseMenu->setVisible(false);
-    addChild(pauseMenu);
-
-    auto btnSize = StyleManager::get()->getValue<Vec2f>(DEFAULT_ELEMENT_SIZE);
-    auto border = StyleManager::get()->getValue<float>(DEFAULT_BORDER_WIDTH);
-
-    std::list<std::pair<std::string, MiniFunction<void(Button*)>>> const btns = {
-        {"Resume game", [this](auto) { setPaused(false); }},
-        {"Back to main menu", [game, this](auto) { destroy(); }}
-    };
-
-    auto y = 0.f;
-    for(auto& [text, call] : btns) {
-        auto btn = std::make_shared<Button>(text, call);
-        btn->setPos({0.f, y});
-        btn->setAnchor({0.f, 0.f});
-        pauseMenu->addChild(btn);
-        
-        y += btn->getHeight() + btn->getBorderWidth();
-    }
-
-    pauseMenu->hugContent();
-
     auto hotbar = std::make_shared<Hotbar>(m_player, [this]() { setInventoryOpened(true); });
     hotbar->setAnchorY(0.f);
     hotbar->setPos({getWidth() / 2, 0.f});
     hotbar->setFlags(FLAG_GUI_SCALE);
-    // hotbar->setTag("hotbar");
+    hotbar->setTag("hotbar");
     addChild(hotbar);
 
     auto inventory = std::make_shared<Inventory>(m_player->getInventory());
@@ -78,7 +50,6 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     blockInfo->setAnchorY(0.f);
     blockInfo->setVisible(false);
     blockInfo->setEnabled(false);
-    
     blockInfo->setPos({getWidth() / 2, hotbar->getHeight() * getGlobalScaleY() + 10.f});
     blockInfo->setTag("blockinfo");
     addChild(blockInfo);
@@ -87,7 +58,24 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     hp->setAnchor({1.f, 0.f});
     hp->setPos({getWidth() - 5.f, 5.f});
     hp->setFlags(FLAG_GUI_SCALE);
-    addChild(hp); 
+    addChild(hp);
+
+    auto pauseLayer = std::make_shared<Layer>();
+    pauseLayer->setColor({0, 0, 0, 64});
+    pauseLayer->setEnabled(false);
+    pauseLayer->setVisible(false);
+    pauseLayer->setTag("pause-menu");
+    addChild(pauseLayer);
+
+    auto pauseMenu = std::make_shared<ListContainer>(false, false, true);
+    pauseMenu->setFlags(FLAG_ALWAYS_CENTER | FLAG_GUI_SCALE);
+    pauseMenu->setColor({0, 0, 0, 0});
+    pauseMenu->setBorderWidth(0.f);
+    pauseMenu->addChild(std::make_shared<Button>("Resume game", [this](auto) { setPaused(false); }));
+    pauseMenu->addChild(std::make_shared<Button>("Back to main menu", [this](auto) { destroy(); }));
+    pauseLayer->addChild(pauseMenu);
+
+    m_pauseNodes = {hotbar, blockInfo};
 
     if(m_online) {
         auto playerList = std::make_shared<List>(nickList, [](auto, auto) {});
@@ -95,7 +83,7 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
         playerList->setVisible(false);
         playerList->setEnabled(false);
         playerList->setTag("playerlist");
-        addChild(playerList);
+        pauseLayer->addChild(playerList);
     }
 }
 
@@ -106,22 +94,41 @@ PlayScene::~PlayScene() {
 }
 
 void PlayScene::draw() {
+    Vector2 static mouse = {0};
+    TargetBlock static target = {0};
+
+    if (!m_paused) {
+        mouse = GetMousePosition();
+        target = m_player->getTargetBlock();
+    }
+
     BeginMode2D(m_player->getCamera());
         RenderManager::renderWorld(m_world, m_player);
+
+        if (m_player->isBreakingBlock()) {
+            auto breakingBlock = m_player->getBreakingBlockInfo();
+    
+            RenderManager::drawTile("gui.png", 8 + (5.f - (breakingBlock.currentDurability / breakingBlock.totalDurability) * 5.f), BLOCK_RECT(target.x, target.y));
+        }
+
+        if (m_player->canAccessBlock(target)) {
+            if(m_player->canPlaceBlock(target)) {
+                RenderManager::drawTile("gui.png", 1, BLOCK_RECT(target.x, target.y));
+            }
+
+            if(m_player->canDestroyBlock(target)) {
+                RenderManager::drawTile("gui.png", 2 + IsKeyDown(KEY_LEFT_CONTROL), BLOCK_RECT(target.x, target.y));
+            }
+        }
     EndMode2D();
 
-    auto game = Game::get();
-    auto scale = game->getGuiScale();
+    RenderManager::drawTile("gui.png", 0, {mouse.x, mouse.y, 16.f, 16.f}, COL_WHITE, 0.f, {0.5f, 0.5f});
 
     if(m_paused) {
         RenderManager::drawRect({0.f, 0.f, getWidth(), getHeight()}, {0, 0, 0, 127});
     }
 
     Scene::draw();
-
-    auto mouse = GetMousePosition();
-    RenderManager::drawTile("gui.png", 0, {mouse.x, mouse.y, 16.f, 16.f}, COL_WHITE, 0.f, {0.5f, 0.5f});
-
     Debug::get()->draw();
 }
 
@@ -163,8 +170,10 @@ void PlayScene::update() {
     blockInfo->setVisible(block != nullptr && !m_inventoryEnabled && !m_paused);
     blockInfo->setEnabled(block != nullptr && !m_inventoryEnabled && !m_paused);
 
-    playerList->setVisible(m_paused);
-    playerList->setEnabled(m_paused);
+    if (playerList != nullptr) {
+        playerList->setVisible(m_paused);
+        playerList->setEnabled(m_paused);
+    }
 
     if(m_online) {
         auto mp = Multiplayer::get();
@@ -193,7 +202,7 @@ void PlayScene::update() {
         setInventoryOpened(false);
     }
 
-    if(IsKeyPressed(KEY_E)) {
+    if(IsKeyPressed(KEY_E) && !m_paused) {
         setInventoryOpened(!m_inventoryEnabled);
     }
 
@@ -206,6 +215,10 @@ void PlayScene::setPaused(bool paused) {
     pauseMenu->setEnabled(paused);
     m_paused = paused;
     (paused ? ShowCursor() : HideCursor());
+
+    for (auto& node : m_pauseNodes) {
+        node->setEnabled(!paused);
+    }
 }
 
 void PlayScene::setInventoryOpened(bool isOpen) {
@@ -213,6 +226,8 @@ void PlayScene::setInventoryOpened(bool isOpen) {
     inventory->setVisible(isOpen);
     inventory->setEnabled(isOpen);
     m_inventoryEnabled = isOpen;
+
+    (isOpen ? ShowCursor() : HideCursor());
 }
 
 void PlayScene::keyBackClicked() {

@@ -31,7 +31,7 @@ void Hotbar::draw() {
 
         if(inventory[i].pointer != nullptr) {
             RenderManager::renderInventoryItem(itemRect, inventory[i]);
-            RenderManager::drawText("font", std::to_string(inventory[i].count), {cellRect.x + cellRect.width, cellRect.y + cellRect.height}, COL_WHITE, 0.f, {1.f, 1.f});
+            RenderManager::drawText("font", std::to_string(inventory[i].count), {cellRect.x + cellRect.width - 3.f, cellRect.y + cellRect.height}, COL_WHITE, 0.f, {1.f, 1.f});
         }
 
         if(i == selected) {

@@ -26,17 +26,17 @@ public:
 
     void draw();
 
-    float getFontSize();
-    void setFontSize(float fontSize);
+    float getFontSize() { return m_fontSize; }
+    void setFontSize(float fontSize) { m_fontSize = fontSize; }
 
-    std::string const& getText();
-    void setText(std::string const& text);
+    std::string const& getText() { return m_text; }
+    void setText(std::string const& text) { m_text = text; }
 
-    std::string const& getFont();
-    void setFont(std::string const& font);
+    std::string const& getFont() { return m_font; }
+    void setFont(std::string const& font) { m_font = font; }
 
     void setWordWrap(bool flag, bool autoHeight);
 
-    void setAlignV(TextAlignmentV alignV);
-    void setAlignH(TextAlignmentH alignH);
+    void setAlignV(TextAlignmentV alignV) { m_alignVertical = alignV; }
+    void setAlignH(TextAlignmentH alignH) { m_alignHorizontal = alignH; }
 };

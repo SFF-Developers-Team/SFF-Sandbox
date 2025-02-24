@@ -38,7 +38,7 @@ void List::draw() {
             };
 
             RenderManager::drawFrame(cell, (i == m_selected) ? selectedColor : m_color, m_border);
-            RenderManager::drawText("boldfont", m_elements[i], {cell.width / 2, cell.y + cell.height / 2}, COL_WHITE, 0.f, {0.5f, 0.5f});
+            RenderManager::drawText("boldfont", m_elements[i], {cell.x + cell.width / 2, cell.y + cell.height / 2}, COL_WHITE, 0.f, {0.5f, 0.5f});
         }
 
         if(scrollBar) {

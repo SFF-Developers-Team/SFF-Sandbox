@@ -65,7 +65,7 @@ void Inventory::update() {
 
         if(click && cell.contains(mouse) && m_selected >= 0) {
             if (m_inventory[i].pointer == nullptr) {
-                m_inventory[i].pointer = std::move(m_inventory[m_selected].pointer);
+                m_inventory[i] = std::move(m_inventory[m_selected]);
             } else {
                 std::swap(m_inventory[i], m_inventory[m_selected]);
             }

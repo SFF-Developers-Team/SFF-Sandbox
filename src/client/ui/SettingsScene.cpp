@@ -1,5 +1,5 @@
 #include <ui/SettingsScene.hpp>
-#include <ui/nodes/ToggleButton.hpp>
+#include <ui/nodes/SettingsToggle.hpp>
 #include <ui/nodes/DropDown.hpp>
 #include <ui/nodes/SettingsSlider.hpp>
 #include <ui/nodes/ListContainer.hpp>
@@ -24,9 +24,6 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
     // back->setAnchorY(1.f);
     // back->setWidth(container->getWidth() / containers.size());
     // container->addChild(back);
-
-    // Vec2f categorySize = {container->getWidth() / containers.size(), container->getHeight() - back->getHeight() - back->getBorderWidth() * 3};
-    // float x = 0.f;
 
     std::vector<std::string> containers{"Video", "Audio", "Keyboard"};
 
@@ -101,7 +98,7 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
         */
 
 #ifdef PLATFORM_DESKTOP
-        video->addChild(std::make_shared<ToggleButton>("Fullscreen", [stm, this](ToggleButton*, bool flag) {
+        video->addChild(std::make_shared<SettingsToggle>("video.fullscreen", "Fullscreen", [stm, this](ToggleButton*, bool flag) {
             // auto modes = stm->getModes();
             auto mon = GetCurrentMonitor();
             auto game =  Game::get();
@@ -123,7 +120,7 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
             onShow();
         }));
 
-        video->addChild(std::make_shared<ToggleButton>("VSYNC", [stm](ToggleButton*, bool flag) {
+        video->addChild(std::make_shared<SettingsToggle>("video.vsync", "VSYNC", [stm](ToggleButton*, bool flag) {
             if(!flag && IsWindowState(FLAG_VSYNC_HINT)) {
                 ClearWindowState(FLAG_VSYNC_HINT);
             }

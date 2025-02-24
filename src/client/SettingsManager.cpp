@@ -58,13 +58,18 @@ SettingsManager::SettingsManager() {
     game->setGuiScale(getValue<int>("video.scale", 1));
     (getValue<bool>("video.vsync", true) ? SetWindowState(FLAG_VSYNC_HINT) : ClearWindowState(FLAG_VSYNC_HINT));
 
+    auto mon = GetCurrentMonitor();
+    Vec2i monSize = {GetMonitorWidth(mon), GetMonitorHeight(mon)};
+
     if (getValue<bool>("video.fullscreen", true)) {
-        auto mon = GetCurrentMonitor();
         SetWindowState(FLAG_WINDOW_UNDECORATED);
-        SetWindowSize(GetMonitorWidth(mon), GetMonitorHeight(mon));
+        SetWindowSize(monSize.x, monSize.y);
     } else {
-        auto wSize = Game::get()->getLastWindowSize();
-        SetWindowSize(wSize.x, wSize.y);
+        auto winSize = Game::get()->getLastWindowSize();
+        
+        ClearWindowState(FLAG_WINDOW_UNDECORATED);
+        SetWindowSize(winSize.x, winSize.y);
+        SetWindowPosition((monSize.x - winSize.x) / 2, (monSize.y - winSize.y) / 2);
     }
 }
 

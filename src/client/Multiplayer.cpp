@@ -184,10 +184,13 @@ void Multiplayer::handleLoadPlayer(Packet& packet) {
     auto game = Game::get();
     auto world = game->getWorld();
     auto id = packet.get<PlayerID>(0);
+
     logD("Load player {}", id);
+    
     if(id > 0) {
         auto player = world->getPlayer(id);
-        std::string username = packet.get(std::string(""));
+        std::string username = packet.get("");
+        
         if(!player) {
             player = std::make_shared<OnlinePlayer>(world);
             world->addPlayer(id, player);

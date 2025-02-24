@@ -29,6 +29,6 @@ void ToggleButton::update() {
 
     if(rect.contains({mouse.x, mouse.y}) && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
         m_flag = !m_flag;
-        m_callback(this, m_flag);
+        triggerCallback();
     }
 }

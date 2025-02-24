@@ -25,7 +25,7 @@ public:
     }
 
     template<typename... Args>
-    Packet(Header const header, Args const&... arg) : Packet(header) { add(arg...); }
+    Packet(Header const header, Args const&... args) : Packet(header) { (add(args), ...); }
 
     template<typename... Args>
     Packet(Args const&... arg) { add(arg...); }

@@ -5,6 +5,7 @@
 class World;
 class Player;
 class Timer;
+class Node;
 
 class PlayScene : public Scene {
 private:
@@ -17,6 +18,7 @@ private:
     bool m_inventoryEnabled;
 
     std::vector<std::string> nickList;
+    std::vector<std::shared_ptr<Node>> m_pauseNodes;
 public:
     PlayScene(bool isOnline = false);
     ~PlayScene();

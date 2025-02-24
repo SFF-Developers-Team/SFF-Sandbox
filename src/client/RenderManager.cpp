@@ -97,25 +97,6 @@ void RenderManager::renderWorld(std::shared_ptr<World> world, std::shared_ptr<Pl
             chunksCount++;
         }
 
-        auto target = player->getTargetBlock();
-
-        if (player->isBreakingBlock()) {
-            auto breakingBlock = player->getBreakingBlockInfo();
-    
-            RenderManager::drawTile("gui.png", 8 + (5.f - (breakingBlock.currentDurability / breakingBlock.totalDurability) * 5.f), BLOCK_RECT(target.x, target.y));
-        }
-
-        // Selected block
-        if (player->canAccessBlock(target)) {
-            if(player->canPlaceBlock(target)) {
-                drawTile("gui.png", 1, BLOCK_RECT(target.x, target.y));
-            }
-
-            if(player->canDestroyBlock(target)) {
-                drawTile("gui.png", 2 + IsKeyDown(KEY_LEFT_CONTROL), BLOCK_RECT(target.x, target.y));
-            }
-        }
-
         if (dbg->isVisible()) {
             DrawLineV({(float)pos * CHUNK_WIDTH, 0.f}, {(float)pos * CHUNK_WIDTH, 256.f}, YELLOW);
 

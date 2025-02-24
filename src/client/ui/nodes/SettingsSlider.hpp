@@ -8,7 +8,6 @@ protected:
 
     void callback() {
         SettingsManager::get()->setValue<T>(m_property, this->m_value);
-
         Slider<T>::callback();
     }
 
