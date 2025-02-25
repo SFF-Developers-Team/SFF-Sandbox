@@ -78,7 +78,6 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     m_pauseNodes = {hotbar, blockInfo};
 
     if(m_online) {
-        
         auto playerList = std::make_shared<List>(nickList, [](auto, auto) {});
         playerList->setFlags(FLAG_GUI_SCALE);
         playerList->setPos({static_cast<float>(GetScreenWidth() / 2 + 735), 0});

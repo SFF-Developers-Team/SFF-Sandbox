@@ -156,7 +156,7 @@ void Multiplayer::handlePlayer(Packet& packet) {
     auto me = game->getPlayer();
     auto id = packet.get<PlayerID>(0);
     
-    if(id > 0) {
+    if(id > 0 && me != nullptr) {
         if(id == me->getPlayerID()) {
             me->deserialize(packet.bytes());
             return;
