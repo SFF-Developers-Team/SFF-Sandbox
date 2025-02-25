@@ -12,7 +12,7 @@ protected:
 
 public:
     List(std::vector<std::string> const& elements, MiniFunction<void(List*, int)> callback);
-
+    void setList(std::vector<std::string> const& elements) { m_elements = elements; }
     void update();
     void draw();
 };

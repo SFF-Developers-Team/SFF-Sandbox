@@ -6,13 +6,15 @@ class World;
 class Player;
 class Timer;
 class Node;
+class List;
 
 class PlayScene : public Scene {
 private:
     std::shared_ptr<World> m_world;
     std::shared_ptr<Player> m_player;
     std::shared_ptr<Timer> m_timer;
-
+    std::shared_ptr<List> m_playersList;
+    
     bool m_online;
     bool m_paused;
     bool m_inventoryEnabled;

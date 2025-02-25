@@ -30,7 +30,7 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     m_keyBack = false;
 
     HideCursor();
-
+    
     auto hotbar = std::make_shared<Hotbar>(m_player, [this]() { setInventoryOpened(true); });
     hotbar->setAnchorY(0.f);
     hotbar->setPos({getWidth() / 2, 0.f});
@@ -78,12 +78,17 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     m_pauseNodes = {hotbar, blockInfo};
 
     if(m_online) {
+        
         auto playerList = std::make_shared<List>(nickList, [](auto, auto) {});
-        playerList->setPos({static_cast<float>(GetScreenWidth() / 2), static_cast<float>(GetScreenHeight() / 2)});
-        playerList->setVisible(false);
-        playerList->setEnabled(false);
+        playerList->setFlags(FLAG_GUI_SCALE);
+        playerList->setPos({static_cast<float>(GetScreenWidth() / 2 + 735), 0});
+        playerList->setVisible(true);
+        playerList->setEnabled(true);
+        playerList->setAnchorY(0.f);
+        playerList->setSize({150, static_cast<float>(GetScreenHeight() / Game::get()->getGuiScale())});
         playerList->setTag("playerlist");
-        pauseLayer->addChild(playerList);
+        m_playersList = playerList;
+        pauseLayer->addChild(m_playersList);
     }
 }
 
@@ -153,13 +158,6 @@ void PlayScene::update() {
         }
 
         m_player->update();
-    } else {
-        auto players = m_world->getPlayers();
-        if(nickList.size() != players.size()) {
-            for(auto& [id, player] : players) {
-                nickList.push_back(player->getUsername());
-            }
-        }
     }
 
     auto target = Game::get()->getPlayer()->getTargetBlock();
@@ -211,8 +209,26 @@ void PlayScene::update() {
 
 void PlayScene::setPaused(bool paused) {
     auto pauseMenu = getChild<Container>("pause-menu");
-    pauseMenu->setVisible(paused);
+
+    pauseMenu->setVisible(paused);  
     pauseMenu->setEnabled(paused);
+    
+    if(m_online) {
+        auto players = m_world->getPlayers();
+        if(nickList.size() != players.size() && m_playersList != nullptr) {
+            nickList.clear();
+            nickList.push_back(Game::get()->getUsername());
+            for(auto& [id, player] : players) {
+                if(player->getUsername().empty()) {
+                    continue;
+                }
+                nickList.push_back(player->getUsername());
+                logD("{}", player->getUsername());
+            }
+                m_playersList->setList(nickList);  
+        }
+    }
+
     m_paused = paused;
     (paused ? ShowCursor() : HideCursor());
 
