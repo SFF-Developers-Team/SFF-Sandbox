@@ -31,6 +31,8 @@ MainMenuScene::MainMenuScene() : MenuBase() {
             game->setPlayer(player);
             world->addPlayer(player);
 
+            // I HATE THIS SHIT
+            // WHEN I CLEAR SCENE HISTORY, PLAYSCENE CAUSES CRASH
             game->pushScene(std::make_shared<PlayScene>()); 
         }},
         {"Multiplayer", [game](Button*) { game->pushScene(std::make_shared<MultiplayerScene>()); }},

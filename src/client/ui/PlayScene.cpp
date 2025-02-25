@@ -29,6 +29,8 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     m_color = COL_SKYBLUE;
     m_keyBack = false;
 
+    game->clearSceneHistory();
+
     HideCursor();
     
     auto hotbar = std::make_shared<Hotbar>(m_player, [this]() { setInventoryOpened(true); });
@@ -217,6 +219,7 @@ void PlayScene::setPaused(bool paused) {
         if(nickList.size() != players.size() && m_playersList != nullptr) {
             nickList.clear();
             nickList.push_back(Game::get()->getUsername());
+            
             for(auto& [id, player] : players) {
                 if(player->getUsername().empty()) {
                     continue;
@@ -224,7 +227,8 @@ void PlayScene::setPaused(bool paused) {
                 nickList.push_back(player->getUsername());
                 logD("{}", player->getUsername());
             }
-                m_playersList->setList(nickList);  
+            
+            m_playersList->setList(nickList);  
         }
     }
 

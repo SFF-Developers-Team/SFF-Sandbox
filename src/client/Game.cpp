@@ -18,15 +18,20 @@ void Game::pushScene(std::shared_ptr<Scene> scene) {
     }
 
     m_scene = scene;
-    m_scene->onShow();
+    m_scene->onPush();
 }
 
 void Game::popScene() {
+    m_scene->onPop();
+
     if(!m_sceneHistory.empty()) {
         m_scene = m_sceneHistory.back();
         m_sceneHistory.pop_back();
-        m_scene->onShow();
+    } else {
+        m_scene = std::make_shared<MainMenuScene>();
     }
+
+    m_scene->onPush();
 }
 
 void Game::checkSceneFlags(std::shared_ptr<Container> scene) {
@@ -119,11 +124,11 @@ void Game::update() {
             Debug::get()->toggleVisibility();
         }
 
-        m_scene->update();
-
         if(m_scene->shouldDestroy()) {
             popScene();
         }
+
+        m_scene->update();
     }
 
     if(GetKeyPressed() > 0 || IsMouseButtonPressed(MOUSE_LEFT_BUTTON) || IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)) {
