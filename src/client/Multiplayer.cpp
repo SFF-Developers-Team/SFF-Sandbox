@@ -59,7 +59,7 @@ bool Multiplayer::connect(std::string const& host, uint16_t port) {
 
     auto packet = Packet(SerializedObject::Header::IDENTIFICATION);
     packet.add(myUsername);
-    packet.print();
+    
     if(sendPacket(packet)) {
         logD("Identification sent. Waiting for response...");
         m_state = LOGGING_IN;
