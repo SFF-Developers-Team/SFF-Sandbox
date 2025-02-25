@@ -27,9 +27,8 @@ void PacketManager::packetReceived(Packet& packet) {
 }
 
 void PacketManager::handle(Packet& packet) {
-    switch(packet.get<Header>()) {
-        case Header::ARRAY: handleArray(packet); break;
-        default: break;
+    if(packet.get<Header>() == Header::ARRAY) {
+        handleArray(packet);
     }
 
     packet.reset();

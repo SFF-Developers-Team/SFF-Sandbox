@@ -95,7 +95,7 @@ PlayScene::~PlayScene() {
 
 void PlayScene::draw() {
     Vector2 static mouse = {0};
-    TargetBlock static target = {0};
+    BlockPosition static target = {0};
 
     if (!m_paused) {
         mouse = GetMousePosition();

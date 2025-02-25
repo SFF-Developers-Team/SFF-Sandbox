@@ -33,7 +33,7 @@ private:
     uint8_t m_prevAnimFrame;
     Direction m_prevDir;
     GameMode m_gamemode;
-    TargetBlock m_breakingBlock;
+    BlockPosition m_breakingBlock;
     float m_breakingBlockDurability;
     float m_lastPunch;
 
@@ -54,11 +54,11 @@ public:
 
     bool isChunkInView(std::shared_ptr<Chunk> chunk);
     bool isBlockInView(std::shared_ptr<Block> block);
-    bool canDestroyBlock(TargetBlock target);
-    bool canPlaceBlock(TargetBlock target);
-    bool canAccessBlock(TargetBlock target);
+    bool canDestroyBlock(BlockPosition target);
+    bool canPlaceBlock(BlockPosition target);
+    bool canAccessBlock(BlockPosition target);
     
-    TargetBlock getTargetBlock();
+    BlockPosition getTargetBlock();
     
     InventoryItem const& getSelectedItem();
     auto& getInventory() { return m_inventory; }

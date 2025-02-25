@@ -59,6 +59,7 @@ bool Multiplayer::connect(std::string const& host, uint16_t port) {
 
     auto packet = Packet(SerializedObject::Header::IDENTIFICATION);
     packet.add(myUsername);
+    packet.print();
     if(sendPacket(packet)) {
         logD("Identification sent. Waiting for response...");
         m_state = LOGGING_IN;
@@ -93,20 +94,14 @@ void Multiplayer::update() {
                     if(header == Header::NETWORK_ERROR) handleError(packet);
                     if(header != Header::IDENTIFICATION) break;
 
+                    m_myPlayerId = packet.get<PlayerID>(0);
+                    logD("Received PlayerID from server {}", m_myPlayerId);
+
                     auto game = Game::get();
-                    auto world = std::make_shared<World>("mp");
-                    auto player = std::make_shared<Player>(world);
-                    game->setWorld(world);
-                    game->setPlayer(player);
-
-                    auto id = packet.get<PlayerID>(0);
-                    logD("Received PlayerID from server {}", id);
-
-                    world->addPlayer(id, player);
+                    game->setWorld(std::make_shared<World>("mp"));
 
                     m_connected = true;
-                    m_state = PLAYING;
-
+                    m_state = LOADING_TERRAIN;
                     break;
                 }
 
@@ -142,9 +137,9 @@ void Multiplayer::handle(Packet& packet) {
         case Header::NETWORK_ERROR: handleError(packet); break;
         case Header::PLAYER: handlePlayer(packet); break;
         case Header::CHUNK: handleChunk(packet); break;
-        // case Header::BLOCK: handleBlock(packet); break;
         case Header::BLOCK_DESTROY: handleBlockDestroy(packet); break;
         case Header::BLOCK_PLACE: handleBlockPlace(packet); break;
+        case Header::TERRAIN: handleTerrain(packet); break;
         default: return;
     }
 }
@@ -225,19 +220,20 @@ void Multiplayer::handleChunk(Packet& packet) {
     world->addChunk(chunk);
 }
 
-// void Multiplayer::handleBlock(Packet& packet) {
-//     auto game = Game::get();
-    
-//     auto block = std::make_shared<Block>();
-//     block->deserialize(packet.bytes());
+void Multiplayer::handleTerrain(Packet& packet) {
+    if(packet.get<Header>() == Header::ARRAY) {
+        handleArray(packet);
+    }
 
-//     auto pos = block->getPos();
-//     auto lay = block->getLayer();
+    auto game = Game::get();
+    auto world = game->getWorld();
+    auto player = std::make_shared<Player>(world);
+    game->setPlayer(player);
+    world->addPlayer(m_myPlayerId, player);
 
-//     game->getWorld()->setBlock(pos.x, pos.y, lay, block);
-    
-//     logD("Received block {}, {}, {}", pos.x, pos.y, lay);
-// }
+    sendPacket(Packet(Header::TERRAIN_LOADED));
+    m_state = PLAYING;
+}
 
 void Multiplayer::handleBlockPlace(Packet& packet) {
     auto game = Game::get();
@@ -249,32 +245,18 @@ void Multiplayer::handleBlockPlace(Packet& packet) {
     auto lay = block->getLayer();
 
     game->getWorld()->setBlock(pos.x, pos.y, lay, block);
-
-    logD("Placed block {}, {}, {}", pos.x, pos.y, lay);
 }
 
 void Multiplayer::handleBlockDestroy(Packet& packet) {
     auto x = packet.get<int32_t>();
     auto y = packet.get<int32_t>();
     auto l = packet.get<uint8_t>();
+
     Game::get()->getWorld()->destroyBlock(x, y, l);
-    logD("Destroyed block {}, {}, {}", x, y, l);
 }
 
 std::string const Multiplayer::getAddress() {
     char buf[256];
     enet_address_get_host(&m_client->address, buf, sizeof(buf));
     return std::string(buf);
-}
-
-uint16_t const Multiplayer::getPort() {
-    return m_client->address.port;
-}
-
-std::string const& Multiplayer::getError() {
-    return m_error;
-}
-
-MultiplayerState const Multiplayer::getState() {
-    return m_state;
 }

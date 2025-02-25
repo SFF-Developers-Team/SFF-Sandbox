@@ -37,7 +37,7 @@ void List::draw() {
                 elementHeight
             };
 
-            RenderManager::drawFrame(cell, (i == m_selected) ? selectedColor : m_color, m_border);
+            RenderManager::drawFrame(cell, (i == m_selected && m_callback) ? selectedColor : m_color, m_border);
             RenderManager::drawText("boldfont", m_elements[i], {cell.x + cell.width / 2, cell.y + cell.height / 2}, COL_WHITE, 0.f, {0.5f, 0.5f});
         }
 
@@ -70,7 +70,7 @@ void List::update() {
 
         bool isVisible = rect.y + rect.height > m_border && rect.y < m_bounds.height - m_border;
 
-        if(isVisible && rect.contains({mouse.x, mouse.y}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        if(m_callback && isVisible && rect.contains({mouse.x, mouse.y}) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             m_selected = i;
             return m_callback(this, i);
         }

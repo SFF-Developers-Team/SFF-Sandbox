@@ -11,15 +11,15 @@ Client::Client(ENetPeer* peer) : PacketManager(peer) {}
 bool Client::accept(Packet& packet) {
     auto srv = Server::get();
     auto head = packet.get<Header>();
-    auto players = srv->getWorld()->getPlayers();
     
     if (head != Header::IDENTIFICATION) {
         disconnect(INVALID_FIRST_PACKET);
         return false;
     }
 
-    std::string username = packet.get("Undefined");
-    
+    std::string username = packet.get("Player_" + std::to_string(rand() % 10000));
+    auto world = srv->getWorld();
+
     if (username.size() < 3) {
         disconnect(TOO_SHORT_USERNAME);
         return false;
@@ -36,24 +36,22 @@ bool Client::accept(Packet& packet) {
     }
 
     m_id = srv->joinPlayer(username);
-    auto iden = Packet(Header::IDENTIFICATION, m_id);
-    sendPacket(iden);
+    sendPacket(Packet(Header::IDENTIFICATION, m_id));
 
-    uint16_t chunksCount = 3;
+    auto player = world->getPlayer(m_id);
+    auto playerChunk = world->xToChunk(player->getHitbox().x);
+    auto terrain = Packet(Header::TERRAIN, Header::ARRAY, 3);
 
-    while (chunksCount-- > 0) {
-        sendObj(srv->getWorld()->getChunk(chunksCount));
+    for (auto i = playerChunk - 1; i <= playerChunk + 1; i++) {
+        auto chunk = world->getChunk(i)->serialize();
+        terrain.add<uint16_t>(chunk.size());
+        terrain.add(chunk);
     }
 
-    for (auto& [id, player] : srv->getWorld()->getPlayers()) {
-        if (id != m_id) {
-            sendPacket(player->serialize(), Channel::EVERYTHING);
-            sendPacket(Packet(Header::LOAD_PLAYER, id, player->getUsername()), Channel::NOTIFICATIONS);
-        }
-    }
+    sendPacket(terrain);
 
     m_loggedIn = true;
-
+    
     return true;
 }
 
@@ -171,4 +169,15 @@ void Client::handleLoadChunk(Packet& packet) {
     }
 
     sendObj(chunk);
+}
+
+void Client::handleTerrainLoaded(Packet& packet) {
+    auto srv = Server::get();
+
+    for (auto& [id, player] : srv->getWorld()->getPlayers()) {
+        if (id != m_id) {
+            sendPacket(player->serialize(), Channel::EVERYTHING);
+            sendPacket(Packet(Header::LOAD_PLAYER, id, player->getUsername()), Channel::NOTIFICATIONS);
+        }
+    }
 }

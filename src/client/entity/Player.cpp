@@ -106,14 +106,14 @@ void Player::updateAnimation() {
     }
 }
 
-TargetBlock Player::getTargetBlock() {
+BlockPosition Player::getTargetBlock() {
     Vector2 cur = TO_CAMERA_POS(m_camera, GetMousePosition());
     auto layer = !IsKeyDown(KEY_LEFT_ALT);
 
     return {static_cast<int>(floorl(cur.x)), static_cast<int>(floorl(cur.y)), layer};
 }
 
-bool Player::canAccessBlock(TargetBlock target) {
+bool Player::canAccessBlock(BlockPosition target) {
     Vec2f playerPos{m_hitbox.x, m_hitbox.y};
 
     bool result = playerPos.distance(Vec2f {static_cast<float>(target.x), static_cast<float>(target.y)}) <= 4.f;
@@ -121,7 +121,7 @@ bool Player::canAccessBlock(TargetBlock target) {
     return result;
 }
 
-bool Player::canDestroyBlock(TargetBlock target) {
+bool Player::canDestroyBlock(BlockPosition target) {
     if (m_world->isOutOfBound(target.x, target.y, target.layer)) {
         return false;
     }
@@ -137,7 +137,7 @@ bool Player::canDestroyBlock(TargetBlock target) {
     return false;
 }
 
-bool Player::canPlaceBlock(TargetBlock target) {
+bool Player::canPlaceBlock(BlockPosition target) {
     if (m_world->isOutOfBound(target.x, target.y, target.layer)) {
         return false;
     }

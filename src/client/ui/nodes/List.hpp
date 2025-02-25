@@ -11,6 +11,7 @@ protected:
     int m_selected;
 
 public:
+    // Oh fuck, we can't use std::initializer_list<std::string> with std::make_shared
     List(std::vector<std::string> const& elements, MiniFunction<void(List*, int)> callback);
 
     void update();

@@ -18,6 +18,7 @@
 enum MultiplayerState {
     CONNECTING,
     LOGGING_IN,
+    LOADING_TERRAIN,
     PLAYING,
     ERROR
 };
@@ -52,16 +53,16 @@ public:
     void handle(Packet& packet) override;
     void handleError(Packet& packet);
     void handleChunk(Packet& packet);
-    // void handleBlock(Packet& packet);
+    void handleTerrain(Packet& packet);
     void handlePlayer(Packet& packet);
     void handleLoadPlayer(Packet& packet);
     void handleUnloadPlayer(Packet& packet);
     void handleBlockPlace(Packet& packet);
     void handleBlockDestroy(Packet& packet);
 
-    std::string const& getError();
-    MultiplayerState const getState();
+    std::string const& getError() { return m_error; }
+    MultiplayerState const getState() { return m_state; }
 
     std::string const getAddress();
-    uint16_t const getPort();
+    uint16_t const getPort() { return m_client->address.port; }
 };
