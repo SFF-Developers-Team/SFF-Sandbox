@@ -101,6 +101,8 @@ void Multiplayer::update() {
                     game->setWorld(std::make_shared<World>("mp"));
 
                     m_connected = true;
+
+                    sendPacket(Packet(Header::LOAD_TERRAIN));
                     m_state = LOADING_TERRAIN;
                     break;
                 }
@@ -132,14 +134,14 @@ void Multiplayer::handle(Packet& packet) {
     PacketManager::handle(packet);
 
     switch(packet.get<Header>()) {
-        case Header::UNLOAD_PLAYER: handleUnloadPlayer(packet); break;
-        case Header::LOAD_PLAYER: handleLoadPlayer(packet); break;
-        case Header::NETWORK_ERROR: handleError(packet); break;
-        case Header::PLAYER: handlePlayer(packet); break;
-        case Header::CHUNK: handleChunk(packet); break;
-        case Header::BLOCK_DESTROY: handleBlockDestroy(packet); break;
-        case Header::BLOCK_PLACE: handleBlockPlace(packet); break;
-        case Header::TERRAIN: handleTerrain(packet); break;
+        case Header::UNLOAD_PLAYER: return handleUnloadPlayer(packet);
+        case Header::LOAD_PLAYER: return handleLoadPlayer(packet);
+        case Header::NETWORK_ERROR: return handleError(packet);
+        case Header::PLAYER: return handlePlayer(packet);
+        case Header::CHUNK: return handleChunk(packet);
+        case Header::BLOCK_DESTROY: return handleBlockDestroy(packet);
+        case Header::BLOCK_PLACE: return handleBlockPlace(packet);
+        case Header::TERRAIN: return handleTerrain(packet);
         default: return;
     }
 }
@@ -231,7 +233,7 @@ void Multiplayer::handleTerrain(Packet& packet) {
     game->setPlayer(player);
     world->addPlayer(m_myPlayerId, player);
 
-    sendPacket(Packet(Header::TERRAIN_LOADED));
+    sendPacket(Packet(Header::LOAD_PLAYERS));
     m_state = PLAYING;
 }
 

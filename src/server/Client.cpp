@@ -18,7 +18,6 @@ bool Client::accept(Packet& packet) {
     }
 
     std::string username = packet.get("Player_" + std::to_string(rand() % 10000));
-    auto world = srv->getWorld();
 
     if (username.size() < 3) {
         disconnect(TOO_SHORT_USERNAME);
@@ -37,18 +36,6 @@ bool Client::accept(Packet& packet) {
 
     m_id = srv->joinPlayer(username);
     sendPacket(Packet(Header::IDENTIFICATION, m_id));
-
-    auto player = world->getPlayer(m_id);
-    auto playerChunk = world->xToChunk(player->getHitbox().x);
-    auto terrain = Packet(Header::TERRAIN, Header::ARRAY, 3);
-
-    for (auto i = playerChunk - 1; i <= playerChunk + 1; i++) {
-        auto chunk = world->getChunk(i)->serialize();
-        terrain.add<uint16_t>(chunk.size());
-        terrain.add(chunk);
-    }
-
-    sendPacket(terrain);
 
     m_loggedIn = true;
     
@@ -80,26 +67,14 @@ void Client::handle(Packet& packet) {
     PacketManager::handle(packet);
 
     switch (packet.get<Header>()) {
-    case Header::LOAD_PLAYER:
-        handleLoadPlayer(packet);
-        break;
-    case Header::LOAD_CHUNK:
-        handleLoadChunk(packet);
-        break;
-    case Header::BLOCK_PLACE:
-        handleBlockPlace(packet);
-        break;
-    case Header::BLOCK_DESTROY:
-        handleBlockDestroy(packet);
-        break;
-    case Header::PLAYER:
-        handlePlayer(packet);
-        break;
-    // case Header::BLOCK:
-    //     handleBlock(packet);
-    //     break;
-    default:
-        break;
+        case Header::LOAD_PLAYER: return handleLoadPlayer(packet);
+        case Header::LOAD_CHUNK: return handleLoadChunk(packet);
+        case Header::BLOCK_PLACE: return handleBlockPlace(packet);
+        case Header::BLOCK_DESTROY: return handleBlockDestroy(packet);
+        case Header::PLAYER: return handlePlayer(packet);
+        case Header::LOAD_TERRAIN: return handleLoadTerrain(packet);
+        case Header::LOAD_PLAYERS: return handleLoadPlayers(packet);
+        default: break;
     }
 }
 
@@ -171,7 +146,22 @@ void Client::handleLoadChunk(Packet& packet) {
     sendObj(chunk);
 }
 
-void Client::handleTerrainLoaded(Packet& packet) {
+void Client::handleLoadTerrain(Packet& packet) {
+    auto world = Server::get()->getWorld();
+    auto player = world->getPlayer(m_id);
+    auto playerChunk = world->xToChunk(player->getHitbox().x - 1);
+    auto terrain = Packet(Header::TERRAIN, Header::ARRAY, 3);
+
+    for (auto i = playerChunk; i <= playerChunk + 2; i++) {
+        auto chunk = world->getChunk(i)->serialize();
+        terrain.add<uint16_t>(chunk.size());
+        terrain.add(chunk);
+    }
+
+    sendPacket(terrain);
+}
+
+void Client::handleLoadPlayers(Packet& packet) {
     auto srv = Server::get();
 
     for (auto& [id, player] : srv->getWorld()->getPlayers()) {

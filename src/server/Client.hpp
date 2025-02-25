@@ -26,7 +26,8 @@ public:
     void handleLoadPlayer(Packet& packet);
     void handleBlockPlace(Packet& packet);
     void handleBlockDestroy(Packet& packet);
-    void handleTerrainLoaded(Packet& packet);
+    void handleLoadTerrain(Packet& packet);
+    void handleLoadPlayers(Packet& packet);
 
     auto const getPlayerID() {
         return m_id;
