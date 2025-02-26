@@ -47,6 +47,8 @@ bool Client::accept(Packet& packet) {
 
     for (auto& [id, player] : srv->getWorld()->getPlayers()) {
         if (id != m_id) {
+            
+
             sendPacket(player->serialize(), Channel::EVERYTHING);
             sendPacket(Packet(Header::LOAD_PLAYER, id, player->getUsername()), Channel::NOTIFICATIONS);
         }
