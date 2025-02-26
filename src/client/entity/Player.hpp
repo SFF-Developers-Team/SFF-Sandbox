@@ -4,6 +4,7 @@
 #include <vector>
 #include <raylib.h>
 #include <Types.hpp>
+#include <Inventory.hpp>
 
 class World;
 class Chunk;
@@ -14,10 +15,9 @@ struct BreakingBlockInfo {
     float currentDurability;
 };
 
-class Player : public SimplePlayer {
+class Player : public SimplePlayer, public Inventory {
 private:
     Camera2D m_camera;
-    std::vector<InventoryItem> m_inventory;
     int8_t m_selectedBlock;
 
     bool m_sneakToggled = false;
@@ -59,12 +59,6 @@ public:
     bool canAccessBlock(BlockPosition target);
     
     BlockPosition getTargetBlock();
-    
-    InventoryItem const& getSelectedItem();
-    auto& getInventory() { return m_inventory; }
-    int8_t getSelectedIndex() { return m_selectedBlock; }
-    void setSelectedIndex(int8_t i) { m_selectedBlock = i; } 
-    int addToInventory(InventoryItem item);
     
     void placeBlock();
     void destroyBlock();

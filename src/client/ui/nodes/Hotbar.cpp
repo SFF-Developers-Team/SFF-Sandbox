@@ -4,8 +4,8 @@
 #include <entity/Player.hpp>
 #include <world/Block.hpp>
 
-float constexpr cellSize = 32.f;
-float constexpr blockSize = cellSize / 2.f;
+float constexpr cellSize = 26.f;
+float constexpr blockSize = 16.f;
 int constexpr cellsCount = 9;
 
 Hotbar::Hotbar(std::shared_ptr<Player> player, MiniFunction<void()> const& inventoryCallback) : Frame(), m_player(player), m_invCallback(inventoryCallback) {
@@ -15,12 +15,12 @@ Hotbar::Hotbar(std::shared_ptr<Player> player, MiniFunction<void()> const& inven
 void Hotbar::draw() {
     Frame::draw();
 
-    auto inventory = m_player->getInventory();
-    auto selected = m_player->getSelectedIndex();
+    auto selected = m_player->getSelectedItem();
 
     for (auto i = 0; i <= cellsCount; i++) {
         Rectf cellRect = {m_border * 2 + cellSize * i + m_border * i, m_border * 2, cellSize, cellSize};
         Rectf itemRect = {cellRect.x + (cellRect.width - blockSize) / 2, cellRect.y + (cellRect.height - blockSize) / 2, blockSize, blockSize};
+        auto item = m_player->getItem(i);
 
         RenderManager::drawFrame(cellRect, m_color, m_border);
 
@@ -29,9 +29,8 @@ void Hotbar::draw() {
             break;
         }
 
-        if(inventory[i].pointer != nullptr) {
-            RenderManager::renderInventoryItem(itemRect, inventory[i]);
-            RenderManager::drawText("font", std::to_string(inventory[i].count), {cellRect.x + cellRect.width - 3.f, cellRect.y + cellRect.height}, COL_WHITE, 0.f, {1.f, 1.f});
+        if(item != nullptr) {
+            RenderManager::renderInventoryItem(itemRect, item);
         }
 
         if(i == selected) {
@@ -43,13 +42,13 @@ void Hotbar::draw() {
 void Hotbar::update() {
     for (int i = 0; i < 9; i++) {
         if (IsKeyDown(KEY_ONE + i)) {
-            m_player->setSelectedIndex(i);
+            m_player->setSelectedItem(i);
         }
     }
 
     auto wheel = GetMouseWheelMove();
     auto mouse = getLocalMousePosition();
-    auto index = m_player->getSelectedIndex();
+    auto index = m_player->getSelectedItem();
 
     if(!IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.f) {
         (wheel > 0.f ? index-- : index++);
@@ -57,7 +56,7 @@ void Hotbar::update() {
         if(index < 0) index = 8;
         if(index >= 9) index = 0;
     
-        m_player->setSelectedIndex(index);
+        m_player->setSelectedItem(index);
     }
 
     for (auto i = 0; i <= cellsCount; i++) {
@@ -69,7 +68,7 @@ void Hotbar::update() {
                 break;
             }
 
-            m_player->setSelectedIndex(i);
+            m_player->setSelectedItem(i);
         }
     }
 }

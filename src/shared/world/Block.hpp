@@ -3,6 +3,7 @@
 #include <ItemBase.hpp>
 #include <Types.hpp>
 #include <cstddef>
+#include <InventoryItem.hpp>
 
 class Block : public ItemBase {
 protected:
@@ -18,7 +19,7 @@ public:
 
     Block(BlockID id = BlockID::AIR, int32_t x = 0, int32_t y = 0, uint8_t layer = 1);
     Block(Block& block);
-    Block(ItemBase& item);
+    Block(InventoryItem& item);
 
     Rectf getHitbox();
 
@@ -38,5 +39,5 @@ public:
     float getDurability();
     void updateMaterial();
 
-    InventoryItem dropItem();
+    std::shared_ptr<InventoryItem> dropItem();
 };

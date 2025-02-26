@@ -12,7 +12,7 @@
 #include <Game.hpp>
 #include <ui/MainMenuScene.hpp>
 #include <ui/nodes/Hotbar.hpp>
-#include <ui/nodes/Inventory.hpp>
+#include <ui/nodes/InventoryNode.hpp>
 #include <ui/nodes/ListContainer.hpp>
 #include <ui/nodes/TouchControlButton.hpp>
 #include <ui/nodes/BlockInfo.hpp>
@@ -33,19 +33,46 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
 
     HideCursor();
     
-    auto hotbar = std::make_shared<Hotbar>(m_player, [this]() { setInventoryOpened(true); });
+    auto hotbar = std::make_shared<Hotbar>(m_player, [this]() { setInventoryOpened(!m_inventoryEnabled); });
     hotbar->setAnchorY(0.f);
     hotbar->setPos({getWidth() / 2, 0.f});
     hotbar->setFlags(FLAG_GUI_SCALE);
     hotbar->setTag("hotbar");
     addChild(hotbar);
 
-    auto inventory = std::make_shared<Inventory>(m_player->getInventory());
-    inventory->setFlags(FLAG_GUI_SCALE | FLAG_ALWAYS_CENTER);
-    inventory->setVisible(false);
-    inventory->setEnabled(false);
-    inventory->setTag("inventory");
-    addChild(inventory);
+    auto inventoryContainer = std::make_shared<Container>();
+    inventoryContainer->setFlags(FLAG_GUI_SCALE | FLAG_ALWAYS_CENTER);
+    inventoryContainer->setVisible(false);
+    inventoryContainer->setEnabled(false);
+    inventoryContainer->setTag("inventory");
+    addChild(inventoryContainer);
+
+    auto border = inventoryContainer->getBorderWidth();
+    auto inventory = std::make_shared<InventoryNode>(m_player);
+    inventory->setPos({border * 2, border * 2});
+    inventory->setAnchor({0.f, 0.f});
+    inventoryContainer->addChild(inventory);
+
+    auto invLabel = std::make_shared<Text>("boldfont", "Inventory");
+    invLabel->setPos({border, border});
+    invLabel->setAnchor({0.f, 0.f});
+    invLabel->setWidth(inventory->getWidth());
+    inventory->setY(invLabel->getBottomY());
+    inventoryContainer->addChild(invLabel);
+
+    auto craftList = std::make_shared<List>(std::vector<std::string>{"Planks", "Stick"}, nullptr);
+    craftList->setPos({inventory->getRightX() + border, border * 2});
+    craftList->setAnchor({0.f, 0.f});
+    craftList->setSize({craftList->getWidth() / 2, inventory->getHeight()});
+    inventoryContainer->addChild(craftList);
+
+    auto craftLabel = std::make_shared<Text>("boldfont", "Craft");
+    craftLabel->setPos({craftList->getX(), border});
+    craftLabel->setAnchor({0.f, 0.f});
+    craftLabel->setWidth(craftList->getWidth());
+    craftList->setY(craftLabel->getBottomY());
+    inventoryContainer->addChild(craftLabel);
+    inventoryContainer->setSize({craftList->getRightX() + border * 2, craftList->getBottomY() + border * 2});
 
     auto blockInfo = std::make_shared<BlockInfo>();
     blockInfo->setFlags(FLAG_GUI_SCALE);
@@ -241,7 +268,7 @@ void PlayScene::setPaused(bool paused) {
 }
 
 void PlayScene::setInventoryOpened(bool isOpen) {
-    auto inventory = getChild<Inventory>("inventory");
+    auto inventory = getChild<Container>("inventory");
     inventory->setVisible(isOpen);
     inventory->setEnabled(isOpen);
     m_inventoryEnabled = isOpen;

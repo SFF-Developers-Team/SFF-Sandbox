@@ -3,8 +3,4 @@
 
 ItemBase::ItemBase(uint8_t id) : m_id(id) {}
 
-ItemBase::ItemBase(std::shared_ptr<ItemBase> itemPointer) : m_id(itemPointer->getID()), m_tags(itemPointer->getTags()) {}
-
-bool ItemBase::operator==(ItemBase const& other) {
-    return m_id == other.m_id && m_tags == other.m_tags;
-}
+ItemBase::ItemBase(ItemBase& itemPointer) : m_id(itemPointer.m_id), m_tags(itemPointer.m_tags) {}

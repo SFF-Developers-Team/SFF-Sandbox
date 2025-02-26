@@ -12,10 +12,9 @@
 
 #undef min
 
-Player::Player(std::shared_ptr<World> world) 
-    : SimplePlayer(world), m_selectedBlock(0), m_inventory(36), m_forward(0.f), m_gamemode(GAMEMODE_SURVIVAL), 
+Player::Player(std::shared_ptr<World> world) : SimplePlayer(world), Inventory(36), 
+    m_selectedBlock(0), m_forward(0.f), m_gamemode(GAMEMODE_SURVIVAL), 
     m_id(0), m_lastAnimFrameTime(0.f), m_lastDestroyedBlock(0.f), m_lastPlacedBlock(0.f) {
-    m_header = Header::PLAYER;
     m_camera.zoom = 50.0f;
     m_camera.rotation = 0.0f;
 
@@ -44,13 +43,13 @@ Player::Player(std::shared_ptr<World> world)
                 continue;
             }
 
-            addToInventory({std::make_shared<ItemBase>(i), INVENTORY_TYPE_BLOCK, 64});
+            addItem(std::make_shared<InventoryItem>(INV_BLOCK, i, 64));
         }
 
         for (auto& col : colors) {
-            auto wool = std::make_shared<Block>(BlockID::WOOL);
+            auto wool = std::make_shared<InventoryItem>(INV_BLOCK, WOOL, 64);
             wool->setTag(TagID::TAG_COLOR, col);
-            addToInventory({wool, INVENTORY_TYPE_BLOCK, 64});
+            addItem(wool);
         }
     }
 }
@@ -78,30 +77,30 @@ void Player::updateAnimation() {
         m_animFrame++;
 
         switch (m_animType) {
-        case PLAYER_IDLE:
-            m_animFrame = 0;
-            break;
-        case PLAYER_MOVE:
-            m_animFrame = animationClamp(m_animFrame, 1, 5);
-            break;
-        case PLAYER_SNEAK:
-            m_animFrame = animationClamp(m_animFrame, 6, 7);
-            break;
-        case PLAYER_JUMP:
-            m_animFrame = 8;
-            break;
-        case PLAYER_HIT:
-            m_animFrame = animationClamp(m_animFrame, 9, 13);
-            break;
-        case PLAYER_HURT:
-            m_animFrame = 14;
-            break;
-        case PLAYER_SIT:
-            m_animFrame = 15;
-            break;
-        case PLAYER_CART:
-            m_animFrame = 16;
-            break;
+            case PLAYER_IDLE:
+                m_animFrame = 0;
+                break;
+            case PLAYER_MOVE:
+                m_animFrame = animationClamp(m_animFrame, 1, 5);
+                break;
+            case PLAYER_SNEAK:
+                m_animFrame = animationClamp(m_animFrame, 6, 7);
+                break;
+            case PLAYER_JUMP:
+                m_animFrame = 8;
+                break;
+            case PLAYER_HIT:
+                m_animFrame = animationClamp(m_animFrame, 9, 13);
+                break;
+            case PLAYER_HURT:
+                m_animFrame = 14;
+                break;
+            case PLAYER_SIT:
+                m_animFrame = 15;
+                break;
+            case PLAYER_CART:
+                m_animFrame = 16;
+                break;
         }
     }
 }
@@ -372,33 +371,6 @@ bool Player::isBlockInView(std::shared_ptr<Block> block) {
     return false;
 }
 
-InventoryItem const& Player::getSelectedItem() {
-    return m_inventory[m_selectedBlock % 9];
-}
-
-int Player::addToInventory(InventoryItem item) {
-    if(item.count <= 0) return 0;
-
-    auto isBlock = std::dynamic_pointer_cast<Block>(item.pointer) != nullptr;
-
-    for (auto& slot : m_inventory) {
-        if (slot.pointer == nullptr || *slot.pointer == item.pointer) {  
-            uint16_t add = std::min(item.count, (uint16_t)(slot.pointer != nullptr ? 64 - slot.count : 64));
-
-            if (slot.pointer == nullptr) {
-                slot = InventoryItem {item.pointer, item.type, 0};  
-            }
-
-            slot.count += add;
-            item.count -= add;
-
-            if (item.count <= 0) return 0;
-        }
-    }
-
-    return item.count;
-}
-
 void Player::triggerMove(Direction dir) {
     m_direction = dir;
     (dir == RIGHT) ? m_forward++ : m_forward--;
@@ -442,18 +414,18 @@ void Player::setGameMode(GameMode gamemode) {
 }
 
 void Player::placeBlock() {
-    if(m_inventory[m_selectedBlock].pointer != nullptr) {
-        auto block = std::make_shared<Block>(*m_inventory[m_selectedBlock].pointer);
+    if(getItem(m_selectedBlock) != nullptr) {
+        auto block = std::make_shared<Block>(*m_inventory[m_selectedBlock]);
         auto target = getTargetBlock();
         auto mp = Multiplayer::get();
 
         m_world->placeBlock(target.x, target.y, target.layer, block);
         
         if(m_gamemode == GAMEMODE_SURVIVAL) {
-            m_inventory[m_selectedBlock].count--;
+            m_inventory[m_selectedBlock]->sub(1);
 
-            if(m_inventory[m_selectedBlock].count <= 0) {
-                m_inventory[m_selectedBlock].pointer = nullptr;
+            if(m_inventory[m_selectedBlock]->getCount() <= 0) {
+                m_inventory[m_selectedBlock] = nullptr;
             }
         }
 
@@ -486,7 +458,7 @@ void Player::destroyBlock() {
             return;
         }
 
-        addToInventory(targetBlock->dropItem());
+        addItem(targetBlock->dropItem());
     }
     
     m_world->destroyBlock(target.x, target.y, target.layer);

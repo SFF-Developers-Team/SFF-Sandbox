@@ -2,9 +2,6 @@
 #include <ui/nodes/Container.hpp>
 
 class ScrollableContainer : public Container {
-protected:
-    float calculateTotalHeight();
-
 public:
     ScrollableContainer();
 
@@ -12,4 +9,5 @@ public:
     void update();
 
     void resetScroll() { m_offset.y = 0.f; }
+    Vec2f getTotalSize();
 };

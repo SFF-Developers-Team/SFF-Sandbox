@@ -13,7 +13,7 @@ Block::Block(Block& block) : Block(static_cast<BlockID>(block.m_id), block.m_x, 
     m_tags = block.m_tags;
 }
 
-Block::Block(ItemBase& item) : Block(static_cast<BlockID>(item.getID())) {
+Block::Block(InventoryItem& item) : Block(static_cast<BlockID>(item.getID())) {
     m_tags = item.getTags();
 }
 
@@ -152,10 +152,10 @@ void Block::updateMaterial() {
     };
 }
 
-InventoryItem Block::dropItem() {
+std::shared_ptr<InventoryItem> Block::dropItem() {
     switch (m_id) {
-        case GRASS: return {std::make_shared<ItemBase>(DIRT), INVENTORY_TYPE_BLOCK, 1};
-        case STONE: return {std::make_shared<ItemBase>(COBLESTONE), INVENTORY_TYPE_BLOCK, 1};
-        default: return {std::make_shared<ItemBase>(m_id), INVENTORY_TYPE_BLOCK, 1};
+        case GRASS: return std::make_shared<InventoryItem>(INV_BLOCK, DIRT, 1);
+        case STONE: return std::make_shared<InventoryItem>(INV_BLOCK, COBLESTONE, 1);
+        default: return std::make_shared<InventoryItem>(*this, 1);
     };
 }

@@ -111,8 +111,8 @@ public:
     float getRotation() { return m_rotation; }
     void setRotation(float degrees) { m_rotation = degrees; }
     
-    float getLeftX() { return m_bounds.x - m_bounds.width * m_scale.x * m_anchor.x; } 
-    float getRightX() { return m_bounds.x + m_bounds.width * m_scale.x * m_anchor.x; }
-    float getTopY() { return m_bounds.y - m_bounds.height * m_scale.y * m_anchor.y; }
-    float getBottomY() { return m_bounds.y + m_bounds.height * m_scale.y * m_anchor.y; } 
+    float getLeftX() { return m_bounds.x - m_bounds.width + m_bounds.width * m_scale.x * m_anchor.x; } 
+    float getRightX() { return m_bounds.x + m_bounds.width - m_bounds.width * m_scale.x * m_anchor.x; }
+    float getTopY() { return m_bounds.y - m_bounds.height + m_bounds.height * m_scale.y * m_anchor.y; }
+    float getBottomY() { return m_bounds.y + m_bounds.height - m_bounds.height * m_scale.y * m_anchor.y; } 
 };
