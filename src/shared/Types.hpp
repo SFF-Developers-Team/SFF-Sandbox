@@ -220,7 +220,8 @@ enum DisconnectReasonID : uint32_t {
     INVALID_FIRST_PACKET,
     TOO_SHORT_USERNAME,
     TOO_LONG_USERNAME,
-    USERNAME_ALREADY_TAKEN
+    USERNAME_ALREADY_TAKEN,
+    KICKED_BY_SERVER
 };
 
 enum Direction : uint8_t {
@@ -263,6 +264,13 @@ enum BlockID : uint8_t {
     ACTIVE_FURHANCE
 };
 
+enum MaterialType : uint8_t {
+    MATERIAL_STONE,
+    MATERIAL_DIRT,
+    MATERIAL_WOOD,
+    MATERIAL_WOOL
+};
+
 enum InventoryItemType : uint8_t {
     INVENTORY_TYPE_BLOCK,
     INVENTORY_TYPE_ITEM
@@ -273,22 +281,15 @@ enum TagID : uint8_t {
     TAG_GHOST
 };
 
-enum MaterialType : uint8_t {
-    MATERIAL_STONE,
-    MATERIAL_DIRT,
-    MATERIAL_WOOD,
-    MATERIAL_WOOL
-};
-
 using TagValue = std::variant<Col3u, bool>;
 using ItemTags = std::map<TagID, TagValue>;
 
-struct TargetBlock {
+struct BlockPosition {
     int x;
     int y;
     uint8_t layer;
 
-    bool operator==(TargetBlock const& other) const { return x == other.x && y == other.y && layer == other.layer; }
+    bool operator==(BlockPosition const& other) const { return x == other.x && y == other.y && layer == other.layer; }
 };
 
 class ItemBase;

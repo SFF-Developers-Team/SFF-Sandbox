@@ -21,12 +21,13 @@ public:
     void disconnect(DisconnectReasonID reason);
 
     void handle(Packet& packet) override;
-    // void handleBlock(Packet& packet);
     void handlePlayer(Packet& packet);
     void handleLoadChunk(Packet& packet);
     void handleLoadPlayer(Packet& packet);
     void handleBlockPlace(Packet& packet);
     void handleBlockDestroy(Packet& packet);
+    void handleLoadTerrain(Packet& packet);
+    void handleLoadPlayers(Packet& packet);
 
     auto const getPlayerID() {
         return m_id;

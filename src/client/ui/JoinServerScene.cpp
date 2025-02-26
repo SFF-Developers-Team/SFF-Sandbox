@@ -42,13 +42,17 @@ void JoinServerScene::update() {
             mp->update();
             m_message = "Logging in";
             break;
+
+        case LOADING_TERRAIN:
+            mp->update();
+            m_message = "Loading terrain";
+            break;
         case ERROR:
             game->clearSceneHistory();
             game->pushScene(std::make_shared<ErrorScene>(mp->getError()));
             return;
             
         case PLAYING:
-            
             game->clearSceneHistory();
             game->pushScene(std::make_shared<PlayScene>(true));
             break;

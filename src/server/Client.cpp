@@ -11,15 +11,14 @@ Client::Client(ENetPeer* peer) : PacketManager(peer) {}
 bool Client::accept(Packet& packet) {
     auto srv = Server::get();
     auto head = packet.get<Header>();
-    auto players = srv->getWorld()->getPlayers();
     
     if (head != Header::IDENTIFICATION) {
         disconnect(INVALID_FIRST_PACKET);
         return false;
     }
 
-    std::string username = packet.get("Undefined");
-    
+    std::string username = packet.get("Player_" + std::to_string(rand() % 10000));
+
     if (username.size() < 3) {
         disconnect(TOO_SHORT_USERNAME);
         return false;
@@ -36,26 +35,10 @@ bool Client::accept(Packet& packet) {
     }
 
     m_id = srv->joinPlayer(username);
-    auto iden = Packet(Header::IDENTIFICATION, m_id);
-    sendPacket(iden);
-
-    uint16_t chunksCount = 3;
-
-    while (chunksCount-- > 0) {
-        sendObj(srv->getWorld()->getChunk(chunksCount));
-    }
-
-    for (auto& [id, player] : srv->getWorld()->getPlayers()) {
-        if (id != m_id) {
-            
-
-            sendPacket(player->serialize(), Channel::EVERYTHING);
-            sendPacket(Packet(Header::LOAD_PLAYER, id, player->getUsername()), Channel::NOTIFICATIONS);
-        }
-    }
+    sendPacket(Packet(Header::IDENTIFICATION, m_id));
 
     m_loggedIn = true;
-
+    
     return true;
 }
 
@@ -84,26 +67,14 @@ void Client::handle(Packet& packet) {
     PacketManager::handle(packet);
 
     switch (packet.get<Header>()) {
-    case Header::LOAD_PLAYER:
-        handleLoadPlayer(packet);
-        break;
-    case Header::LOAD_CHUNK:
-        handleLoadChunk(packet);
-        break;
-    case Header::BLOCK_PLACE:
-        handleBlockPlace(packet);
-        break;
-    case Header::BLOCK_DESTROY:
-        handleBlockDestroy(packet);
-        break;
-    case Header::PLAYER:
-        handlePlayer(packet);
-        break;
-    // case Header::BLOCK:
-    //     handleBlock(packet);
-    //     break;
-    default:
-        break;
+        case Header::LOAD_PLAYER: return handleLoadPlayer(packet);
+        case Header::LOAD_CHUNK: return handleLoadChunk(packet);
+        case Header::BLOCK_PLACE: return handleBlockPlace(packet);
+        case Header::BLOCK_DESTROY: return handleBlockDestroy(packet);
+        case Header::PLAYER: return handlePlayer(packet);
+        case Header::LOAD_TERRAIN: return handleLoadTerrain(packet);
+        case Header::LOAD_PLAYERS: return handleLoadPlayers(packet);
+        default: break;
     }
 }
 
@@ -173,4 +144,30 @@ void Client::handleLoadChunk(Packet& packet) {
     }
 
     sendObj(chunk);
+}
+
+void Client::handleLoadTerrain(Packet& packet) {
+    auto world = Server::get()->getWorld();
+    auto player = world->getPlayer(m_id);
+    auto playerChunk = world->xToChunk(player->getHitbox().x - 1);
+    auto terrain = Packet(Header::TERRAIN, Header::ARRAY, 3);
+
+    for (auto i = playerChunk; i <= playerChunk + 2; i++) {
+        auto chunk = world->getChunk(i)->serialize();
+        terrain.add<uint16_t>(chunk.size());
+        terrain.add(chunk);
+    }
+
+    sendPacket(terrain);
+}
+
+void Client::handleLoadPlayers(Packet& packet) {
+    auto srv = Server::get();
+
+    for (auto& [id, player] : srv->getWorld()->getPlayers()) {
+        if (id != m_id) {
+            sendPacket(player->serialize(), Channel::EVERYTHING);
+            sendPacket(Packet(Header::LOAD_PLAYER, id, player->getUsername()), Channel::NOTIFICATIONS);
+        }
+    }
 }

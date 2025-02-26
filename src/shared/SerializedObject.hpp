@@ -21,11 +21,11 @@ public:
 
         // Multiplayer headers
         IDENTIFICATION, DISCONNECT,
-        LOAD_CHUNK,  UNLOAD_CHUNK, CHUNKS,
+        LOAD_CHUNK,  UNLOAD_CHUNK,
         LOAD_PLAYER, UNLOAD_PLAYER,
         BLOCK_PLACE, BLOCK_DESTROY,
 
-        NETWORK_ERROR, ARRAY,
+        NETWORK_ERROR, ARRAY, TERRAIN, LOAD_TERRAIN, LOAD_PLAYERS,
         NULL_PACKET = 0xFF
     };
 
@@ -120,6 +120,10 @@ public:
         m_offset += sz;
 
         return t;
+    }
+
+    std::string get(std::string const& defaultString) {
+        return get(defaultString.c_str());
     }
 
     /// @brief Ignore offset

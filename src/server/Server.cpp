@@ -12,6 +12,7 @@
 #include <fstream>
 
 using namespace std::string_view_literals;
+
 std::string_view const help = R"(help - display this message
 list - display players on server
 stop - stop server)";
@@ -98,6 +99,7 @@ void Server::inputThread() {
         if(args[0] == "stop") destroy();
         if(args[0] == "help") displayHelp();
         if(args[0] == "list") displayList();
+        if(args[0] == "kick") kickPlayer(args[1]);
     }
 }
 
@@ -126,7 +128,7 @@ void Server::onTick() {
             case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT:
             case ENET_EVENT_TYPE_DISCONNECT: 
                 if(m_clients.contains(id)) {
-                    disconnectPlayer(m_clients[id], static_cast<DisconnectReasonID>(event.data));
+                    disconnectPlayer(m_clients[id]->getPlayerID(), static_cast<DisconnectReasonID>(event.data));
                 }
 
                 break;
@@ -223,8 +225,17 @@ PlayerID Server::joinPlayer(std::string const& username) {
     return playerId;
 }
 
-void Server::disconnectPlayer(std::shared_ptr<Client> client, DisconnectReasonID reason) {    
-    auto id = client->getPlayerID();
+void Server::kickPlayer(std::string const& username) {
+    for (auto& [id, player] : m_world->getPlayers()) {
+        if (player->getUsername() == username) {
+            return disconnectPlayer(id, KICKED_BY_SERVER);
+        }
+    }
+
+    logW("Player with username {} not found", username);
+}
+
+void Server::disconnectPlayer(PlayerID id, DisconnectReasonID reason) {
     logD("{} left the game", m_world->getPlayer(id)->getUsername());
     
     m_world->unloadPlayer(id);
