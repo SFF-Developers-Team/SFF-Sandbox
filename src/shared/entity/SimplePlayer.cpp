@@ -51,14 +51,14 @@ ByteVector SimplePlayer::serialize() {
 }
 
 size_t SimplePlayer::deserialize(ByteVector const& bytes) {
-    std::lock_guard<std::mutex> guard(mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     SerializedObject::deserialize(bytes);
 
     m_id = get<PlayerID>(0);
     m_hitbox.x = get<float>(0.0f);
     m_hitbox.y = get<float>(0.0f);
-    m_direction = get<Direction>(Direction::LEFT);
     m_animFrame = get<uint8_t>(0);
+    m_direction = get<Direction>(Direction::LEFT);
 
     return m_offset;
 }

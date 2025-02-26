@@ -33,7 +33,7 @@ protected:
     // multiplayer features
     PlayerID m_id;
     std::string m_username;
-    std::mutex mutex;
+    std::mutex m_mutex;
 
 
 

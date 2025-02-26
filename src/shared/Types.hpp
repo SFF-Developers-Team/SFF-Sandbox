@@ -2,6 +2,7 @@
 #include <type_traits>
 #include <cstdint>
 #include <variant>
+#include <cmath>
 #include <memory>
 #include <map>
 
@@ -12,6 +13,18 @@ struct Vec2 {
     T x;
     T y;
 
+    Vec2<T> const operator+(Vec2<T> other) { return Vec2<T> {x + other.x, y + other.y}; }
+    Vec2<T> const operator+(T value) { return Vec2<T> {x + value, y + value}; }
+    
+    Vec2<T> const operator-(Vec2<T> other) { return Vec2<T> {x - other.x, y - other.y}; }
+    Vec2<T> const operator-(T value) { return Vec2<T> {x - value, y - value}; }
+
+    T length() { return std::sqrt((x * x) + (y * y)); }
+    T lengthSqr() { return (x * x) + (y * y); }
+
+    Vec2<T> lerp(Vec2<T> other, float a) { return {x + a * (other.x - x), y + a * (other.y - y)}; }
+
+    
     Vec2<T> const operator/(T value) { return Vec2<T> {x / value, y / value}; }
 
     template <typename T2>
