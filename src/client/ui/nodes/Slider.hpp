@@ -21,7 +21,7 @@ protected:
     T m_value;
     bool m_selected;
 
-    void callback() { m_callback(this, m_value); }
+    virtual void callback() { m_callback(this, m_value); }
 
 public:
     Slider(std::string const& text, T min, T max, MiniFunction<void(Slider*, T)> const& callback)

@@ -113,8 +113,6 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
             SetWindowSize((flag) ? fullscreenSize.x : windowSize.x, (flag) ? fullscreenSize.y : windowSize.y);
             SetWindowPosition((flag) ? 0 : (GetMonitorWidth(mon) - windowSize.x) / 2, (flag) ? 0 : (GetMonitorHeight(mon) - windowSize.y) / 2);
         
-
-            stm->setValue("video.fullscreen", flag);
             game->updateGuiScale();
             game->checkSceneFlags(game->getScene());
             onShow();
@@ -128,8 +126,6 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
             if(flag && !IsWindowState(FLAG_VSYNC_HINT)) {
                 SetWindowState(FLAG_VSYNC_HINT);
             }
-
-            stm->setValue("video.vsync", flag);
         }));
 #endif
 
@@ -147,6 +143,8 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
             stm->setValue("video.scale", curScale);
             game->setGuiScale(curScale);
         }));
+
+        video->addChild(std::make_shared<SettingsToggle>("video.blockinfo", "Block info", nullptr));
     }
 
     // audio settings

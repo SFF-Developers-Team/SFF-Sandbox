@@ -17,6 +17,7 @@
 #include <ui/nodes/TouchControlButton.hpp>
 #include <ui/nodes/BlockInfo.hpp>
 #include <ui/nodes/HeartsIndicator.hpp>
+#include <SettingsManager.hpp>
 #include <ui/nodes/List.hpp>
 #include <ui/nodes/Layer.hpp>
 #include <chrono>
@@ -31,14 +32,14 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
 
     HideCursor();
     
-    auto hotbar = std::make_shared<Hotbar>(m_player, [this]() { setInventoryOpened(true); });
+    auto hotbar = std::make_shared<Hotbar>(m_player, [this]() { setInventoryOpened(!m_inventoryEnabled); });
     hotbar->setAnchorY(0.f);
     hotbar->setPos({getWidth() / 2, 0.f});
     hotbar->setFlags(FLAG_GUI_SCALE);
     hotbar->setTag("hotbar");
     addChild(hotbar);
 
-    auto inventory = std::make_shared<Inventory>(m_player->getInventory());
+    auto inventory = std::make_shared<Container>();
     inventory->setFlags(FLAG_GUI_SCALE | FLAG_ALWAYS_CENTER);
     inventory->setVisible(false);
     inventory->setEnabled(false);
@@ -159,13 +160,17 @@ void PlayScene::update() {
         m_player->update();
     }
 
-    auto target = Game::get()->getPlayer()->getTargetBlock();
-    auto block = Game::get()->getWorld()->getBlock(target.x, target.y, target.layer);
+    
+    auto stm = SettingsManager::get();
+    auto target = m_player->getTargetBlock();
+    auto block = m_world->getBlock(target.x, target.y, target.layer);
     auto blockInfo = getChild<BlockInfo>("blockinfo");
-    auto playerList = getChild<List>("playerlist");
+    auto playerList = getChild<List>("playerlist"); 
 
-    blockInfo->setVisible(block != nullptr && !m_inventoryEnabled && !m_paused);
-    blockInfo->setEnabled(block != nullptr && !m_inventoryEnabled && !m_paused);
+    auto enabledBlockInfo = stm->getValue<bool>("video.blockinfo", true) && block != nullptr && !m_inventoryEnabled && !m_paused;
+
+    blockInfo->setVisible(enabledBlockInfo);
+    blockInfo->setEnabled(enabledBlockInfo);
 
     if (playerList != nullptr) {
         playerList->setVisible(m_paused);
@@ -217,14 +222,15 @@ void PlayScene::setPaused(bool paused) {
         if(nickList.size() != players.size() && m_playersList != nullptr) {
             nickList.clear();
             nickList.push_back(Game::get()->getUsername());
+
             for(auto& [id, player] : players) {
                 if(player->getUsername().empty()) {
                     continue;
                 }
                 nickList.push_back(player->getUsername());
-                logD("{}", player->getUsername());
             }
-                m_playersList->setList(nickList);  
+            
+            m_playersList->setList(nickList);  
         }
     }
 
@@ -247,4 +253,8 @@ void PlayScene::setInventoryOpened(bool isOpen) {
 
 void PlayScene::keyBackClicked() {
     (!m_inventoryEnabled) ? setPaused(!m_paused) : setInventoryOpened(false);
+}
+
+void PlayScene::onPop() {
+    ShowCursor();
 }

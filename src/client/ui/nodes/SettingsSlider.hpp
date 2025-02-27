@@ -6,9 +6,9 @@ class SettingsSlider : public Slider<T> {
 protected:
     std::string m_property;
 
-    void callback() {
-        SettingsManager::get()->setValue<T>(m_property, this->m_value);
+    void callback() override {
         Slider<T>::callback();
+        SettingsManager::get()->setValue<T>(m_property, this->m_value);
     }
 
 public:

@@ -4,6 +4,7 @@
 #include <RenderManager.hpp>
 #include <TextureManager.hpp>
 #include <StyleManager.hpp>
+#include <Logger.hpp>
 
 ToggleButton::ToggleButton(std::string const& text, MiniFunction<void(ToggleButton*, bool)> const& callback) : 
     Frame(), m_flag(false), m_callback(callback), m_text(text) {
@@ -28,7 +29,14 @@ void ToggleButton::update() {
     }
 
     if(rect.contains({mouse.x, mouse.y}) && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-        m_flag = !m_flag;
-        triggerCallback();
+        callback();
+    }
+}
+
+void ToggleButton::callback() {
+    m_flag = !m_flag;
+
+    if (m_callback) {
+        m_callback(this, m_flag);
     }
 }

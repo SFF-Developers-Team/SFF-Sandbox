@@ -8,10 +8,11 @@ protected:
     float m_fontSize;
     bool m_flag;
 
-    void triggerCallback() { m_callback(this, m_flag); }
-
+    virtual void callback();
+    
 public:
     ToggleButton(std::string const& text, MiniFunction<void(ToggleButton*, bool)> const& callback);
+
     void draw();
     void update();
 

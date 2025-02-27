@@ -32,4 +32,6 @@ public:
     void setInventoryOpened(bool isOpen);
 
     void keyBackClicked();
+
+    void onPop();
 };
