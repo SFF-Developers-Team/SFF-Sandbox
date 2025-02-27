@@ -272,8 +272,8 @@ enum MaterialType : uint8_t {
 };
 
 enum InventoryItemType : uint8_t {
-    INVENTORY_TYPE_BLOCK,
-    INVENTORY_TYPE_ITEM
+    INV_BLOCK,
+    INV_ITEM
 };
 
 enum TagID : uint8_t {
@@ -290,12 +290,4 @@ struct BlockPosition {
     uint8_t layer;
 
     bool operator==(BlockPosition const& other) const { return x == other.x && y == other.y && layer == other.layer; }
-};
-
-class ItemBase;
-
-struct InventoryItem {
-    std::shared_ptr<ItemBase> pointer;
-    InventoryItemType type;
-    uint16_t count;
 };

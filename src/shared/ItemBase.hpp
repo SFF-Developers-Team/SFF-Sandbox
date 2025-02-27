@@ -11,7 +11,7 @@ protected:
 
 public:
     ItemBase(uint8_t id);
-    ItemBase(std::shared_ptr<ItemBase> itemPointer);
+    ItemBase(ItemBase& itemPointer);
 
     uint8_t getID() { return m_id; }
     void setID(uint8_t id) { m_id = id; }
@@ -24,5 +24,5 @@ public:
     T getTag(TagID key) { return std::get<T>(m_tags[key]); }
     auto& getTags() { return m_tags; }
 
-    bool operator==(ItemBase const& other);
+    bool operator==(ItemBase const& other) const { return m_id == other.m_id && m_tags == other.m_tags; }
 };

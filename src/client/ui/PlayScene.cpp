@@ -12,7 +12,7 @@
 #include <Game.hpp>
 #include <ui/MainMenuScene.hpp>
 #include <ui/nodes/Hotbar.hpp>
-#include <ui/nodes/Inventory.hpp>
+#include <ui/nodes/InventoryNode.hpp>
 #include <ui/nodes/ListContainer.hpp>
 #include <ui/nodes/TouchControlButton.hpp>
 #include <ui/nodes/BlockInfo.hpp>
@@ -30,6 +30,8 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     m_color = COL_SKYBLUE;
     m_keyBack = false;
 
+    game->clearSceneHistory();
+
     HideCursor();
     
     auto hotbar = std::make_shared<Hotbar>(m_player, [this]() { setInventoryOpened(!m_inventoryEnabled); });
@@ -39,7 +41,7 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     hotbar->setTag("hotbar");
     addChild(hotbar);
 
-    auto inventory = std::make_shared<Container>();
+    auto inventory = std::make_shared<Inventory>(m_player->getInventory());
     inventory->setFlags(FLAG_GUI_SCALE | FLAG_ALWAYS_CENTER);
     inventory->setVisible(false);
     inventory->setEnabled(false);
@@ -222,7 +224,6 @@ void PlayScene::setPaused(bool paused) {
         if(nickList.size() != players.size() && m_playersList != nullptr) {
             nickList.clear();
             nickList.push_back(Game::get()->getUsername());
-
             for(auto& [id, player] : players) {
                 if(player->getUsername().empty()) {
                     continue;
@@ -243,7 +244,7 @@ void PlayScene::setPaused(bool paused) {
 }
 
 void PlayScene::setInventoryOpened(bool isOpen) {
-    auto inventory = getChild<Inventory>("inventory");
+    auto inventory = getChild<Container>("inventory");
     inventory->setVisible(isOpen);
     inventory->setEnabled(isOpen);
     m_inventoryEnabled = isOpen;

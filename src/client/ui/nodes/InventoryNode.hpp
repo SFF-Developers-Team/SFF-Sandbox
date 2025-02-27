@@ -3,17 +3,17 @@
 #include <memory>
 #include <entity/Player.hpp>
 
-class Inventory : public Frame {
+class InventoryNode : public Frame {
 private:
-    std::vector<InventoryItem>& m_inventory;
-    int m_selected;
+    std::shared_ptr<Player> m_player;
+    std::shared_ptr<InventoryItem> m_selected;
 
     using Frame::setSize;
 
     Rectf getCellPosition(int index);
 
 public:
-    Inventory(std::vector<InventoryItem>& inventory);
+    InventoryNode(std::shared_ptr<Player> player);
 
     void draw();
     void update();

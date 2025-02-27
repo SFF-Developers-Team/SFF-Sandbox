@@ -14,15 +14,10 @@ JoinServerScene::JoinServerScene(std::string const& hostname, uint16_t port) : m
     auto mp = Multiplayer::get();
     std::thread(&Multiplayer::connect, mp, hostname, port).detach();
 
-    auto const screenW = static_cast<float>(GetScreenWidth());
-    auto const screenH = static_cast<float>(GetScreenHeight());
-    auto const inputW = 200.f;
-
     m_state = std::make_shared<Text>("font", "");
-    m_state->setFontSize(m_state->getFontSize() * 2);
-    m_state->setPos({screenW / 2, screenH / 2});
+    m_state->setPos({getWidth() / 2, getHeight() / 2});
     m_state->setFlags(FLAG_GUI_SCALE | FLAG_ALWAYS_CENTER);
-    m_state->setWidth(screenW);
+    m_state->setWidth(getWidth());
     m_state->setTag("state");
     m_state->setScale(Game::get()->getGuiScale());
     addChild(m_state);
@@ -48,12 +43,10 @@ void JoinServerScene::update() {
             m_message = "Loading terrain";
             break;
         case ERROR:
-            game->clearSceneHistory();
             game->pushScene(std::make_shared<ErrorScene>(mp->getError()));
             return;
             
         case PLAYING:
-            game->clearSceneHistory();
             game->pushScene(std::make_shared<PlayScene>(true));
             break;
     }
@@ -71,11 +64,14 @@ void JoinServerScene::update() {
         m_message += std::format(" ({}s)", static_cast<int>(GetTime() - m_startTime));
     
         if(!m_cancelBtn) {
-            m_cancelBtn = std::make_shared<Button>("Cancel", [&] (Button*) {
+            m_cancelBtn = std::make_shared<Button>("Cancel", [this, mp] (Button*) {
+                this->destroy();
                 mp->destroy();
             });
 
-            m_cancelBtn->setPos({getWidth() / 2.f, getHeight() / 2 + 100.f});
+            m_cancelBtn->setPos({getWidth() / 2.f, m_state->getBottomY() + 40.f});
+            m_cancelBtn->setFlags(FLAG_GUI_SCALE);
+            m_cancelBtn->setAnchorY(0.f);
             addChild(m_cancelBtn);
         }
     }

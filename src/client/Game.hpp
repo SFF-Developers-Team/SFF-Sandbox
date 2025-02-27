@@ -41,6 +41,7 @@ public:
     
     auto getScene() { return m_scene; }
     void clearSceneHistory() { m_sceneHistory.clear(); }
+    void setScene(std::shared_ptr<Scene> scene) { m_scene = scene; }
     void pushScene(std::shared_ptr<Scene> scene);
     void popScene();
 

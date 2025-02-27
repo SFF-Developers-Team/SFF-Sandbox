@@ -48,7 +48,11 @@ bool Multiplayer::connect(std::string const& host, uint16_t port) {
 
     auto res = enet_host_service(m_client, &event, 5000);
 
-    if(res < 0 || event.type != ENET_EVENT_TYPE_CONNECT) {
+    if(m_peer == nullptr || m_client == nullptr) {
+        return false;
+    }
+
+    if (res < 0 || event.type != ENET_EVENT_TYPE_CONNECT) {
         enet_peer_reset(m_peer);
         error("Failed to connect to server!");
         return false;
@@ -96,14 +100,13 @@ void Multiplayer::update() {
 
                     m_myPlayerId = packet.get<PlayerID>(0);
                     logD("Received PlayerID from server {}", m_myPlayerId);
-
-                    auto game = Game::get();
-                    game->setWorld(std::make_shared<World>("mp"));
+                    
+                    Game::get()->setWorld(std::make_shared<World>("mp"));
 
                     m_connected = true;
+                    m_state = LOADING_TERRAIN;
 
                     sendPacket(Packet(Header::LOAD_TERRAIN));
-                    m_state = LOADING_TERRAIN;
                     break;
                 }
 
@@ -126,8 +129,15 @@ void Multiplayer::update() {
 }
 
 void Multiplayer::destroy() {
-    if(m_peer) enet_peer_reset(m_peer);
-    if(m_client) enet_host_destroy(m_client);
+    if (m_peer) {
+        enet_peer_reset(m_peer);
+        m_peer = nullptr;
+    }
+
+    if(m_client) {
+        enet_host_destroy(m_client);
+        m_client = nullptr;
+    }
 }
 
 void Multiplayer::handle(Packet& packet) {
@@ -232,9 +242,9 @@ void Multiplayer::handleTerrain(Packet& packet) {
     auto player = std::make_shared<Player>(world);
     game->setPlayer(player);
     world->addPlayer(m_myPlayerId, player);
+    m_state = PLAYING;
 
     sendPacket(Packet(Header::LOAD_PLAYERS));
-    m_state = PLAYING;
 }
 
 void Multiplayer::handleBlockPlace(Packet& packet) {
