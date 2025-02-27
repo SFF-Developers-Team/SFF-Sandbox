@@ -9,6 +9,7 @@
 #include <SettingsManager.hpp>
 #include <StyleManager.hpp>
 #include <RenderManager.hpp>
+#include <RecipesManager.hpp>
 #include <Debug.hpp>
 
 void Game::pushScene(std::shared_ptr<Scene> scene) {
@@ -69,6 +70,7 @@ void Game::init(std::vector<std::string>& args) {
     tm->loadTexture("sff.png");
     tm->loadTexture("raylib.png");
     tm->loadTileMap("blocks.png", {16, 16});
+    tm->loadTileMap("items.png", {16, 16});
     tm->loadTileMap("gui.png", {16, 16});
     tm->loadTileMap("developers.png", {128, 128});
     tm->loadTileMap("indicators.png", {8, 7});
@@ -87,6 +89,7 @@ void Game::init(std::vector<std::string>& args) {
     // Load settings
     SettingsManager::get();
     StyleManager::get();
+    RecipesManager::get();
     
     // Load main menu
     pushScene(std::make_shared<MainMenuScene>());

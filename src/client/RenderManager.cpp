@@ -171,16 +171,18 @@ void RenderManager::renderBlock(Rectf dest, std::shared_ptr<Block> block, uint8_
 }
 
 void RenderManager::renderInventoryItem(Rectf dest, std::shared_ptr<InventoryItem> item) {
-    auto index = static_cast<uint16_t>(item->getID() - 1);
+    auto index = static_cast<uint16_t>(item->getID());
+    if (item->getType() == INV_BLOCK) {
+        index -= 1;
+    }
+    
     Col3u col = {255, 255, 255};
 
     if (item->hasTag(TagID::TAG_COLOR)) { 
         col = item->getTag<Col3u>(TagID::TAG_COLOR);
     }
 
-    if(item->getType() == INV_BLOCK) {
-        drawTile("blocks.png", index, dest, {col.r, col.g, col.b, 255});
-    }
+    drawTile((item->getType() == INV_BLOCK) ? "blocks.png" : "items.png", index, dest, {col.r, col.g, col.b, 255});
 
     RenderManager::drawText("font", std::to_string(item->getCount()), {dest.x + dest.width, dest.y + dest.height}, COL_WHITE, 0.f, {1.f, 1.f});
 }

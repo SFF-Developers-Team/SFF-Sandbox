@@ -20,6 +20,9 @@
 #include <SettingsManager.hpp>
 #include <ui/nodes/List.hpp>
 #include <ui/nodes/Layer.hpp>
+#include <Item.hpp>
+#include <RecipesManager.hpp>
+#include <ui/nodes/IngredientsList.hpp>
 #include <chrono>
 #include <list>
 
@@ -41,12 +44,71 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     hotbar->setTag("hotbar");
     addChild(hotbar);
 
-    auto inventory = std::make_shared<Inventory>(m_player->getInventory());
-    inventory->setFlags(FLAG_GUI_SCALE | FLAG_ALWAYS_CENTER);
-    inventory->setVisible(false);
-    inventory->setEnabled(false);
-    inventory->setTag("inventory");
-    addChild(inventory);
+
+    // oh fuck we should create InventoryContainer class and move this shit to it
+    auto inventoryContainer = std::make_shared<Container>();
+    inventoryContainer->setFlags(FLAG_GUI_SCALE | FLAG_ALWAYS_CENTER);
+    inventoryContainer->setVisible(false);
+    inventoryContainer->setEnabled(false);
+    inventoryContainer->setTag("inventory");
+    addChild(inventoryContainer);
+
+    auto border = inventoryContainer->getBorderWidth();
+    auto inventory = std::make_shared<InventoryNode>(m_player);
+    inventory->setPos({border * 2, border * 2});
+    inventory->setAnchor({0.f, 0.f});
+    inventoryContainer->addChild(inventory);
+
+    auto invLabel = std::make_shared<Text>("boldfont", "Inventory");
+    invLabel->setPos({border, border});
+    invLabel->setAnchor({0.f, 0.f});
+    invLabel->setWidth(inventory->getWidth());
+    inventory->setY(invLabel->getBottomY());
+    inventoryContainer->addChild(invLabel);
+
+
+    std::vector<std::string> recipesList;
+
+    for (auto& recipe : RecipesManager::get()->getRecipes()) {
+        auto id = recipe.result->getID();
+        recipesList.push_back(
+            (recipe.result->getType() == INV_BLOCK) ? Block::idToString((BlockID)id) : Item::idToString((ItemID)id)
+        );
+    }
+
+    auto craftList = std::make_shared<List>(recipesList, [inventoryContainer](auto, int id) {
+        auto ingredients = inventoryContainer->getChild<IngredientsList>("ingredients");
+        auto recipes = RecipesManager::get()->getRecipes();
+
+        if (ingredients != nullptr) {
+            ingredients->setRecipe(recipes[id]);
+        }
+    });
+    craftList->setPos({inventory->getRightX() + border, border * 2});
+    craftList->setAnchor({0.f, 0.f});
+    craftList->setSize({craftList->getWidth() / 2, inventory->getHeight()});
+    inventoryContainer->addChild(craftList);
+
+    auto craftLabel = std::make_shared<Text>("boldfont", "Craft");
+    craftLabel->setPos({craftList->getX(), border});
+    craftLabel->setAnchor({0.f, 0.f});
+    craftLabel->setWidth(craftList->getWidth());
+    craftList->setY(craftLabel->getBottomY());
+    inventoryContainer->addChild(craftLabel);
+
+    auto ingredients = std::make_shared<IngredientsList>();
+    ingredients->setPos({inventory->getX(), inventory->getBottomY() + border});
+    ingredients->setAnchor({0.f, 0.f});
+    ingredients->setWidth(inventory->getWidth());
+    ingredients->setTag("ingredients");
+    inventoryContainer->addChild(ingredients);
+
+    auto craftBtn = std::make_shared<Button>("Craft!", [](auto) {});
+    craftBtn->setPos({craftList->getX(), craftList->getBottomY() + border});
+    craftBtn->setAnchor({0.f, 0.f});
+    craftBtn->setSize({craftList->getWidth(), ingredients->getHeight()});
+    inventoryContainer->addChild(craftBtn);
+    inventoryContainer->setSize({craftList->getRightX() + border * 2, ingredients->getBottomY() + border * 2});
 
     auto blockInfo = std::make_shared<BlockInfo>();
     blockInfo->setFlags(FLAG_GUI_SCALE);
@@ -149,7 +211,7 @@ void PlayScene::update() {
             auto seconds = std::chrono::seconds(m_world->getSpentTime() + (std::time(NULL) - m_world->getLoadTime()));
             auto hours = std::chrono::duration_cast<std::chrono::hours>(seconds);
             seconds -= hours;
-            auto minutes = duration_cast<std::chrono::minutes>(seconds);
+            auto minutes = std::chrono::duration_cast<std::chrono::minutes>(seconds);
             seconds -= minutes;
 
             Debug::get()->setString(DebugID::WORLD_TIME_SPENT, "Time spent in world: {} {} {}", hours, minutes, seconds);
@@ -224,6 +286,7 @@ void PlayScene::setPaused(bool paused) {
         if(nickList.size() != players.size() && m_playersList != nullptr) {
             nickList.clear();
             nickList.push_back(Game::get()->getUsername());
+            
             for(auto& [id, player] : players) {
                 if(player->getUsername().empty()) {
                     continue;

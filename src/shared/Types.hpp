@@ -264,6 +264,20 @@ enum BlockID : uint8_t {
     ACTIVE_FURHANCE
 };
 
+enum ItemID : uint8_t {
+    STICK,
+    WOODEN_PICKAXE,
+    WOODEN_SWORD,
+    STONE_PICKAXE,
+    STONE_SWORD,
+    IRON_PICKAXE,
+    IRON_SWORD,
+    GOLDEN_PICKAXE,
+    GOLDEN_SWORD,
+    DIAMOND_PICKAXE,
+    DIAMOND_SWORD
+};
+
 enum MaterialType : uint8_t {
     MATERIAL_STONE,
     MATERIAL_DIRT,
