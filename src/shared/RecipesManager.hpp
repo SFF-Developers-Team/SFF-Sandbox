@@ -4,8 +4,7 @@
 #include <unordered_map>
 
 struct RecipeIngredient {
-    InventoryItemType type;
-    uint16_t id;
+    ItemID id;
     uint16_t count;
 };
 

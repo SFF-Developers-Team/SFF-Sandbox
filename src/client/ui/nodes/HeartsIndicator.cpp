@@ -1,6 +1,7 @@
 #include <ui/nodes/HeartsIndicator.hpp>
 #include <RenderManager.hpp>
 #include <entity/Player.hpp>
+#include <world/World.hpp>
 #include <raylib.h>
 
 HeartsIndicator::HeartsIndicator(std::shared_ptr<Player> player) : m_player(player) {
@@ -10,7 +11,7 @@ HeartsIndicator::HeartsIndicator(std::shared_ptr<Player> player) : m_player(play
 }
 
 void HeartsIndicator::draw() {
-    auto add = (GetTime() < m_player->getLastHeartTime() + 0.25f) * 3;
+    auto add = (m_player->getWorld()->getTime() < m_player->getLastHeartTime() + 0.5f) * 3;
 
     for(auto i = 0; i < m_player->getMaxHealth() / 2.f; i++) {
         if(m_player->getHealth() / 2.f >= i + 1.f) {

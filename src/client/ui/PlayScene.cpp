@@ -70,10 +70,7 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     std::vector<std::string> recipesList;
 
     for (auto& recipe : RecipesManager::get()->getRecipes()) {
-        auto id = recipe.result->getID();
-        recipesList.push_back(
-            (recipe.result->getType() == INV_BLOCK) ? Block::idToString((BlockID)id) : Item::idToString((ItemID)id)
-        );
+        recipesList.push_back(recipe.result->getName());
     }
 
     auto craftList = std::make_shared<List>(recipesList, [inventoryContainer](auto, int id) {
@@ -110,14 +107,14 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     inventoryContainer->addChild(craftBtn);
     inventoryContainer->setSize({craftList->getRightX() + border * 2, ingredients->getBottomY() + border * 2});
 
-    auto blockInfo = std::make_shared<BlockInfo>();
-    blockInfo->setFlags(FLAG_GUI_SCALE);
-    blockInfo->setAnchorY(0.f);
-    blockInfo->setVisible(false);
-    blockInfo->setEnabled(false);
-    blockInfo->setPos({getWidth() / 2, hotbar->getHeight() * getGlobalScaleY() + 10.f});
-    blockInfo->setTag("blockinfo");
-    addChild(blockInfo);
+    // auto blockInfo = std::make_shared<BlockInfo>();
+    // blockInfo->setFlags(FLAG_GUI_SCALE);
+    // blockInfo->setAnchorY(0.f);
+    // blockInfo->setVisible(false);
+    // blockInfo->setEnabled(false);
+    // blockInfo->setPos({getWidth() / 2, hotbar->getHeight() * getGlobalScaleY() + 10.f});
+    // blockInfo->setTag("blockinfo");
+    // addChild(blockInfo);
 
     auto hp = std::make_shared<HeartsIndicator>(m_player);
     hp->setAnchor({1.f, 0.f});
@@ -140,7 +137,7 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     pauseMenu->addChild(std::make_shared<Button>("Back to main menu", [this](auto) { destroy(); }));
     pauseLayer->addChild(pauseMenu);
 
-    m_pauseNodes = {hotbar, blockInfo};
+    // m_pauseNodes = {hotbar, blockInfo};
 
     if(m_online) {
         auto playerList = std::make_shared<List>(nickList, [](auto, auto) {});
@@ -208,13 +205,12 @@ void PlayScene::update() {
         for (uint32_t i = 0; i < m_timer->getTicks(); i++) {
             m_world->onTick();
 
-            auto seconds = std::chrono::seconds(m_world->getSpentTime() + (std::time(NULL) - m_world->getLoadTime()));
-            auto hours = std::chrono::duration_cast<std::chrono::hours>(seconds);
-            seconds -= hours;
-            auto minutes = std::chrono::duration_cast<std::chrono::minutes>(seconds);
-            seconds -= minutes;
+            int time = m_world->getTime();
+            int seconds = time % 60;
+            int minutes = (time / 60) % 60;
+            int hours = (time / 60) / 60;
 
-            Debug::get()->setString(DebugID::WORLD_TIME_SPENT, "Time spent in world: {} {} {}", hours, minutes, seconds);
+            Debug::get()->setString(DebugID::WORLD_TIME_SPENT, "Time spent in world: {}h {}m {}s", hours, minutes, seconds);
         }
 
         if(!m_inventoryEnabled) {
@@ -233,8 +229,8 @@ void PlayScene::update() {
 
     auto enabledBlockInfo = stm->getValue<bool>("video.blockinfo", true) && block != nullptr && !m_inventoryEnabled && !m_paused;
 
-    blockInfo->setVisible(enabledBlockInfo);
-    blockInfo->setEnabled(enabledBlockInfo);
+    // blockInfo->setVisible(enabledBlockInfo);
+    // blockInfo->setEnabled(enabledBlockInfo);
 
     if (playerList != nullptr) {
         playerList->setVisible(m_paused);

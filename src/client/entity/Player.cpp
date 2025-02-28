@@ -10,8 +10,6 @@
 #include <algorithm>
 #include <Types.hpp>
 
-#undef min
-
 Player::Player(std::shared_ptr<World> world) : SimplePlayer(world), Inventory(36), 
     m_selectedBlock(0), m_forward(0.f), m_gamemode(GAMEMODE_SURVIVAL), 
     m_id(0), m_lastAnimFrameTime(0.f), m_lastDestroyedBlock(0.f), m_lastPlacedBlock(0.f) {
@@ -39,15 +37,15 @@ Player::Player(std::shared_ptr<World> world) : SimplePlayer(world), Inventory(36
 
     if(m_gamemode == GAMEMODE_CREATIVE) {
         for(int i = 1; i < 20; i++) {
-            if(i == BlockID::BEDROCK) {
+            if(i == ItemID::BEDROCK) {
                 continue;
             }
 
-            addItem(std::make_shared<InventoryItem>(INV_BLOCK, i, 64));
+            addItem(std::make_shared<InventoryItem>(static_cast<ItemID>(i), 64));
         }
 
         for (auto& col : colors) {
-            auto wool = std::make_shared<InventoryItem>(INV_BLOCK, WOOL, 64);
+            auto wool = std::make_shared<InventoryItem>(WOOL, 64);
             wool->setTag(TagID::TAG_COLOR, col);
             addItem(wool);
         }
@@ -128,9 +126,9 @@ bool Player::canDestroyBlock(BlockPosition target) {
     if (auto block = m_world->getBlock(target.x, target.y, target.layer)) {
         if(block == nullptr) return false;
 
-        BlockID type = block->getID();
+        ItemID type = block->getID();
 
-        return type != BlockID::BEDROCK && type > 0;
+        return type != ItemID::BEDROCK && type > 0;
     }
 
     return false;
@@ -256,7 +254,7 @@ void Player::onTick() {
         setAnimation(PLAYER_JUMP);
     }
 
-    if (GetTime() < m_lastHurtTime + 0.25f) {
+    if (m_world->getTime() < m_lastHurtTime + 0.25f) {
         setAnimation(PLAYER_HURT);
     }
 
@@ -340,7 +338,7 @@ void Player::update() {
     auto target = getTargetBlock();
     auto block = m_world->getBlock(target.x, target.y, target.layer);
 
-    dbg->setString(PLAYER_TARGET_BLOCK, "Target block: [{}, {}] ({})", target.x, target.y, (block ? Block::idToString(block->getID()) : "nullptr"));
+    dbg->setString(PLAYER_TARGET_BLOCK, "Target block: [{}, {}] ({})", target.x, target.y, (block ? block->getName() : "nullptr"));
     dbg->setString(PLAYER_POSITION, "Position: [{:.2f}, {:.2f}]", m_hitbox.x, m_hitbox.y);
     dbg->setString(PLAYER_HEALTH, "Health: {}", m_health);
 }

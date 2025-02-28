@@ -1,19 +1,23 @@
 #include <Item.hpp>
+#include <ItemDatabase.hpp>
+#include <world/Block.hpp>
 
-std::string Item::idToString(ItemID id) {
-    switch (id) {
-        case STICK: return "Stick";
-        case WOODEN_PICKAXE: return "Wooden pickaxe";
-        case STONE_PICKAXE: return "Stone pickaxe";
-        case IRON_PICKAXE: return "Iron pickaxe";
-        case GOLDEN_PICKAXE: return "Golden pickaxe";
-        case DIAMOND_PICKAXE: return "Diamond pickaxe";
-        case WOODEN_SWORD: return "Wooden sword";
-        case STONE_SWORD: return "Stone sword";
-        case IRON_SWORD: return "Iron sword";
-        case GOLDEN_SWORD: return "Golden sword";
-        case DIAMOND_SWORD: return "Diamond sword";
-    };
+Item::Item(ItemID id) : m_id(id) {}
+
+Item::Item(Item& itemPointer) : m_id(itemPointer.m_id), m_tags(itemPointer.m_tags) {}
+
+ItemType Item::getType() {
+    return gBlocksDatabase[m_id].type;
 }
 
-Item::Item(ItemID id) : ItemBase(id) {}
+std::string Item::getName() {
+    return gBlocksDatabase[m_id].name;
+}
+
+MaterialType Item::getMaterial() {
+    return gBlocksDatabase[m_id].material;
+}
+
+uint16_t Item::getSpriteIndex() {
+    return gBlocksDatabase[m_id].spriteIndex;
+}

@@ -15,7 +15,7 @@ void BlockInfo::draw() {
     if (block != nullptr) {
         Rectf blockDest = {10, (getSize().y - 16) / 2, 16, 16};
 
-        std::string top = std::format("{} {} H: {}", Block::idToString(block->getID()), static_cast<int>(block->getID()), block->getDurability());
+        std::string top = std::format("{} {} H: {}", block->getName(), static_cast<int>(block->getID()), block->getDurability());
         std::string bot = std::format("X: {} Y: {}", target.x, target.y);
 
         RenderManager::renderBlock(blockDest, block);

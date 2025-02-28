@@ -1,6 +1,6 @@
 #pragma once
 #include <SerializedObject.hpp>
-#include <Hitbox.hpp>
+#include <entity/Hitbox.hpp>
 #include <Types.hpp>
 #include <vector>
 #include <memory>

@@ -9,7 +9,7 @@
 #include <assert.h>
 #include <Logger.hpp>
 
-World::World(uint32_t height, std::string const& worldName) : m_height(height), m_worldName(worldName), m_version(WORLDVER), m_spentTime(0), m_loadTime(0), m_lastPlayerID(1) {
+World::World(uint32_t height, std::string const& worldName) : m_height(height), m_worldName(worldName), m_version(WORLDVER), m_time(0), m_lastPlayerID(1) {
     m_header = WORLD;
 }
 
@@ -27,6 +27,8 @@ void World::generate() {
 }
 
 void World::onTick() {
+    m_time += (1 / 60.f);
+
     for (auto& [id, player] : m_players) {
         player->onTick();
     }
@@ -82,7 +84,7 @@ std::shared_ptr<Block> World::getBlock(int32_t x, int32_t y, uint8_t layer) {
 }
 
 void World::setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block) {
-    if (isOutOfBound(x, y, layer) || (block && block->getID() == BlockID::AIR)) {
+    if (isOutOfBound(x, y, layer) || (block && block->getID() == ItemID::AIR)) {
         return;
     }
 
@@ -100,7 +102,7 @@ ByteVector World::serialize() {
     add(m_worldGen->getType());
     add(m_worldGen->getSeed());
     // World version 3
-    add(m_spentTime + (std::time(NULL) - m_loadTime));
+    add(m_time);
 
     // World version 1
     add((uint32_t)m_chunks.size());
@@ -144,7 +146,7 @@ size_t World::deserialize(ByteVector const& bytes) {
         auto seed = get<int64_t>();
 
         if(m_version >= 3) {
-            m_spentTime = get<uint64_t>(0);
+            m_time = get<float>(0);
         }
 
         switch (generatorType) {
@@ -174,8 +176,6 @@ size_t World::deserialize(ByteVector const& bytes) {
     }
 
     // World end
-
-    m_loadTime = std::time(NULL);
 
     return m_offset;
 }
@@ -257,6 +257,7 @@ PlayerID World::addPlayer(std::shared_ptr<SimplePlayer> player, std::string cons
     addPlayer(m_lastPlayerID, player, username);
     auto ret = m_lastPlayerID;
     m_lastPlayerID++;
+
     return ret;
 }
 
