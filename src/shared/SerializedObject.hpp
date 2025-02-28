@@ -98,6 +98,15 @@ public:
         return add(str.c_str(), str.size());
     }
 
+    template<typename T>
+    void add(std::vector<T> const& vec) {
+        add<uint16_t>(vec.size());
+
+        for (auto& el : vec) {
+            add<T>(el);
+        }
+    }
+
     /// @brief Get N-count bytes from serialized object
     ByteVector getN(std::size_t count) {
         if(m_offset + count > size()) {
@@ -134,7 +143,7 @@ public:
         return ret;
     }
 
-    const char* get(const char* defaultVal) {
+    const char* get(const char* defaultVal = "unknown") {
         auto len = std::strlen((char*)data() + m_offset);
 
         if(m_offset + len > size()) return defaultVal;
@@ -146,6 +155,23 @@ public:
         m_offset += len;
 
         return ret;
+    }
+
+    template<typename T>
+    std::vector<T> get(std::initializer_list<T> const& def) {
+        auto count = get<uint16_t>(0);
+
+        if (!count) {
+            return def;
+        }
+
+        std::vector<T> vec(count);
+
+        while (count-- > 0) {
+            vec.push_back(get<T>());
+        }
+
+        return vec;
     }
 
     std::size_t offset() { return m_offset; }
