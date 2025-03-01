@@ -74,10 +74,40 @@ void Client::handle(Packet& packet) {
         case Header::PLAYER: return handlePlayer(packet);
         case Header::LOAD_TERRAIN: return handleLoadTerrain(packet);
         case Header::LOAD_PLAYERS: return handleLoadPlayers(packet);
+        case Header::LOAD_MESSAGE: return handleLoadMessages(packet);
+        case Header::MESSAGE: return handleMessage(packet);
         default: break;
     }
 }
 
+void Client::handleMessage(Packet& packet){
+    auto srv = Server::get();
+    auto player = srv->getWorld()->getPlayer(m_id);
+    std::string msg = packet.get("");
+    std::string msgFull = std::format("{}: {}", player->getUsername(), msg);
+    
+
+    logM("{}", msgFull);
+
+    srv->pushMessage(msgFull);
+    srv->broadcast(Packet(Header::MESSAGE, msgFull));
+
+    if(srv->getMessage().size() > 30) {
+        srv->clearMessage();
+    }
+}
+
+void Client::handleLoadMessages(Packet& packet) {
+    auto srv = Server::get();
+    auto messages = srv->getMessage();
+
+    if(messages.size() > 0) {
+        logD("Trying to send... ");
+        auto pak = Packet(Header::MESSAGE, messages);
+        pak.print();
+        sendPacket(Packet(Header::MESSAGE, messages));
+    }
+}
 void Client::handlePlayer(Packet& packet) {
     if(packet.get<PlayerID>() != m_id) {
         return;

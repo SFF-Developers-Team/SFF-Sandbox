@@ -155,6 +155,12 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
         playerList->setTag("playerlist");
         m_playersList = playerList;
         pauseLayer->addChild(m_playersList);
+
+        auto msgInput = std::make_shared<TextInput>("font", "");
+        msgInput->setFlags(FLAG_GUI_SCALE);
+        msgInput->setPos({static_cast<float>(GetScreenWidth() / 2), static_cast<float>(GetScreenHeight() / 2)});
+        msgInput->setTag("inputmsg");
+        addChild(msgInput);
     }
 }
 
@@ -192,7 +198,13 @@ void PlayScene::draw() {
             }
         }
     EndMode2D();
-
+    if(m_online) {
+        auto mp = Multiplayer::get();
+        auto messages = mp->getMessages();
+        for(int i = 0; i < messages.size(); i++) {
+            RenderManager::drawText("font", messages[i], {0, static_cast<float>(10 * i)});
+        }
+    }
     RenderManager::drawTile("gui.png", 0, {mouse.x, mouse.y, 16.f, 16.f}, COL_WHITE, 0.f, {0.5f, 0.5f});
 
     if(m_paused) {
@@ -231,6 +243,7 @@ void PlayScene::update() {
     auto block = m_world->getBlock(target.x, target.y, target.layer);
     auto blockInfo = getChild<BlockInfo>("blockinfo");
     auto playerList = getChild<List>("playerlist"); 
+    auto inputMsg = getChild<TextInput>("inputmsg");
 
     auto enabledBlockInfo = stm->getValue<bool>("video.blockinfo", true) && block != nullptr && !m_inventoryEnabled && !m_paused;
 
@@ -250,6 +263,14 @@ void PlayScene::update() {
             Game::get()->pushScene(std::make_shared<ErrorScene>(mp->getError()));
             mp->destroy();
             m_world->reset();
+        }
+
+        if(IsKeyPressed(KEY_ENTER)) {
+            if(!inputMsg->getText().empty()) {
+                auto msg = inputMsg->getText();
+                auto pak = Packet(Header::MESSAGE, msg);
+                mp->sendPacket(pak);
+            }
         }
     }
 

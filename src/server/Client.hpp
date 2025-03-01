@@ -24,10 +24,12 @@ public:
     void handlePlayer(Packet& packet);
     void handleLoadChunk(Packet& packet);
     void handleLoadPlayer(Packet& packet);
+    void handleLoadMessages(Packet& packet);
     void handleBlockPlace(Packet& packet);
     void handleBlockDestroy(Packet& packet);
     void handleLoadTerrain(Packet& packet);
     void handleLoadPlayers(Packet& packet);
+    void handleMessage(Packet& packet);
 
     auto const getPlayerID() {
         return m_id;

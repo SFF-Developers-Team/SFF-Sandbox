@@ -22,12 +22,17 @@ private:
 
     std::map<uint32_t, std::shared_ptr<Client>> m_clients;
 
+    std::vector<std::string> messages;
 public:
     static Server* get() {
         static auto server = new Server();
         return server;
     }
 
+
+    std::vector<std::string> getMessage() { return messages; }
+    void pushMessage(std::string msg) { messages.push_back(msg); }
+    void clearMessage() { messages.erase(messages.begin()); }
     void displayList();
     void displayHelp();
     void destroy();

@@ -35,7 +35,7 @@ Player::Player(std::shared_ptr<World> world) : SimplePlayer(world), Inventory(36
     };
     // clang-format on
 
-    if(m_gamemode == GAMEMODE_CREATIVE) {
+    // if(m_gamemode == GAMEMODE_CREATIVE) {
         for(int i = 1; i < 20; i++) {
             if(i == ItemID::BEDROCK) {
                 continue;
@@ -49,7 +49,7 @@ Player::Player(std::shared_ptr<World> world) : SimplePlayer(world), Inventory(36
             wool->setTag(TagID::TAG_COLOR, col);
             addItem(wool);
         }
-    }
+    // }
 }
 
 void Player::updateCamera() {
