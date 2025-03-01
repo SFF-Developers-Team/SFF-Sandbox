@@ -35,8 +35,9 @@ file(GLOB CLIENT_SOURCES CONFIGURE_DEPENDS
     "src/client/*.cpp"
     "src/client/entity/*.cpp"
     "src/client/particle/*.cpp"
-    "src/client/ui/*.cpp"
-    "src/client/ui/nodes/*.cpp"
+    "src/client/scenes/*.cpp"
+    "src/client/ui/basic/*.cpp"
+    "src/client/ui/gameplay/*.cpp"
 )
 
 file(GLOB SERVER_SOURCES CONFIGURE_DEPENDS
