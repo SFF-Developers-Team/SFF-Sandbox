@@ -11,8 +11,20 @@
 #include <assert.h>
 #include <Utils.hpp>
 #include <string>
+#include <unordered_map>
 
 int blocksDrawn = 0;
+
+std::unordered_map<char, Color> colorMap = {
+    {'r', RED},
+    {'g', GREEN},
+    {'b', BLUE},
+    {'0', BLACK},
+    {'w', WHITE},
+    {'y', YELLOW},
+    {'o', ORANGE},
+    {'p', PURPLE} 
+};
 
 void RenderManager::drawTexture(std::string const& key, Rectf dest, Col4u color, float rot, Vec2f origin) {
     auto texture = TextureManager::get()->getTexture(key);
@@ -52,6 +64,71 @@ void RenderManager::drawText(std::string const& fontKey, std::string const& text
     }
 
     DrawTextEx(font, text.c_str(), {roundf(pos.x), roundf(pos.y)}, fontSize, spacing, color.to<Color>());
+}
+
+void RenderManager::drawColoredText(std::string const& fontKey, std::string const& text, Vec2f pos, Col4u color, float fontSize, Vec2f origin, float spacing) {
+    auto tm = TextureManager::get();
+    auto font = tm->getFont(fontKey);
+
+    if(fontSize == 0.f) {
+        fontSize = font.baseSize;
+    }
+
+    if(origin.x != 0.f || origin.y != 0.f) { // Эта оптимизация направлена на пропуск подсчета размера текста, если точка опоры равна нулю
+        auto size = getTextSize(text, fontKey, fontSize, spacing);
+        pos.x -= size.x * origin.x;
+        pos.y -= size.y * origin.y;
+    }
+
+    // auto splitText = [](std::string const& text) -> {
+
+    // };
+    // std::vector<std::string> SplitTextIntoLines(const std::string& text) {
+    //     std::vector<std::string> lines;
+    //     size_t start = 0;
+    //     size_t end = text.find('\n');
+    
+    //     while (end != std::string::npos) {
+    //         lines.push_back(text.substr(start, end - start));
+    //         start = end + 1;
+    //         end = text.find('\n', start);
+    //     }
+    //     lines.push_back(text.substr(start)); // Добавляем последнюю строку
+    //     return lines;
+    // }
+
+    const char* start = text.c_str();
+    Color currentColor = WHITE;
+    Vec2f curPos = pos;
+
+    while (*start) {
+        if (*start == '\\' && *(start + 1) == 'c' && *(start + 2)) {
+            char colorCode = *(start + 2);
+
+            if (colorMap.find(colorCode) != colorMap.end()) {
+                currentColor = colorMap[colorCode];
+            }
+
+            start += 3;
+        } else {
+            const char* end = strstr(start, "\\c");
+            if (!end) end = start + strlen(start);
+
+            std::string part(start, end);
+            DrawTextEx(font, part.c_str(), {roundf(curPos.x), roundf(curPos.y)}, fontSize, spacing, currentColor);
+
+            auto size = getTextSize(part, fontKey, fontSize, spacing);
+            
+            if (size.y > fontSize) {
+                curPos.x = pos.x;
+                curPos.y += size.y - fontSize;
+            } else {
+                curPos.x += size.x;
+            }
+
+            start = end;
+        }
+    }
 }
 
 void RenderManager::drawRect(Rectf rect, Col4u col) {
