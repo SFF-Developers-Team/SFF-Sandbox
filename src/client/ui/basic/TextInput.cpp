@@ -1,7 +1,7 @@
 #include <ui/basic/TextInput.hpp>
-#include <StyleManager.hpp>
-#include <TextureManager.hpp>
-#include <RenderManager.hpp>
+#include <managers/StyleManager.hpp>
+#include <managers/TextureManager.hpp>
+#include <managers/RenderManager.hpp>
 #include <raylib.h>
 #include <Logger.hpp>
 

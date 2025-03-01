@@ -1,10 +1,10 @@
-#include <SettingsManager.hpp>
+#include <managers/SettingsManager.hpp>
 #include <entity/Player.hpp>
 #include <world/Block.hpp>
 #include <world/Chunk.hpp>
 #include <world/World.hpp>
-#include <Multiplayer.hpp>
-#include <Debug.hpp>
+#include <net/Multiplayer.hpp>
+#include <managers/Debug.hpp>
 #include <Utils.hpp>
 #include <Game.hpp>
 #include <algorithm>

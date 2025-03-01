@@ -1,6 +1,6 @@
 #include <ui/basic/Frame.hpp>
-#include <StyleManager.hpp>
-#include <RenderManager.hpp>
+#include <managers/StyleManager.hpp>
+#include <managers/RenderManager.hpp>
 
 Frame::Frame() : Node() {
     auto sm = StyleManager::get();

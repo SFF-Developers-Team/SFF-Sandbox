@@ -1,4 +1,4 @@
-#include <Inventory.hpp>
+#include <inventory/Inventory.hpp>
 
 Inventory::Inventory(uint16_t slots) : m_inventory(slots), m_selected(0) {}
 

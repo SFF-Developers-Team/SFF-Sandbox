@@ -1,10 +1,10 @@
-#include <Debug.hpp>
+#include <managers/Debug.hpp>
 #include <raylib.h>
 #include <GitHash.hpp>
 #include <ui/basic/ScrollableContainer.hpp>
 #include <ui/basic/Text.hpp>
 #include <ui/basic/TextInput.hpp>
-#include <RenderManager.hpp>
+#include <managers/RenderManager.hpp>
 #include <ui/basic/Scene.hpp>
 
 Debug::Debug() {
@@ -27,6 +27,9 @@ void Debug::draw() {
     }
 }
 
+
+// I don't want to do it now
+#if 0
 void Debug::allocateConsole() {
     m_debugConsole = std::make_shared<Container>();
     m_debugConsole->setTag("debug-console");
@@ -91,3 +94,4 @@ void Debug::log(std::string const& str) {
         m_log.append(str);
     }
 }
+#endif

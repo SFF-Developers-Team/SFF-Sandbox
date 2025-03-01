@@ -4,7 +4,7 @@
 #include <vector>
 #include <raylib.h>
 #include <Types.hpp>
-#include <Inventory.hpp>
+#include <inventory/Inventory.hpp>
 
 class World;
 class Chunk;

@@ -1,5 +1,5 @@
 #include <ui/basic/SettingsToggle.hpp>
-#include <SettingsManager.hpp>
+#include <managers/SettingsManager.hpp>
 #include <Logger.hpp>
 
 SettingsToggle::SettingsToggle(std::string const& property, std::string const& text, MiniFunction<void(ToggleButton*, bool)> const& callback) 

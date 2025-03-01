@@ -36,7 +36,6 @@ public:
     Debug();
 
     void draw();
-    void update();
     void setVisible(bool flag) { m_visible = flag; }
     bool isVisible() { return m_visible; }
     void toggleVisibility() { m_visible = !m_visible; }
@@ -48,6 +47,9 @@ public:
 
     void removeString(DebugID id) { m_debugList.erase(id); }
 
+#if 0
+    void update();
     void log(std::string const& str);
     void allocateConsole();
+#endif
 };

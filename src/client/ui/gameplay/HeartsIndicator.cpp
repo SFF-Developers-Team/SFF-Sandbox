@@ -1,5 +1,5 @@
 #include <ui/gameplay/HeartsIndicator.hpp>
-#include <RenderManager.hpp>
+#include <managers/RenderManager.hpp>
 #include <entity/Player.hpp>
 #include <world/World.hpp>
 #include <raylib.h>

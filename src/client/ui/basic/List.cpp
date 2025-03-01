@@ -1,7 +1,7 @@
 #include <ui/basic/List.hpp>
-#include <RenderManager.hpp>
-#include <TextureManager.hpp>
-#include <StyleManager.hpp>
+#include <managers/RenderManager.hpp>
+#include <managers/TextureManager.hpp>
+#include <managers/StyleManager.hpp>
 #include <raylib.h>
 #include <algorithm>
 

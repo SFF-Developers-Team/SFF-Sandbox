@@ -1,12 +1,12 @@
-#include <TextureManager.hpp>
-#include <RenderManager.hpp>
+#include <managers/TextureManager.hpp>
+#include <managers/RenderManager.hpp>
 #include <entity/Player.hpp>
 #include <world/Chunk.hpp>
 #include <world/World.hpp>
-#include <InventoryItem.hpp>
+#include <inventory/InventoryItem.hpp>
 #include <TileMap.hpp>
 #include <Types.hpp>
-#include <Debug.hpp>
+#include <managers/Debug.hpp>
 #include <Game.hpp>
 #include <assert.h>
 #include <Utils.hpp>

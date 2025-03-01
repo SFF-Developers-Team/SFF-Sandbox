@@ -1,6 +1,6 @@
 #pragma once
 #include <entity/SimplePlayer.hpp>
-#include <PacketManager.hpp>
+#include <managers/PacketManager.hpp>
 #include <Packet.hpp>
 #include <Types.hpp>
 

@@ -2,11 +2,11 @@
 #include <ui/basic/Frame.hpp>
 #include <MiniFunction.hpp>
 #include <type_traits>
-#include <RenderManager.hpp>
+#include <managers/RenderManager.hpp>
 #include <raylib.h>
 #include <algorithm>
 #include <format>
-#include <TextureManager.hpp>
+#include <managers/TextureManager.hpp>
 
 template <typename T>
 class Slider : public Frame {

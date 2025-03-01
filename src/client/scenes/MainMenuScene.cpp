@@ -7,7 +7,7 @@
 #include <ui/basic/Button.hpp>
 #include <ui/basic/ListContainer.hpp>
 
-#include <StyleManager.hpp>
+#include <managers/StyleManager.hpp>
 #include <world/World.hpp>
 #include <entity/Player.hpp>
 #include <world/gen/WorldGenNormal.hpp>

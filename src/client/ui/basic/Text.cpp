@@ -1,7 +1,7 @@
 #include <ui/basic/Text.hpp>
-#include <StyleManager.hpp>
-#include <TextureManager.hpp>
-#include <RenderManager.hpp>
+#include <managers/StyleManager.hpp>
+#include <managers/TextureManager.hpp>
+#include <managers/RenderManager.hpp>
 #include <raylib.h>
 
 Text::Text(std::string const& font, std::string const& text, float fontSize) : Node(), m_font(font), m_text(text), m_fontSize(fontSize), m_wordWrap(false) {

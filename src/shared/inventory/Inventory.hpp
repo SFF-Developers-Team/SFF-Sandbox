@@ -1,6 +1,6 @@
 #pragma once
 #include <Types.hpp>
-#include <InventoryItem.hpp>
+#include <inventory/InventoryItem.hpp>
 
 class Inventory {
 protected:

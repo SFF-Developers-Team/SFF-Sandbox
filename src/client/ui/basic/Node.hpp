@@ -4,7 +4,7 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include <Debug.hpp>
+#include <managers/Debug.hpp>
 
 enum NodeFlags : uint8_t {
     FLAG_GUI_SCALE = 1 << 0,

@@ -1,9 +1,9 @@
 #include <ui/basic/Button.hpp>
 #include <ui/basic/Text.hpp>
 #include <raylib.h>
-#include <StyleManager.hpp>
-#include <RenderManager.hpp>
-#include <TextureManager.hpp>
+#include <managers/StyleManager.hpp>
+#include <managers/RenderManager.hpp>
+#include <managers/TextureManager.hpp>
 
 Button::Button(std::string const& text, MiniFunction<void(Button*)> const& callback) : Frame(), m_text(text), m_callback(callback), m_fontSize(0.f) {}
 

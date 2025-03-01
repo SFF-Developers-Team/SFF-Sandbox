@@ -28,14 +28,18 @@ file(GLOB SHARED_SOURCES CONFIGURE_DEPENDS
     "src/shared/entity/*.cpp"
     "src/shared/world/gen/*.cpp"
     "src/shared/world/*.cpp"
+    "src/shared/managers/*.cpp"
+    "src/shared/inventory/*.cpp"
     "src/shared/*.cpp"
 )
 
 file(GLOB CLIENT_SOURCES CONFIGURE_DEPENDS
     "src/client/*.cpp"
+    "src/client/net/*.cpp"
     "src/client/entity/*.cpp"
     "src/client/particle/*.cpp"
     "src/client/scenes/*.cpp"
+    "src/client/managers/*.cpp"
     "src/client/ui/basic/*.cpp"
     "src/client/ui/gameplay/*.cpp"
 )

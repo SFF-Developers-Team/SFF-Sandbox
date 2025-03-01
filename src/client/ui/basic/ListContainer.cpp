@@ -1,5 +1,5 @@
 #include <ui/basic/ListContainer.hpp>
-#include <StyleManager.hpp>
+#include <managers/StyleManager.hpp>
 
 ListContainer::ListContainer(bool horizontal, bool resizeElements, bool selfAutoResize, float padding) 
     : ScrollableContainer(), m_horizontal(horizontal), m_last(m_border * 2), m_resizeElements(resizeElements), m_padding(padding), m_selfAutoResize(selfAutoResize) {

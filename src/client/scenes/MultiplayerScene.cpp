@@ -4,7 +4,7 @@
 #include <ui/basic/Button.hpp>
 #include <ui/basic/Text.hpp>
 #include <ui/basic/TextInput.hpp>
-#include <StyleManager.hpp>
+#include <managers/StyleManager.hpp>
 #include <Game.hpp>
 
 MultiplayerScene::MultiplayerScene() : MenuBase() {

@@ -2,9 +2,9 @@
 #include <entity/Player.hpp>
 #include <world/Chunk.hpp>
 #include <world/World.hpp>
-#include <Multiplayer.hpp>
+#include <net/Multiplayer.hpp>
 #include <Logger.hpp>
-#include <Debug.hpp>
+#include <managers/Debug.hpp>
 #include <Game.hpp>
 #include <thread>
 

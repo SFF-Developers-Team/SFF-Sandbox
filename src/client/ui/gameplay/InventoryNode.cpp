@@ -1,5 +1,5 @@
 #include <ui/gameplay/InventoryNode.hpp>
-#include <RenderManager.hpp>
+#include <managers/RenderManager.hpp>
 #include <raylib.h>
 
 float constexpr cellSize = 24.f;

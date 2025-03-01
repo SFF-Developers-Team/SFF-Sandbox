@@ -4,8 +4,8 @@
 #include <ui/basic/SettingsSlider.hpp>
 #include <ui/basic/ListContainer.hpp>
 #include <ui/basic/Text.hpp>
-#include <SettingsManager.hpp>
-#include <SoundManager.hpp>
+#include <managers/SettingsManager.hpp>
+#include <managers/SoundManager.hpp>
 #include <Logger.hpp>
 
 SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolution(true) {

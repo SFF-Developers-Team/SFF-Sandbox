@@ -1,5 +1,5 @@
 #include <ui/basic/Tile.hpp>
-#include <RenderManager.hpp>
+#include <managers/RenderManager.hpp>
 
 Tile::Tile(std::string const& tilemapKey, int index) : m_tilemapKey(tilemapKey), m_index(index) {}
 

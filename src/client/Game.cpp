@@ -1,17 +1,17 @@
 #include <scenes/MainMenuScene.hpp>
-#include <TextureManager.hpp>
-#include <SoundManager.hpp>
+#include <managers/TextureManager.hpp>
+#include <managers/SoundManager.hpp>
 #include <entity/Player.hpp>
 #include <world/World.hpp>
 #include <TileMap.hpp>
 #include <Logger.hpp>
 #include <Game.hpp>
-#include <SettingsManager.hpp>
-#include <StyleManager.hpp>
-#include <RenderManager.hpp>
-#include <RecipesManager.hpp>
-#include <Debug.hpp>
-#include <Multiplayer.hpp>
+#include <managers/SettingsManager.hpp>
+#include <managers/StyleManager.hpp>
+#include <managers/RenderManager.hpp>
+#include <managers/RecipesManager.hpp>
+#include <managers/Debug.hpp>
+#include <net/Multiplayer.hpp>
 
 void Game::pushScene(std::shared_ptr<Scene> scene) {
     if(m_scene != nullptr) {    
@@ -54,6 +54,7 @@ void Game::checkSceneFlags(std::shared_ptr<Container> scene) {
 }
 
 void Game::init(std::vector<std::string>& args) {
+#if 0
     SetTraceLogCallback([](int logLevel, const char *text, va_list args) {
         std::unordered_map<int, std::string> static prefixes = {
             {LOG_ALL, "\\cw"},
@@ -78,6 +79,7 @@ void Game::init(std::vector<std::string>& args) {
 
         Debug::get()->log(buffer);
     });
+#endif
 
     InitWindow(GetScreenWidth(), GetScreenHeight(), "SFF Sandbox");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
@@ -116,7 +118,7 @@ void Game::init(std::vector<std::string>& args) {
     SettingsManager::get();
     StyleManager::get();
     RecipesManager::get();
-    Debug::get()->allocateConsole();
+    // Debug::get()->allocateConsole();
 
     // Load main menu
     pushScene(std::make_shared<MainMenuScene>());
@@ -161,7 +163,7 @@ void Game::update() {
         }
 
         m_scene->update();
-        debug->update();
+        // debug->update();
     }
 
     if(GetKeyPressed() > 0 || IsMouseButtonPressed(MOUSE_LEFT_BUTTON) || IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)) {

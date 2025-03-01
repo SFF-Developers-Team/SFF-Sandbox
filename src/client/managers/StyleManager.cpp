@@ -1,4 +1,4 @@
-#include <StyleManager.hpp>
+#include <managers/StyleManager.hpp>
 
 StyleManager::StyleManager() {
     m_style = {

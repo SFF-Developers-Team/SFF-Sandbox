@@ -1,5 +1,5 @@
 #include <ui/basic/SpriteNode.hpp>
-#include <RenderManager.hpp>
+#include <managers/RenderManager.hpp>
 
 SpriteNode::SpriteNode(std::string const& textureKey) : m_textureKey(textureKey) {}
 

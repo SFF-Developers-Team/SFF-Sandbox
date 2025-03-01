@@ -1,7 +1,7 @@
 #include <ui/basic/DropDown.hpp>
-#include <RenderManager.hpp>
-#include <TextureManager.hpp>
-#include <StyleManager.hpp>
+#include <managers/RenderManager.hpp>
+#include <managers/TextureManager.hpp>
+#include <managers/StyleManager.hpp>
 #include <algorithm>
 #include <raylib.h>
 #include <format>

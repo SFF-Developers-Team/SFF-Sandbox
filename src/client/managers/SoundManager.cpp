@@ -1,5 +1,5 @@
-#include <SoundManager.hpp>
-#include <SettingsManager.hpp>
+#include <managers/SoundManager.hpp>
+#include <managers/SettingsManager.hpp>
 
 // Sounds
 bool SoundManager::loadSound(std::filesystem::path const& filepath) {

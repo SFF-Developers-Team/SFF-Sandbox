@@ -1,5 +1,5 @@
 #pragma once
-#include <InventoryItem.hpp>
+#include <inventory/InventoryItem.hpp>
 #include <list>
 #include <unordered_map>
 

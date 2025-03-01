@@ -1,6 +1,6 @@
 #pragma once
 #include <ui/basic/Frame.hpp>
-#include <RecipesManager.hpp>
+#include <managers/RecipesManager.hpp>
 
 class IngredientsList : public Frame {
 private:

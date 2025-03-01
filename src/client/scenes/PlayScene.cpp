@@ -19,13 +19,13 @@
 #include <entity/Player.hpp>
 #include <world/World.hpp>
 
-#include <SettingsManager.hpp>
-#include <RecipesManager.hpp>
-#include <RenderManager.hpp>
-#include <StyleManager.hpp>
-#include <Multiplayer.hpp>
+#include <managers/SettingsManager.hpp>
+#include <managers/RecipesManager.hpp>
+#include <managers/RenderManager.hpp>
+#include <managers/StyleManager.hpp>
+#include <net/Multiplayer.hpp>
 #include <Types.hpp>
-#include <Debug.hpp>
+#include <managers/Debug.hpp>
 #include <Timer.hpp>
 #include <Game.hpp>
 #include <Item.hpp>

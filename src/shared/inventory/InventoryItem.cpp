@@ -1,4 +1,4 @@
-#include <InventoryItem.hpp>
+#include <inventory/InventoryItem.hpp>
 #include <Item.hpp>
 
 InventoryItem::InventoryItem(ItemID id, int16_t count) : Item(id), m_count(count) {}

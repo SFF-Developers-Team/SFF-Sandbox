@@ -1,9 +1,9 @@
 #include <ui/basic/ToggleButton.hpp>
 #include <raylib.h>
 #include <format>
-#include <RenderManager.hpp>
-#include <TextureManager.hpp>
-#include <StyleManager.hpp>
+#include <managers/RenderManager.hpp>
+#include <managers/TextureManager.hpp>
+#include <managers/StyleManager.hpp>
 #include <Logger.hpp>
 
 ToggleButton::ToggleButton(std::string const& text, MiniFunction<void(ToggleButton*, bool)> const& callback) : 

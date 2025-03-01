@@ -1,7 +1,7 @@
 #include <scenes/CreditsScene.hpp>
-#include <StyleManager.hpp>
-#include <RenderManager.hpp>
-#include <TextureManager.hpp>
+#include <managers/StyleManager.hpp>
+#include <managers/RenderManager.hpp>
+#include <managers/TextureManager.hpp>
 #include <ui/basic/Tile.hpp>
 #include <ui/basic/SpriteNode.hpp>
 #include <ui/basic/List.hpp>

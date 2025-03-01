@@ -3,7 +3,7 @@
 #include <Item.hpp>
 #include <Types.hpp>
 #include <cstddef>
-#include <InventoryItem.hpp>
+#include <inventory/InventoryItem.hpp>
 
 class Block : public Item {
 protected:

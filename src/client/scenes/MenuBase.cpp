@@ -1,6 +1,6 @@
 #include <scenes/MenuBase.hpp>
-#include <TextureManager.hpp>
-#include <RenderManager.hpp>
+#include <managers/TextureManager.hpp>
+#include <managers/RenderManager.hpp>
 #include <TileMap.hpp>
 #include <Types.hpp>
 #include <Game.hpp>

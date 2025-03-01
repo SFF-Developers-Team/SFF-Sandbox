@@ -1,5 +1,5 @@
 #include <ui/basic/Slider.hpp>
-#include <SettingsManager.hpp>
+#include <managers/SettingsManager.hpp>
 
 template <typename T>
 class SettingsSlider : public Slider<T> {

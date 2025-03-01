@@ -1,11 +1,11 @@
-#include <SettingsManager.hpp>
+#include <managers/SettingsManager.hpp>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <Logger.hpp>
 #include <Game.hpp>
-#include <SoundManager.hpp>
+#include <managers/SoundManager.hpp>
 
 #ifdef PLATFORM_DESKTOP
 #include <glfw3.h>
