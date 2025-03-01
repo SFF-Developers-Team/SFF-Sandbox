@@ -49,4 +49,7 @@ public:
 
     bool isFrameVisible() { return m_frame; }
     void setFrameVisible(bool frame) { m_frame = frame; }
+
+    std::shared_ptr<Node> operator[](size_t index) { return getChild(index); }
+    std::shared_ptr<Node> operator[](std::string const& tag) { return getChild(tag); }
 };
