@@ -2,57 +2,24 @@
 #include <SerializedObject.hpp>
 #include <cassert>
 
-Block::Block(BlockID id, int32_t x, int32_t y, uint8_t layer) 
-    : ItemBase(id), m_x(x), m_y(y), m_layer(layer) { 
+Block::Block(ItemID id, int32_t x, int32_t y, uint8_t layer) 
+    : Item(id), m_x(x), m_y(y), m_layer(layer) { 
     
     m_header = BLOCK;
-    updateMaterial();
 }
 
-Block::Block(Block& block) : Block(static_cast<BlockID>(block.m_id), block.m_x, block.m_y, block.m_layer) {
+Block::Block(Block& block) : Block(block.m_id, block.m_x, block.m_y, block.m_layer) {
     m_tags = block.m_tags;
 }
 
-Block::Block(InventoryItem& item) : Block(static_cast<BlockID>(item.getID())) {
+Block::Block(InventoryItem& item) : Block(item.getID()) {
     m_tags = item.getTags();
-}
-
-std::string const Block::idToString(BlockID id) {
-    switch(id) {
-        case AIR: return "Air";
-        case GRASS: return "Grass";
-        case DIRT: return "Dirt";
-        case STONE: return "Stone";
-        case COBLESTONE: return "Coblestone";
-        case PLANKS: return "Planks";
-        case WOOL: return "Wool";
-        case BEDROCK: return "Bedrock";
-        case BRICKS: return "Bricks";
-        case OAK_LOG: return "Oak log";
-        case LEAVES: return "Leaves";
-        case COAL_ORE: return "Coal ore";
-        case IRON_ORE: return "Iron ore";
-        case GOLD_ORE: return "Gold ore";
-        case DIAMOND_ORE: return "Diamond ore";
-        case LAPIZ_ORE: return "Lapiz ore";
-        case BOOKSHELF: return "Bookshelf";
-        case FLOWER_POT: return "Flower pot";
-        case FURHANCE:
-        case ACTIVE_FURHANCE: return "Furhance";
-        default: return "Unknown";
-    }
 }
 
 void Block::setPos(int32_t x, int32_t y, uint8_t layer) {
     m_x = x;
     m_y = y;
     m_layer = layer;
-}
-
-void Block::setID(BlockID id) {
-    m_id = id;
-
-    updateMaterial();
 }
 
 ByteVector Block::serialize() {
@@ -81,7 +48,7 @@ ByteVector Block::serialize() {
 size_t Block::deserialize(ByteVector const& bytes) {
     SerializedObject::deserialize(bytes);
 
-    m_id = get<BlockID>();
+    m_id = get<ItemID>();
     m_x = get<int32_t>();
     m_y = get<int32_t>();
     m_layer = get<uint8_t>(1);
@@ -104,8 +71,6 @@ size_t Block::deserialize(ByteVector const& bytes) {
         }
     }
 
-    updateMaterial();
-
     return m_offset;
 }
 
@@ -118,7 +83,7 @@ Rectf Block::getHitbox() {
 }
 
 float Block::getDurability() {
-    switch (m_materialType) {
+    switch (getMaterial()) {
         default:
         case MATERIAL_WOOL:
         case MATERIAL_DIRT: return 10.f;
@@ -127,35 +92,10 @@ float Block::getDurability() {
     }
 }
 
-void Block::updateMaterial() {
-    switch(m_id) {
-        case GRASS:
-        case DIRT:
-            m_materialType = MATERIAL_DIRT;
-            break;
-        case STONE:
-        case COBLESTONE:
-        case BRICKS:
-        case COAL_ORE:
-        case IRON_ORE:
-        case GOLD_ORE:
-        case DIAMOND_ORE:
-        case LAPIZ_ORE:
-        case FURHANCE:
-            m_materialType = MATERIAL_STONE;
-            break;
-        case PLANKS:
-        case OAK_LOG:
-        case BOOKSHELF:
-            m_materialType = MATERIAL_WOOD;
-            break;
-    };
-}
-
 std::shared_ptr<InventoryItem> Block::dropItem() {
     switch (m_id) {
-        case GRASS: return std::make_shared<InventoryItem>(INV_BLOCK, DIRT, 1);
-        case STONE: return std::make_shared<InventoryItem>(INV_BLOCK, COBLESTONE, 1);
+        case GRASS: return std::make_shared<InventoryItem>(DIRT, 1);
+        case STONE: return std::make_shared<InventoryItem>(COBBLESTONE, 1);
         default: return std::make_shared<InventoryItem>(*this, 1);
     };
 }

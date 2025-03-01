@@ -1,11 +1,11 @@
 #pragma once
 #include <SerializedObject.hpp>
-#include <ItemBase.hpp>
+#include <Item.hpp>
 #include <Types.hpp>
 #include <cstddef>
 #include <InventoryItem.hpp>
 
-class Block : public ItemBase {
+class Block : public Item {
 protected:
     int32_t m_x;
     int32_t m_y;
@@ -15,9 +15,8 @@ protected:
     MaterialType m_materialType;
 
 public:
-    static std::string const idToString(BlockID id);
 
-    Block(BlockID id = BlockID::AIR, int32_t x = 0, int32_t y = 0, uint8_t layer = 1);
+    Block(ItemID id = ItemID::AIR, int32_t x = 0, int32_t y = 0, uint8_t layer = 1);
     Block(Block& block);
     Block(InventoryItem& item);
 
@@ -27,8 +26,6 @@ public:
     virtual void onRandomTick() {}
 
     void setPos(int32_t x, int32_t y, uint8_t layer);
-    void setID(BlockID id);
-    BlockID getID() { return static_cast<BlockID>(m_id); }
 
     ByteVector serialize() override;
     size_t deserialize(ByteVector const& bytes) override;
@@ -37,7 +34,6 @@ public:
     auto const getLayer() { return m_layer; };
 
     float getDurability();
-    void updateMaterial();
 
     std::shared_ptr<InventoryItem> dropItem();
 };

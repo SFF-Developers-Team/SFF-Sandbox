@@ -18,7 +18,7 @@ void IngredientsList::draw() {
             Rectf itemRect = {cellRect.x + (cellRect.width - blockSize) / 2, cellRect.y + (cellRect.height - blockSize) / 2, blockSize, blockSize};
 
             RenderManager::drawFrame(cellRect, m_color, m_border);
-            RenderManager::renderInventoryItem(itemRect, std::make_shared<InventoryItem>(ingredient.type, ingredient.id, ingredient.count));
+            RenderManager::renderInventoryItem(itemRect, std::make_shared<InventoryItem>(ingredient.id, ingredient.count));
         }
     }
 }

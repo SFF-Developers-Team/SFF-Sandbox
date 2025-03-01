@@ -233,33 +233,29 @@ void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Pl
 void RenderManager::renderBlock(Rectf dest, std::shared_ptr<Block> block, uint8_t alpha) {
     assert(block != nullptr);
 
-    auto index = static_cast<uint16_t>(block->getID() - 1);
-    Col3u col = {255, 255, 255};
+    if (block->getType() == TYPE_BLOCK) {
+        Col3u col = {255, 255, 255};
 
-    if (block->hasTag(TagID::TAG_COLOR)) { 
-        col = block->getTag<Col3u>(TagID::TAG_COLOR);
+        if (block->hasTag(TagID::TAG_COLOR)) { 
+            col = block->getTag<Col3u>(TagID::TAG_COLOR);
+        }
+
+        if(!block->getLayer()) {
+            col.brightness(-0.25f);
+        }
+
+        drawTile("blocks.png", block->getSpriteIndex(), dest, {col.r, col.g, col.b, alpha});
     }
-
-    if(!block->getLayer()) {
-        col.brightness(-0.25f);
-    }
-
-    drawTile("blocks.png", index, dest, {col.r, col.g, col.b, alpha});
 }
 
 void RenderManager::renderInventoryItem(Rectf dest, std::shared_ptr<InventoryItem> item) {
-    auto index = static_cast<uint16_t>(item->getID());
-    if (item->getType() == INV_BLOCK) {
-        index -= 1;
-    }
-    
     Col3u col = {255, 255, 255};
 
     if (item->hasTag(TagID::TAG_COLOR)) { 
         col = item->getTag<Col3u>(TagID::TAG_COLOR);
     }
 
-    drawTile((item->getType() == INV_BLOCK) ? "blocks.png" : "items.png", index, dest, {col.r, col.g, col.b, 255});
+    drawTile((item->getType() == TYPE_BLOCK) ? "blocks.png" : "items.png", item->getSpriteIndex(), dest, {col.r, col.g, col.b, 255});
 
     RenderManager::drawText("font", std::to_string(item->getCount()), {dest.x + dest.width, dest.y + dest.height}, COL_WHITE, 0.f, {1.f, 1.f});
 }

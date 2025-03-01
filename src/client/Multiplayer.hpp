@@ -2,6 +2,7 @@
 #ifdef _WIN32
     #define NOGDI
     #define NOUSER
+    #define NOMINMAX
 
     // Type required before windows.h inclusion
     typedef struct tagMSG *LPMSG;

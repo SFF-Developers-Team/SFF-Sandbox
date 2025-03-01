@@ -3,7 +3,7 @@
 #include <world/Block.hpp>
 #include <world/Chunk.hpp>
 #include <SerializedObject.hpp>
-#include <Hitbox.hpp>
+#include <entity/Hitbox.hpp>
 
 #include <vector>
 #include <string>
@@ -23,10 +23,9 @@ private:
     std::shared_ptr<WorldGen> m_worldGen;
     std::string m_worldName;
     PlayerID m_lastPlayerID;
-    uint64_t m_spentTime;
-    uint64_t m_loadTime;
     uint32_t m_version;
     uint32_t m_height;
+    float m_time;
 
 public:
     uint32_t const WORLD_VERSION = WORLDVER;
@@ -70,8 +69,7 @@ public:
 
     uint32_t getHeight() { return m_height; }
     uint32_t getVersion() { return m_version; }
-    uint64_t getLoadTime() { return m_loadTime; }
-    uint64_t getSpentTime() { return m_spentTime; }
+    uint64_t getTime() { return m_time; }
     auto const& getGenerator() { return m_worldGen; }
     auto const& getPlayers() { return m_players; }
     auto const& getChunks() { return m_chunks; }

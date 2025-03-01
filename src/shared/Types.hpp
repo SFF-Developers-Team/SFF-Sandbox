@@ -240,12 +240,12 @@ enum GameMode : uint8_t {
     GAMEMODE_SURVIVAL
 };
 
-enum BlockID : uint8_t {
+enum ItemID : uint8_t {
     AIR = 0,
     GRASS,
     DIRT,
     STONE,
-    COBLESTONE,
+    COBBLESTONE,
     PLANKS,
     WOOL,
     BEDROCK,
@@ -261,10 +261,7 @@ enum BlockID : uint8_t {
     BOOKSHELF,
     FLOWER_POT,
     FURHANCE,
-    ACTIVE_FURHANCE
-};
-
-enum ItemID : uint8_t {
+    ACTIVE_FURHANCE,
     STICK,
     WOODEN_PICKAXE,
     WOODEN_SWORD,
@@ -279,15 +276,16 @@ enum ItemID : uint8_t {
 };
 
 enum MaterialType : uint8_t {
+    MATERIAL_NONE,
     MATERIAL_STONE,
     MATERIAL_DIRT,
     MATERIAL_WOOD,
     MATERIAL_WOOL
 };
 
-enum InventoryItemType : uint8_t {
-    INV_BLOCK,
-    INV_ITEM
+enum ItemType : uint8_t {
+    TYPE_BLOCK,
+    TYPE_ITEM
 };
 
 enum TagID : uint8_t {

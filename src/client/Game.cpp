@@ -11,7 +11,7 @@
 #include <RenderManager.hpp>
 #include <RecipesManager.hpp>
 #include <Debug.hpp>
-#include <format>
+#include <Multiplayer.hpp>
 
 void Game::pushScene(std::shared_ptr<Scene> scene) {
     if(m_scene != nullptr) {    
@@ -194,6 +194,12 @@ void Game::render() {
 }
 
 void Game::destroy() {
+    auto mp = Multiplayer::get();
+
+    if (mp->connected()) {
+        mp->destroy();
+    }
+
     CloseAudioDevice();
     CloseWindow();
 }

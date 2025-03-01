@@ -5,17 +5,17 @@
 #include <stdlib.h>
 
 struct Ore {
-    BlockID type;
+    ItemID type;
     int maxHeight;
     int veinSize;
     float density;
 };
 
 std::vector<Ore> ores = {
-    {BlockID::COAL_ORE, 128, 6, 0.025f},
-    {BlockID::IRON_ORE, 64, 6, 0.012f},
-    {BlockID::GOLD_ORE, 16, 4, 0.01f},
-    {BlockID::DIAMOND_ORE, 12, 2, 0.01f}
+    {ItemID::COAL_ORE, 128, 6, 0.025f},
+    {ItemID::IRON_ORE, 64, 6, 0.012f},
+    {ItemID::GOLD_ORE, 16, 4, 0.01f},
+    {ItemID::DIAMOND_ORE, 12, 2, 0.01f}
 };
 
 WorldGenNormal::WorldGenNormal(std::shared_ptr<World> world, uint64_t seed) : WorldGen(world, seed), m_perlinNoise(seed) {
@@ -36,22 +36,22 @@ std::shared_ptr<Chunk> WorldGenNormal::generateChunk(int32_t position) {
 
             for (auto y = 0u; y < m_world->getHeight(); y++) {
                 if (y == m_world->getHeight() - 1) {
-                    ret->setBlock(x, y, z, BlockID::BEDROCK);
+                    ret->setBlock(x, y, z, ItemID::BEDROCK);
                     continue;
                 }
 
                 if (y == grassLevel) {
-                    ret->setBlock(x, y, z, BlockID::GRASS);
+                    ret->setBlock(x, y, z, ItemID::GRASS);
                     continue;
                 }
 
                 if (y > grassLevel && y < stoneLevel) {
-                    ret->setBlock(x, y, z, BlockID::DIRT);
+                    ret->setBlock(x, y, z, ItemID::DIRT);
                     continue;
                 }
 
                 if (y >= stoneLevel) {
-                    ret->setBlock(x, y, z, BlockID::STONE);
+                    ret->setBlock(x, y, z, ItemID::STONE);
                     continue;
                 }
             }
@@ -72,7 +72,7 @@ std::shared_ptr<Chunk> WorldGenNormal::generateChunk(int32_t position) {
                             continue;
                         }
 
-                        if(block->getID() == BlockID::STONE) {
+                        if(block->getID() == ItemID::STONE) {
                             ret->setBlock(veinX, veinY, 1, ore.type);
                         }
                     }
