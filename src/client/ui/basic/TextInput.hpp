@@ -21,7 +21,9 @@ public:
 
     void draw();
     void update();
-
+    
+    void clear() { m_text.clear(); }
+    
     std::string const& getText();
     int getLength();
 

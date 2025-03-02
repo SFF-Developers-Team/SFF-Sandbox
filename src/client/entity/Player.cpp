@@ -50,8 +50,6 @@ Player::Player(std::shared_ptr<World> world) : SimplePlayer(world),
             addItem(wool);
         }
     }
-
-    addItem(std::make_shared<InventoryItem>(PLANKS, 64));
 }
 
 void Player::updateCamera() {

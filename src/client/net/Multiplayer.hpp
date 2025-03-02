@@ -32,6 +32,7 @@ private:
     bool m_connected = false;
     PlayerID m_myPlayerId;
     std::vector<Chunk::Position> m_chunkRequests;
+    std::vector<std::string> messages;
     ENetHost* m_client;
     MultiplayerState m_state;
     std::string m_error;
@@ -49,7 +50,7 @@ public:
     bool connected();
 
     void requestChunk(Chunk::Position pos);
-
+    
     void update();
     void error(std::string const& str);
     void destroy();
@@ -63,10 +64,13 @@ public:
     void handleUnloadPlayer(Packet& packet);
     void handleBlockPlace(Packet& packet);
     void handleBlockDestroy(Packet& packet);
-
+    void handleMessage(Packet& packet);
+    void handleLoadMessage(Packet& packet);
     std::string const& getError() { return m_error; }
     MultiplayerState const getState() { return m_state; }
 
     std::string const getAddress();
     uint16_t const getPort() { return m_client->address.port; }
+
+    std::vector<std::string> getMessages() { return messages; }
 };

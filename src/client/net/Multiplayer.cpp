@@ -107,6 +107,9 @@ void Multiplayer::update() {
                     m_state = LOADING_TERRAIN;
 
                     sendPacket(Packet(Header::LOAD_TERRAIN));
+                    sendPacket(Packet(Header::LOAD_MESSAGE));
+
+                    logD("Sending load message");
                     break;
                 }
 
@@ -152,6 +155,8 @@ void Multiplayer::handle(Packet& packet) {
         case Header::BLOCK_DESTROY: return handleBlockDestroy(packet);
         case Header::BLOCK_PLACE: return handleBlockPlace(packet);
         case Header::TERRAIN: return handleTerrain(packet);
+        case Header::MESSAGE: return handleMessage(packet);
+        case Header::LOAD_MESSAGE: return handleLoadMessage(packet);
         default: return;
     }
 }
@@ -160,6 +165,20 @@ void Multiplayer::handleError(Packet& packet) {
     error(packet.get("Unknown error has occured"));
 }
 
+void Multiplayer::handleLoadMessage(Packet& packet) {
+    packet.print();
+    auto message = packet.get<std::vector<std::string>>();
+    logD("{}", message.at(1));
+    for(int i = 0; i < message.size(); i++) {
+        messages[i] = message[i];
+    }
+}
+void Multiplayer::handleMessage(Packet& packet) {
+    std::string msg = packet.get("");
+    logD("{}", msg);
+
+    messages.push_back(msg);
+}
 void Multiplayer::handlePlayer(Packet& packet) {
     auto game = Game::get();
     auto world = game->getWorld();
