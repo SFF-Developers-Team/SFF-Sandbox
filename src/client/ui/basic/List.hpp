@@ -20,4 +20,6 @@ public:
     void setList(std::vector<std::string> const& elements) { m_elements = elements; }
     void update();
     void draw();
+
+    int getSelected() { return m_selected; }
 };

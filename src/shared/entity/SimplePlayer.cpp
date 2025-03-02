@@ -4,7 +4,7 @@
 #include <world/World.hpp>
 #include <world/Chunk.hpp>
 
-SimplePlayer::SimplePlayer(std::shared_ptr<World> world) : Mob(world) {
+SimplePlayer::SimplePlayer(std::shared_ptr<World> world) : Mob(world), Inventory(36) {
     m_header = Header::PLAYER;
 }
 

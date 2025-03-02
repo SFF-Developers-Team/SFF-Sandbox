@@ -1,10 +1,11 @@
 #pragma once
 #include <map>
 #include <entity/Mob.hpp>
+#include <inventory/Inventory.hpp>
 
 using PlayerID = uint32_t;
 
-class SimplePlayer : public Mob {
+class SimplePlayer : public Mob, public Inventory {
 public:
     enum AnimationType : uint8_t {
         PLAYER_IDLE,
@@ -34,8 +35,6 @@ protected:
     PlayerID m_id;
     std::string m_username;
     std::mutex m_mutex;
-
-
 
 public:
     SimplePlayer(std::shared_ptr<World> world);

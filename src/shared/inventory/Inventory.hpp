@@ -22,4 +22,7 @@ public:
 
     void setSelectedItem(uint8_t selected) { m_selected = selected % 9; }
     uint8_t getSelectedItem() { return m_selected; }
+
+    std::shared_ptr<InventoryItem> findItem(ItemID id);
+    void deleteItem(ItemID item, int count);
 };

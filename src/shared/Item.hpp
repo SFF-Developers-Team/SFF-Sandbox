@@ -29,5 +29,7 @@ public:
     MaterialType getMaterial();
     uint16_t getSpriteIndex();
 
+    uint16_t getMaxCount();
+
     bool operator==(Item const& other) const { return m_id == other.m_id && m_tags == other.m_tags; }
 };

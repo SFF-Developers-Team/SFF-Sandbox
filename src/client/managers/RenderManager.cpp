@@ -80,23 +80,6 @@ void RenderManager::drawColoredText(std::string const& fontKey, std::string cons
         pos.y -= size.y * origin.y;
     }
 
-    // auto splitText = [](std::string const& text) -> {
-
-    // };
-    // std::vector<std::string> SplitTextIntoLines(const std::string& text) {
-    //     std::vector<std::string> lines;
-    //     size_t start = 0;
-    //     size_t end = text.find('\n');
-    
-    //     while (end != std::string::npos) {
-    //         lines.push_back(text.substr(start, end - start));
-    //         start = end + 1;
-    //         end = text.find('\n', start);
-    //     }
-    //     lines.push_back(text.substr(start)); // Добавляем последнюю строку
-    //     return lines;
-    // }
-
     const char* start = text.c_str();
     Color currentColor = WHITE;
     Vec2f curPos = pos;
@@ -257,7 +240,9 @@ void RenderManager::renderInventoryItem(Rectf dest, std::shared_ptr<InventoryIte
 
     drawTile((item->getType() == TYPE_BLOCK) ? "blocks.png" : "items.png", item->getSpriteIndex(), dest, {col.r, col.g, col.b, 255});
 
-    RenderManager::drawText("font", std::to_string(item->getCount()), {dest.x + dest.width, dest.y + dest.height}, COL_WHITE, 0.f, {1.f, 1.f});
+    if(item->getCount() > 1) {
+        RenderManager::drawText("font", std::to_string(item->getCount()), {dest.x + dest.width, dest.y + dest.height}, COL_WHITE, 0.f, {1.f, 1.f});
+    }
 }
 
 void RenderManager::renderEntity(std::string& textureKey, std::shared_ptr<Entity> entity) {

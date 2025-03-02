@@ -49,6 +49,20 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     hotbar->setTag("hotbar");
     addChild(hotbar);
 
+    auto blockInfo = std::make_shared<BlockInfo>();
+    blockInfo->setFlags(FLAG_GUI_SCALE);
+    blockInfo->setAnchorY(0.f);
+    blockInfo->setVisible(false);
+    blockInfo->setEnabled(false);
+    blockInfo->setPos({getWidth() / 2, hotbar->getHeight() * getGlobalScaleY() + 10.f});
+    blockInfo->setTag("blockinfo");
+    addChild(blockInfo);
+
+    auto hp = std::make_shared<HeartsIndicator>(m_player);
+    hp->setAnchor({1.f, 0.f});
+    hp->setPos({getWidth() - 5.f, 5.f});
+    hp->setFlags(FLAG_GUI_SCALE);
+    addChild(hp);
 
     // oh fuck we should create InventoryContainer class and move this shit to it
     auto inventoryContainer = std::make_shared<Container>();
@@ -105,27 +119,19 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     ingredients->setTag("ingredients");
     inventoryContainer->addChild(ingredients);
 
-    auto craftBtn = std::make_shared<Button>("Craft!", [](auto) {});
+    auto craftBtn = std::make_shared<Button>("Craft!", [this, craftList](auto) {
+        auto selected = craftList->getSelected();
+        logD("Selected: {}", selected);
+        auto rm = RecipesManager::get();
+        auto recipes = rm->getRecipes();
+
+        rm->craftItem(m_player, recipes[selected]);
+    });
     craftBtn->setPos({craftList->getX(), craftList->getBottomY() + border});
     craftBtn->setAnchor({0.f, 0.f});
     craftBtn->setSize({craftList->getWidth(), ingredients->getHeight()});
     inventoryContainer->addChild(craftBtn);
     inventoryContainer->setSize({craftList->getRightX() + border * 2, ingredients->getBottomY() + border * 2});
-
-    // auto blockInfo = std::make_shared<BlockInfo>();
-    // blockInfo->setFlags(FLAG_GUI_SCALE);
-    // blockInfo->setAnchorY(0.f);
-    // blockInfo->setVisible(false);
-    // blockInfo->setEnabled(false);
-    // blockInfo->setPos({getWidth() / 2, hotbar->getHeight() * getGlobalScaleY() + 10.f});
-    // blockInfo->setTag("blockinfo");
-    // addChild(blockInfo);
-
-    auto hp = std::make_shared<HeartsIndicator>(m_player);
-    hp->setAnchor({1.f, 0.f});
-    hp->setPos({getWidth() - 5.f, 5.f});
-    hp->setFlags(FLAG_GUI_SCALE);
-    addChild(hp);
 
     auto pauseLayer = std::make_shared<Layer>();
     pauseLayer->setColor({0, 0, 0, 64});
@@ -142,7 +148,7 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     pauseMenu->addChild(std::make_shared<Button>("Back to main menu", [this](auto) { destroy(); }));
     pauseLayer->addChild(pauseMenu);
 
-    // m_pauseNodes = {hotbar, blockInfo};
+    m_pauseNodes = {hotbar, blockInfo};
 
     if(m_online) {
         auto playerList = std::make_shared<List>(nickList, [](auto, auto) {});
@@ -234,8 +240,8 @@ void PlayScene::update() {
 
     auto enabledBlockInfo = stm->getValue<bool>("video.blockinfo", true) && block != nullptr && !m_inventoryEnabled && !m_paused;
 
-    // blockInfo->setVisible(enabledBlockInfo);
-    // blockInfo->setEnabled(enabledBlockInfo);
+    blockInfo->setVisible(enabledBlockInfo);
+    blockInfo->setEnabled(enabledBlockInfo);
 
     if (playerList != nullptr) {
         playerList->setVisible(m_paused);

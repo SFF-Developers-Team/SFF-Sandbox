@@ -3,14 +3,14 @@
 #include <Types.hpp>
 #include <unordered_map>
 
-struct BlockInfo {
+struct ItemInfo {
     std::string name;
     ItemType type;
     MaterialType material;
     uint8_t spriteIndex;
 };
 
-inline std::unordered_map<ItemID, BlockInfo> gBlocksDatabase = {
+inline std::unordered_map<ItemID, ItemInfo> gBlocksDatabase = {
     {GRASS, {"Grass", TYPE_BLOCK, MATERIAL_DIRT, 0}},
     {DIRT, {"Dirt", TYPE_BLOCK, MATERIAL_DIRT, 1}},
     {STONE, {"Stone", TYPE_BLOCK, MATERIAL_STONE, 2}},
@@ -31,14 +31,14 @@ inline std::unordered_map<ItemID, BlockInfo> gBlocksDatabase = {
     {FLOWER_POT, {"Flower pot", TYPE_BLOCK, MATERIAL_DIRT, 17}},
     {FURHANCE, {"Furhance", TYPE_BLOCK, MATERIAL_STONE, 18}},
     {STICK, {"Stick", TYPE_ITEM, MATERIAL_NONE, 0}},
-    {WOODEN_PICKAXE, {"Wooden pickaxe", TYPE_ITEM, MATERIAL_NONE, 1}},
-    {STONE_PICKAXE, {"Stone pickaxe", TYPE_ITEM, MATERIAL_NONE, 3}},
-    {IRON_PICKAXE, {"Iron pickaxe", TYPE_ITEM, MATERIAL_NONE, 5}},
-    {GOLDEN_PICKAXE, {"Golden pickaxe", TYPE_ITEM, MATERIAL_NONE, 7}},
-    {DIAMOND_PICKAXE, {"Diamond pickaxe", TYPE_ITEM, MATERIAL_NONE, 9}},
-    {WOODEN_SWORD, {"Wooden sword", TYPE_ITEM, MATERIAL_NONE, 2}},
-    {STONE_SWORD, {"Stone sword", TYPE_ITEM, MATERIAL_NONE, 4}},
-    {IRON_SWORD, {"Iron sword", TYPE_ITEM, MATERIAL_NONE, 6}},
-    {GOLDEN_SWORD, {"Golden sword", TYPE_ITEM, MATERIAL_NONE, 8}},
-    {DIAMOND_SWORD, {"Diamond sword", TYPE_ITEM, MATERIAL_NONE, 10}}
+    {WOODEN_PICKAXE, {"Wooden pickaxe", TYPE_TOOL, MATERIAL_NONE, 1}},
+    {STONE_PICKAXE, {"Stone pickaxe", TYPE_TOOL, MATERIAL_NONE, 3}},
+    {IRON_PICKAXE, {"Iron pickaxe", TYPE_TOOL, MATERIAL_NONE, 5}},
+    {GOLDEN_PICKAXE, {"Golden pickaxe", TYPE_TOOL, MATERIAL_NONE, 7}},
+    {DIAMOND_PICKAXE, {"Diamond pickaxe", TYPE_TOOL, MATERIAL_NONE, 9}},
+    {WOODEN_SWORD, {"Wooden sword", TYPE_TOOL, MATERIAL_NONE, 2}},
+    {STONE_SWORD, {"Stone sword", TYPE_TOOL, MATERIAL_NONE, 4}},
+    {IRON_SWORD, {"Iron sword", TYPE_TOOL, MATERIAL_NONE, 6}},
+    {GOLDEN_SWORD, {"Golden sword", TYPE_TOOL, MATERIAL_NONE, 8}},
+    {DIAMOND_SWORD, {"Diamond sword", TYPE_TOOL, MATERIAL_NONE, 10}}
 };

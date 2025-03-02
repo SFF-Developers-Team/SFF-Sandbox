@@ -8,7 +8,7 @@ InventoryItem::InventoryItem(Block& block, int16_t count) : Item(reinterpret_cas
 InventoryItem::InventoryItem(Item& item, int16_t count)  : Item(reinterpret_cast<Item&>(item)), m_count(count) {}
 
 int16_t InventoryItem::add(int amount) {
-    int16_t add = std::min(amount, 64 - m_count);
+    int16_t add = std::min(amount, getMaxCount() - m_count);
     m_count += add;
 
     return add;

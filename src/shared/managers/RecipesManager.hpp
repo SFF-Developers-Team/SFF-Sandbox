@@ -1,7 +1,10 @@
 #pragma once
 #include <inventory/InventoryItem.hpp>
 #include <list>
+#include <memory>
 #include <unordered_map>
+
+class SimplePlayer;
 
 struct RecipeIngredient {
     ItemID id;
@@ -29,4 +32,6 @@ public:
     void addRecipe(Recipe recipe) { m_recipes.push_back(recipe); }
 
     auto& getRecipes() { return m_recipes; }
+
+    bool craftItem(std::shared_ptr<SimplePlayer> player, Recipe& recipe);
 };

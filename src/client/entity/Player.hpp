@@ -4,7 +4,6 @@
 #include <vector>
 #include <raylib.h>
 #include <Types.hpp>
-#include <inventory/Inventory.hpp>
 
 class World;
 class Chunk;
@@ -15,7 +14,7 @@ struct BreakingBlockInfo {
     float currentDurability;
 };
 
-class Player : public SimplePlayer, public Inventory {
+class Player : public SimplePlayer {
 private:
     Camera2D m_camera;
     int8_t m_selectedBlock;

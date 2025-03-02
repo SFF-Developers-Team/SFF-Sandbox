@@ -21,3 +21,12 @@ MaterialType Item::getMaterial() {
 uint16_t Item::getSpriteIndex() {
     return gBlocksDatabase[m_id].spriteIndex;
 }
+
+uint16_t Item::getMaxCount() {
+    auto type = getType();
+    if (type == ItemType::TYPE_TOOL || type == ItemType::TYPE_WEAPON) {
+        return 1;
+    }
+
+    return 64;
+}

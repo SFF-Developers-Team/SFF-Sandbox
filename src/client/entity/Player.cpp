@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <Types.hpp>
 
-Player::Player(std::shared_ptr<World> world) : SimplePlayer(world), Inventory(36), 
+Player::Player(std::shared_ptr<World> world) : SimplePlayer(world), 
     m_selectedBlock(0), m_forward(0.f), m_gamemode(GAMEMODE_SURVIVAL), 
     m_id(0), m_lastAnimFrameTime(0.f), m_lastDestroyedBlock(0.f), m_lastPlacedBlock(0.f) {
     m_camera.zoom = 50.0f;
@@ -50,6 +50,8 @@ Player::Player(std::shared_ptr<World> world) : SimplePlayer(world), Inventory(36
             addItem(wool);
         }
     }
+
+    addItem(std::make_shared<InventoryItem>(PLANKS, 64));
 }
 
 void Player::updateCamera() {

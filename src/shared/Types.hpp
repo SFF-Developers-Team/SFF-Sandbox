@@ -285,7 +285,9 @@ enum MaterialType : uint8_t {
 
 enum ItemType : uint8_t {
     TYPE_BLOCK,
-    TYPE_ITEM
+    TYPE_ITEM,
+    TYPE_TOOL,
+    TYPE_WEAPON
 };
 
 enum TagID : uint8_t {

@@ -42,3 +42,31 @@ bool Inventory::addItem(std::shared_ptr<InventoryItem> item) {
 
     return false;
 }
+
+std::shared_ptr<InventoryItem> Inventory::findItem(ItemID id) {
+    for (auto& slot : m_inventory) {
+        if (slot && slot->getID() == id) {
+            return slot;
+        }
+    }
+
+    return nullptr;
+}
+
+void Inventory::deleteItem(ItemID id, int count) {
+    for (auto& slot : m_inventory) {
+        if (slot != nullptr && slot->getID() == id) {
+            auto slotCount = slot->getCount();
+            slot->sub(count);
+            count -= slotCount;
+
+            if (slot->getCount() <= 0) {
+                slot = nullptr;
+            }
+        }
+
+        if (count <= 0) {
+            return;
+        }
+    }
+}
