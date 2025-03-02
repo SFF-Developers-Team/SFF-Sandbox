@@ -7,6 +7,7 @@
 #include <ui/basic/Text.hpp>
 #include <ui/basic/Layer.hpp>
 #include <ui/basic/Button.hpp>
+#include <ui/basic/TextInput.hpp>
 #include <ui/basic/ListContainer.hpp>
 #include <ui/basic/TouchControlButton.hpp>
 
