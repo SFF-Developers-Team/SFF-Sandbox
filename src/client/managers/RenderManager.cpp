@@ -195,7 +195,7 @@ void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Pl
                     IsKeyDown(KEY_LEFT_ALT) && 
                     player->canAccessBlock(target);
 
-                if (block0 != nullptr && (block1 == nullptr || watchAltBlock)) {
+                if (block0 != nullptr /* && (block1 == nullptr || watchAltBlock) */) {
                     renderBlock(BLOCK_RECT(blockX, y), block0);
                     blocksDrawn++;
                 }

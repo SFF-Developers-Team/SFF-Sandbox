@@ -2,13 +2,16 @@
 #include <SerializedObject.hpp>
 #include <cassert>
 
-Block::Block(ItemID id, int32_t x, int32_t y, uint8_t layer) 
-    : Item(id), m_x(x), m_y(y), m_layer(layer) { 
+Block::Block(ItemID id) 
+    : Item(id), m_x(0), m_y(0), m_layer(1) { 
     
     m_header = BLOCK;
 }
 
-Block::Block(Block& block) : Block(block.m_id, block.m_x, block.m_y, block.m_layer) {
+Block::Block(Block& block) : Block(block.m_id) {
+    m_x = block.m_x;
+    m_y = block.m_y; 
+    m_layer = block.m_layer;
     m_tags = block.m_tags;
 }
 

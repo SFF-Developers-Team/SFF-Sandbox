@@ -16,7 +16,7 @@ protected:
 
 public:
 
-    Block(ItemID id = ItemID::AIR, int32_t x = 0, int32_t y = 0, uint8_t layer = 1);
+    Block(ItemID id = ItemID::AIR);
     Block(Block& block);
     Block(InventoryItem& item);
 
