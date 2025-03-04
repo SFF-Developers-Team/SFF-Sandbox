@@ -11,7 +11,7 @@
 #include <Types.hpp>
 
 Player::Player(std::shared_ptr<World> world) : SimplePlayer(world), 
-    m_selectedBlock(0), m_forward(0.f), m_gamemode(GAMEMODE_SURVIVAL), 
+    m_selectedBlock(0), m_forward(0.f), m_gamemode(GAMEMODE_CREATIVE), 
     m_id(0), m_lastAnimFrameTime(0.f), m_lastDestroyedBlock(0.f), m_lastPlacedBlock(0.f) {
     m_camera.zoom = 50.0f;
     m_camera.rotation = 0.0f;
@@ -269,8 +269,7 @@ void Player::onTick() {
         if(mp->connected()) {
             mp->requestChunk(x);
         } else {
-            auto chunk = m_world->getGenerator()->generateChunk(x);
-            m_world->addChunk(chunk);
+            m_world->generateChunk(x);
         }
     }
 

@@ -301,7 +301,13 @@ using ItemTags = std::map<TagID, TagValue>;
 struct BlockPosition {
     int x;
     int y;
-    uint8_t layer;
+    uint8_t layer = 1;
 
     bool operator==(BlockPosition const& other) const { return x == other.x && y == other.y && layer == other.layer; }
+};
+
+struct TreeStructure {
+    int x;
+    int y;
+    int trunkHeight;
 };

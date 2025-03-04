@@ -20,6 +20,7 @@ class World : public SerializedObject {
 private:
     std::map<Chunk::Position, std::shared_ptr<Chunk>> m_chunks;
     std::map<PlayerID, std::shared_ptr<SimplePlayer>> m_players;
+    std::vector<TreeStructure> m_postGenTrees;
     std::shared_ptr<WorldGen> m_worldGen;
     std::string m_worldName;
     PlayerID m_lastPlayerID;
@@ -73,4 +74,7 @@ public:
     auto const& getGenerator() { return m_worldGen; }
     auto const& getPlayers() { return m_players; }
     auto const& getChunks() { return m_chunks; }
+
+    void postGenerateTree(TreeStructure tree) { m_postGenTrees.push_back(tree); }
+    void generateChunk(Chunk::Position xPos);
 };

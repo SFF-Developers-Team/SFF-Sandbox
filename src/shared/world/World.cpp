@@ -8,6 +8,7 @@
 #include <cmath>
 #include <assert.h>
 #include <Logger.hpp>
+#include <world/Leaves.hpp>
 
 World::World(uint32_t height, std::string const& worldName) : m_height(height), m_worldName(worldName), m_version(WORLDVER), m_time(0), m_lastPlayerID(1) {
     m_header = WORLD;
@@ -21,8 +22,7 @@ void World::generate() {
     int end = 3;
 
     for (auto x = start; x < end; x++) {
-        logD("gen chunk {}", x);
-        m_chunks.insert(std::make_pair(x, m_worldGen->generateChunk(x)));
+        generateChunk(x);
     }
 }
 
@@ -298,4 +298,36 @@ bool World::isOutOfBound(int x, int y, uint8_t layer) {
     }
 
     return (y < 0 || y >= getHeight() || layer < 0 || layer > LAYERS - 1);
+}
+
+void World::generateChunk(Chunk::Position xPos) {
+    m_chunks.insert(std::make_pair(xPos, m_worldGen->generateChunk(xPos)));
+
+    for (auto& tree : m_postGenTrees) {
+        for (auto y = tree.y - tree.trunkHeight; y < tree.y; y++) {
+            setBlock(tree.x, y, 0, std::make_shared<Block>(OAK_LOG));
+        }
+
+        for (int x = -3; x <= 3; ++x) {
+            for (int y = -2; y <= 2; ++y) {
+                if (x * x + y * y <= 3 * 2) {
+                    Vec2i pos = {tree.x + x, (tree.y - tree.trunkHeight) + y};
+                    
+                    auto xChunk = xToChunk(pos.x);
+
+                    if (getChunk(xChunk) == nullptr) {
+                        generateChunk(xChunk);
+                    }
+
+                    if (getBlock(pos.x, pos.y, 0) == nullptr) {
+                        setBlock(pos.x, pos.y, 0, std::make_shared<Leaves>());
+                    }
+
+                    setBlock(pos.x, pos.y, 1, std::make_shared<Leaves>());
+                }
+            }
+        }
+    }
+
+    m_postGenTrees.clear();
 }
