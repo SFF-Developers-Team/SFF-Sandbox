@@ -27,7 +27,7 @@ void World::generate() {
 }
 
 void World::onTick() {
-    m_time += (1 / 60.f);
+    m_time++;
 
     for (auto& [id, player] : m_players) {
         player->onTick();
@@ -146,7 +146,7 @@ size_t World::deserialize(ByteVector const& bytes) {
         auto seed = get<int64_t>();
 
         if(m_version >= 3) {
-            m_time = get<float>(0);
+            m_time = get<uint64_t>(0);
         }
 
         switch (generatorType) {
@@ -284,10 +284,12 @@ bool World::isUsernameAlreadyTaken(std::string const& username) {
 
 Rectf World::getBlockHitbox(int x, int y) {
     auto chunk = getChunk(x / CHUNK_WIDTH);
-    if (!chunk)
-        return Rectf {0.0f, 0.0f, 0.0f, 0.0f};
+    
+    if (chunk != nullptr) {
+        return chunk->getBlock(x % CHUNK_WIDTH, y, 1)->getHitbox();
+    }
 
-    return chunk->getBlock(x % CHUNK_WIDTH, y, 1)->getHitbox();
+    return Rectf {0.0f, 0.0f, 0.0f, 0.0f};
 }
 
 bool World::isOutOfBound(int x, int y, uint8_t layer) {

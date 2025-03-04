@@ -83,6 +83,7 @@ void Game::init(std::vector<std::string>& args) {
 
     InitWindow(GetScreenWidth(), GetScreenHeight(), "SFF Sandbox");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
+    SetWindowMinSize(640, 360);
     InitAudioDevice();
     SetExitKey(-1);
 

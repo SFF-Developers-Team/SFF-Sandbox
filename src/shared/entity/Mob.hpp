@@ -4,7 +4,7 @@
 class Mob : public Entity {
 protected:
     int m_health;
-    float m_lastHurtTime;
+    uint64_t m_lastHurtTime;
     float m_fallY;
 
     bool m_prevOnGround;

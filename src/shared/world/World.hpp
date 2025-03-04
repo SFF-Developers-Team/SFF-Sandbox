@@ -25,7 +25,7 @@ private:
     PlayerID m_lastPlayerID;
     uint32_t m_version;
     uint32_t m_height;
-    float m_time;
+    uint64_t m_time;
 
 public:
     uint32_t const WORLD_VERSION = WORLDVER;

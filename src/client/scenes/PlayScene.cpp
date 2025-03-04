@@ -229,10 +229,10 @@ void PlayScene::update() {
         for (uint32_t i = 0; i < m_timer->getTicks(); i++) {
             m_world->onTick();
 
-            int time = m_world->getTime();
-            int seconds = time % 60;
-            int minutes = (time / 60) % 60;
-            int hours = (time / 60) / 60;
+            auto time = m_world->getTime();
+            auto seconds = (time / 60) % 60;
+            auto minutes = (time / 3600) % 60;
+            auto hours = time / 216000;
 
             Debug::get()->setString(DebugID::WORLD_TIME_SPENT, "Time spent in world: {}h {}m {}s", hours, minutes, seconds);
         }

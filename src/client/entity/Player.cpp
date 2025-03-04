@@ -254,7 +254,7 @@ void Player::onTick() {
         setAnimation(PLAYER_JUMP);
     }
 
-    if (m_world->getTime() < m_lastHurtTime + 0.25f) {
+    if (m_world->getTime() < m_lastHurtTime + 15) {
         setAnimation(PLAYER_HURT);
     }
 
