@@ -1,7 +1,12 @@
 #include <inventory/InventoryItem.hpp>
 #include <Item.hpp>
+#include <ItemDatabase.hpp>
 
-InventoryItem::InventoryItem(ItemID id, int16_t count) : Item(id), m_count(count) {}
+InventoryItem::InventoryItem(ItemID id, int16_t count) : Item(id), m_count(count) {
+    if (gItemDatabase.find(id) != gItemDatabase.end()) {
+        m_tags = gItemDatabase[id].defaultTags;
+    }
+}
 
 InventoryItem::InventoryItem(Block& block, int16_t count) : Item(reinterpret_cast<Item&>(block)), m_count(count) {}
 

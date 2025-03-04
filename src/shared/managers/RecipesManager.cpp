@@ -4,6 +4,11 @@
 
 RecipesManager::RecipesManager() {
     addRecipe({
+        std::make_shared<InventoryItem>(PLANKS, 4),
+        {{OAK_LOG, 1}}
+    });
+
+    addRecipe({
         std::make_shared<InventoryItem>(STICK, 4),
         {{PLANKS, 2}}
     });

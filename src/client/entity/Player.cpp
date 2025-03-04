@@ -9,10 +9,10 @@
 #include <Game.hpp>
 #include <algorithm>
 #include <Types.hpp>
+#include <ItemDatabase.hpp>
 
-Player::Player(std::shared_ptr<World> world) : SimplePlayer(world), 
-    m_selectedBlock(0), m_forward(0.f), m_gamemode(GAMEMODE_CREATIVE), 
-    m_id(0), m_lastAnimFrameTime(0.f), m_lastDestroyedBlock(0.f), m_lastPlacedBlock(0.f) {
+Player::Player(std::shared_ptr<World> world) : SimplePlayer(world), m_forward(0.f), 
+    m_gamemode(GAMEMODE_SURVIVAL), m_id(0), m_lastAnimFrameTime(0.f), m_lastDestroyedBlock(0.f), m_lastPlacedBlock(0.f) {
     m_camera.zoom = 50.0f;
     m_camera.rotation = 0.0f;
 
@@ -411,18 +411,18 @@ void Player::setGameMode(GameMode gamemode) {
 }
 
 void Player::placeBlock() {
-    if(getItem(m_selectedBlock) != nullptr) {
-        auto block = std::make_shared<Block>(*m_inventory[m_selectedBlock]);
+    if(getItem(m_selected) != nullptr) {
+        auto block = Block::create(reinterpret_cast<Item&>(*m_inventory[m_selected]));
         auto target = getTargetBlock();
         auto mp = Multiplayer::get();
 
         m_world->placeBlock(target.x, target.y, target.layer, block);
         
         if(m_gamemode == GAMEMODE_SURVIVAL) {
-            m_inventory[m_selectedBlock]->sub(1);
+            m_inventory[m_selected]->sub(1);
 
-            if(m_inventory[m_selectedBlock]->getCount() <= 0) {
-                m_inventory[m_selectedBlock] = nullptr;
+            if(m_inventory[m_selected]->getCount() <= 0) {
+                m_inventory[m_selected] = nullptr;
             }
         }
 
@@ -447,7 +447,20 @@ void Player::destroyBlock() {
 
     if (m_gamemode == GAMEMODE_SURVIVAL && targetBlock != nullptr) {
         if (GetTime() > m_lastPunch + 0.1f) {
-            m_breakingBlockDurability--;
+            int strength = 1;
+            auto curItem = m_inventory[m_selected];
+
+            bool correctItem = (
+                curItem != nullptr &&
+                gToolForMaterial.find(curItem->getType()) != gToolForMaterial.end() &&
+                gToolForMaterial[curItem->getType()] == targetBlock->getMaterial()
+            );
+
+            if (correctItem && curItem->hasTag(TAG_EFFICIENCY)) {
+                strength += curItem->getTag<uint8_t>(TAG_EFFICIENCY);
+            }
+
+            m_breakingBlockDurability -= strength;
             m_lastPunch = GetTime();
         }
 
@@ -455,7 +468,7 @@ void Player::destroyBlock() {
             return;
         }
 
-        addItem(targetBlock->dropItem());
+        addItem(targetBlock->dropItem(m_inventory[m_selected]));
     }
     
     m_world->destroyBlock(target.x, target.y, target.layer);

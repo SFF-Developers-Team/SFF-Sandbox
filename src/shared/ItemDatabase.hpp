@@ -2,15 +2,25 @@
 #include <string>
 #include <Types.hpp>
 #include <unordered_map>
+#include <array>
 
 struct ItemInfo {
     std::string name;
     ItemType type;
     MaterialType material;
     uint8_t spriteIndex;
+    ItemTags defaultTags;
 };
 
-inline std::unordered_map<ItemID, ItemInfo> gBlocksDatabase = {
+inline std::array<ItemType, 4> gTools = {TYPE_TOOL_PICKAXE, TYPE_TOOL_AXE, TYPE_TOOL_HOE, TYPE_TOOL_SHOVEL};
+
+inline std::map<ItemType, MaterialType> gToolForMaterial = {
+    {TYPE_TOOL_PICKAXE, MATERIAL_STONE},
+    {TYPE_TOOL_AXE, MATERIAL_WOOD},
+    {TYPE_TOOL_SHOVEL, MATERIAL_DIRT}
+};
+
+inline std::unordered_map<ItemID, ItemInfo> gItemDatabase = {
     {GRASS, {"Grass", TYPE_BLOCK, MATERIAL_DIRT, 0}},
     {DIRT, {"Dirt", TYPE_BLOCK, MATERIAL_DIRT, 1}},
     {STONE, {"Stone", TYPE_BLOCK, MATERIAL_STONE, 2}},
@@ -31,14 +41,14 @@ inline std::unordered_map<ItemID, ItemInfo> gBlocksDatabase = {
     {FLOWER_POT, {"Flower pot", TYPE_BLOCK, MATERIAL_DIRT, 17}},
     {FURHANCE, {"Furhance", TYPE_BLOCK, MATERIAL_STONE, 18}},
     {STICK, {"Stick", TYPE_ITEM, MATERIAL_NONE, 0}},
-    {WOODEN_PICKAXE, {"Wooden pickaxe", TYPE_TOOL, MATERIAL_NONE, 1}},
-    {STONE_PICKAXE, {"Stone pickaxe", TYPE_TOOL, MATERIAL_NONE, 3}},
-    {IRON_PICKAXE, {"Iron pickaxe", TYPE_TOOL, MATERIAL_NONE, 5}},
-    {GOLDEN_PICKAXE, {"Golden pickaxe", TYPE_TOOL, MATERIAL_NONE, 7}},
-    {DIAMOND_PICKAXE, {"Diamond pickaxe", TYPE_TOOL, MATERIAL_NONE, 9}},
-    {WOODEN_SWORD, {"Wooden sword", TYPE_TOOL, MATERIAL_NONE, 2}},
-    {STONE_SWORD, {"Stone sword", TYPE_TOOL, MATERIAL_NONE, 4}},
-    {IRON_SWORD, {"Iron sword", TYPE_TOOL, MATERIAL_NONE, 6}},
-    {GOLDEN_SWORD, {"Golden sword", TYPE_TOOL, MATERIAL_NONE, 8}},
-    {DIAMOND_SWORD, {"Diamond sword", TYPE_TOOL, MATERIAL_NONE, 10}}
+    {WOODEN_PICKAXE, {"Wooden pickaxe", TYPE_TOOL_PICKAXE, MATERIAL_NONE, 1, {{TAG_EFFICIENCY, (uint8_t)2}}}},
+    {STONE_PICKAXE, {"Stone pickaxe", TYPE_TOOL_PICKAXE, MATERIAL_NONE, 3, {{TAG_EFFICIENCY, (uint8_t)5}}}},
+    {IRON_PICKAXE, {"Iron pickaxe", TYPE_TOOL_PICKAXE, MATERIAL_NONE, 5, {{TAG_EFFICIENCY, (uint8_t)10}}}},
+    {GOLDEN_PICKAXE, {"Golden pickaxe", TYPE_TOOL_PICKAXE, MATERIAL_NONE, 7, {{TAG_EFFICIENCY, (uint8_t)20}}}},
+    {DIAMOND_PICKAXE, {"Diamond pickaxe", TYPE_TOOL_PICKAXE, MATERIAL_NONE, 9, {{TAG_EFFICIENCY, (uint8_t)15}}}},
+    {WOODEN_SWORD, {"Wooden sword", TYPE_WEAPON, MATERIAL_NONE, 2}},
+    {STONE_SWORD, {"Stone sword", TYPE_WEAPON, MATERIAL_NONE, 4}},
+    {IRON_SWORD, {"Iron sword", TYPE_WEAPON, MATERIAL_NONE, 6}},
+    {GOLDEN_SWORD, {"Golden sword", TYPE_WEAPON, MATERIAL_NONE, 8}},
+    {DIAMOND_SWORD, {"Diamond sword", TYPE_WEAPON, MATERIAL_NONE, 10}}
 };

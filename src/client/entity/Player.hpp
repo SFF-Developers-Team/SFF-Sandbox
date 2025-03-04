@@ -17,7 +17,6 @@ struct BreakingBlockInfo {
 class Player : public SimplePlayer {
 private:
     Camera2D m_camera;
-    int8_t m_selectedBlock;
 
     bool m_sneakToggled = false;
     bool m_sneak = false;

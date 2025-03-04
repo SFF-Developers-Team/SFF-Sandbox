@@ -31,7 +31,7 @@ void Chunk::setBlock(int x, int y, uint8_t layer, std::shared_ptr<Block> block) 
 }
 
 void Chunk::setBlock(int x, int y, uint8_t layer, ItemID type) {
-    setBlock(x, y, layer, (type == ItemID::AIR ? nullptr : std::make_shared<Block>(type)));
+    setBlock(x, y, layer, (type == ItemID::AIR ? nullptr : Block::create(type)));
 }
 
 std::shared_ptr<Block> Chunk::getBlock(int x, int y, uint8_t layer) {
@@ -145,10 +145,11 @@ size_t Chunk::deserialize(ByteVector const& bytes) {
         auto header = data.getI<Header>();
 
         if (header == Header::BLOCK) {
-            auto bbytes = data.getN(bsize);
-            auto block = std::make_shared<Block>();
-            block->deserialize(bbytes);
-
+            auto blockBytes = SerializedObject();
+            blockBytes.deserialize(data.getN(bsize));
+            blockBytes.reset();
+            
+            auto block = Block::create(blockBytes);
             auto pos = block->getPos();
             auto layer = block->getLayer();
 

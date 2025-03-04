@@ -7,24 +7,23 @@ Item::Item(ItemID id) : m_id(id) {}
 Item::Item(Item& itemPointer) : m_id(itemPointer.m_id), m_tags(itemPointer.m_tags) {}
 
 ItemType Item::getType() {
-    return gBlocksDatabase[m_id].type;
+    return gItemDatabase[m_id].type;
 }
 
 std::string Item::getName() {
-    return gBlocksDatabase[m_id].name;
+    return gItemDatabase[m_id].name;
 }
 
 MaterialType Item::getMaterial() {
-    return gBlocksDatabase[m_id].material;
+    return gItemDatabase[m_id].material;
 }
 
 uint16_t Item::getSpriteIndex() {
-    return gBlocksDatabase[m_id].spriteIndex;
+    return gItemDatabase[m_id].spriteIndex;
 }
 
 uint16_t Item::getMaxCount() {
-    auto type = getType();
-    if (type == ItemType::TYPE_TOOL || type == ItemType::TYPE_WEAPON) {
+    if (std::find(gTools.begin(), gTools.end(), getType()) != gTools.end()) {
         return 1;
     }
 

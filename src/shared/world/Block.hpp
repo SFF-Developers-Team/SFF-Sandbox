@@ -15,6 +15,9 @@ protected:
     MaterialType m_materialType;
 
 public:
+    std::shared_ptr<Block> static create(ItemID id);
+    std::shared_ptr<Block> static create(Item& block);
+    std::shared_ptr<Block> static create(SerializedObject& obj);
 
     Block(ItemID id = ItemID::AIR);
     Block(Block& block);
@@ -35,5 +38,5 @@ public:
 
     float getDurability();
 
-    std::shared_ptr<InventoryItem> dropItem();
+    virtual std::shared_ptr<InventoryItem> dropItem(std::shared_ptr<Item> tool);
 };

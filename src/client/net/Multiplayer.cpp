@@ -269,8 +269,10 @@ void Multiplayer::handleTerrain(Packet& packet) {
 void Multiplayer::handleBlockPlace(Packet& packet) {
     auto game = Game::get();
 
-    auto block = std::make_shared<Block>();
-    block->deserialize(packet.getN(packet.size() - 1));
+    auto blockBytes = SerializedObject();
+    blockBytes.deserialize(packet.getN(packet.size() - 1));
+    auto block = Block::create(blockBytes);
+    block->deserialize(blockBytes);
 
     auto pos = block->getPos();
     auto lay = block->getLayer();

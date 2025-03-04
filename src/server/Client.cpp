@@ -140,10 +140,9 @@ void Client::handleLoadPlayer(Packet& packet) {
 
 void Client::handleBlockPlace(Packet& packet) {
     auto srv = Server::get();
-
-    auto block = std::make_shared<Block>();
-    block->deserialize(packet.getN(packet.size() - 1));
-
+    auto blockBytes = SerializedObject();
+    blockBytes.deserialize(packet.getN(packet.size() - 1));
+    auto block = Block::create(blockBytes);
     auto pos = block->getPos();
     auto lay = block->getLayer();
 

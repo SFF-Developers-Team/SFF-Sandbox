@@ -1,6 +1,39 @@
 #include <world/Block.hpp>
 #include <SerializedObject.hpp>
 #include <cassert>
+#include <world/Leaves.hpp>
+#include <world/Stone.hpp>
+#include <world/Grass.hpp>
+
+std::shared_ptr<Block> Block::create(ItemID id) {
+    switch (id) {
+        case LEAVES: return std::make_shared<Leaves>();
+        case STONE: return std::make_shared<Stone>();
+        case GRASS: return std::make_shared<Grass>();
+        default: return std::make_shared<Block>(id);
+    }
+}
+
+std::shared_ptr<Block> Block::create(Item& block) {
+    auto ret = Block::create(block.getID());
+    ret->setTags(block.getTags());
+
+    return ret;
+}
+
+std::shared_ptr<Block> Block::create(SerializedObject& obj) {
+    if (obj.get<Header>() == Header::BLOCK) {
+        auto id = obj.get<ItemID>();
+        obj.reset();
+
+        auto block = Block::create(id);
+        block->deserialize(obj);
+
+        return block;
+    }
+
+    return nullptr;
+}
 
 Block::Block(ItemID id) 
     : Item(id), m_x(0), m_y(0), m_layer(1) { 
@@ -95,10 +128,6 @@ float Block::getDurability() {
     }
 }
 
-std::shared_ptr<InventoryItem> Block::dropItem() {
-    switch (m_id) {
-        case GRASS: return std::make_shared<InventoryItem>(DIRT, 1);
-        case STONE: return std::make_shared<InventoryItem>(COBBLESTONE, 1);
-        default: return std::make_shared<InventoryItem>(*this, 1);
-    };
+std::shared_ptr<InventoryItem> Block::dropItem(std::shared_ptr<Item> tool) {
+    return std::make_shared<InventoryItem>(*this, 1);
 }

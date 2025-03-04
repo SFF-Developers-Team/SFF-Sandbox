@@ -286,16 +286,21 @@ enum MaterialType : uint8_t {
 enum ItemType : uint8_t {
     TYPE_BLOCK,
     TYPE_ITEM,
-    TYPE_TOOL,
+    TYPE_TOOL_PICKAXE,
+    TYPE_TOOL_AXE,
+    TYPE_TOOL_SHOVEL,
+    TYPE_TOOL_HOE,
     TYPE_WEAPON
 };
 
 enum TagID : uint8_t {
     TAG_COLOR,
-    TAG_GHOST
+    TAG_GHOST,
+    TAG_EFFICIENCY,
+    TAG_DAMAGE
 };
 
-using TagValue = std::variant<Col3u, bool>;
+using TagValue = std::variant<Col3u, bool, uint8_t>;
 using ItemTags = std::map<TagID, TagValue>;
 
 struct BlockPosition {

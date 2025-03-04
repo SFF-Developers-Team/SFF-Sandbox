@@ -3,6 +3,10 @@
 Inventory::Inventory(uint16_t slots) : m_inventory(slots), m_selected(0) {}
 
 bool Inventory::addItem(std::shared_ptr<InventoryItem> item) {
+    if (item == nullptr) {
+        return false;
+    }
+
     // Search for similar items and combine them
     for (auto& slot : m_inventory) {
         if (slot != nullptr && *slot == *item) {

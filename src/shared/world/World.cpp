@@ -305,7 +305,7 @@ void World::generateChunk(Chunk::Position xPos) {
 
     for (auto& tree : m_postGenTrees) {
         for (auto y = tree.y - tree.trunkHeight; y < tree.y; y++) {
-            setBlock(tree.x, y, 0, std::make_shared<Block>(OAK_LOG));
+            setBlock(tree.x, y, 0, Block::create(OAK_LOG));
         }
 
         for (int x = -3; x <= 3; ++x) {

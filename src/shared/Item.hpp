@@ -23,6 +23,7 @@ public:
     template <typename T>
     T getTag(TagID key) { return std::get<T>(m_tags[key]); }
     auto& getTags() { return m_tags; }
+    void setTags(ItemTags const& newTags) { m_tags = newTags; }
 
     ItemType getType();
     std::string getName();
