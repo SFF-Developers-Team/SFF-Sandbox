@@ -112,6 +112,7 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
         }));
 
         video->addChild(std::make_shared<SettingsToggle>("video.blockinfo", "Block info", nullptr));
+        video->addChild(std::make_shared<SettingsSlider<float>>("video.layer0.brightness", "Background brightness: ", 0.1f, 0.9f, 0.75f, nullptr));
     }
 
     // audio settings

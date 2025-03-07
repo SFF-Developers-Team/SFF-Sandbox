@@ -2,6 +2,7 @@
 
 #include <world/Block.hpp>
 #include <memory>
+
 class World;
 class Chunk;
 
@@ -21,11 +22,8 @@ public:
 
     virtual std::shared_ptr<Chunk> generateChunk(int32_t position) = 0;
 
-    auto getType() {
-        return m_type;
-    }
-    
-    auto getSeed() {
-        return m_seed;
-    }
+    void generateBlock(std::shared_ptr<Chunk> chunk, BlockPosition position, ItemID id);
+
+    Type getType() { return m_type; }
+    int64_t getSeed() { return m_seed; }
 };

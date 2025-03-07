@@ -41,7 +41,7 @@ public:
     void destroyBlock(int32_t x, int32_t y, uint8_t layer);
     Rectf getBlockHitbox(int32_t x, int32_t y);
     bool isBlockClosed(int32_t x, int32_t y, uint8_t layer);
-    void setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block);
+    void setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block, bool natural = false);
     std::shared_ptr<Block> getBlock(int32_t x, int32_t y, uint8_t layer);
 
     void unloadChunk(std::shared_ptr<Chunk> chunk);

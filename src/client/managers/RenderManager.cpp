@@ -12,6 +12,7 @@
 #include <Utils.hpp>
 #include <string>
 #include <unordered_map>
+#include <managers/SettingsManager.hpp>
 
 int blocksDrawn = 0;
 
@@ -217,6 +218,8 @@ void RenderManager::renderBlock(Rectf dest, std::shared_ptr<Block> block, uint8_
     assert(block != nullptr);
 
     if (block->getType() == TYPE_BLOCK) {
+        auto sm = SettingsManager::get();
+        
         Col3u col = {255, 255, 255};
 
         if (block->hasTag(TagID::TAG_COLOR)) { 
@@ -224,7 +227,7 @@ void RenderManager::renderBlock(Rectf dest, std::shared_ptr<Block> block, uint8_
         }
 
         if(!block->getLayer()) {
-            col.brightness(-0.25f);
+            col.brightness(-(1.f - sm->getValue<float>("video.layer0.brightness", 0.75f)));
         }
 
         drawTile("blocks.png", block->getSpriteIndex(), dest, {col.r, col.g, col.b, alpha});
@@ -252,6 +255,8 @@ void RenderManager::renderEntity(std::string& textureKey, std::shared_ptr<Entity
     DrawTexturePro(tex, {0, 0, (float)tex.width, (float)tex.height}, entity->getHitbox().getRect().to<Rectangle>(), {0, 0}, 0.0f, WHITE);
 }
 
+
+// TODO: Rework this
 void RenderManager::renderSimplePlayer(std::shared_ptr<SimplePlayer> player) {
     auto dbg = Debug::get();
     if (dbg->isVisible()) {

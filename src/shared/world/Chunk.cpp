@@ -10,6 +10,17 @@ Chunk::Chunk(std::shared_ptr<World> world, Chunk::Position pos) : m_world(world)
     m_blocks.resize(CHUNK_WIDTH * world->getHeight() * LAYERS);
 }
 
+void Chunk::onTick() {
+    auto x = rand() % CHUNK_WIDTH;
+    auto y = rand() % m_world->getHeight();
+    auto z = rand() % 2;
+    auto block = getBlock(x, y, z);
+
+    if(block) {
+        block->onRandomTick();
+    }
+}
+
 bool Chunk::isOutOfBound(int x, int y, uint8_t layer) {
     bool result = (x < (x < 0 ? -CHUNK_WIDTH : 0) || x > (x > 0 ? CHUNK_WIDTH - 1 : 0) || y < 0 || y >= m_world->getHeight() || layer < 0 || layer > LAYERS - 1);
 
@@ -24,6 +35,7 @@ void Chunk::setBlock(int x, int y, uint8_t layer, std::shared_ptr<Block> block) 
     if (!isOutOfBound(x, y, layer)) {
         if(block != nullptr) {
             block->setPos(m_position * CHUNK_WIDTH + x, y, layer);
+            block->m_world = m_world.get();
         }
         
         m_blocks[getIndex((x < 0 ? CHUNK_WIDTH + x : x), y, layer)] = block;

@@ -32,28 +32,28 @@ std::shared_ptr<Chunk> WorldGenNormal::generateChunk(int32_t position) {
 
     // generating surface
     for (int x = 0u; x < CHUNK_WIDTH; x++) {
-        for (int z = 0u; z < LAYERS; z++) {
+        for (uint8_t z = 0u; z < LAYERS; z++) {
             int grassLevel = m_world->getHeight() * m_perlinNoise.noise2D_01(fabs(INT_MAX / 2 + position * CHUNK_WIDTH + x) * 0.01f, z * 0.01f);
             int stoneLevel = grassLevel + 4 + m_random() % 3;
 
-            for (auto y = 0u; y < m_world->getHeight(); y++) {
+            for (int y = 0u; y < m_world->getHeight(); y++) {
                 if (y == m_world->getHeight() - 1) {
-                    ret->setBlock(x, y, z, ItemID::BEDROCK);
+                    generateBlock(ret, {x, y, z}, BEDROCK);
                     continue;
                 }
 
                 if (y == grassLevel) {
-                    ret->setBlock(x, y, z, ItemID::GRASS);
+                    generateBlock(ret, {x, y, z}, GRASS);
                     continue;
                 }
 
                 if (y > grassLevel && y < stoneLevel) {
-                    ret->setBlock(x, y, z, ItemID::DIRT);
+                    generateBlock(ret, {x, y, z}, DIRT);
                     continue;
                 }
 
                 if (y >= stoneLevel) {
-                    ret->setBlock(x, y, z, ItemID::STONE);
+                    generateBlock(ret, {x, y, z}, STONE);
                     continue;
                 }
             }
@@ -80,7 +80,7 @@ std::shared_ptr<Chunk> WorldGenNormal::generateChunk(int32_t position) {
                         }
 
                         if(block->getID() == ItemID::STONE) {
-                            ret->setBlock(veinX, veinY, 1, ore.type);
+                            generateBlock(ret, {veinX, veinY, 1}, ore.type);
                         }
                     }
                 }

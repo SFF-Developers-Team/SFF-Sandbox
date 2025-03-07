@@ -29,6 +29,10 @@ void World::generate() {
 void World::onTick() {
     m_time++;
 
+    for (auto& [x, chunk] : m_chunks) {
+        chunk->onTick();
+    }
+
     for (auto& [id, player] : m_players) {
         player->onTick();
     }
@@ -83,14 +87,18 @@ std::shared_ptr<Block> World::getBlock(int32_t x, int32_t y, uint8_t layer) {
     return chunk->getBlock(x % CHUNK_WIDTH, y, layer);
 }
 
-void World::setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block) {
+void World::setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block, bool natural) {
     if (isOutOfBound(x, y, layer) || (block && block->getID() == ItemID::AIR)) {
         return;
     }
 
-    auto chunk = getChunk(xToChunk(x));
+    if (natural) {
+        block->setTag(TAG_NATURAL, true);
+    }
 
+    auto chunk = getChunk(xToChunk(x));
     auto localx = (x < 0 ? (CHUNK_WIDTH - (-x) % CHUNK_WIDTH) % CHUNK_WIDTH : x % CHUNK_WIDTH);
+    
     chunk->setBlock(localx, y, layer, block);
 }
 
@@ -305,7 +313,7 @@ void World::generateChunk(Chunk::Position xPos) {
 
     for (auto& tree : m_postGenTrees) {
         for (auto y = tree.y - tree.trunkHeight; y < tree.y; y++) {
-            setBlock(tree.x, y, 0, Block::create(OAK_LOG));
+            setBlock(tree.x, y, 0, Block::create(OAK_LOG), true);
         }
 
         for (int x = -3; x <= 3; ++x) {
@@ -320,10 +328,10 @@ void World::generateChunk(Chunk::Position xPos) {
                     }
 
                     if (getBlock(pos.x, pos.y, 0) == nullptr) {
-                        setBlock(pos.x, pos.y, 0, std::make_shared<Leaves>());
+                        setBlock(pos.x, pos.y, 0, Block::create(LEAVES), true);
                     }
 
-                    setBlock(pos.x, pos.y, 1, std::make_shared<Leaves>());
+                    setBlock(pos.x, pos.y, 1, Block::create(LEAVES), true);
                 }
             }
         }
