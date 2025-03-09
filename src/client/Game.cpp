@@ -12,6 +12,9 @@
 #include <managers/RecipesManager.hpp>
 #include <managers/Debug.hpp>
 #include <net/Multiplayer.hpp>
+#include <Platform.hpp>
+
+#define CHECK_DIR(path) if (!std::filesystem::exists(path)) std::filesystem::create_directory(path);
 
 void Game::pushScene(std::shared_ptr<Scene> scene) {
     if(m_scene != nullptr) {    
@@ -89,6 +92,11 @@ void Game::init(std::vector<std::string>& args) {
 
     m_lastWindowSize = {1280, 720};
     m_close = false;
+
+    auto home = Platform::getHomeDir();
+
+    CHECK_DIR(home);
+    CHECK_DIR(home / "worlds");
 
     // Load assets
     auto sm = SoundManager::get();

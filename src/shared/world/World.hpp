@@ -22,7 +22,7 @@ private:
     std::map<PlayerID, std::shared_ptr<SimplePlayer>> m_players;
     std::vector<TreeStructure> m_postGenTrees;
     std::shared_ptr<WorldGen> m_worldGen;
-    std::string m_worldName;
+    std::filesystem::path m_saveDir;
     PlayerID m_lastPlayerID;
     uint32_t m_version;
     uint32_t m_height;
@@ -31,8 +31,8 @@ private:
 public:
     uint32_t const WORLD_VERSION = WORLDVER;
 
-    World(uint32_t height, std::string const& worldName);
-    World(std::string const& worldName);
+    World(uint32_t height, std::filesystem::path const& saveDir);
+    World(std::filesystem::path const& saveDir);
 
     void generate();
     void onTick();
@@ -44,10 +44,10 @@ public:
     void setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block, bool natural = false);
     std::shared_ptr<Block> getBlock(int32_t x, int32_t y, uint8_t layer);
 
-    void unloadChunk(std::shared_ptr<Chunk> chunk);
     void unloadChunk(Chunk::Position pos);
     void addChunk(std::shared_ptr<Chunk> chunk);
-    std::shared_ptr<Chunk> getChunk(int32_t position);
+    std::shared_ptr<Chunk> getChunk(Chunk::Position position);
+    bool saveChunk(Chunk::Position pos);
 
     std::vector<Hitbox> getHitboxes(Hitbox entityHitbox, int radius = 1);
 
@@ -61,8 +61,10 @@ public:
     PlayerID addPlayer(std::shared_ptr<SimplePlayer> player, std::string const username = "");
     std::shared_ptr<SimplePlayer> getPlayer(PlayerID id);
     void unloadPlayer(PlayerID id);
+    bool savePlayer(PlayerID id);
+    bool loadPlayer(std::string const& username);
     bool isUsernameAlreadyTaken(std::string const& username);
-    bool isOutOfBound(int32_t x, int32_t y, uint8_t layer);
+    bool isOutOfBound(int x, int y, uint8_t layer);
 
     Chunk::Position xToChunk(int32_t x) { return static_cast<Chunk::Position>(floor(static_cast<float>(x) / CHUNK_WIDTH)); }
 

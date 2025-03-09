@@ -10,11 +10,16 @@
 #include <Logger.hpp>
 #include <world/blocks/Leaves.hpp>
 
-World::World(uint32_t height, std::string const& worldName) : m_height(height), m_worldName(worldName), m_version(WORLDVER), m_time(0), m_lastPlayerID(1) {
+World::World(uint32_t height, std::filesystem::path const& saveDir) : m_height(height), m_saveDir(saveDir), m_version(WORLDVER), m_time(0), m_lastPlayerID(1) {
     m_header = WORLD;
+
+    if (!saveDir.empty() && !std::filesystem::exists(m_saveDir)) {
+        std::filesystem::create_directory(m_saveDir);
+        std::filesystem::create_directory(m_saveDir / "chunks");
+    }
 }
 
-World::World(std::string const& worldName) : World(128, worldName) {}
+World::World(std::filesystem::path const& saveDir) : World(256, saveDir) {}
 
 void World::generate() {
     assert(m_worldGen != nullptr);
@@ -42,12 +47,6 @@ bool World::isBlockClosed(int x, int y, uint8_t l) {
     return getBlock(x - 1, y, l) && getBlock(x + 1, y, l) && getBlock(x, y - 1, l) && getBlock(x, y + 1, l);
 }
 
-void World::unloadChunk(std::shared_ptr<Chunk> chunk) {
-    if (chunk) {
-        unloadChunk(chunk->getPosition());
-    }
-}
-
 void World::unloadChunk(Chunk::Position pos) {
     if (m_chunks.contains(pos)) {
         m_chunks.erase(pos);
@@ -64,6 +63,27 @@ std::shared_ptr<Chunk> World::getChunk(Chunk::Position position) {
 
 void World::addChunk(std::shared_ptr<Chunk> chunk) {
     m_chunks[chunk->getPosition()] = chunk;
+}
+
+bool World::saveChunk(Chunk::Position pos) {
+    auto chunk = m_chunks[pos];
+    auto cbytes = chunk->serialize();
+
+    if (!cbytes.size()) {
+        logE("Failed to serialize chunk {}!", pos);
+    }
+
+    std::ofstream file(m_saveDir / "chunks" / (std::to_string(pos) + ".dat"), std::ios::binary);
+    
+    if(file.is_open()) {
+        file.write((char const*)cbytes.data(), cbytes.size());
+        file.close();
+
+        return true;
+    }
+
+    logE("Failed to save chunk {}!", pos);
+    return false;
 }
 
 void World::placeBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> newBlock) {
@@ -189,30 +209,39 @@ size_t World::deserialize(ByteVector const& bytes) {
 }
 
 bool World::save() {
-    auto worldData = this->serialize();
-
-    if (!worldData.size()) {
-        logE("Failed to save world");
+    if (!std::filesystem::exists(m_saveDir) && !std::filesystem::create_directory(m_saveDir)) {
+        logE("Failed to save world!");
         return false;
     }
 
-    std::ofstream file(m_worldName + ".dat", std::ios::binary);
-
-    if (!file.is_open()) {
-        logE("Failed to open save file");
-        return false;
+    for (auto [x, chunk] : m_chunks) {
+        saveChunk(x);
     }
 
-    file.write((char const*)worldData.data(), worldData.size());
+    // auto worldData = this->serialize();
+
+    // if (!worldData.size()) {
+    //     logE("Failed to save world");
+    //     return false;
+    // }
+
+    // std::ofstream file(m_worldName + ".dat", std::ios::binary);
+
+    // if (!file.is_open()) {
+    //     logE("Failed to open save file");
+    //     return false;
+    // }
+
+    // file.write((char const*)worldData.data(), worldData.size());
 
     return true;
 }
 
 bool World::load() {
-    if (!std::filesystem::exists(m_worldName + ".dat"))
+    if (!std::filesystem::exists(m_saveDir + ".dat"))
         return false;
 
-    std::ifstream file(m_worldName + ".dat", std::ios::in | std::ios::binary);
+    std::ifstream file(m_saveDir + ".dat", std::ios::in | std::ios::binary);
     if (!file.is_open())
         return false;
 
@@ -279,6 +308,33 @@ std::shared_ptr<SimplePlayer> World::getPlayer(PlayerID id) {
 
 void World::unloadPlayer(PlayerID id) {
     m_players.erase(id);
+}
+
+bool World::savePlayer(PlayerID id) {
+    auto player = m_players[id];
+    auto pbytes = player->serialize();
+
+    if (!pbytes.size()) {
+        logE("Failed to serialize player {}!", id);
+    }
+
+    auto username = player->getUsername();
+
+    std::ofstream file(m_saveDir / "players" / ((username.empty() ? "player" : username) + ".dat"), std::ios::binary);
+    
+    if(file.is_open()) {
+        file.write((char const*)pbytes.data(), pbytes.size());
+        file.close();
+
+        return true;
+    }
+
+    logE("Failed to save player {}!", id);
+    return false;
+}
+
+bool World::loadPlayer(std::string const& username) {
+    // TODO:
 }
 
 bool World::isUsernameAlreadyTaken(std::string const& username) {
