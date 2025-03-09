@@ -297,7 +297,8 @@ enum TagID : uint8_t {
     TAG_COLOR,
     TAG_GHOST,
     TAG_EFFICIENCY,
-    TAG_DAMAGE
+    TAG_DAMAGE,
+    TAG_NATURAL
 };
 
 using TagValue = std::variant<Col3u, bool, uint8_t>;

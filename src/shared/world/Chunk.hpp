@@ -21,6 +21,8 @@ private:
 public:
     Chunk(std::shared_ptr<World> world, Position position = 0);
 
+    void onTick();
+
     auto getPosition() { return m_position; }
     auto getWorld() { return m_world; }
 

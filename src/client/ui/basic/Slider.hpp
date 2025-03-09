@@ -58,10 +58,14 @@ public:
             m_selected = false;
         }
     
-        if(m_selected) {
-            m_value = (mouse.x - bounds.x) / bounds.width * (m_max - m_min) + m_min;
+        if(m_selected || (isMouseHover() && GetMouseWheelMove() != 0.f)) {
+            if (m_selected) {
+                m_value = (mouse.x - bounds.x) / bounds.width * (m_max - m_min) + m_min;
+            }
+
+            m_value += GetMouseWheelMove() * (m_max - m_min) / 10;
             m_value = std::clamp(m_value, m_min, m_max);
-    
+
             if(m_prevValue != m_value) callback();
         }
     }
