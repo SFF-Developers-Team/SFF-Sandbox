@@ -34,6 +34,7 @@ file(GLOB SHARED_SOURCES CONFIGURE_DEPENDS
 )
 
 file(GLOB CLIENT_SOURCES CONFIGURE_DEPENDS
+    "src/client/main.cpp"
     "src/client/*.cpp"
     "src/client/net/*.cpp"
     "src/client/entity/*.cpp"
@@ -45,6 +46,7 @@ file(GLOB CLIENT_SOURCES CONFIGURE_DEPENDS
 )
 
 file(GLOB SERVER_SOURCES CONFIGURE_DEPENDS
+    "src/server/main.cpp"
     "src/server/*.cpp"
 )
 
