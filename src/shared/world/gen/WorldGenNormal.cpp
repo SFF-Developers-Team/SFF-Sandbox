@@ -13,8 +13,8 @@ struct Ore {
 
 std::vector<Ore> ores = {
     {ItemID::COAL_ORE, 128, 6, 0.025f},
-    {ItemID::IRON_ORE, 64, 6, 0.012f},
-    {ItemID::GOLD_ORE, 16, 4, 0.01f},
+    {ItemID::IRON_ORE_BLOCK, 64, 6, 0.012f},
+    {ItemID::GOLD_ORE_BLOCK, 16, 4, 0.01f},
     {ItemID::DIAMOND_ORE, 12, 2, 0.01f}
 };
 

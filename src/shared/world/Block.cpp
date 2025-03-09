@@ -1,15 +1,23 @@
 #include <world/Block.hpp>
 #include <SerializedObject.hpp>
 #include <cassert>
-#include <world/Leaves.hpp>
-#include <world/Stone.hpp>
-#include <world/Grass.hpp>
+#include <world/blocks/Leaves.hpp>
+#include <world/blocks/Stone.hpp>
+#include <world/blocks/Grass.hpp>
+#include <world/blocks/CoalOre.hpp>
+#include <world/blocks/IronOre.hpp>
+#include <world/blocks/GoldOre.hpp>
+#include <world/blocks/DiamondOre.hpp>
 
 std::shared_ptr<Block> Block::create(ItemID id) {
     switch (id) {
         case LEAVES: return std::make_shared<Leaves>();
         case STONE: return std::make_shared<Stone>();
         case GRASS: return std::make_shared<Grass>();
+        case COAL_ORE: return std::make_shared<CoalOre>();
+        case IRON_ORE: return std::make_shared<IronOre>();
+        case GOLD_ORE: return std::make_shared<GoldOre>();
+        case DIAMOND_ORE: return std::make_shared<DiamondOre>();
         default: return std::make_shared<Block>(id);
     }
 }

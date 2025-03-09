@@ -254,8 +254,8 @@ enum ItemID : uint8_t {
     ANOTHER_OAK_LOG,
     LEAVES,
     COAL_ORE,
-    IRON_ORE,
-    GOLD_ORE,
+    IRON_ORE_BLOCK,
+    GOLD_ORE_BLOCK,
     DIAMOND_ORE,
     LAPIZ_ORE,
     BOOKSHELF,
@@ -272,7 +272,13 @@ enum ItemID : uint8_t {
     GOLDEN_PICKAXE,
     GOLDEN_SWORD,
     DIAMOND_PICKAXE,
-    DIAMOND_SWORD
+    DIAMOND_SWORD,
+    IRON_ORE,
+    GOLD_ORE,
+    COAL,
+    IRON_INGOT,
+    GOLD_INGOT,
+    DIAMOND
 };
 
 enum MaterialType : uint8_t {

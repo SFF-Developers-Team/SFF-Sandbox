@@ -8,7 +8,7 @@
 #include <cmath>
 #include <assert.h>
 #include <Logger.hpp>
-#include <world/Leaves.hpp>
+#include <world/blocks/Leaves.hpp>
 
 World::World(uint32_t height, std::string const& worldName) : m_height(height), m_worldName(worldName), m_version(WORLDVER), m_time(0), m_lastPlayerID(1) {
     m_header = WORLD;

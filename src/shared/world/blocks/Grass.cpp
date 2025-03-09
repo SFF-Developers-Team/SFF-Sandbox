@@ -1,4 +1,4 @@
-#include <world/Grass.hpp>
+#include <world/blocks/Grass.hpp>
 
 Grass::Grass() : Block(GRASS) {
     m_materialType = MATERIAL_DIRT;

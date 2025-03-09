@@ -1,4 +1,4 @@
-#include <world/Stone.hpp>
+#include <world/blocks/Stone.hpp>
 
 Stone::Stone() : Block(STONE) {
     m_materialType = MATERIAL_STONE;

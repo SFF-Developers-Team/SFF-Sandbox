@@ -1,4 +1,4 @@
-#include <world/Leaves.hpp>
+#include <world/blocks/Leaves.hpp>
 #include <world/World.hpp>
 
 Leaves::Leaves() : Block(ItemID::LEAVES) {

@@ -33,8 +33,8 @@ inline std::unordered_map<ItemID, ItemInfo> gItemDatabase = {
     {ANOTHER_OAK_LOG, {"Oak log", TYPE_BLOCK, MATERIAL_WOOD, 9}},
     {LEAVES, {"Leaves", TYPE_BLOCK, MATERIAL_NONE, 10}},
     {COAL_ORE, {"Coal ore", TYPE_BLOCK, MATERIAL_STONE, 11}},
-    {IRON_ORE, {"Iron ore", TYPE_BLOCK, MATERIAL_STONE, 12}},
-    {GOLD_ORE, {"Gold ore", TYPE_BLOCK, MATERIAL_STONE, 13}},
+    {IRON_ORE_BLOCK, {"Iron ore", TYPE_BLOCK, MATERIAL_STONE, 12}},
+    {GOLD_ORE_BLOCK, {"Gold ore", TYPE_BLOCK, MATERIAL_STONE, 13}},
     {DIAMOND_ORE, {"Diamond ore", TYPE_BLOCK, MATERIAL_STONE, 14}},
     {LAPIZ_ORE, {"Lapiz ore", TYPE_BLOCK, MATERIAL_STONE, 15}},
     {BOOKSHELF, {"Bookshelf", TYPE_BLOCK, MATERIAL_WOOD, 16}},
@@ -50,5 +50,12 @@ inline std::unordered_map<ItemID, ItemInfo> gItemDatabase = {
     {STONE_SWORD, {"Stone sword", TYPE_WEAPON, MATERIAL_NONE, 4}},
     {IRON_SWORD, {"Iron sword", TYPE_WEAPON, MATERIAL_NONE, 6}},
     {GOLDEN_SWORD, {"Golden sword", TYPE_WEAPON, MATERIAL_NONE, 8}},
-    {DIAMOND_SWORD, {"Diamond sword", TYPE_WEAPON, MATERIAL_NONE, 10}}
+    {DIAMOND_SWORD, {"Diamond sword", TYPE_WEAPON, MATERIAL_NONE, 10}},
+    {COAL_ORE, {"Coal ore", TYPE_ITEM, MATERIAL_NONE, 11}},
+    {IRON_ORE, {"Iron ore", TYPE_ITEM, MATERIAL_NONE, 12}},
+    {GOLD_ORE, {"Gold ore", TYPE_ITEM, MATERIAL_NONE, 13}},
+    {COAL, {"Coal", TYPE_ITEM, MATERIAL_NONE, 14}},
+    {IRON_INGOT, {"Iron", TYPE_ITEM, MATERIAL_NONE, 15}},
+    {GOLD_INGOT, {"Gold", TYPE_ITEM, MATERIAL_NONE, 16}},
+    {DIAMOND, {"Diamond", TYPE_ITEM, MATERIAL_NONE, 17}}
 };
