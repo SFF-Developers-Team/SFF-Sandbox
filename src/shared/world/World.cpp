@@ -11,8 +11,6 @@
 #include <world/blocks/Leaves.hpp>
 
 World::World(uint32_t height, std::filesystem::path const& saveDir) : m_height(height), m_saveDir(saveDir), m_version(WORLDVER), m_time(0), m_lastPlayerID(1) {
-    m_header = WORLD;
-
     if (!saveDir.empty() && !std::filesystem::exists(m_saveDir)) {
         std::filesystem::create_directory(m_saveDir);
         std::filesystem::create_directory(m_saveDir / "chunks");
@@ -23,11 +21,12 @@ World::World(uint32_t height, std::filesystem::path const& saveDir) : m_height(h
 World::World(std::filesystem::path const& saveDir) : World(256, saveDir) {}
 
 void World::generate() {
-    assert(m_worldGen != nullptr);
-    int start = -3;
-    int end = 3;
+    if (m_worldGen == nullptr) {
+        return logE("Can't generate world without WorldGen ¯\\_(ツ)_/¯");
+    }
 
-    for (auto x = start; x < end; x++) {
+    // spawn area [-3; 3]
+    for (auto x = -3; x < 3; x++) {
         generateChunk(x);
     }
 }
@@ -105,7 +104,7 @@ bool World::loadChunk(ChunkPosition pos) {
     int chunkSize = file.tellg();
 
     file.seekg(0, std::ios::beg);
-    auto chunkBytes = ByteVector(chunkSize);
+    auto chunkBytes = DataStream(chunkSize);
 
     file.read((char*)chunkBytes.data(), chunkSize);
     m_chunks[pos]->deserialize(chunkBytes);
@@ -148,9 +147,9 @@ void World::setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block>
     
     chunk->setBlock(localx, y, layer, block);
 }
-
+#if 0
 ByteVector World::serialize() {
-    SerializedObject::serialize();
+    DataStream::serialize();
 
     add(WORLD_VERSION);
     add(m_height);
@@ -163,7 +162,7 @@ ByteVector World::serialize() {
 }
 
 size_t World::deserialize(ByteVector const& bytes) {
-    SerializedObject::deserialize(bytes);
+    DataStream::deserialize(bytes);
     m_chunks.clear();
 
     m_version = get<uint32_t>();
@@ -215,77 +214,78 @@ size_t World::deserialize(ByteVector const& bytes) {
 
     return m_offset;
 }
+#endif
 
 bool World::save() {
-    if (!std::filesystem::exists(m_saveDir) && !std::filesystem::create_directory(m_saveDir)) {
-        logE("Failed to save world!");
-        return false;
-    }
+    // if (!std::filesystem::exists(m_saveDir) && !std::filesystem::create_directory(m_saveDir)) {
+    //     logE("Failed to save world!");
+    //     return false;
+    // }
 
-    for (auto [x, chunk] : m_chunks) {
-        saveChunk(x);
-    }
+    // for (auto [x, chunk] : m_chunks) {
+    //     saveChunk(x);
+    // }
 
-    for (auto [id, player] : m_players) {
-        savePlayer(id);
-    }
+    // for (auto [id, player] : m_players) {
+    //     savePlayer(id);
+    // }
 
-    auto worldData = this->serialize();
+    // auto worldData = this->serialize();
 
-    if (!worldData.size()) {
-        logE("Failed to serialize world!");
-        return false;
-    }
+    // if (!worldData.size()) {
+    //     logE("Failed to serialize world!");
+    //     return false;
+    // }
 
-    std::ofstream file(m_saveDir / "world.dat", std::ios::binary);
+    // std::ofstream file(m_saveDir / "world.dat", std::ios::binary);
 
-    if (!file.is_open()) {
-        logE("Failed to save world!");
-        return false;
-    }
+    // if (!file.is_open()) {
+    //     logE("Failed to save world!");
+    //     return false;
+    // }
 
-    file.write((char const*)worldData.data(), worldData.size());
+    // file.write((char const*)worldData.data(), worldData.size());
 
     return true;
 }
 
 bool World::load() {
-    if (!std::filesystem::exists(m_saveDir)) {
-        logE("World directory not found!");
-        return false;
-    }
+    // if (!std::filesystem::exists(m_saveDir)) {
+    //     logE("World directory not found!");
+    //     return false;
+    // }
 
-    if (!std::filesystem::exists(m_saveDir / "world.dat")) {
-        logE("world.dat not found!");
-        return false;
-    }
+    // if (!std::filesystem::exists(m_saveDir / "world.dat")) {
+    //     logE("world.dat not found!");
+    //     return false;
+    // }
 
-    std::ifstream file(m_saveDir / "world.dat", std::ios::in | std::ios::binary);
+    // std::ifstream file(m_saveDir / "world.dat", std::ios::in | std::ios::binary);
 
-    if (!file.is_open()) {
-        logE("Can't open world.dat");
-        return false;
-    }
+    // if (!file.is_open()) {
+    //     logE("Can't open world.dat");
+    //     return false;
+    // }
 
 
-    file.seekg(0, std::ios::end);
-    int worldSize = file.tellg();
+    // file.seekg(0, std::ios::end);
+    // int worldSize = file.tellg();
 
-    file.seekg(0, std::ios::beg);
-    auto worldBytes = ByteVector(worldSize);
+    // file.seekg(0, std::ios::beg);
+    // auto worldBytes = ByteVector(worldSize);
 
-    file.read((char*)worldBytes.data(), worldBytes.size());
-    deserialize(worldBytes);
+    // file.read((char*)worldBytes.data(), worldBytes.size());
+    // deserialize(worldBytes);
 
-    if (m_version >= 4) {
-        for (const auto& entry : std::filesystem::directory_iterator(m_saveDir / "chunks")) {
-            auto filename = entry.path().stem().string();
+    // if (m_version >= 4) {
+    //     for (const auto& entry : std::filesystem::directory_iterator(m_saveDir / "chunks")) {
+    //         auto filename = entry.path().stem().string();
             
-            if (!filename.empty() && std::all_of(filename.begin(), filename.end(), ::isdigit)) {
-                loadChunk(std::stoi(filename));
-            }
-        }
-    }
+    //         if (!filename.empty() && std::all_of(filename.begin(), filename.end(), ::isdigit)) {
+    //             loadChunk(std::stoi(filename));
+    //         }
+    //     }
+    // }
 
     return true;
 }
@@ -344,52 +344,52 @@ void World::unloadPlayer(PlayerID id) {
 }
 
 bool World::savePlayer(PlayerID id) {
-    auto player = m_players[id];
-    auto pbytes = player->serialize();
+    // auto player = m_players[id];
+    // auto pbytes = player->serialize();
 
-    if (!pbytes.size()) {
-        logE("Failed to serialize player {}!", id);
-    }
+    // if (!pbytes.size()) {
+    //     logE("Failed to serialize player {}!", id);
+    // }
 
-    auto username = player->getUsername();
+    // auto username = player->getUsername();
 
-    std::ofstream file(m_saveDir / "players" / ((username.empty() ? "player" : username) + ".dat"), std::ios::binary);
+    // std::ofstream file(m_saveDir / "players" / ((username.empty() ? "player" : username) + ".dat"), std::ios::binary);
     
-    if(file.is_open()) {
-        file.write((char const*)pbytes.data(), pbytes.size());
-        file.close();
+    // if(file.is_open()) {
+    //     file.write((char const*)pbytes.data(), pbytes.size());
+    //     file.close();
 
-        return true;
-    }
+    //     return true;
+    // }
 
-    logE("Failed to save player {}!", id);
+    // logE("Failed to save player {}!", id);
     return false;
 }
 
 bool World::loadPlayer(std::string const& username) {
-    auto playerIt = std::find_if(m_players.begin(), m_players.end(), [username](auto&& pair) {
-        return pair.second->getUsername() == username;
-    });
+    // auto playerIt = std::find_if(m_players.begin(), m_players.end(), [username](auto&& pair) {
+    //     return pair.second->getUsername() == username;
+    // });
 
-    auto player = (playerIt != m_players.end() ? playerIt->second : std::make_shared<SimplePlayer>(std::shared_ptr<World>(this)));
+    // auto player = (playerIt != m_players.end() ? playerIt->second : std::make_shared<SimplePlayer>(std::shared_ptr<World>(this)));
 
-    std::ifstream file(m_saveDir / "players" / ((username.empty() ? "player" : username) + ".dat"), std::ios::in | std::ios::binary);
+    // std::ifstream file(m_saveDir / "players" / ((username.empty() ? "player" : username) + ".dat"), std::ios::in | std::ios::binary);
         
-    if (!file.is_open()) {
-        return false;
-    }
+    // if (!file.is_open()) {
+    //     return false;
+    // }
 
-    file.seekg(0, std::ios::end);
-    int worldSize = file.tellg();
+    // file.seekg(0, std::ios::end);
+    // int worldSize = file.tellg();
 
-    file.seekg(0, std::ios::beg);
-    auto playerBytes = ByteVector(worldSize);
+    // file.seekg(0, std::ios::beg);
+    // auto playerBytes = ByteVector(worldSize);
 
-    file.read((char*)playerBytes.data(), playerBytes.size());
-    file.close();
+    // file.read((char*)playerBytes.data(), playerBytes.size());
+    // file.close();
 
-    player->deserialize(playerBytes);
-    player->setUsername(username);
+    // player->deserialize(playerBytes);
+    // player->setUsername(username);
 
     return true;
 }

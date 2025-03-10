@@ -5,7 +5,7 @@
 #include <world/Chunk.hpp>
 
 SimplePlayer::SimplePlayer(std::shared_ptr<World> world) : Mob(world), Inventory(36) {
-    m_header = Header::PLAYER;
+    m_header = ObjectHeader::PLAYER;
 }
 
 const char* SimplePlayer::getAnimationName() {
@@ -38,29 +38,28 @@ uint8_t SimplePlayer::animationClamp(uint8_t value, uint8_t min, uint8_t max) {
     return value;
 }
 
-ByteVector SimplePlayer::serialize() {
-    Mob::serialize();
+DataStream SimplePlayer::serialize() {
+    auto ret = Mob::serialize();
 
-    add(m_id);
-    add(m_animFrame);
-
-    add<uint8_t>('I');
+    ret.add(m_id);
+    ret.add(m_animFrame);
+    ret.add<uint8_t>('I');
 
     for (auto i = 0; i < m_inventory.size(); i++) {
         if (m_inventory[i]) {
-            add<uint8_t>(i);
+            ret.add<uint8_t>(i);
         }
     }
 
-    return bytes();
+    return ret;
 }
 
-size_t SimplePlayer::deserialize(ByteVector const& bytes) {
-    std::lock_guard<std::mutex> guard(m_mutex);
-    Mob::deserialize(bytes);
+bool SimplePlayer::deserialize(DataStream& stream) {
+    // std::lock_guard<std::mutex> guard(m_mutex);
+    if(!Mob::deserialize(stream)) return false;
 
-    m_id = get<PlayerID>(0);
-    m_animFrame = get<uint8_t>(0);
+    m_id = stream.get<PlayerID>(0);
+    m_animFrame = stream.get<uint8_t>(0);
 
-    return m_offset;
+    return true;
 }

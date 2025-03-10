@@ -26,8 +26,8 @@ public:
     /// @return Animation name as string
     const char* getAnimationName();
 
-    ByteVector serialize() override;
-    size_t deserialize(ByteVector const& bytes) override;
+    DataStream serialize() override;
+    bool deserialize(DataStream& bytes) override;
 
     void setUsername(std::string const& username) { m_username = username; }
     void setAnimCurrentFrame(uint8_t frame) { m_animFrame = frame; }

@@ -16,5 +16,5 @@ public:
     OnlinePlayer(std::shared_ptr<World> world);
 
     void update();
-    size_t deserialize(ByteVector const& bytes);
+    bool deserialize(DataStream& bytes);
 };

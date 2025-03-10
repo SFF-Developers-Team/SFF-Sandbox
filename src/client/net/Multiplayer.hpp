@@ -31,7 +31,7 @@ class Multiplayer : public PacketManager {
 private:
     bool m_connected = false;
     PlayerID m_myPlayerId;
-    std::vector<Chunk::Position> m_chunkRequests;
+    std::vector<ChunkPosition> m_chunkRequests;
     std::vector<std::string> messages;
     ENetHost* m_client;
     MultiplayerState m_state;
@@ -49,7 +49,7 @@ public:
     bool connect(std::string const& host, uint16_t port);
     bool connected();
 
-    void requestChunk(Chunk::Position pos);
+    void requestChunk(ChunkPosition pos);
     
     void update();
     void error(std::string const& str);

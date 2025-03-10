@@ -9,17 +9,14 @@
 
 class World;
 
-class Chunk : public SerializedObject {
-public:
-    typedef int32_t Position;
-
+class Chunk : public Serializable {
 private:
     std::vector<std::shared_ptr<Block>> m_blocks;
     std::shared_ptr<World> m_world;
-    Position m_position;
+    ChunkPosition m_position;
 
 public:
-    Chunk(std::shared_ptr<World> world, Position position = 0);
+    Chunk(std::shared_ptr<World> world, ChunkPosition position = 0);
 
     void onTick();
 
@@ -34,11 +31,10 @@ public:
 
     // Is block closed by other blocks in 4 directions
     bool isBlockClosed(int x, int y, uint8_t layer);
-
     bool isOutOfBound(int x, int y, uint8_t layer);
 
-    ByteVector serialize() override;
-    size_t deserialize(ByteVector const& bytes) override;
+    DataStream serialize() override;
+    bool deserialize(DataStream& stream) override;
 
     uint16_t countBlocks();
 };

@@ -1,5 +1,4 @@
 #include <world/Block.hpp>
-#include <SerializedObject.hpp>
 #include <cassert>
 #include <world/blocks/Leaves.hpp>
 #include <world/blocks/Stone.hpp>
@@ -29,23 +28,7 @@ std::shared_ptr<Block> Block::create(Item& block) {
     return ret;
 }
 
-std::shared_ptr<Block> Block::create(SerializedObject& obj) {
-    if (obj.get<Header>() == Header::BLOCK) {
-        auto id = obj.get<ItemID>();
-        obj.reset();
-
-        auto block = Block::create(id);
-        block->deserialize(obj);
-
-        return block;
-    }
-
-    return nullptr;
-}
-
-Block::Block(ItemID id) 
-    : Item(id), m_x(0), m_y(0), m_layer(1) { 
-    
+Block::Block(ItemID id) : Item(id), m_x(0), m_y(0), m_layer(1) {
     m_header = BLOCK;
 }
 
@@ -64,58 +47,6 @@ void Block::setPos(int32_t x, int32_t y, uint8_t layer) {
     m_x = x;
     m_y = y;
     m_layer = layer;
-}
-
-ByteVector Block::serialize() {
-    std::lock_guard<std::mutex> guard(m_mutex);
-    SerializedObject::serialize();
-
-    add(m_id);
-    add(m_x);
-    add(m_y);
-    add(m_layer);
-    add<uint8_t>(0x20);
-    add<uint16_t>(static_cast<uint16_t>(m_tags.size()));
-
-    for(auto& [key, value] : m_tags) {
-        add<TagID>(key);
-
-        switch(key) {
-            case TAG_COLOR: add<Col3u>(std::get<Col3u>(value)); break;
-            case TAG_GHOST: add<bool>(std::get<bool>(value)); break;
-        }
-    }
-
-    return bytes();
-}
-
-size_t Block::deserialize(ByteVector const& bytes) {
-    SerializedObject::deserialize(bytes);
-
-    m_id = get<ItemID>();
-    m_x = get<int32_t>();
-    m_y = get<int32_t>();
-    m_layer = get<uint8_t>(1);
-
-    if(get<uint8_t>() == 0x20) {
-        auto tagsc = get<uint16_t>();
-
-        for(int i = 0; i < tagsc; i++) {
-            TagID key = get<TagID>();
-
-            switch(key) {
-                case TAG_COLOR:
-                    m_tags[key] = get<Col3u>({255, 255, 255});
-                    break;
-
-                case TAG_GHOST:
-                    m_tags[key] = get<bool>();
-                    break;
-            }
-        }
-    }
-
-    return m_offset;
 }
 
 Rectf Block::getHitbox() {

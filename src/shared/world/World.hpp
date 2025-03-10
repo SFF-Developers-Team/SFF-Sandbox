@@ -2,7 +2,6 @@
 #include <entity/SimplePlayer.hpp>
 #include <world/Block.hpp>
 #include <world/Chunk.hpp>
-#include <SerializedObject.hpp>
 #include <entity/Hitbox.hpp>
 
 #include <filesystem>
@@ -17,7 +16,7 @@
 class Player;
 class WorldGen;
 
-class World : public SerializedObject {
+class World {
 private:
     std::map<ChunkPosition, std::shared_ptr<Chunk>> m_chunks;
     std::map<PlayerID, std::shared_ptr<SimplePlayer>> m_players;
@@ -56,8 +55,6 @@ public:
     bool save();
     bool load();
 
-    ByteVector serialize() override;
-    size_t deserialize(ByteVector const& bytes) override;
 
     void addPlayer(PlayerID id, std::shared_ptr<SimplePlayer> player, std::string const username = "");
     PlayerID addPlayer(std::shared_ptr<SimplePlayer> player, std::string const username = "");

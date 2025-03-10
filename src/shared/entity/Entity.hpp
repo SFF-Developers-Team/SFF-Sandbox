@@ -1,5 +1,5 @@
 #pragma once
-#include <SerializedObject.hpp>
+#include <Serializable.hpp>
 #include <entity/Hitbox.hpp>
 #include <Types.hpp>
 #include <vector>
@@ -7,7 +7,7 @@
 
 class World;
 
-class Entity : public SerializedObject {
+class Entity : public Serializable {
 protected:
     Hitbox m_hitbox;
     std::shared_ptr<World> m_world;
@@ -30,8 +30,8 @@ public:
     virtual void onTick();
     void move(float x, float y);
 
-    ByteVector serialize() override;
-    size_t deserialize(ByteVector const& bytes) override;
+    DataStream serialize() override;
+    bool deserialize(DataStream& stream) override;
 
     void setPosition(Vec2f pos);
     void setSize(Vec2f size);

@@ -5,8 +5,7 @@
 #include <assert.h>
 #include <miniz.h>
 
-Chunk::Chunk(std::shared_ptr<World> world, Chunk::Position pos) : m_world(world), m_position(pos) {
-    m_header = Header::CHUNK;
+Chunk::Chunk(std::shared_ptr<World> world, ChunkPosition pos) : Serializable(CHUNK), m_world(world), m_position(pos) {
     m_blocks.resize(CHUNK_WIDTH * world->getHeight() * LAYERS);
 }
 
@@ -65,14 +64,13 @@ bool Chunk::isBlockClosed(int x, int y, uint8_t layer) {
     return ret;
 }
 
-ByteVector Chunk::serialize() {
-    SerializedObject::serialize();
-    uint16_t blockCount = countBlocks();
+DataStream Chunk::serialize() {
+    auto ret = Serializable::serialize();
 
-    SerializedObject obj;
+    ret.add(m_position);
+    ret.add(countBlocks());
 
-    add(m_position);
-    add(blockCount);
+    DataStream blocks;
 
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < m_world->getHeight(); y++) {
@@ -80,59 +78,61 @@ ByteVector Chunk::serialize() {
                 auto block = getBlock(x, y, layer);
 
                 if (block && block->getID() != ItemID::AIR) {
-                    auto bytes = block->serialize();
-                    obj.add<uint16_t>(bytes.size());
-                    obj.add(bytes);
+                    blocks.add(ObjectHeader::BLOCK);
+                    blocks.add(x);
+                    blocks.add(y);
+                    blocks.add(layer);
+                    blocks.add(block->serialize());
                 }
             }
         }
     }
 
-    uLongf compressedSize = compressBound(obj.size());
+    uLongf compressedSize = compressBound(blocks.size());
     ByteVector compressed(compressedSize);
-    auto res = compress(compressed.data(), &compressedSize, obj.data(), obj.size());
+
+    ret.add(static_cast<uint32_t>(compressedSize));
+
+    auto res = compress(compressed.data(), &compressedSize, blocks.data(), blocks.size());
 
     if (res != Z_OK) {
         logE("Error while compressing chunk! {}", zError(res));
-        clear();
+        ret.clear();
 
-        return bytes();
+        return ret;
     }
 
     compressed.resize(compressedSize);
+    ret.add(compressed);
 
-    add(static_cast<uint32_t>(compressedSize));
-    add(compressed);
-
-    return bytes();
+    return ret;
 }
 
-size_t Chunk::deserialize(ByteVector const& bytes) {
-    SerializedObject::deserialize(bytes);
+bool Chunk::deserialize(DataStream& stream) {
+    if(!Serializable::deserialize(stream)) return false;
 
-    m_position = get<Chunk::Position>();
-
-    auto blockCount = get<uint16_t>();
+    m_position = stream.get<ChunkPosition>();
+    auto blockCount = stream.get<uint16_t>();
 
     if (!blockCount) {
-        return 0;
+        return false;
     }
 
     auto wver = m_world->getVersion();
-    uint8_t blockSize = (!wver ? get<uint8_t>() : 0);
+    uint8_t blockSize = (!wver ? stream.get<uint8_t>() : 0);
 
-    SerializedObject data;
+    DataStream data;
 
     // World version 0-1 (raw data)
     if (wver <= 1) {
-        data.add(ByteVector(begin() + m_offset, end()));
-        data.reset();
+        data.resize(stream.size() - stream.offset());
+        std::copy(stream.begin() + stream.offset(), stream.end(), data.begin());
     }
 
     // World version 2 (gzip compression)
     if (wver > 1) {
-        auto size = get<uint32_t>();
-        auto compressed = getN(size);
+        auto size = stream.get<uint32_t>();
+        auto compressed = stream.getN(size);
         uLongf decompressedSize = 1024 * 1024;
 
         data.resize(decompressedSize);
@@ -151,31 +151,30 @@ size_t Chunk::deserialize(ByteVector const& bytes) {
 
     // World version 1
     for (int i = 0; i < blockCount; i++) {
-        auto bsize = (blockSize > 0) ? blockSize : data.get<uint16_t>();
-        assert(bsize > 0);
-
-        auto header = data.getI<Header>();
-
-        if (header == Header::BLOCK) {
-            auto blockBytes = SerializedObject();
-            blockBytes.deserialize(data.getN(bsize));
-            blockBytes.reset();
-            
-            auto block = Block::create(blockBytes);
-            auto pos = block->getPos();
-            auto layer = block->getLayer();
-
-            pos.x -= m_position * CHUNK_WIDTH;
-
-            setBlock(pos.x, pos.y, layer, block);
+        if (data.get<ObjectHeader>() != ObjectHeader::BLOCK) {
+            return false;
         }
+
+        auto x = data.get<int>();
+        auto y = data.get<int>();
+        auto l = data.get<int>();    
+        
+        
+        if(data.get<ObjectHeader>() != ObjectHeader::ITEM) {
+            return false;
+        }
+        
+        auto block = Block::create(data.getI<ItemID>());
+        block->deserialize(data);
+        
+        setBlock(x - m_position * CHUNK_WIDTH, y, l, block);
     }
 
 #if _DEBUG
     logD("Read {} chunk: {} | block count: {} | data size: {}", (wver > 1 ? "gzip" : "non-gzip"), m_position, blockCount, data.size());
 #endif
 
-    return m_offset;
+    return true;
 }
 
 uint16_t Chunk::countBlocks() {

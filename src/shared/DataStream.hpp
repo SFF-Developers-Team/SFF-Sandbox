@@ -1,61 +1,20 @@
 #pragma once
 #include <string>
-#include <cstring>
-#include <vector>
 #include <algorithm>
-#include <string.h>
-#include <mutex>
+#include <cstring>
+#include <Types.hpp>
 
-using ByteVector = std::vector<uint8_t>;
-
-class SerializedObject : public ByteVector {
-public:
-    enum Header : uint8_t {
-        // World headers (also uses in mp)
-        PLAYER,
-        BLOCK,
-        CHUNK,
-        WORLD,
-        ENTITY,
-        INVENTORY_ITEM,
-
-        // Multiplayer headers
-        IDENTIFICATION, DISCONNECT,
-        LOAD_CHUNK,  UNLOAD_CHUNK,
-        LOAD_PLAYER, UNLOAD_PLAYER,
-        BLOCK_PLACE, BLOCK_DESTROY,
-
-        NETWORK_ERROR, ARRAY, TERRAIN, LOAD_TERRAIN, LOAD_PLAYERS, MESSAGE, LOAD_MESSAGE,
-        NULL_PACKET = 0xFF
-    };
-
-    using ByteVector::data;
-    using ByteVector::size;
-
+class DataStream : public ByteVector {
 protected:
     std::size_t m_offset = 0;
-    Header m_header;
 
 public:
-    SerializedObject() {}
-    SerializedObject(Header header) : m_header(header) {}
+    DataStream() : ByteVector() {}
+    DataStream(size_t size) : ByteVector(size) {}
+    DataStream(ByteVector const& vec) : ByteVector(vec) {}
 
-    virtual ByteVector serialize() {
-        clear();
-        add(m_header);
-
-        return bytes();
-    }
-
-    virtual size_t deserialize(ByteVector const& bytes) {
-        resize(bytes.size());
-        std::copy(bytes.begin(), bytes.end(), begin());
-        
-        m_offset = 0;
-        m_header = get<Header>();
-
-        return m_offset;
-    }
+    template <class InputIt>
+    DataStream(InputIt first, InputIt last) : ByteVector(first, last) {}
 
     template<typename T>
     void add(T value) {
@@ -64,6 +23,15 @@ public:
         }
 
         m_offset += sizeof(T);
+    }
+
+    template<typename T>
+    void add(std::vector<T> const& vec) {
+        add<uint16_t>(vec.size());
+
+        for (auto& el : vec) {
+            add<T>(el);
+        }
     }
 
     void add(const char* str, size_t size) {
@@ -98,15 +66,6 @@ public:
         return add(str.c_str(), str.size());
     }
 
-    template<typename T>
-    void add(std::vector<T> const& vec) {
-        add<uint16_t>(vec.size());
-
-        for (auto& el : vec) {
-            add<T>(el);
-        }
-    }
-
     /// @brief Get N-count bytes from serialized object
     ByteVector getN(std::size_t count) {
         if(m_offset + count > size()) {
@@ -131,32 +90,6 @@ public:
         return t;
     }
 
-    std::string get(std::string const& defaultString) {
-        return get(defaultString.c_str());
-    }
-
-    /// @brief Ignore offset
-    template<typename T>
-    T getI(T defaultVal = T()) {
-        auto ret = get(defaultVal);
-        m_offset -= sizeof(ret);
-        return ret;
-    }
-
-    const char* get(const char* defaultVal = "unknown") {
-        auto len = std::strlen((char*)data() + m_offset);
-
-        if(m_offset + len > size()) return defaultVal;
-
-        auto ret = new char[len + 1];
-        std::memset(ret, 0, len + 1);
-        std::copy(begin() + m_offset, begin() + m_offset + len, ret);
-
-        m_offset += len;
-
-        return ret;
-    }
-
     template<typename T>
     std::vector<T> get(std::initializer_list<T> const& def) {
         auto count = get<uint16_t>(0);
@@ -174,21 +107,37 @@ public:
         return vec;
     }
 
+    std::string get(std::string const& defaultString) {
+        return get(defaultString.c_str());
+    }
+
+    const char* get(const char* defaultVal = "unknown") {
+        auto len = std::strlen((char*)data() + m_offset);
+
+        if(m_offset + len > size()) return defaultVal;
+
+        auto ret = new char[len + 1];
+        std::memset(ret, 0, len + 1);
+        std::copy(begin() + m_offset, begin() + m_offset + len, ret);
+
+        m_offset += len;
+
+        return ret;
+    }
+
+    /// @brief Ignore offset
+    template<typename T>
+    T getI(T defaultVal = T()) {
+        auto ret = get(defaultVal);
+        m_offset -= sizeof(ret);
+        return ret;
+    }
+
     std::size_t offset() { return m_offset; }
     
     /// @return All bytes of serialized object
     ByteVector bytes() { return ByteVector(begin(), end()); }
 
-    uint32_t hash() {
-        std::size_t seed = size();
-        
-        for(auto i = begin(); i != end(); i++) {
-            seed ^= *i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-        }
-
-        return seed;
-    }
-    
     /// @brief Reset offset 
     void reset() { m_offset = 0; }
 };

@@ -122,7 +122,6 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
 
     auto craftBtn = std::make_shared<Button>("Craft!", [this, craftList](auto) {
         auto selected = craftList->getSelected();
-        logD("Selected: {}", selected);
         auto rm = RecipesManager::get();
         auto recipes = rm->getRecipes();
 
@@ -269,14 +268,14 @@ void PlayScene::update() {
         if(mp->getState() == ERROR) {
             Game::get()->pushScene(std::make_shared<ErrorScene>(mp->getError()));
             mp->destroy();
-            m_world->reset();
         }
 
         if(IsKeyPressed(KEY_ENTER)) {
             if(!inputMsg->getText().empty()) {
                 auto msg = inputMsg->getText();
-                auto pak = Packet(Header::MESSAGE, msg);
+                auto pak = Packet(ObjectHeader::MESSAGE, msg);
                 mp->sendPacket(pak);
+                m_world = nullptr;
             }
         }
     }

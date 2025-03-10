@@ -1,5 +1,4 @@
 #pragma once
-#include <SerializedObject.hpp>
 #include <Item.hpp>
 #include <Types.hpp>
 #include <cstddef>
@@ -24,7 +23,7 @@ protected:
 public:
     std::shared_ptr<Block> static create(ItemID id);
     std::shared_ptr<Block> static create(Item& block);
-    std::shared_ptr<Block> static create(SerializedObject& obj);
+    std::shared_ptr<Block> static create(DataStream& obj);
 
     Block(ItemID id = ItemID::AIR);
     Block(Block& block);
@@ -36,9 +35,6 @@ public:
     virtual void onRandomTick() {}
 
     void setPos(int32_t x, int32_t y, uint8_t layer);
-
-    ByteVector serialize() override;
-    size_t deserialize(ByteVector const& bytes) override;
 
     auto const getPos() { return Vec2i {m_x, m_y}; }
     auto const getLayer() { return m_layer; }

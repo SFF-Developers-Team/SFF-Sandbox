@@ -14,11 +14,11 @@ void OnlinePlayer::update() {
     }
 }
 
-size_t OnlinePlayer::deserialize(ByteVector const& bytes) {
-    SimplePlayer::deserialize(bytes);
+bool OnlinePlayer::deserialize(DataStream& stream) {
+    if(!SimplePlayer::deserialize(stream)) return false;
 
     m_positions[m_index] = {m_hitbox.x, m_hitbox.y, static_cast<float>(GetTime())};
     m_index = (m_index + 1) % m_positions.size();
 
-    return m_offset;
+    return true;
 }

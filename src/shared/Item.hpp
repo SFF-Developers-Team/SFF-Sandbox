@@ -1,17 +1,20 @@
 #pragma once
-#include <SerializedObject.hpp>
+#include <Serializable.hpp>
 #include <Types.hpp>
+
+// TODO: ItemManager
+#include <ItemDatabase.hpp>
 
 class Block;
 
-class Item : public SerializedObject {
+class Item : public Serializable {
 protected:
     ItemID m_id;
     ItemTags m_tags;
 
 public:
     Item(ItemID id);
-    Item(Item& itemPointer);
+    Item(Item& item);
 
     ItemID getID() { return m_id; }
     void setID(ItemID id) { m_id = id; }
@@ -25,14 +28,14 @@ public:
     auto& getTags() { return m_tags; }
     void setTags(ItemTags const& newTags) { m_tags = newTags; }
 
-    ItemType getType();
-    std::string getName();
-    MaterialType getMaterial();
-    uint16_t getSpriteIndex();
+    ItemType getType() { return gItemDatabase[m_id].type; }
+    std::string getName() { return gItemDatabase[m_id].name; }
+    MaterialType getMaterial() { return gItemDatabase[m_id].material; }
+    uint16_t getSpriteIndex() { return gItemDatabase[m_id].spriteIndex; }
     uint16_t getMaxCount();
 
-    ByteVector serialize();
-    size_t deserialize(ByteVector const& bytes);
+    DataStream serialize();
+    bool deserialize(DataStream& bytes);
 
     bool operator==(Item const& other) const { return m_id == other.m_id && m_tags == other.m_tags; }
 };

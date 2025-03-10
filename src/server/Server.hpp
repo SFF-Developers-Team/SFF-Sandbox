@@ -42,11 +42,11 @@ public:
     void update();
     void onTick();
 
-    void broadcast(std::shared_ptr<SerializedObject> obj, Channel channel = EVERYTHING, bool reliable = true);
+    void broadcast(std::shared_ptr<Serializable> obj, Channel channel = EVERYTHING, bool reliable = true);
     void broadcast(Packet const& packet, Channel channel = EVERYTHING, bool reliable = true);
-    void broadcastExcept(PlayerID pid, std::shared_ptr<SerializedObject> obj, Channel channel = EVERYTHING, bool reliable = true);
+    void broadcastExcept(PlayerID pid, std::shared_ptr<Serializable> obj, Channel channel = EVERYTHING, bool reliable = true);
     void broadcastExcept(PlayerID pid, Packet const& packet, Channel channel = EVERYTHING, bool reliable = true);
-    void send(PlayerID pid, std::shared_ptr<SerializedObject> obj, Channel channel = EVERYTHING, bool reliable = true);
+    void send(PlayerID pid, std::shared_ptr<Serializable> obj, Channel channel = EVERYTHING, bool reliable = true);
     void send(PlayerID pid, Packet const& packet, Channel channel = EVERYTHING, bool reliable = true);
 
     PlayerID joinPlayer(std::string const& username);

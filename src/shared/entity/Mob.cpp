@@ -29,22 +29,22 @@ void Mob::onTick() {
     m_prevOnGround = m_onGround;
 }
 
-ByteVector Mob::serialize() {
-    Entity::serialize();
+DataStream Mob::serialize() {
+    auto ret = Entity::serialize();
     
-    add(m_health);
-    add(m_lastHurtTime);
-    add(m_fallY);
+    ret.add(m_health);
+    ret.add(m_lastHurtTime);
+    ret.add(m_fallY);
 
-    return bytes();
+    return ret;
 }
 
-size_t Mob::deserialize(ByteVector const& bytes) {
-    Entity::deserialize(bytes);
+bool Mob::deserialize(DataStream& stream) {
+    if(!Entity::deserialize(stream)) return false;
 
-    m_health = get<int>(20);
-    m_lastHurtTime = get<uint64_t>(0);
-    m_fallY = get<float>();
+    m_health = stream.get<int>(20);
+    m_lastHurtTime = stream.get<uint64_t>(0);
+    m_fallY = stream.get<float>();
 
-    return m_offset;
+    return true;
 }

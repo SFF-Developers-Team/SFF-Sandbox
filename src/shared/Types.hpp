@@ -4,6 +4,7 @@
 #include <variant>
 #include <cmath>
 #include <memory>
+#include <vector>
 #include <map>
 
 template <typename T>
@@ -344,3 +345,25 @@ const static inline std::map<AnimationType, std::pair<uint8_t, uint8_t>> m_animL
     {PLAYER_HIT, {9, 13}}
 };
 //clang-format on
+
+using ByteVector = std::vector<uint8_t>;
+
+enum ObjectHeader : uint8_t {
+    // World headers (also uses in mp)
+    PLAYER,
+    BLOCK,
+    CHUNK,
+    WORLD,
+    ENTITY,
+    ITEM,
+    INVENTORY_ITEM,
+
+    // Multiplayer headers
+    IDENTIFICATION, DISCONNECT,
+    LOAD_CHUNK,  UNLOAD_CHUNK,
+    LOAD_PLAYER, UNLOAD_PLAYER,
+    BLOCK_PLACE, BLOCK_DESTROY,
+
+    NETWORK_ERROR, ARRAY, TERRAIN, LOAD_TERRAIN, LOAD_PLAYERS, MESSAGE, LOAD_MESSAGE,
+    NULL_PACKET = 0xFF
+};

@@ -2,9 +2,7 @@
 #include <world/Block.hpp>
 #include <world/World.hpp>
 
-Entity::Entity(std::shared_ptr<World> world) : m_world(world), m_hitbox(0.0f, 0.0f, 0.8f, 1.65f) {
-    m_header = ENTITY;
-}
+Entity::Entity(std::shared_ptr<World> world) : Serializable(ENTITY), m_world(world), m_hitbox(0.0f, 0.0f, 0.8f, 1.65f) {}
 
 void Entity::setPosition(Vec2f pos) {
     m_hitbox.x = pos.x;
@@ -56,22 +54,22 @@ void Entity::resetPosition() {
     m_hitbox.y = -3.0f;
 }
 
-ByteVector Entity::serialize() {
-    SerializedObject::serialize();
+DataStream Entity::serialize() {
+    auto ret = Serializable::serialize();
 
-    add(m_hitbox.x);
-    add(m_hitbox.y);
-    add(m_direction);
+    ret.add(m_hitbox.x);
+    ret.add(m_hitbox.y);
+    ret.add(m_direction);
 
-    return bytes();
+    return ret;
 }
 
-size_t Entity::deserialize(ByteVector const& bytes) {
-    SerializedObject::deserialize(bytes);
+bool Entity::deserialize(DataStream& stream) {
+    if(!Serializable::deserialize(stream)) return false;
 
-    m_hitbox.x = get<float>();
-    m_hitbox.y = get<float>();
-    m_direction = get<Direction>();
+    m_hitbox.x = stream.get<float>();
+    m_hitbox.y = stream.get<float>();
+    m_direction = stream.get<Direction>();
 
-    return m_offset;
+    return true;
 }

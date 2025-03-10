@@ -429,7 +429,7 @@ void Player::placeBlock() {
         m_lastPlacedBlock = GetTime();
 
         if (mp->connected()) {
-            mp->sendPacket(Packet(Header::BLOCK_PLACE, block->serialize()), BLOCKS);
+            mp->sendPacket(Packet(ObjectHeader::BLOCK_PLACE, block->serialize()), BLOCKS);
         }
     }
 }
@@ -475,7 +475,7 @@ void Player::destroyBlock() {
     m_lastDestroyedBlock = GetTime();
 
     if (mp->connected()) {
-        auto pak = Packet(Header::BLOCK_DESTROY);
+        auto pak = Packet(ObjectHeader::BLOCK_DESTROY);
         pak.add<int32_t>(target.x);
         pak.add<int32_t>(target.y);
         pak.add<uint8_t>(target.layer);
