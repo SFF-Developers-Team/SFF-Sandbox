@@ -164,7 +164,7 @@ void Client::handleBlockDestroy(Packet& packet) {
 void Client::handleLoadChunk(Packet& packet) {
     auto srv = Server::get();
     auto world = srv->getWorld();
-    auto pos = packet.get<Chunk::Position>();
+    auto pos = packet.get<ChunkPosition>();
     auto chunk = world->getChunk(pos);
 
     if (chunk == nullptr) {

@@ -8,9 +8,9 @@ SimplePlayer::SimplePlayer(std::shared_ptr<World> world) : Mob(world), Inventory
     m_header = Header::PLAYER;
 }
 
-const char* SimplePlayer::getAnimationName(AnimationType type) {
+const char* SimplePlayer::getAnimationName() {
     // clang-format off
-    switch(type) {
+    switch(m_animType) {
         case PLAYER_IDLE: return "PLAYER_IDLE";
         case PLAYER_MOVE: return "PLAYER_MOVE";
         case PLAYER_SNEAK: return "PLAYER_SNEAK";
@@ -39,26 +39,28 @@ uint8_t SimplePlayer::animationClamp(uint8_t value, uint8_t min, uint8_t max) {
 }
 
 ByteVector SimplePlayer::serialize() {
-    SerializedObject::serialize();
+    Mob::serialize();
 
     add(m_id);
-    add(m_hitbox.x);
-    add(m_hitbox.y);
     add(m_animFrame);
-    add(m_direction);
+
+    add<uint8_t>('I');
+
+    for (auto i = 0; i < m_inventory.size(); i++) {
+        if (m_inventory[i]) {
+            add<uint8_t>(i);
+        }
+    }
 
     return bytes();
 }
 
 size_t SimplePlayer::deserialize(ByteVector const& bytes) {
     std::lock_guard<std::mutex> guard(m_mutex);
-    SerializedObject::deserialize(bytes);
+    Mob::deserialize(bytes);
 
     m_id = get<PlayerID>(0);
-    m_hitbox.x = get<float>(0.0f);
-    m_hitbox.y = get<float>(0.0f);
     m_animFrame = get<uint8_t>(0);
-    m_direction = get<Direction>(Direction::LEFT);
 
     return m_offset;
 }

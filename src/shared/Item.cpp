@@ -29,3 +29,49 @@ uint16_t Item::getMaxCount() {
 
     return 64;
 }
+
+ByteVector Item::serialize() {
+    SerializedObject::serialize();
+
+    add(m_id);
+    add<uint8_t>(0x20);
+    add<uint16_t>(m_tags.size());
+
+    for(auto& [key, value] : m_tags) {
+        add<TagID>(key);
+
+        switch(key) {
+            case TAG_COLOR: add<Col3u>(std::get<Col3u>(value)); break;
+            case TAG_NATURAL:
+            case TAG_GHOST: add<bool>(std::get<bool>(value)); break;
+        }
+    }
+
+    return bytes();
+}
+
+size_t Item::deserialize(ByteVector const& bytes) {
+    SerializedObject::deserialize(bytes);
+    
+    m_id = get<ItemID>();
+
+    if(get<uint8_t>() == 0x20) {
+        auto tagsc = get<uint16_t>();
+
+        for(int i = 0; i < tagsc; i++) {
+            TagID key = get<TagID>();
+
+            switch(key) {
+                case TAG_COLOR:
+                    m_tags[key] = get<Col3u>({255, 255, 255});
+                    break;
+
+                case TAG_GHOST:
+                    m_tags[key] = get<bool>();
+                    break;
+            }
+        }
+    }
+
+    return m_offset;
+}

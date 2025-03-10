@@ -5,20 +5,21 @@
 #include <SerializedObject.hpp>
 #include <entity/Hitbox.hpp>
 
+#include <filesystem>
 #include <vector>
 #include <string>
 #include <memory>
 #include <cmath>
 #include <map>
 
-#define WORLDVER 3
+#define WORLDVER 4
 
 class Player;
 class WorldGen;
 
 class World : public SerializedObject {
 private:
-    std::map<Chunk::Position, std::shared_ptr<Chunk>> m_chunks;
+    std::map<ChunkPosition, std::shared_ptr<Chunk>> m_chunks;
     std::map<PlayerID, std::shared_ptr<SimplePlayer>> m_players;
     std::vector<TreeStructure> m_postGenTrees;
     std::shared_ptr<WorldGen> m_worldGen;
@@ -44,10 +45,11 @@ public:
     void setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block, bool natural = false);
     std::shared_ptr<Block> getBlock(int32_t x, int32_t y, uint8_t layer);
 
-    void unloadChunk(Chunk::Position pos);
+    void unloadChunk(ChunkPosition pos);
     void addChunk(std::shared_ptr<Chunk> chunk);
-    std::shared_ptr<Chunk> getChunk(Chunk::Position position);
-    bool saveChunk(Chunk::Position pos);
+    std::shared_ptr<Chunk> getChunk(ChunkPosition position);
+    bool saveChunk(ChunkPosition pos);
+    bool loadChunk(ChunkPosition pos);
 
     std::vector<Hitbox> getHitboxes(Hitbox entityHitbox, int radius = 1);
 
@@ -62,11 +64,11 @@ public:
     std::shared_ptr<SimplePlayer> getPlayer(PlayerID id);
     void unloadPlayer(PlayerID id);
     bool savePlayer(PlayerID id);
-    bool loadPlayer(std::string const& username);
+    bool loadPlayer(std::string const& username = "");
     bool isUsernameAlreadyTaken(std::string const& username);
     bool isOutOfBound(int x, int y, uint8_t layer);
 
-    Chunk::Position xToChunk(int32_t x) { return static_cast<Chunk::Position>(floor(static_cast<float>(x) / CHUNK_WIDTH)); }
+    ChunkPosition xToChunk(int32_t x) { return static_cast<ChunkPosition>(floor(static_cast<float>(x) / CHUNK_WIDTH)); }
 
     void setGenerator(std::shared_ptr<WorldGen> generator) { m_worldGen = generator; }
 
@@ -78,5 +80,5 @@ public:
     auto const& getChunks() { return m_chunks; }
 
     void postGenerateTree(TreeStructure tree) { m_postGenTrees.push_back(tree); }
-    void generateChunk(Chunk::Position xPos);
+    void generateChunk(ChunkPosition xPos);
 };

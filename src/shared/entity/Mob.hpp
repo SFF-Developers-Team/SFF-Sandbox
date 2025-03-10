@@ -17,4 +17,7 @@ public:
     virtual int getMaxHealth() { return 20; }
     int getHealth() { return m_health; }
     float getLastHeartTime() { return m_lastHurtTime; }
+
+    ByteVector serialize();
+    size_t deserialize(ByteVector const& bytes);
 };

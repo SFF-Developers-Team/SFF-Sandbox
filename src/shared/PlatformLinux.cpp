@@ -3,7 +3,7 @@
 #if defined(__linux__)
 #include <cstdlib>
 
-std::filesystem::path getHomeDir() {
+std::filesystem::path Platform::getHomeDir() {
     auto path = getenv("HOME");
 
     std::filesystem::path ret = path;

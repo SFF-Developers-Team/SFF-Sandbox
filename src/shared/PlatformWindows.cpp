@@ -4,7 +4,7 @@
 #include <Windows.h>
 #include <ShlObj.h>
 
-std::filesystem::path getHomeDir() {
+std::filesystem::path Platform::getHomeDir() {
     char path[MAX_PATH];
     SHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, path);
 

@@ -28,3 +28,23 @@ void Mob::onTick() {
 
     m_prevOnGround = m_onGround;
 }
+
+ByteVector Mob::serialize() {
+    Entity::serialize();
+    
+    add(m_health);
+    add(m_lastHurtTime);
+    add(m_fallY);
+
+    return bytes();
+}
+
+size_t Mob::deserialize(ByteVector const& bytes) {
+    Entity::deserialize(bytes);
+
+    m_health = get<int>(20);
+    m_lastHurtTime = get<uint64_t>(0);
+    m_fallY = get<float>();
+
+    return m_offset;
+}

@@ -12,6 +12,7 @@
 #include <entity/Player.hpp>
 #include <world/gen/WorldGenNormal.hpp>
 #include <Game.hpp>
+#include <Platform.hpp>
 #include <list>
 
 MainMenuScene::MainMenuScene() : MenuBase() {
@@ -19,7 +20,7 @@ MainMenuScene::MainMenuScene() : MenuBase() {
 
     std::list<std::pair<std::string, MiniFunction<void(Button*)>>> const btns = {
         {"Singleplayer", [game](Button*) { 
-            auto world = std::make_shared<World>("world");
+            auto world = std::make_shared<World>(Platform::getHomeDir() / "worlds" / "world1");
 
             if (!world->load()) {
                 world->setGenerator(std::make_shared<WorldGenNormal>(world, 1));
@@ -31,6 +32,7 @@ MainMenuScene::MainMenuScene() : MenuBase() {
             game->setWorld(world);
             game->setPlayer(player);
             world->addPlayer(player);
+            world->loadPlayer();
 
             // I HATE THIS SHIT
             // WHEN I CLEAR SCENE HISTORY, PLAYSCENE CAUSES CRASH

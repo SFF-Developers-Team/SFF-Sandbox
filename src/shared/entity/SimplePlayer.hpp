@@ -6,26 +6,6 @@
 using PlayerID = uint32_t;
 
 class SimplePlayer : public Mob, public Inventory {
-public:
-    enum AnimationType : uint8_t {
-        PLAYER_IDLE,
-        PLAYER_MOVE,
-        PLAYER_SNEAK,
-        PLAYER_JUMP,
-        PLAYER_HIT,
-        PLAYER_HURT,
-        PLAYER_SIT,
-        PLAYER_CART
-    };
-
-    // clang-format off
-    const static inline std::map<AnimationType, std::pair<uint8_t, uint8_t>> m_animLimits = {
-        {PLAYER_MOVE, {1, 5}},
-        {PLAYER_SNEAK, {6, 7}},
-        {PLAYER_HIT, {9, 13}}
-    };
-    //clang-format on
-
 protected:
     AnimationType m_animType = PLAYER_IDLE;
     uint8_t m_animFps = 10;
@@ -44,7 +24,7 @@ public:
 
     /// @brief For debug
     /// @return Animation name as string
-    static const char* getAnimationName(AnimationType type);
+    const char* getAnimationName();
 
     ByteVector serialize() override;
     size_t deserialize(ByteVector const& bytes) override;
