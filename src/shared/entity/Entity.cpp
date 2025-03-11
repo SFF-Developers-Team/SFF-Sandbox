@@ -2,7 +2,7 @@
 #include <world/Block.hpp>
 #include <world/World.hpp>
 
-Entity::Entity(std::shared_ptr<World> world) : Serializable(ENTITY), m_world(world), m_hitbox(0.0f, 0.0f, 0.8f, 1.65f) {}
+Entity::Entity() : Serializable(ENTITY), m_hitbox(0.0f, 0.0f, 0.8f, 1.65f), m_speed({0.f, 0.f}) {}
 
 void Entity::setPosition(Vec2f pos) {
     m_hitbox.x = pos.x;
@@ -14,44 +14,28 @@ void Entity::setSize(Vec2f size) {
     m_hitbox.height = size.y;
 }
 
-void Entity::turn(Direction dir) {
-    m_direction = dir;
-}
-
-void Entity::onTick() {
-    // Store previous position
-    m_prevX = m_hitbox.x;
-    m_prevY = m_hitbox.y;
-}
-
-void Entity::move(float x, float y) {
-    auto prevX = x;
-    auto prevY = y;
-    auto hitboxes = m_world->getHitboxes(m_hitbox.expand(x, y));
+void Entity::move(std::vector<Hitbox>& env, float xa, float ya) {
+    auto prevX = xa;
+    auto prevY = ya;
 
     // Check for X collision
-    for (auto& hitbox : hitboxes) {
-        x = hitbox.clipXCollide(m_hitbox, x);
+    for (auto& hitbox : env) {
+        xa = hitbox.clipXCollide(m_hitbox, xa);
     }
-    m_hitbox.move(x, 0.0f);
+    m_hitbox.move(xa, 0.0f);
 
     // Check for Y collision
-    for (auto& hitbox : hitboxes) {
-        y = hitbox.clipYCollide(m_hitbox, y);
+    for (auto& hitbox : env) {
+        ya = hitbox.clipYCollide(m_hitbox, ya);
     }
-    m_hitbox.move(0.0f, y);
+    m_hitbox.move(0.0f, ya);
 
     // Update on ground state
-    m_onGround = prevY != y && prevY > 0.f;
+    m_onGround = prevY != ya && prevY > 0.f;
 
     // Stop motion on collision
-    if (prevX != x) m_speedX = 0.f;
-    if (prevY != y) m_speedY = 0.f;
-}
-
-void Entity::resetPosition() {
-    m_hitbox.x = 0.0f;
-    m_hitbox.y = -3.0f;
+    if (prevX != xa) m_speed.x = 0.f;
+    if (prevY != ya) m_speed.y = 0.f;
 }
 
 DataStream Entity::serialize() {

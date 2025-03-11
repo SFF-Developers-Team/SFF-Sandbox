@@ -119,41 +119,42 @@ bool Player::canAccessBlock(BlockPosition target) {
 }
 
 bool Player::canDestroyBlock(BlockPosition target) {
-    if (m_world->isOutOfBound(target.x, target.y, target.layer)) {
-        return false;
-    }
+    // if (m_world->isOutOfBound(target.x, target.y, target.layer)) {
+    //     return false;
+    // }
 
-    if (auto block = m_world->getBlock(target.x, target.y, target.layer)) {
-        if(block == nullptr) return false;
+    // if (auto block = m_world->getBlock(target.x, target.y, target.layer)) {
+    //     if(block == nullptr) return false;
 
-        ItemID type = block->getID();
+    //     ItemID type = block->getID();
 
-        return type != ItemID::BEDROCK && type > 0;
-    }
+    //     return type != ItemID::BEDROCK && type > 0;
+    // }
 
     return false;
 }
 
 bool Player::canPlaceBlock(BlockPosition target) {
-    if (m_world->isOutOfBound(target.x, target.y, target.layer)) {
-        return false;
-    }
+    // if (m_world->isOutOfBound(target.x, target.y, target.layer)) {
+    //     return false;
+    // }
 
-    bool blockAround = (
-        m_world->getBlock(target.x - 1, target.y, target.layer) || 
-        m_world->getBlock(target.x + 1, target.y, target.layer) ||
-        m_world->getBlock(target.x, target.y - 1, target.layer) || 
-        m_world->getBlock(target.x, target.y + 1, target.layer) ||
-        m_world->getBlock(target.x, target.y, !target.layer)
-    );
+    // bool blockAround = (
+    //     m_world->getBlock(target.x - 1, target.y, target.layer) || 
+    //     m_world->getBlock(target.x + 1, target.y, target.layer) ||
+    //     m_world->getBlock(target.x, target.y - 1, target.layer) || 
+    //     m_world->getBlock(target.x, target.y + 1, target.layer) ||
+    //     m_world->getBlock(target.x, target.y, !target.layer)
+    // );
 
-    bool overlap = false;
+    // bool overlap = false;
 
-    for(auto& [_, player] : m_world->getPlayers()) {
-        overlap |= (target.layer == 1 && CheckCollisionRecs(player->getHitbox().getRect().to<Rectangle>(), BLOCK_RECT(target.x, target.y)));
-    }
+    // for(auto& [_, player] : m_world->getPlayers()) {
+    //     overlap |= (target.layer == 1 && CheckCollisionRecs(player->getHitbox().getRect().to<Rectangle>(), BLOCK_RECT(target.x, target.y)));
+    // }
 
-    return !m_world->getBlock(target.x, target.y, target.layer) && blockAround && !overlap;
+    // return !m_world->getBlock(target.x, target.y, target.layer) && blockAround && !overlap;
+    return true;
 }
 
 void Player::onTickControls() {
@@ -176,7 +177,7 @@ void Player::onTickControls() {
             wantPlaceBlock = !wantDestroyBlock && IsGestureDetected(GESTURE_TAP);
         }
 
-        m_isBreakingBlock = wantDestroyBlock && m_world->getBlock(target.x, target.y, target.layer);
+        // m_isBreakingBlock = wantDestroyBlock && m_world->getBlock(target.x, target.y, target.layer);
 
         if(m_isBreakingBlockPrev && !m_isBreakingBlock) {
             m_breakingBlock = {0, -1};
@@ -205,21 +206,21 @@ void Player::onTickControls() {
         }
     }
 
-    m_speedX += (m_onGround ? (m_sneak ? 0.0025f : 0.06f) : 0.02f) * m_forward;
-    m_speedY += gravitation;
+    m_speed.x += (m_onGround ? (m_sneak ? 0.0025f : 0.06f) : 0.02f) * m_forward;
+    m_speed.y += gravitation;
 
-    move(m_speedX, m_speedY);
+    // move(m_speed.x, m_speed.y);
 
-    m_speedX *= 0.91f;
-    m_speedY *= 0.98f;
+    m_speed.x *= 0.91f;
+    m_speed.y *= 0.98f;
 
     if (m_onGround) {
-        m_speedX *= 0.7f;
-        m_speedY *= 0.7f;
+        m_speed.x *= 0.7f;
+        m_speed.y *= 0.7f;
     }
 
     if (m_fly) {
-        m_speedY *= 0.7f;
+        m_speed.y *= 0.7f;
     }
 
     m_forward = 0.f;
@@ -240,47 +241,49 @@ void Player::onTick() {
         setAnimation(PLAYER_IDLE);
     }
 
-    if (m_onGround && (m_speedX > 0.025f || m_speedX < -0.025f)) {
+    if (m_onGround && (m_speed.x > 0.025f || m_speed.x < -0.025f)) {
         m_animFps = (m_sneak ? 7 : 10);
         setAnimation((m_sneak ? PLAYER_SNEAK : PLAYER_MOVE));
     }
 
     if (m_sneak) {
         setAnimation(PLAYER_SNEAK);
-        m_animFps = (m_speedX != 0.f ? 4 : 0);
+        m_animFps = (m_speed.x != 0.f ? 4 : 0);
     }
 
     if (!m_onGround) {
         setAnimation(PLAYER_JUMP);
     }
 
-    if (m_world->getTime() < m_lastHurtTime + 15) {
-        setAnimation(PLAYER_HURT);
-    }
+    // if (m_world->getTime() < m_lastHurtTime + 15) {
+    //     setAnimation(PLAYER_HURT);
+    // }
 
     auto mp = Multiplayer::get();
 
-    auto minX = m_world->xToChunk(m_hitbox.x) - 2;
-    auto maxX = m_world->xToChunk(m_hitbox.x) + 2;
+    // auto minX = m_world->xToChunk(m_hitbox.x) - 2;
+    // auto maxX = m_world->xToChunk(m_hitbox.x) + 2;
 
-    for(auto x = minX; x < maxX; x++) {
-        if(m_world->getChunk(x)) continue;
+    // for(auto x = minX; x < maxX; x++) {
+    //     if(m_world->getChunk(x)) continue;
 
-        if(mp->connected()) {
-            mp->requestChunk(x);
-        } else {
-            m_world->generateChunk(x);
-        }
-    }
+    //     if(mp->connected()) {
+    //         mp->requestChunk(x);
+    //     } else {
+    //         m_world->generateChunk(x);
+    //     }
+    // }
 
     if(!m_sneakToggled) {
         m_sneak = false;
     }
 
+    auto static prevPos = getPosition();
+
     // clang-format off
     bool shouldupd = (
-        m_prevX != m_hitbox.x || 
-        m_prevY != m_hitbox.y || 
+        prevPos.x != m_hitbox.x || 
+        prevPos.y != m_hitbox.y || 
         m_prevAnimFrame != m_animFrame || 
         m_prevAnimType != m_animType || 
         m_prevDir != m_direction
@@ -333,13 +336,13 @@ void Player::update() {
     updateCamera();
     updateAnimation();
 
-    auto dbg = Debug::get();
-    auto target = getTargetBlock();
-    auto block = m_world->getBlock(target.x, target.y, target.layer);
+    // auto dbg = Debug::get();
+    // auto target = getTargetBlock();
+    // auto block = m_world->getBlock(target.x, target.y, target.layer);
 
-    dbg->setString(PLAYER_TARGET_BLOCK, "Target block: [{}, {}] ({})", target.x, target.y, (block ? block->getName() : "nullptr"));
-    dbg->setString(PLAYER_POSITION, "Position: [{:.2f}, {:.2f}]", m_hitbox.x, m_hitbox.y);
-    dbg->setString(PLAYER_HEALTH, "Health: {}", m_health);
+    // dbg->setString(PLAYER_TARGET_BLOCK, "Target block: [{}, {}] ({})", target.x, target.y, (block ? block->getName() : "nullptr"));
+    // dbg->setString(PLAYER_POSITION, "Position: [{:.2f}, {:.2f}]", m_hitbox.x, m_hitbox.y);
+    // dbg->setString(PLAYER_HEALTH, "Health: {}", m_health);
 }
 
 bool Player::isChunkInView(std::shared_ptr<Chunk> chunk) {
@@ -353,19 +356,14 @@ bool Player::isChunkInView(std::shared_ptr<Chunk> chunk) {
     return (minPos >= min.x && minPos <= max.x) || (maxPos >= min.x && maxPos <= max.x) || (min.x >= minPos && max.x <= maxPos);
 }
 
-bool Player::isBlockInView(std::shared_ptr<Block> block) {
-    if (block != nullptr) {
-        Vec2i zero = {0, 0};
-        Vec2i screen = {GetScreenWidth(), GetScreenHeight()};
+bool Player::isBlockInView(BlockPosition position) {
+    Vec2i zero = {0, 0};
+    Vec2i screen = {GetScreenWidth(), GetScreenHeight()};
 
-        auto pos = block->getPos();
-        Vector2 min = TO_CAMERA_POS(m_camera, zero);
-        Vector2 max = TO_CAMERA_POS(m_camera, screen);
+    Vector2 min = TO_CAMERA_POS(m_camera, zero);
+    Vector2 max = TO_CAMERA_POS(m_camera, screen);
 
-        return (pos.x + 1.0f >= min.x && pos.x <= max.x) && (pos.y + 1.0f >= min.y && pos.y <= max.y);
-    }
-
-    return false;
+    return (position.x + 1.0f >= min.x && position.x <= max.x) && (position.y + 1.0f >= min.y && position.y <= max.y);
 }
 
 void Player::triggerMove(Direction dir) {
@@ -377,7 +375,7 @@ void Player::triggerMove(Direction dir) {
 
 void Player::triggerJump() {
     if(m_onGround || m_fly) {
-        m_speedY = ((!m_fly) ? -0.3f : -0.25f);
+        m_speed.y = ((!m_fly) ? -0.3f : -0.25f);
     }
 }
 
@@ -389,7 +387,7 @@ void Player::toggleFly() {
 
 void Player::triggerDuck(bool toggle) {
     if (m_fly && !m_onGround) {
-        m_speedY = 0.25f;
+        m_speed.y = 0.25f;
     }
 
     if(!m_fly && m_onGround) {
@@ -411,37 +409,38 @@ void Player::setGameMode(GameMode gamemode) {
 }
 
 void Player::placeBlock() {
-    if(getItem(m_selected) != nullptr) {
-        auto block = Block::create(reinterpret_cast<Item&>(*m_inventory[m_selected]));
-        auto target = getTargetBlock();
-        auto mp = Multiplayer::get();
+    // if(getItem(m_selected) != nullptr) {
+    //     auto block = Block::create(reinterpret_cast<Item&>(*m_inventory[m_selected]));
+    //     auto target = getTargetBlock();
+    //     auto mp = Multiplayer::get();
 
-        m_world->placeBlock(target.x, target.y, target.layer, block);
+    //     m_world->placeBlock(target.x, target.y, target.layer, block);
         
-        if(m_gamemode == GAMEMODE_SURVIVAL) {
-            m_inventory[m_selected]->sub(1);
+    //     if(m_gamemode == GAMEMODE_SURVIVAL) {
+    //         m_inventory[m_selected]->sub(1);
 
-            if(m_inventory[m_selected]->getCount() <= 0) {
-                m_inventory[m_selected] = nullptr;
-            }
-        }
+    //         if(m_inventory[m_selected]->getCount() <= 0) {
+    //             m_inventory[m_selected] = nullptr;
+    //         }
+    //     }
 
-        m_lastPlacedBlock = GetTime();
+    //     m_lastPlacedBlock = GetTime();
 
-        if (mp->connected()) {
-            mp->sendPacket(Packet(ObjectHeader::BLOCK_PLACE, block->serialize()), BLOCKS);
-        }
-    }
+    //     if (mp->connected()) {
+    //         mp->sendPacket(Packet(ObjectHeader::BLOCK_PLACE, block->serialize()), BLOCKS);
+    //     }
+    // }
 }
 
 void Player::destroyBlock() {
     auto mp = Multiplayer::get();
     auto target = getTargetBlock();
+#if 0
     auto targetBlock = m_world->getBlock(target.x, target.y, target.layer);
 
     if (m_breakingBlock != target) {
         m_breakingBlock = target;
-        m_breakingBlockDurability = (targetBlock != nullptr ? targetBlock->getDurability() : 0.f);
+        m_breakingBlockDurability = 0.f;
         m_lastPunch = GetTime();
     }
 
@@ -470,9 +469,10 @@ void Player::destroyBlock() {
 
         addItem(targetBlock->dropItem(m_inventory[m_selected]));
     }
-    
+
     m_world->destroyBlock(target.x, target.y, target.layer);
     m_lastDestroyedBlock = GetTime();
+#endif
 
     if (mp->connected()) {
         auto pak = Packet(ObjectHeader::BLOCK_DESTROY);
@@ -485,12 +485,12 @@ void Player::destroyBlock() {
 }
 
 BreakingBlockInfo Player::getBreakingBlockInfo() {
-    auto target = getTargetBlock();
-    auto targetBlock = m_world->getBlock(target.x, target.y, target.layer);
+    // auto target = getTargetBlock();
+    // auto targetBlock = m_world->getBlock(target.x, target.y, target.layer);
 
-    if (!targetBlock || !m_isBreakingBlock) {
-        return {0, 1};
-    }
+    // if (!targetBlock || !m_isBreakingBlock) {
+    //     return {0, 1};
+    // }
 
-    return {targetBlock->getDurability(), m_breakingBlockDurability};
+    return {/* targetBlock->getDurability() */ 0.f, m_breakingBlockDurability};
 }

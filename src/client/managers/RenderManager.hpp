@@ -24,7 +24,7 @@ namespace RenderManager {
 
     void renderWorld(std::shared_ptr<World> world, std::shared_ptr<Player> player);
     void renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Player> player);
-    void renderBlock(Rectf dest, std::shared_ptr<Block> block, uint8_t alpha = 255);
+    void renderBlock(std::shared_ptr<World> world, Rectf dest, BlockPosition position, uint8_t alpha = 255);
     void renderInventoryItem(Rectf dest, std::shared_ptr<InventoryItem> item);
     void renderEntity(std::string& textureKey, std::shared_ptr<Entity> entity);
     void renderSimplePlayer(std::shared_ptr<SimplePlayer> player);

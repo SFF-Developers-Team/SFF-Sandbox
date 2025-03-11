@@ -184,11 +184,11 @@ void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Pl
 
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < world->getHeight(); y++) {
-            auto block0 = chunk->getBlock(x, y, 0);
-            auto block1 = chunk->getBlock(x, y, 1);
+            int blockX = ((cpos > 0 || cpos < 0) && x < CHUNK_WIDTH ? cpos * CHUNK_WIDTH + x : x);
 
-            if (player->isBlockInView(block0) || player->isBlockInView(block1)) {
-                auto blockX = ((cpos > 0 || cpos < 0) && x < CHUNK_WIDTH ? static_cast<float>(cpos) * CHUNK_WIDTH + x : x);
+            if (player->isBlockInView({blockX, y})) {
+                auto block0 = chunk->getBlock(x, y, 0);
+                auto block1 = chunk->getBlock(x, y, 1);
 
                 auto watchAltBlock = 
                     target.x == blockX && 
@@ -197,12 +197,12 @@ void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Pl
                     player->canAccessBlock(target);
 
                 if (block0 != nullptr /* && (block1 == nullptr || watchAltBlock) */) {
-                    renderBlock(BLOCK_RECT(blockX, y), block0);
+                    renderBlock(world, BLOCK_RECT(blockX, y), {x + cpos * CHUNK_WIDTH, y, 0});
                     blocksDrawn++;
                 }
 
                 if (block1 != nullptr) {
-                    renderBlock(BLOCK_RECT(blockX, y), block1, (watchAltBlock ? 128 : 255));
+                    renderBlock(world, BLOCK_RECT(blockX, y), {x + cpos * CHUNK_WIDTH, y, 1}, (watchAltBlock ? 128 : 255));
                     blocksDrawn++;
                 }
             }
@@ -214,10 +214,10 @@ void RenderManager::renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Pl
     }
 }
 
-void RenderManager::renderBlock(Rectf dest, std::shared_ptr<Block> block, uint8_t alpha) {
-    assert(block != nullptr);
+void RenderManager::renderBlock(std::shared_ptr<World> world, Rectf dest, BlockPosition position, uint8_t alpha) {
+    auto block = world->getBlock(position.x, position.y, position.layer);
 
-    if (block->getType() == TYPE_BLOCK) {
+    if (block != nullptr) {
         auto sm = SettingsManager::get();
         
         Col3u col = {255, 255, 255};
@@ -226,7 +226,7 @@ void RenderManager::renderBlock(Rectf dest, std::shared_ptr<Block> block, uint8_
             col = block->getTag<Col3u>(TagID::TAG_COLOR);
         }
 
-        if(!block->getLayer()) {
+        if(position.layer < 1) {
             col.brightness(-(1.f - sm->getValue<float>("video.layer0.brightness", 0.75f)));
         }
 
@@ -258,12 +258,12 @@ void RenderManager::renderEntity(std::string& textureKey, std::shared_ptr<Entity
 
 // TODO: Rework this
 void RenderManager::renderSimplePlayer(std::shared_ptr<SimplePlayer> player) {
-    auto dbg = Debug::get();
-    if (dbg->isVisible()) {
-        for (auto& hitbox : player->getWorld()->getHitboxes(player->getHitbox())) {
-            DrawRectangleLinesEx(hitbox.getRect().to<Rectangle>(), 0.05f, RED);
-        }
-    }
+    // auto dbg = Debug::get();
+    // if (dbg->isVisible()) {
+    //     for (auto& hitbox : player->getWorld()->getHitboxes(player->getHitbox())) {
+    //         DrawRectangleLinesEx(hitbox.getRect().to<Rectangle>(), 0.05f, RED);
+    //     }
+    // }
 
     auto tex = TextureManager::get()->getTexture("player.png");
 
@@ -282,9 +282,9 @@ void RenderManager::renderSimplePlayer(std::shared_ptr<SimplePlayer> player) {
         DrawTextEx(GetFontDefault(), username.c_str(), {hitbox.x + hitbox.width / 2.f - size.x / 2.f, hitbox.y - 1.f}, 0.5f, 0.05f, WHITE);
     }
 
-    if (dbg->isVisible()) {
-        DrawRectangleLinesEx(hitbox.getRect().to<Rectangle>(), 0.025f, GREEN);
-    }
+    // if (dbg->isVisible()) {
+    //     DrawRectangleLinesEx(hitbox.getRect().to<Rectangle>(), 0.025f, GREEN);
+    // }
 }
 
 void RenderManager::renderPlayerTexture(Vec2f pos, std::string const& key, Vec2f size, int animFrame, Direction direction, std::string const& username, float nameHeight, float nameSpacing) {

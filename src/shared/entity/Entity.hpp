@@ -10,32 +10,25 @@ class World;
 class Entity : public Serializable {
 protected:
     Hitbox m_hitbox;
-    std::shared_ptr<World> m_world;
-
-    float m_prevX;
-    float m_prevY;
-    float m_speedX = 0.0f;
-    float m_speedY = 0.0f;
+    Vec2f m_speed;
 
     bool m_remove = false;
     bool m_onGround = false;
 
     Direction m_direction;
 
-    void resetPosition();
-
 public:
-    Entity(std::shared_ptr<World> world);
+    Entity();
 
-    virtual void onTick();
-    void move(float x, float y);
+    virtual void onTick() {}
+    void move(std::vector<Hitbox>& env, float xa, float ya);
 
     DataStream serialize() override;
     bool deserialize(DataStream& stream) override;
 
     void setPosition(Vec2f pos);
     void setSize(Vec2f size);
-    void turn(Direction dir);
+    void setDirection(Direction dir) { m_direction = dir; }
 
     void remove() { m_remove = true; }
 
@@ -44,6 +37,5 @@ public:
     auto getDirection() { return m_direction; }
     auto getSize() { return Vec2f {m_hitbox.width, m_hitbox.height}; }
     auto willRemove() { return m_remove; }
-    auto getSpeed() { return Vec2f {m_speedX, m_speedY}; }
-    auto getWorld() { return m_world; }
+    auto getSpeed() { return m_speed; }
 };

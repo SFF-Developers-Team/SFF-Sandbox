@@ -51,7 +51,7 @@ public:
     void updateControls();
 
     bool isChunkInView(std::shared_ptr<Chunk> chunk);
-    bool isBlockInView(std::shared_ptr<Block> block);
+    bool isBlockInView(BlockPosition position);
     bool canDestroyBlock(BlockPosition target);
     bool canPlaceBlock(BlockPosition target);
     bool canAccessBlock(BlockPosition target);

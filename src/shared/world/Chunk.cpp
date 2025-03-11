@@ -6,7 +6,7 @@
 #include <miniz.h>
 
 Chunk::Chunk(std::shared_ptr<World> world, ChunkPosition pos) : Serializable(CHUNK), m_world(world), m_position(pos) {
-    m_blocks.resize(CHUNK_WIDTH * world->getHeight() * LAYERS);
+    m_blocks.resize(CHUNK_WIDTH * world->getHeight() * CHUNK_DEPTH);
 }
 
 void Chunk::onTick() {
@@ -16,12 +16,12 @@ void Chunk::onTick() {
     auto block = getBlock(x, y, z);
 
     if(block) {
-        block->onRandomTick();
+        block->onRandomTick(m_world.get(), {x, y, z});
     }
 }
 
 bool Chunk::isOutOfBound(int x, int y, uint8_t layer) {
-    bool result = (x < (x < 0 ? -CHUNK_WIDTH : 0) || x > (x > 0 ? CHUNK_WIDTH - 1 : 0) || y < 0 || y >= m_world->getHeight() || layer < 0 || layer > LAYERS - 1);
+    bool result = (x < (x < 0 ? -CHUNK_WIDTH : 0) || x > (x > 0 ? CHUNK_WIDTH - 1 : 0) || y < 0 || y >= m_world->getHeight() || layer < 0 || layer > CHUNK_DEPTH - 1);
 
     return result;
 }
@@ -32,11 +32,6 @@ int Chunk::getIndex(int x, int y, uint8_t layer) {
 
 void Chunk::setBlock(int x, int y, uint8_t layer, std::shared_ptr<Block> block) {
     if (!isOutOfBound(x, y, layer)) {
-        if(block != nullptr) {
-            block->setPos(m_position * CHUNK_WIDTH + x, y, layer);
-            block->m_world = m_world.get();
-        }
-        
         m_blocks[getIndex((x < 0 ? CHUNK_WIDTH + x : x), y, layer)] = block;
     }
 }
@@ -74,7 +69,7 @@ DataStream Chunk::serialize() {
 
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < m_world->getHeight(); y++) {
-            for (int layer = 0; layer < LAYERS; layer++) {
+            for (int layer = 0; layer < CHUNK_DEPTH; layer++) {
                 auto block = getBlock(x, y, layer);
 
                 if (block && block->getID() != ItemID::AIR) {

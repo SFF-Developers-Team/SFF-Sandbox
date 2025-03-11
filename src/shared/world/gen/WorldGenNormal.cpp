@@ -32,7 +32,7 @@ std::shared_ptr<Chunk> WorldGenNormal::generateChunk(int32_t position) {
 
     // generating surface
     for (int x = 0u; x < CHUNK_WIDTH; x++) {
-        for (uint8_t z = 0u; z < LAYERS; z++) {
+        for (uint8_t z = 0u; z < CHUNK_DEPTH; z++) {
             int grassLevel = m_world->getHeight() - (m_world->getHeight() * 0.5f) * m_perlinNoise.noise2D_01(fabs(INT_MAX / 2 + position * CHUNK_WIDTH + x) * 0.01f, z * 0.01f);
             int stoneLevel = grassLevel + 4 + m_random() % 3;
 

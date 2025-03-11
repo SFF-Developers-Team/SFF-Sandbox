@@ -5,16 +5,16 @@ Leaves::Leaves() : Block(ItemID::LEAVES) {
     setTag(TAG_COLOR, Col3u {0, 228, 48});
 }
 
-void Leaves::onRandomTick() {
-    Block::onRandomTick();
+void Leaves::onRandomTick(World* world, BlockPosition position) {
+    Block::onRandomTick(world, position);
 
     if (hasTag(TAG_NATURAL)) {
         bool isThereTree = false;
 
-        for (int x = m_x - 4; x < m_x + 4; x++) {
-            for (int y = m_y - 4; y < m_y + 4; y++) {
-                auto block0 = m_world->getBlock(x, y, 0);
-                auto block1 = m_world->getBlock(x, y, 1);
+        for (int x = position.x - 4; x < position.x + 4; x++) {
+            for (int y = position.y - 4; y < position.y + 4; y++) {
+                auto block0 = world->getBlock(x, y, 0);
+                auto block1 = world->getBlock(x, y, 1);
 
                 isThereTree |= block0 != nullptr && block0->getID() == OAK_LOG;
                 isThereTree |= block1 != nullptr && block1->getID() == OAK_LOG;
@@ -22,7 +22,7 @@ void Leaves::onRandomTick() {
         }
 
         if (!isThereTree) {
-            m_world->setBlock(m_x, m_y, m_layer, nullptr);
+            world->setBlock(position.x, position.y, position.layer, nullptr);
         }
     }
 }

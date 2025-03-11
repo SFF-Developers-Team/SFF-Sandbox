@@ -11,7 +11,8 @@ HeartsIndicator::HeartsIndicator(std::shared_ptr<Player> player) : m_player(play
 }
 
 void HeartsIndicator::draw() {
-    auto add = (m_player->getWorld()->getTime() < m_player->getLastHeartTime() + 0.5f) * 3;
+    // auto add = (m_player->getWorld()->getTime() < m_player->getLastHurtTime() + 0.5f) * 3;
+    auto add = 0;
 
     for(auto i = 0; i < m_player->getMaxHealth() / 2.f; i++) {
         if(m_player->getHealth() / 2.f >= i + 1.f) {

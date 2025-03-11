@@ -21,11 +21,8 @@ World::World(uint32_t height, std::filesystem::path const& saveDir) : m_height(h
 World::World(std::filesystem::path const& saveDir) : World(256, saveDir) {}
 
 void World::generate() {
-    if (m_worldGen == nullptr) {
-        return logE("Can't generate world without WorldGen ¯\\_(ツ)_/¯");
-    }
-
     // spawn area [-3; 3]
+
     for (auto x = -3; x < 3; x++) {
         generateChunk(x);
     }
@@ -287,7 +284,8 @@ bool World::load() {
     //     }
     // }
 
-    return true;
+    // return true;
+    return false;
 }
 
 std::vector<Hitbox> World::getHitboxes(Hitbox entityHitbox, int radius) {
@@ -300,14 +298,10 @@ std::vector<Hitbox> World::getHitboxes(Hitbox entityHitbox, int radius) {
 
     for (int x = minX; x <= maxX; x++) {
         for (int y = minY; y <= maxY; y++) {
-            auto block = getBlock(x, y, 1);
+            auto hitbox = getBlockHitbox({x, y, 1});
 
-            if (block) {
-                auto hitbox = block->getHitbox();
-
-                if (hitbox.width != 0.0f && hitbox.height != 0.0f) {
-                    ret.push_back(hitbox);
-                }
+            if (hitbox.width > 0.f && hitbox.height > 0.f) {
+                ret.push_back(hitbox);
             }
         }
     }
@@ -403,11 +397,13 @@ bool World::isUsernameAlreadyTaken(std::string const& username) {
     return false;
 }
 
-Rectf World::getBlockHitbox(int x, int y) {
-    auto chunk = getChunk(x / CHUNK_WIDTH);
-    
-    if (chunk != nullptr) {
-        return chunk->getBlock(x % CHUNK_WIDTH, y, 1)->getHitbox();
+Rectf World::getBlockHitbox(BlockPosition position) {
+    if (position.layer > 0) {
+        auto block = getBlock(position.x, position.y, position.layer);
+
+        if (block != nullptr) {
+            return Rectf {static_cast<float>(position.x), static_cast<float>(position.y), 1.f, 1.f};
+        } 
     }
 
     return Rectf {0.0f, 0.0f, 0.0f, 0.0f};
@@ -418,10 +414,14 @@ bool World::isOutOfBound(int x, int y, uint8_t layer) {
         return true;
     }
 
-    return (y < 0 || y >= getHeight() || layer < 0 || layer > LAYERS - 1);
+    return (y < 0 || y >= getHeight() || layer < 0 || layer > CHUNK_DEPTH - 1);
 }
 
 void World::generateChunk(ChunkPosition xPos) {
+    if (m_worldGen == nullptr) {
+        return logE("Can't generate chunk without WorldGen ¯\\_(ツ)_/¯");
+    }
+
     m_chunks.insert(std::make_pair(xPos, m_worldGen->generateChunk(xPos)));
 
     for (auto& tree : m_postGenTrees) {

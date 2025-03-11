@@ -5,7 +5,8 @@
 #include <vector>
 
 #define CHUNK_WIDTH 16
-#define LAYERS 2
+#define CHUNK_HEIGHT 16
+#define CHUNK_DEPTH 2
 
 class World;
 
