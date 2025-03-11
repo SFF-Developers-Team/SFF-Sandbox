@@ -4,10 +4,8 @@
 class Mob : public Entity {
 protected:
     int m_health;
-    uint64_t m_lastHurtTime;
     float m_fallY;
-
-    bool m_prevOnGround;
+    uint64_t m_lastHurtTime;
 
 public:
     Mob(std::shared_ptr<World> world);

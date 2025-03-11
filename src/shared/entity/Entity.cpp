@@ -14,19 +14,19 @@ void Entity::setSize(Vec2f size) {
     m_hitbox.height = size.y;
 }
 
-void Entity::move(std::vector<Hitbox>& env, float xa, float ya) {
+void Entity::move(std::vector<Hitbox> const& env, float xa, float ya) {
     auto prevX = xa;
     auto prevY = ya;
 
     // Check for X collision
     for (auto& hitbox : env) {
-        xa = hitbox.clipXCollide(m_hitbox, xa);
+        xa = m_hitbox.clipXCollide(hitbox, xa);
     }
     m_hitbox.move(xa, 0.0f);
 
     // Check for Y collision
     for (auto& hitbox : env) {
-        ya = hitbox.clipYCollide(m_hitbox, ya);
+        ya = m_hitbox.clipYCollide(hitbox, ya);
     }
     m_hitbox.move(0.0f, ya);
 

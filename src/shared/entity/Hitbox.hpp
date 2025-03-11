@@ -12,10 +12,10 @@ public:
     Hitbox(Rectf rec);
     Hitbox(float x, float y, float width, float height);
 
-    float clipXCollide(Hitbox& otherHitbox, float x);
-    float clipYCollide(Hitbox& otherHitbox, float x);
+    float clipXCollide(Hitbox const& otherHitbox, float x);
+    float clipYCollide(Hitbox const& otherHitbox, float x);
 
-    bool intersects(Hitbox& otherHitbox);
+    bool intersects(Hitbox const& otherHitbox);
     void move(float x, float y);
     Hitbox expand(float x, float y);
 

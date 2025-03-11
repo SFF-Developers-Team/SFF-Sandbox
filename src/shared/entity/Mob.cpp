@@ -1,7 +1,7 @@
 #include <entity/Mob.hpp>
 #include <world/World.hpp>
 
-Mob::Mob(std::shared_ptr<World> world) : Entity(), m_health(getMaxHealth()), m_prevOnGround(false), m_lastHurtTime(0.f) {
+Mob::Mob(std::shared_ptr<World> world) : Entity(), m_health(getMaxHealth()), m_lastHurtTime(0.f) {
     for(auto i = 0; i < world->getHeight(); i++) {
         auto hitbox = world->getBlockHitbox({(int)m_hitbox.x, i, 1});
 
@@ -15,18 +15,20 @@ Mob::Mob(std::shared_ptr<World> world) : Entity(), m_health(getMaxHealth()), m_p
 }
 
 void Mob::onTick() {
-    if (m_prevOnGround && !m_onGround) {
+    bool static prevOnGround;
+
+    if (prevOnGround && !m_onGround) {
         m_fallY = m_hitbox.y;
     }
 
     float fallenBlocks = m_hitbox.y - m_fallY;
 
-    if(!m_prevOnGround && m_onGround && fallenBlocks > 4.f) {
+    if(!prevOnGround && m_onGround && fallenBlocks > 4.f) {
         m_health -= floor(fallenBlocks / 4.f);
         // m_lastHurtTime = m_world->getTime();
     }
 
-    m_prevOnGround = m_onGround;
+    prevOnGround = m_onGround;
 }
 
 DataStream Mob::serialize() {
