@@ -8,22 +8,13 @@
 #define CHUNK_HEIGHT 16
 #define CHUNK_DEPTH 2
 
-class World;
-
 class Chunk : public Serializable {
 private:
     std::vector<std::shared_ptr<Block>> m_blocks;
-    std::shared_ptr<World> m_world;
-    ChunkPosition m_position;
 
 public:
-    Chunk(std::shared_ptr<World> world, ChunkPosition position = 0);
-
-    void onTick();
-
-    auto getPosition() { return m_position; }
-    auto getWorld() { return m_world; }
-
+    Chunk();
+    
     void setBlock(int x, int y, uint8_t layer, ItemID type);
     void setBlock(int x, int y, uint8_t layer, std::shared_ptr<Block> block);
     std::shared_ptr<Block> getBlock(int x, int y, uint8_t layer);

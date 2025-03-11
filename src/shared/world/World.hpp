@@ -27,6 +27,7 @@ private:
     uint32_t m_version;
     uint32_t m_height;
     uint64_t m_time;
+    uint8_t m_randomTickSpeed;
 
 public:
     uint32_t const WORLD_VERSION = WORLDVER;

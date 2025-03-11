@@ -32,7 +32,23 @@ void World::onTick() {
     m_time++;
 
     for (auto& [x, chunk] : m_chunks) {
-        chunk->onTick();
+        for (auto x = 0; x < CHUNK_WIDTH; x++) {
+            for (auto y = 0; x < CHUNK_HEIGHT; y++) {
+                chunk->getBlock(x, y, 0)->onTick(this, {x, y, 0});
+                chunk->getBlock(x, y, 1)->onTick(this, {x, y, 1});
+            }
+        }
+
+        for (int i = 0; i < m_randomTickSpeed; i++) {
+            int x = rand() % CHUNK_WIDTH;
+            int y = rand() % CHUNK_HEIGHT;
+            uint8_t z = rand() % CHUNK_DEPTH;
+            auto block = chunk->getBlock(x, y, z);
+        
+            if(block) {
+                block->onRandomTick(this, {x, y, z});
+            }
+        }
     }
 
     for (auto& [id, player] : m_players) {

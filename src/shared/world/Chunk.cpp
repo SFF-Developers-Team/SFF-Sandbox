@@ -5,29 +5,19 @@
 #include <assert.h>
 #include <miniz.h>
 
-Chunk::Chunk(std::shared_ptr<World> world, ChunkPosition pos) : Serializable(CHUNK), m_world(world), m_position(pos) {
-    m_blocks.resize(CHUNK_WIDTH * world->getHeight() * CHUNK_DEPTH);
-}
-
-void Chunk::onTick() {
-    int x = rand() % CHUNK_WIDTH;
-    int y = rand() % m_world->getHeight();
-    uint8_t z = rand() % 2;
-    auto block = getBlock(x, y, z);
-
-    if(block) {
-        block->onRandomTick(m_world.get(), {x, y, z});
-    }
-}
+Chunk::Chunk() : Serializable(CHUNK), m_blocks(CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH) {}
 
 bool Chunk::isOutOfBound(int x, int y, uint8_t layer) {
-    bool result = (x < (x < 0 ? -CHUNK_WIDTH : 0) || x > (x > 0 ? CHUNK_WIDTH - 1 : 0) || y < 0 || y >= m_world->getHeight() || layer < 0 || layer > CHUNK_DEPTH - 1);
-
-    return result;
+    return (
+        x < (x < 0 ? -CHUNK_WIDTH : 0) || 
+        x > (x > 0 ? CHUNK_WIDTH - 1 : 0) || 
+        y < 0 || y >= CHUNK_HEIGHT || layer < 0 || 
+        layer > CHUNK_DEPTH - 1
+    );
 }
 
 int Chunk::getIndex(int x, int y, uint8_t layer) {
-    return (layer * CHUNK_WIDTH * m_world->getHeight()) + (y * CHUNK_WIDTH) + abs(x);
+    return (layer * CHUNK_WIDTH * CHUNK_HEIGHT) + (y * CHUNK_WIDTH) + abs(x);
 }
 
 void Chunk::setBlock(int x, int y, uint8_t layer, std::shared_ptr<Block> block) {
@@ -41,34 +31,30 @@ void Chunk::setBlock(int x, int y, uint8_t layer, ItemID type) {
 }
 
 std::shared_ptr<Block> Chunk::getBlock(int x, int y, uint8_t layer) {
-    if (isOutOfBound(x, y, layer)) {
-        return nullptr;
+    if (!isOutOfBound(x, y, layer)) {
+        return m_blocks[getIndex((x < 0 ? CHUNK_WIDTH + x : x), y, layer)];
     }
 
-    return m_blocks[getIndex((x < 0 ? CHUNK_WIDTH + x : x), y, layer)];
+    return nullptr;
 }
 
 bool Chunk::isBlockClosed(int x, int y, uint8_t layer) {
-    bool ret = (
+    return (
         getBlock(x - 1, y, layer) && 
         getBlock(x + 1, y, layer) && 
         getBlock(x, y - 1, layer) && 
         getBlock(x, y + 1, layer)
     );
-
-    return ret;
 }
 
 DataStream Chunk::serialize() {
     auto ret = Serializable::serialize();
-
-    ret.add(m_position);
     ret.add(countBlocks());
 
     DataStream blocks;
 
     for (int x = 0; x < CHUNK_WIDTH; x++) {
-        for (int y = 0; y < m_world->getHeight(); y++) {
+        for (int y = 0; y < CHUNK_HEIGHT; y++) {
             for (int layer = 0; layer < CHUNK_DEPTH; layer++) {
                 auto block = getBlock(x, y, layer);
 
@@ -105,27 +91,26 @@ DataStream Chunk::serialize() {
 
 bool Chunk::deserialize(DataStream& stream) {
     if(!Serializable::deserialize(stream)) return false;
-
-    m_position = stream.get<ChunkPosition>();
+    
     auto blockCount = stream.get<uint16_t>();
 
     if (!blockCount) {
         return false;
     }
 
-    auto wver = m_world->getVersion();
-    uint8_t blockSize = (!wver ? stream.get<uint8_t>() : 0);
+    // auto wver = m_world->getVersion();
+    // uint8_t blockSize = (!wver ? stream.get<uint8_t>() : 0);
 
     DataStream data;
 
     // World version 0-1 (raw data)
-    if (wver <= 1) {
-        data.resize(stream.size() - stream.offset());
-        std::copy(stream.begin() + stream.offset(), stream.end(), data.begin());
-    }
+    // if (wver <= 1) {
+    //     data.resize(stream.size() - stream.offset());
+    //     std::copy(stream.begin() + stream.offset(), stream.end(), data.begin());
+    // }
 
     // World version 2 (gzip compression)
-    if (wver > 1) {
+    // if (wver > 1) {
         auto size = stream.get<uint32_t>();
         auto compressed = stream.getN(size);
         uLongf decompressedSize = 1024 * 1024;
@@ -140,7 +125,7 @@ bool Chunk::deserialize(DataStream& stream) {
         }
 
         data.resize(decompressedSize);
-    }
+    // }
 
     std::fill(m_blocks.begin(), m_blocks.end(), nullptr);
 
@@ -162,7 +147,7 @@ bool Chunk::deserialize(DataStream& stream) {
         auto block = Block::create(data.getI<ItemID>());
         block->deserialize(data);
         
-        setBlock(x - m_position * CHUNK_WIDTH, y, l, block);
+        setBlock(x, y, l, block);
     }
 
 #if _DEBUG
