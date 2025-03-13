@@ -19,12 +19,14 @@ protected:
 public:
     SimplePlayer(std::shared_ptr<World> world);
 
-    uint8_t animationClamp(uint8_t value, uint8_t min, uint8_t max);
+    uint8_t animationClamp(uint8_t value, uint8_t min, uint8_t max) { return (value > max || value < min) ? min : value; }
     void setAnimation(AnimationType type);
 
     /// @brief For debug
     /// @return Animation name as string
     const char* getAnimationName();
+
+    Vec2i static getAnimLimit(AnimationType type);
 
     DataStream serialize() override;
     bool deserialize(DataStream& bytes) override;

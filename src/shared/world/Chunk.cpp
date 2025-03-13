@@ -10,9 +10,9 @@ Chunk::Chunk(std::shared_ptr<World> world, ChunkPosition pos) : Serializable(CHU
 }
 
 void Chunk::onTick() {
-    auto x = rand() % CHUNK_WIDTH;
-    auto y = rand() % m_world->getHeight();
-    auto z = rand() % 2;
+    int x = rand() % CHUNK_WIDTH;
+    int y = rand() % m_world->getHeight();
+    uint8_t z = rand() % 2;
     auto block = getBlock(x, y, z);
 
     if(block) {

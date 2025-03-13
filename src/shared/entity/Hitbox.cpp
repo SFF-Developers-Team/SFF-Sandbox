@@ -5,7 +5,7 @@ Hitbox::Hitbox(Rectf rec) : x(rec.x), y(rec.y), width(rec.width), height(rec.hei
 
 Hitbox::Hitbox(float x, float y, float width, float height) : x(x), y(y), width(width), height(height) {} 
 
-float Hitbox::clipXCollide(Hitbox& other, float xa) {
+float Hitbox::clipXCollide(Hitbox const& other, float xa) {
     if (other.y + other.height <= y || other.y >= y + height) {
         return xa;
     }
@@ -19,7 +19,7 @@ float Hitbox::clipXCollide(Hitbox& other, float xa) {
     return xa;
 }
 
-float Hitbox::clipYCollide(Hitbox& other, float ya) {
+float Hitbox::clipYCollide(Hitbox const& other, float ya) {
     if (other.x + other.width <= x || other.x >= x + width) {
         return ya;
     }
@@ -33,7 +33,7 @@ float Hitbox::clipYCollide(Hitbox& other, float ya) {
     return ya;
 }
 
-bool Hitbox::intersects(Hitbox& otherHitbox) {
+bool Hitbox::intersects(Hitbox const& otherHitbox) {
     // Check on X axis
     if (otherHitbox.x + otherHitbox.width <= x || otherHitbox.x >= x + width) {
         return false;

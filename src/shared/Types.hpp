@@ -338,14 +338,6 @@ enum AnimationType : uint8_t {
     PLAYER_CART
 };
 
-// clang-format off
-const static inline std::map<AnimationType, std::pair<uint8_t, uint8_t>> m_animLimits = {
-    {PLAYER_MOVE, {1, 5}},
-    {PLAYER_SNEAK, {6, 7}},
-    {PLAYER_HIT, {9, 13}}
-};
-//clang-format on
-
 using ByteVector = std::vector<uint8_t>;
 
 enum ObjectHeader : uint8_t {

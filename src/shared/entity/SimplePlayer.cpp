@@ -24,18 +24,19 @@ const char* SimplePlayer::getAnimationName() {
     //clang-format on
 }
 
-void SimplePlayer::setAnimation(AnimationType type) {
-    m_animType = type;
-
-    if(m_animLimits.contains(type)) {
-        auto limit = m_animLimits.at(type);
-        m_animFrame = animationClamp(m_animFrame, limit.first, limit.second);
+Vec2i SimplePlayer::getAnimLimit(AnimationType type) {
+    switch (type) {
+        case PLAYER_MOVE: return {1, 5};
+        case PLAYER_SNEAK: return {6, 7};
+        case PLAYER_HIT: return {9, 13};
+        default: return {static_cast<int>(type), static_cast<int>(type)};
     }
 }
 
-uint8_t SimplePlayer::animationClamp(uint8_t value, uint8_t min, uint8_t max) {
-    if(value > max || value < min) return min;
-    return value;
+void SimplePlayer::setAnimation(AnimationType type) {
+    auto limit = getAnimLimit(type);
+    m_animType = type;
+    m_animFrame = animationClamp(m_animFrame, limit.x, limit.y);
 }
 
 DataStream SimplePlayer::serialize() {

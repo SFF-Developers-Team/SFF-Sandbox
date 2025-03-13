@@ -36,7 +36,17 @@ void World::onTick() {
     }
 
     for (auto& [id, player] : m_players) {
-        player->onTick();
+        player->onTick(this);
+
+        int x = xToChunk(player->getPosition().x);
+        
+        for (int i = x - 2; i < x + 2; i++) {
+            auto chunk = getChunk(i);
+            
+            if (chunk == nullptr) {
+                generateChunk(i);
+            }
+        }
     }
 }
 
