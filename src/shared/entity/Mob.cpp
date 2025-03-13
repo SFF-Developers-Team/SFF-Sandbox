@@ -14,7 +14,7 @@ Mob::Mob(std::shared_ptr<World> world) : Entity(), m_health(getMaxHealth()), m_l
     m_fallY = m_hitbox.y;
 }
 
-void Mob::onTick() {
+void Mob::onTick(World*) {
     bool static prevOnGround;
 
     if (prevOnGround && !m_onGround) {

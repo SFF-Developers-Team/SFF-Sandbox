@@ -159,7 +159,6 @@ bool Player::canPlaceBlock(BlockPosition target) {
 
 void Player::onTickControls() {
     auto target = getTargetBlock();
-    auto gravitation = (!m_fly) ? 0.02f : 0.0f;
     auto mp = Multiplayer::get();
     auto ct = Game::get()->getControlType();
 
@@ -205,11 +204,23 @@ void Player::onTickControls() {
             placeBlock();
         }
     }
+}
+
+void Player::onTick(World* world) {
+    SimplePlayer::onTick(world);
+
+    m_prevAnimType = m_animType;
+    m_prevAnimFrame = m_animFrame;
+    m_prevDir = m_direction;
+    m_animFps = 10;
+
+    onTickControls();
 
     m_speed.x += (m_onGround ? (m_sneak ? 0.0025f : 0.06f) : 0.02f) * m_forward;
-    m_speed.y += gravitation;
+    m_speed.y += (!m_fly) ? 0.02f : 0.0f;
 
-    // move(m_speed.x, m_speed.y);
+    auto hitboxesAround = world->getHitboxes(m_hitbox.expand(m_speed.x, m_speed.y));
+    move(hitboxesAround, m_speed.x, m_speed.y);
 
     m_speed.x *= 0.91f;
     m_speed.y *= 0.98f;
@@ -224,20 +235,9 @@ void Player::onTickControls() {
     }
 
     m_forward = 0.f;
-}
 
-void Player::onTick() {
-    SimplePlayer::onTick();
-
-    m_prevAnimType = m_animType;
-    m_prevAnimFrame = m_animFrame;
-    m_prevDir = m_direction;
-    m_animFps = 10;
-
-    onTickControls();
-
-    auto hitLimit = m_animLimits.at(PLAYER_HIT);
-    if (m_animFrame < hitLimit.first || m_animFrame >= hitLimit.second) {
+    auto hitLimit = getAnimLimit(m_animType);
+    if (m_animFrame < hitLimit.x || m_animFrame >= hitLimit.y) {
         setAnimation(PLAYER_IDLE);
     }
 
@@ -255,24 +255,11 @@ void Player::onTick() {
         setAnimation(PLAYER_JUMP);
     }
 
-    // if (m_world->getTime() < m_lastHurtTime + 15) {
-    //     setAnimation(PLAYER_HURT);
-    // }
+    if (world->getTime() < m_lastHurtTime + 15) {
+        setAnimation(PLAYER_HURT);
+    }
 
     auto mp = Multiplayer::get();
-
-    // auto minX = m_world->xToChunk(m_hitbox.x) - 2;
-    // auto maxX = m_world->xToChunk(m_hitbox.x) + 2;
-
-    // for(auto x = minX; x < maxX; x++) {
-    //     if(m_world->getChunk(x)) continue;
-
-    //     if(mp->connected()) {
-    //         mp->requestChunk(x);
-    //     } else {
-    //         m_world->generateChunk(x);
-    //     }
-    // }
 
     if(!m_sneakToggled) {
         m_sneak = false;

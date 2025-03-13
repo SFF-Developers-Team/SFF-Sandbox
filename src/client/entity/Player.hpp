@@ -43,7 +43,7 @@ private:
 public:
     Player(std::shared_ptr<World> world);
 
-    void onTick() override;
+    void onTick(World* world) override;
     void update();
     void onTickControls();
     void updateCamera();

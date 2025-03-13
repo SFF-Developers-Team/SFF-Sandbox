@@ -20,8 +20,8 @@ protected:
 public:
     Entity();
 
-    virtual void onTick() {}
-    void move(std::vector<Hitbox> const& env, float xa, float ya);
+    virtual void onTick(World* world) {}
+    void move(std::vector<Hitbox>& env, float xa, float ya);
 
     DataStream serialize() override;
     bool deserialize(DataStream& stream) override;

@@ -10,7 +10,7 @@ protected:
 public:
     Mob(std::shared_ptr<World> world);
 
-    void onTick();
+    void onTick(World* world);
 
     virtual int getMaxHealth() { return 20; }
     int getHealth() { return m_health; }

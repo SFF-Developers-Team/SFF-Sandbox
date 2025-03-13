@@ -12,8 +12,8 @@ public:
     Hitbox(Rectf rec);
     Hitbox(float x, float y, float width, float height);
 
-    float clipXCollide(Hitbox const& otherHitbox, float x);
-    float clipYCollide(Hitbox const& otherHitbox, float x);
+    float clipXCollide(Hitbox const& otherHitbox, float xa);
+    float clipYCollide(Hitbox const& otherHitbox, float ya);
 
     bool intersects(Hitbox const& otherHitbox);
     void move(float x, float y);

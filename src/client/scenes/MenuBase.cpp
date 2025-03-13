@@ -37,12 +37,7 @@ MenuBase::MenuBase() : Scene() {
 
             for(int i = 0; i < blocks.size(); i++) {
                 if(blocks[i] != 0) {
-                    Col4u color;
-                    if(blocks[i] == 11) {
-                        color = COL_GREEN;
-                    } else {
-                        color = COL_WHITE;
-                    }
+                    auto color = (blocks[i] == 11) ? COL_GREEN : COL_WHITE;
                     auto x = static_cast<float>(i % bgwidth);
                     auto y = static_cast<float>(i / bgwidth);
 
