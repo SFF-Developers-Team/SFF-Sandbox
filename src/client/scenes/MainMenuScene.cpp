@@ -22,10 +22,12 @@ MainMenuScene::MainMenuScene() : MenuBase() {
         {"Singleplayer", [game](Button*) { 
             auto world = std::make_shared<World>(Platform::getHomeDir() / "worlds" / "world1");
 
-            if (!world->load()) {
-                world->setGenerator(std::make_shared<WorldGenNormal>(world, 1));
+            srand(time(0));
+
+            // if (!world->load()) {
+                world->setGenerator(std::make_shared<WorldGenNormal>(rand()));
                 world->generate();
-            }
+            // }
 
             auto player = std::make_shared<Player>(world);
 

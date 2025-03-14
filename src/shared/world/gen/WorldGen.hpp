@@ -8,12 +8,11 @@ class Chunk;
 
 class WorldGen {
 protected:
-    std::shared_ptr<World> m_world;
     int64_t m_seed = 0;
     WorldGenType m_type;
 
 public:
-    WorldGen(std::shared_ptr<World> world, uint64_t seed);
+    WorldGen(uint64_t seed);
 
     virtual std::shared_ptr<Chunk> generateChunk(Vec2i position) = 0;
     void generateBlock(std::shared_ptr<Chunk> chunk, BlockPosition position, ItemID id);

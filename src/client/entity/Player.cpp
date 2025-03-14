@@ -12,7 +12,7 @@
 #include <ItemDatabase.hpp>
 
 Player::Player(std::shared_ptr<World> world) : SimplePlayer(world), m_forward(0.f), 
-    m_gamemode(GAMEMODE_SURVIVAL), m_id(0), m_lastAnimFrameTime(0.f), m_lastDestroyedBlock(0.f), m_lastPlacedBlock(0.f) {
+    m_gamemode(GAMEMODE_CREATIVE), m_id(0), m_lastAnimFrameTime(0.f), m_lastDestroyedBlock(0.f), m_lastPlacedBlock(0.f) {
     m_camera.zoom = 50.0f;
     m_camera.rotation = 0.0f;
 
@@ -280,6 +280,14 @@ void Player::onTick(World* world) {
     if (mp->isConnected() && shouldupd) {
         mp->sendObj(std::shared_ptr<SimplePlayer>(Game::get()->getPlayer()), EVERYTHING, false);
     }
+
+    auto dbg = Debug::get();
+    auto target = getTargetBlock();
+    auto block = world->getBlock(target);
+
+    dbg->setString(PLAYER_TARGET_BLOCK, "Target block: [{}, {}] ({})", target.x, target.y, (block ? block->getName() : "nullptr"));
+    dbg->setString(PLAYER_POSITION, "Position: [{:.2f}, {:.2f}]", m_hitbox.x, m_hitbox.y);
+    dbg->setString(PLAYER_HEALTH, "Health: {}", m_health);
 }
 
 void Player::updateControls() {
@@ -322,18 +330,10 @@ void Player::updateControls() {
 void Player::update() {
     updateCamera();
     updateAnimation();
-
-    // auto dbg = Debug::get();
-    // auto target = getTargetBlock();
-    // auto block = m_world->getBlock(target.x, target.y, target.layer);
-
-    // dbg->setString(PLAYER_TARGET_BLOCK, "Target block: [{}, {}] ({})", target.x, target.y, (block ? block->getName() : "nullptr"));
-    // dbg->setString(PLAYER_POSITION, "Position: [{:.2f}, {:.2f}]", m_hitbox.x, m_hitbox.y);
-    // dbg->setString(PLAYER_HEALTH, "Health: {}", m_health);
 }
 
 bool Player::isChunkInView(Vec2i chunkPos) {
-    Vec2i minPos = chunkPos;
+    Vec2i minPos = {chunkPos.x * CHUNK_WIDTH, chunkPos.y * CHUNK_HEIGHT};
     Vec2i maxPos = {minPos.x + CHUNK_WIDTH, minPos.y + CHUNK_HEIGHT};
     Vec2i zero = {0, 0};
     Vec2i screen = {GetScreenWidth(), GetScreenHeight()};

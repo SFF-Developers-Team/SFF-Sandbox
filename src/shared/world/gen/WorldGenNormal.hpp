@@ -9,6 +9,6 @@ private:
     std::mt19937 m_random;
 
 public:
-    WorldGenNormal(std::shared_ptr<World> world, uint64_t seed);
+    WorldGenNormal(uint64_t seed);
     virtual std::shared_ptr<Chunk> generateChunk(Vec2i position) override;
 };

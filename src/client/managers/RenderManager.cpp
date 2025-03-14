@@ -158,19 +158,15 @@ void RenderManager::renderWorld(std::shared_ptr<World> world, std::shared_ptr<Pl
             renderChunk(pos, world, chunk, player);
             chunksCount++;
         }
-
-        if (dbg->isVisible()) {
-            drawRectLines(
-                {static_cast<float>(pos.x), static_cast<float>(pos.y), CHUNK_WIDTH, CHUNK_HEIGHT}, 
-                COL_YELLOW, 1.f
-            );
-            dbg->setString(RENDER_CHUNKS, "Chunks rendered: {}", chunksCount);
-        }
     }
 
     for (auto& [_, player] : world->getPlayers()) {
         renderSimplePlayer(player);
         dbg->setString(RENDER_PLAYERS, "Players rendered: {}", playersCount++);
+    }
+
+    if (dbg->isVisible()) {
+        
     }
 }
 
@@ -181,7 +177,7 @@ void RenderManager::renderChunk(Vec2i pos, std::shared_ptr<World> world, std::sh
 
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < CHUNK_HEIGHT; y++) {
-            int blockX = ((pos.x != 0) && x < CHUNK_WIDTH ? pos.x * CHUNK_WIDTH + x : x);
+            int blockX = pos.x * CHUNK_WIDTH + x;
             int blockY = pos.y * CHUNK_HEIGHT + y;
 
             if (player->isBlockInView({blockX, blockY})) {
@@ -195,12 +191,12 @@ void RenderManager::renderChunk(Vec2i pos, std::shared_ptr<World> world, std::sh
                     player->canAccessBlock(target);
 
                 if (block0 != nullptr /* && (block1 == nullptr || watchAltBlock) */) {
-                    renderBlock(world, BLOCK_RECT(blockX, y), {blockX, blockY, 0});
+                    renderBlock(world, BLOCK_RECT(blockX, blockY), {blockX, blockY, 0});
                     blocksDrawn++;
                 }
 
                 if (block1 != nullptr) {
-                    renderBlock(world, BLOCK_RECT(blockX, y), {blockX, blockY, 0}, (watchAltBlock ? 128 : 255));
+                    renderBlock(world, BLOCK_RECT(blockX, blockY), {blockX, blockY, 1}, (watchAltBlock ? 128 : 255));
                     blocksDrawn++;
                 }
             }
@@ -209,6 +205,11 @@ void RenderManager::renderChunk(Vec2i pos, std::shared_ptr<World> world, std::sh
 
     if (dbg->isVisible()) {
         dbg->setString(RENDER_BLOCKS, "Blocks rendered: {}", blocksDrawn);
+
+        drawRectLines(
+            {static_cast<float>(pos.x), static_cast<float>(pos.y), CHUNK_WIDTH, CHUNK_HEIGHT}, 
+            COL_YELLOW, 0.05f
+        );
     }
 }
 

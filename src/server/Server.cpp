@@ -71,7 +71,7 @@ void Server::init() {
         std::shared_ptr<WorldGen> generator;
         switch(config["world-generator"].value_or(0)) {
             default:
-            case 0: generator = std::make_shared<WorldGenNormal>(m_world, seed); break;
+            case 0: generator = std::make_shared<WorldGenNormal>(seed); break;
             // Oh fu*k I thought we have more worldgens
         }
 

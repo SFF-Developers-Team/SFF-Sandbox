@@ -18,7 +18,7 @@ std::vector<Ore> ores = {
     {ItemID::DIAMOND_ORE, 488, 2, 0.01f}
 };
 
-WorldGenNormal::WorldGenNormal(std::shared_ptr<World> world, uint64_t seed) : WorldGen(world, seed), m_perlinNoise(seed) {
+WorldGenNormal::WorldGenNormal(uint64_t seed) : WorldGen(seed), m_perlinNoise(seed) {
     m_type = NORMAL;
 }
 
@@ -33,8 +33,8 @@ std::shared_ptr<Chunk> WorldGenNormal::generateChunk(Vec2i pos) {
     // generating surface
     for (int x = 0u; x < CHUNK_WIDTH; x++) {
         for (uint8_t z = 0u; z < CHUNK_DEPTH; z++) {
-            int grassLevel = 256 + 128 * m_perlinNoise.noise2D_01((0x7FFFFFFF + pos.x * CHUNK_WIDTH + x) * 0.01f, z * 0.01f);
-            int stoneLevel = grassLevel + 4 + m_random() % 3;
+            int grassLevel = 64 + 128 * m_perlinNoise.noise2D_01((pos.x * CHUNK_WIDTH + x) * 0.01f, z * 0.01f);
+            int stoneLevel = grassLevel + 4 + m_random() % 4;
 
             for (int y = 0; y < CHUNK_HEIGHT; y++) {
                 int wy = pos.y * CHUNK_HEIGHT + y; 
@@ -49,7 +49,7 @@ std::shared_ptr<Chunk> WorldGenNormal::generateChunk(Vec2i pos) {
                     continue;
                 }
 
-                if (wy > grassLevel && y < stoneLevel) {
+                if (wy > grassLevel && wy < stoneLevel) {
                     generateBlock(ret, {x, y, z}, DIRT);
                     continue;
                 }
@@ -60,10 +60,10 @@ std::shared_ptr<Chunk> WorldGenNormal::generateChunk(Vec2i pos) {
                 }
             }
 
-            if(z == 0 && idis(m_random) < 10 && x - lastTree > 2) {
-                m_world->postGenerateTree({pos.x * CHUNK_WIDTH + x, grassLevel, idis(m_random) % 3 + 5});
-                lastTree = x;
-            }
+            // if(z == 0 && idis(m_random) < 10 && x - lastTree > 2) {
+            //     m_world->postGenerateTree({pos.x * CHUNK_WIDTH + x, grassLevel, idis(m_random) % 3 + 5});
+            //     lastTree = x;
+            // }
         }
     }
 
@@ -95,7 +95,7 @@ std::shared_ptr<Chunk> WorldGenNormal::generateChunk(Vec2i pos) {
     // generate caves
     for (int x = 0u; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < CHUNK_HEIGHT; y++) {
-            float caveNoise = m_perlinNoise.noise2D_01((0x7FFFFFFF + pos.x * CHUNK_WIDTH + x) * 0.1f, (pos.y * CHUNK_HEIGHT + y) * 0.1f);
+            float caveNoise = m_perlinNoise.noise2D_01((pos.x * CHUNK_WIDTH + x) * 0.1f, (pos.y * CHUNK_HEIGHT + y) * 0.1f);
 
             if(caveNoise > 0.6f) {
                 ret->setBlock({x, y, 1}, nullptr);

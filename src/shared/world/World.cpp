@@ -1,3 +1,5 @@
+#include <cstdint>
+#include <memory>
 #include <world/gen/WorldGenNormal.hpp>
 #include <entity/SimplePlayer.hpp>
 #include <world/World.hpp>
@@ -19,9 +21,7 @@ World::World(std::filesystem::path const& saveDir) : m_saveDir(saveDir), m_versi
 }
 
 void World::generate() {
-    // spawn area [-3; 3] x [-3; 3]
-
-    for (auto i = -9; i < 9; i++) {
+    for (auto i = 0; i < 32; i++) {
         generateChunk({i / 3, i % 3});
     }
 }
@@ -31,9 +31,16 @@ void World::onTick() {
 
     for (auto& [pos, chunk] : m_chunks) {
         for (auto x = 0; x < CHUNK_WIDTH; x++) {
-            for (uint8_t y = 0; x < CHUNK_HEIGHT; y++) {
-                chunk->getBlock({x, y, 0})->onTick(this, {x, y, 0});
-                chunk->getBlock({x, y, 1})->onTick(this, {x, y, 1});
+            for (auto y = 0; y < CHUNK_HEIGHT; y++) {
+                auto block0 = chunk->getBlock({x, y, 0});
+                if (block0 != nullptr) {
+                    block0->onTick(this, {x, y, 0});
+                }
+
+                auto block1 = chunk->getBlock({x, y, 1});
+                if (block1 != nullptr) {
+                    block1->onTick(this, {x, y, 0});
+                }
             }
         }
 
@@ -43,7 +50,7 @@ void World::onTick() {
             uint8_t z = rand() % CHUNK_DEPTH;
             auto block = chunk->getBlock({x, y, z});
         
-            if(block) {
+            if(block != nullptr) {
                 block->onRandomTick(this, {x, y, z});
             }
         }
@@ -54,11 +61,13 @@ void World::onTick() {
         auto playerPos = player->getPosition();
         auto pos = TO_CHUNK_POS(playerPos);
         
-        for (int i = -4; i < 4; i++) {
-            auto chunk = getChunk({i / 2, i % 2});
-            
-            if (chunk == nullptr) {
-                generateChunk({i / 2, i % 2});
+        for (int x = pos.x - 4; x < pos.x + 4; x++) {
+            for (int y = pos.y - 4; y < pos.y + 4; y++) {
+                auto chunk = getChunk({x, y});
+                
+                if (chunk == nullptr) {
+                    generateChunk({x, y});
+                }
             }
         }
     }
@@ -212,7 +221,7 @@ bool World::load() {
     auto genType = worldData.get<WorldGenType>();
     auto seed = worldData.get<uint64_t>();
 
-    m_worldGen = std::make_shared<WorldGenNormal>(std::shared_ptr<World>(this), seed);
+    m_worldGen = std::make_shared<WorldGenNormal>(seed);
     m_time = worldData.get<uint64_t>();
 
     for (const auto& entry : std::filesystem::directory_iterator(m_saveDir / "chunks")) {
@@ -268,7 +277,7 @@ PlayerID World::addPlayer(std::shared_ptr<SimplePlayer> player, std::string cons
         return 0;
     }
 
-    it->second = player;
+    m_players[m_lastPlayerID] = player;
     player->setID(m_lastPlayerID);
     player->setUsername(username);
 
@@ -375,36 +384,36 @@ void World::generateChunk(Vec2i pos) {
 
     m_chunks[pos] = m_worldGen->generateChunk(pos);
 
-    for (auto& tree : m_postGenTrees) {
-        for (auto y = tree.y - tree.trunkHeight; y < tree.y; y++) {
-            auto log = Block::create(OAK_LOG);
-            log->setTag(TAG_NATURAL, true);
+    // for (auto& tree : m_postGenTrees) {
+    //     for (auto y = tree.y - tree.trunkHeight; y < tree.y; y++) {
+    //         auto log = Block::create(OAK_LOG);
+    //         log->setTag(TAG_NATURAL, true);
 
-            setBlock({tree.x, y, 0}, log);
-        }
+    //         setBlock({tree.x, y, 0}, log);
+    //     }
 
-        for (int x = -3; x <= 3; ++x) {
-            for (int y = -2; y <= 2; ++y) {
-                if (x * x + y * y <= 3 * 2) {
-                    Vec2i pos = {tree.x + x, (tree.y - tree.trunkHeight) + y};
+    //     for (int x = -3; x <= 3; ++x) {
+    //         for (int y = -2; y <= 2; ++y) {
+    //             if (x * x + y * y <= 3 * 2) {
+    //                 Vec2i pos = {tree.x + x, (tree.y - tree.trunkHeight) + y};
                     
-                    auto chunkPos = TO_CHUNK_POS(pos);
+    //                 auto chunkPos = TO_CHUNK_POS(pos);
 
-                    if (getChunk(chunkPos) == nullptr) {
-                        generateChunk(chunkPos);
-                    }
+    //                 if (getChunk(chunkPos) == nullptr) {
+    //                     generateChunk(chunkPos);
+    //                 }
 
-                    auto leaves = Block::create(LEAVES);
+    //                 auto leaves = Block::create(LEAVES);
 
-                    if (getBlock({pos.x, pos.y, 0}) == nullptr) {
-                        setBlock({pos.x, pos.y, 0}, Block::create(*leaves));
-                    }
+    //                 if (getBlock({pos.x, pos.y, 0}) == nullptr) {
+    //                     setBlock({pos.x, pos.y, 0}, Block::create(*leaves));
+    //                 }
 
-                    setBlock({pos.x, pos.y, 1}, leaves);
-                }
-            }
-        }
-    }
+    //                 setBlock({pos.x, pos.y, 1}, leaves);
+    //             }
+    //         }
+    //     }
+    // }
 
     m_postGenTrees.clear();
 }
