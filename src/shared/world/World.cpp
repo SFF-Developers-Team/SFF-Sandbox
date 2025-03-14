@@ -103,11 +103,7 @@ bool World::saveChunk(Vec2i pos) {
 }
 
 bool World::loadChunk(Vec2i pos) {
-    auto chunkIt = m_chunks.find(pos);
-
-    if (chunkIt == m_chunks.end()) {
-        chunkIt->second = std::make_shared<Chunk>();
-    }
+    auto [chunkIt, inserted] = m_chunks.try_emplace(pos, std::make_shared<Chunk>());
     
     std::ifstream file(m_saveDir / "chunks" / std::format("{},{}.dat", pos.x, pos.y), std::ios::in | std::ios::binary);
 
@@ -315,31 +311,31 @@ bool World::savePlayer(PlayerID id) {
 }
 
 bool World::loadPlayer(std::string const& username) {
-    auto it = std::find_if(m_players.begin(), m_players.end(), [username](auto&& pair) {
-        return pair.second->getUsername() == username;
-    });
+    // auto it = std::find_if(m_players.begin(), m_players.end(), [username](auto&& pair) {
+    //     return pair.second->getUsername() == username;
+    // });
 
-    if (it == m_players.end()) {
-        it->second = std::make_shared<SimplePlayer>(std::shared_ptr<World>(this));
-    }
+    // if (it == m_players.end()) {
+    //     it->second = std::make_shared<SimplePlayer>(std::shared_ptr<World>(this));
+    // }
 
-    std::ifstream file(m_saveDir / "players" / ((username.empty() ? "player" : username) + ".dat"), std::ios::in | std::ios::binary);
+    // std::ifstream file(m_saveDir / "players" / ((username.empty() ? "player" : username) + ".dat"), std::ios::in | std::ios::binary);
         
-    if (!file.is_open()) {
-        return false;
-    }
+    // if (!file.is_open()) {
+    //     return false;
+    // }
 
-    file.seekg(0, std::ios::end);
-    int worldSize = file.tellg();
+    // file.seekg(0, std::ios::end);
+    // int worldSize = file.tellg();
 
-    file.seekg(0, std::ios::beg);
-    auto playerBytes = DataStream(worldSize);
+    // file.seekg(0, std::ios::beg);
+    // auto playerBytes = DataStream(worldSize);
 
-    file.read((char*)playerBytes.data(), playerBytes.size());
-    file.close();
+    // file.read((char*)playerBytes.data(), playerBytes.size());
+    // file.close();
 
-    it->second->deserialize(playerBytes);
-    it->second->setUsername(username);
+    // it->second->deserialize(playerBytes);
+    // it->second->setUsername(username);
 
     return true;
 }
