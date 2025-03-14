@@ -25,9 +25,6 @@ struct Vec2 {
 
     Vec2<T> lerp(Vec2<T> other, float a) { return {x + a * (other.x - x), y + a * (other.y - y)}; }
 
-    
-    Vec2<T> const operator/(T value) { return Vec2<T> {x / value, y / value}; }
-
     template <typename T2>
     inline T2 to() const {
         return T2 {x, y};
@@ -37,6 +34,14 @@ struct Vec2 {
     inline float distance(T2 other) const {
         return sqrtf((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y));
     }
+
+    Vec2<T> const operator/(T value) { return Vec2<T> {x / value, y / value}; }
+    bool operator==(Vec2<T> const& other) const { return x == other.x && y == other.y; }
+};
+
+template <typename T>
+struct Vec2Hash {
+    size_t operator()(Vec2<T> const& v) const { return std::hash<T>()(v.x) ^ (std::hash<T>()(v.y) << 1); }
 };
 
 template <typename T>
@@ -177,6 +182,8 @@ struct Col4 {
 
 using Vec2f = Vec2<float>;
 using Vec2i = Vec2<int>;
+using Vec2fHash = Vec2Hash<float>;
+using Vec2iHash = Vec2Hash<int>;
 
 using Vec3f = Vec3<float>;
 using Vec3i = Vec3<int>;
@@ -325,8 +332,6 @@ struct TreeStructure {
     int trunkHeight;
 };
 
-using ChunkPosition = int32_t;
-
 enum AnimationType : uint8_t {
     PLAYER_IDLE,
     PLAYER_MOVE,
@@ -358,4 +363,8 @@ enum ObjectHeader : uint8_t {
 
     NETWORK_ERROR, ARRAY, TERRAIN, LOAD_TERRAIN, LOAD_PLAYERS, MESSAGE, LOAD_MESSAGE,
     NULL_PACKET = 0xFF
+};
+
+enum WorldGenType : uint8_t {
+    NORMAL
 };

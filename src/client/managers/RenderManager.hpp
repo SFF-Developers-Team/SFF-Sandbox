@@ -23,7 +23,7 @@ namespace RenderManager {
     Vec2f getTextSize(std::string const& text, std::string const& font, float fontSize = 0.f, float spacing = 1.f);
 
     void renderWorld(std::shared_ptr<World> world, std::shared_ptr<Player> player);
-    void renderChunk(std::shared_ptr<Chunk> chunk, std::shared_ptr<Player> player);
+    void renderChunk(Vec2i pos, std::shared_ptr<World> world, std::shared_ptr<Chunk> chunk, std::shared_ptr<Player> player);
     void renderBlock(std::shared_ptr<World> world, Rectf dest, BlockPosition position, uint8_t alpha = 255);
     void renderInventoryItem(Rectf dest, std::shared_ptr<InventoryItem> item);
     void renderEntity(std::string& textureKey, std::shared_ptr<Entity> entity);

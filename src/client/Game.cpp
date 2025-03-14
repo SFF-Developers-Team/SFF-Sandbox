@@ -207,7 +207,7 @@ void Game::render() {
 void Game::destroy() {
     auto mp = Multiplayer::get();
 
-    if (mp->connected()) {
+    if (mp->isConnected()) {
         mp->destroy();
     }
 

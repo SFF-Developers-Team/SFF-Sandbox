@@ -60,7 +60,7 @@ void Server::init() {
 
     auto worldName = config["world-name"].value_or<std::string>("world");
 
-    m_world = std::make_shared<World>(128, worldName);
+    m_world = std::make_shared<World>(worldName);
     m_timer = std::make_shared<Timer>(60);
 
     if(!m_world->load()) {

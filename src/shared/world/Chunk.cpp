@@ -7,44 +7,51 @@
 
 Chunk::Chunk() : Serializable(CHUNK), m_blocks(CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH) {}
 
-bool Chunk::isOutOfBound(int x, int y, uint8_t layer) {
+bool Chunk::isOutOfBound(BlockPosition pos) {
     return (
-        x < (x < 0 ? -CHUNK_WIDTH : 0) || 
-        x > (x > 0 ? CHUNK_WIDTH - 1 : 0) || 
-        y < 0 || y >= CHUNK_HEIGHT || layer < 0 || 
-        layer > CHUNK_DEPTH - 1
+        pos.x < (pos.x < 0 ? -CHUNK_WIDTH : 0) || 
+        pos.x > (pos.x > 0 ? CHUNK_WIDTH - 1 : 0) || 
+        pos.y < 0 || pos.y >= CHUNK_HEIGHT || pos.layer < 0 || 
+        pos.layer > CHUNK_DEPTH - 1
     );
 }
 
-int Chunk::getIndex(int x, int y, uint8_t layer) {
-    return (layer * CHUNK_WIDTH * CHUNK_HEIGHT) + (y * CHUNK_WIDTH) + abs(x);
+int Chunk::getIndex(BlockPosition pos) {
+    return (pos.layer * CHUNK_WIDTH * CHUNK_HEIGHT) + (pos.y * CHUNK_WIDTH) + abs(pos.x);
 }
 
-void Chunk::setBlock(int x, int y, uint8_t layer, std::shared_ptr<Block> block) {
-    if (!isOutOfBound(x, y, layer)) {
-        m_blocks[getIndex((x < 0 ? CHUNK_WIDTH + x : x), y, layer)] = block;
+void Chunk::setBlock(BlockPosition pos, std::shared_ptr<Block> block) {
+    if (!isOutOfBound(pos)) {
+        if (pos.x < 0) {
+            pos.x += CHUNK_WIDTH;
+        }
+
+        m_blocks[getIndex(pos)] = block;
     }
 }
 
-void Chunk::setBlock(int x, int y, uint8_t layer, ItemID type) {
-    setBlock(x, y, layer, (type == ItemID::AIR ? nullptr : Block::create(type)));
-}
+std::shared_ptr<Block> Chunk::getBlock(BlockPosition pos) {
+    if (!isOutOfBound(pos)) {
+        if (pos.x < 0) {
+            pos.x += CHUNK_WIDTH;
+        }
 
-std::shared_ptr<Block> Chunk::getBlock(int x, int y, uint8_t layer) {
-    if (!isOutOfBound(x, y, layer)) {
-        return m_blocks[getIndex((x < 0 ? CHUNK_WIDTH + x : x), y, layer)];
+        return m_blocks[getIndex(pos)];
     }
 
     return nullptr;
 }
 
-bool Chunk::isBlockClosed(int x, int y, uint8_t layer) {
-    return (
-        getBlock(x - 1, y, layer) && 
-        getBlock(x + 1, y, layer) && 
-        getBlock(x, y - 1, layer) && 
-        getBlock(x, y + 1, layer)
-    );
+bool Chunk::isBlockClosed(BlockPosition pos) {
+    if (!getBlock({pos.x - 1, pos.y, pos.layer}) || 
+        !getBlock({pos.x + 1, pos.y, pos.layer}) || 
+        !getBlock({pos.x, pos.y - 1, pos.layer}) || 
+        !getBlock({pos.x, pos.y + 1, pos.layer}) || 
+        !getBlock({pos.x, pos.y, static_cast<uint8_t>(pos.layer ^ 1)})) {
+        return false;
+    }
+
+    return true;
 }
 
 DataStream Chunk::serialize() {
@@ -55,14 +62,12 @@ DataStream Chunk::serialize() {
 
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < CHUNK_HEIGHT; y++) {
-            for (int layer = 0; layer < CHUNK_DEPTH; layer++) {
-                auto block = getBlock(x, y, layer);
+            for (uint8_t layer = 0; layer < CHUNK_DEPTH; layer++) {
+                auto block = getBlock({x, y, layer});
 
                 if (block && block->getID() != ItemID::AIR) {
                     blocks.add(ObjectHeader::BLOCK);
-                    blocks.add(x);
-                    blocks.add(y);
-                    blocks.add(layer);
+                    blocks.add<BlockPosition>({x, y, layer});
                     blocks.add(block->serialize());
                 }
             }
@@ -135,10 +140,7 @@ bool Chunk::deserialize(DataStream& stream) {
             return false;
         }
 
-        auto x = data.get<int>();
-        auto y = data.get<int>();
-        auto l = data.get<int>();    
-        
+        auto pos = data.get<BlockPosition>();    
         
         if(data.get<ObjectHeader>() != ObjectHeader::ITEM) {
             return false;
@@ -147,7 +149,7 @@ bool Chunk::deserialize(DataStream& stream) {
         auto block = Block::create(data.getI<ItemID>());
         block->deserialize(data);
         
-        setBlock(x, y, l, block);
+        setBlock(pos, block);
     }
 
 #if _DEBUG

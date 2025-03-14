@@ -10,5 +10,5 @@ private:
 
 public:
     WorldGenNormal(std::shared_ptr<World> world, uint64_t seed);
-    virtual std::shared_ptr<Chunk> generateChunk(int32_t position) override;
+    virtual std::shared_ptr<Chunk> generateChunk(Vec2i position) override;
 };

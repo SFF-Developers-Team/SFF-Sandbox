@@ -2,7 +2,7 @@
 #include <world/World.hpp>
 
 Mob::Mob(std::shared_ptr<World> world) : Entity(), m_health(getMaxHealth()), m_lastHurtTime(0.f) {
-    for(auto i = 0; i < world->getHeight(); i++) {
+    for(auto i = 0; i < 512; i++) {
         auto hitbox = world->getBlockHitbox({(int)m_hitbox.x, i, 1});
 
         if(hitbox.height > 0) {
@@ -14,7 +14,7 @@ Mob::Mob(std::shared_ptr<World> world) : Entity(), m_health(getMaxHealth()), m_l
     m_fallY = m_hitbox.y;
 }
 
-void Mob::onTick(World*) {
+void Mob::onTick(World* world) {
     bool static prevOnGround;
 
     if (prevOnGround && !m_onGround) {
@@ -25,7 +25,7 @@ void Mob::onTick(World*) {
 
     if(!prevOnGround && m_onGround && fallenBlocks > 4.f) {
         m_health -= floor(fallenBlocks / 4.f);
-        // m_lastHurtTime = m_world->getTime();
+        m_lastHurtTime = world->getTime();
     }
 
     prevOnGround = m_onGround;

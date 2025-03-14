@@ -9,8 +9,9 @@
 void BlockInfo::draw() {
     Frame::draw();
 
-    auto target = Game::get()->getPlayer()->getTargetBlock();
-    auto block = Game::get()->getWorld()->getBlock(target.x, target.y, target.layer);
+    auto game = Game::get();
+    auto target = game->getPlayer()->getTargetBlock();
+    auto block = game->getWorld()->getBlock(target);
 
     // if (block != nullptr) {
     //     Rectf blockDest = {10, (getSize().y - 16) / 2, 16, 16};

@@ -277,7 +277,7 @@ void Player::onTick(World* world) {
     );
     // clang-format on
 
-    if (mp->connected() && shouldupd) {
+    if (mp->isConnected() && shouldupd) {
         mp->sendObj(std::shared_ptr<SimplePlayer>(Game::get()->getPlayer()), EVERYTHING, false);
     }
 }
@@ -332,15 +332,18 @@ void Player::update() {
     // dbg->setString(PLAYER_HEALTH, "Health: {}", m_health);
 }
 
-bool Player::isChunkInView(std::shared_ptr<Chunk> chunk) {
-    auto minPos = chunk->getPosition() * CHUNK_WIDTH;
-    auto maxPos = minPos + CHUNK_WIDTH;
+bool Player::isChunkInView(Vec2i chunkPos) {
+    Vec2i minPos = chunkPos;
+    Vec2i maxPos = {minPos.x + CHUNK_WIDTH, minPos.y + CHUNK_HEIGHT};
     Vec2i zero = {0, 0};
     Vec2i screen = {GetScreenWidth(), GetScreenHeight()};
     Vector2 min = TO_CAMERA_POS(m_camera, zero);
     Vector2 max = TO_CAMERA_POS(m_camera, screen);
 
-    return (minPos >= min.x && minPos <= max.x) || (maxPos >= min.x && maxPos <= max.x) || (min.x >= minPos && max.x <= maxPos);
+    bool isXIntersect = (min.x <= maxPos.x && max.x >= minPos.x);
+    bool isYIntersect = (min.y <= maxPos.y && max.y >= minPos.y);
+
+    return isXIntersect && isYIntersect;
 }
 
 bool Player::isBlockInView(BlockPosition position) {
@@ -461,7 +464,7 @@ void Player::destroyBlock() {
     m_lastDestroyedBlock = GetTime();
 #endif
 
-    if (mp->connected()) {
+    if (mp->isConnected()) {
         auto pak = Packet(ObjectHeader::BLOCK_DESTROY);
         pak.add<int32_t>(target.x);
         pak.add<int32_t>(target.y);

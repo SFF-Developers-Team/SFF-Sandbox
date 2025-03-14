@@ -246,7 +246,7 @@ void PlayScene::update() {
     
     auto stm = SettingsManager::get();
     auto target = m_player->getTargetBlock();
-    auto block = m_world->getBlock(target.x, target.y, target.layer);
+    auto block = m_world->getBlock(target);
     auto blockInfo = getChild<BlockInfo>("blockinfo");
     auto playerList = getChild<List>("playerlist"); 
     auto inputMsg = getChild<TextInput>("inputmsg");

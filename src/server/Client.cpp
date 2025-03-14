@@ -152,23 +152,20 @@ void Client::handleBlockPlace(Packet& packet) {
 }
 
 void Client::handleBlockDestroy(Packet& packet) {
-    auto x = packet.get<int32_t>();
-    auto y = packet.get<int32_t>();
-    auto l = packet.get<uint8_t>();
     auto srv = Server::get();
-    srv->getWorld()->destroyBlock(x, y, l);
+    srv->getWorld()->destroyBlock(packet.get<BlockPosition>());
     srv->broadcast(packet);
 }
 
 void Client::handleLoadChunk(Packet& packet) {
     auto srv = Server::get();
     auto world = srv->getWorld();
-    auto pos = packet.get<ChunkPosition>();
+    auto pos = packet.get<Vec2i>();
     auto chunk = world->getChunk(pos);
 
     if (chunk == nullptr) {
         chunk = world->getGenerator()->generateChunk(pos);
-        world->addChunk(chunk);
+        world->addChunk(pos, chunk);
     }
 
     sendObj(chunk);
@@ -177,16 +174,16 @@ void Client::handleLoadChunk(Packet& packet) {
 void Client::handleLoadTerrain(Packet& packet) {
     auto world = Server::get()->getWorld();
     auto player = world->getPlayer(m_id);
-    auto playerChunk = world->xToChunk(player->getHitbox().x - 1);
-    auto terrain = Packet(ObjectHeader::TERRAIN, ObjectHeader::ARRAY, 3);
+    // auto playerChunk = world->xToChunk(player->getHitbox().x - 1);
+    // auto terrain = Packet(ObjectHeader::TERRAIN, ObjectHeader::ARRAY, 3);
 
-    for (auto i = playerChunk; i <= playerChunk + 2; i++) {
-        auto chunk = world->getChunk(i)->serialize();
-        terrain.add<uint16_t>(chunk.size());
-        terrain.add(chunk);
-    }
+    // for (auto i = playerChunk; i <= playerChunk + 2; i++) {
+    //     auto chunk = world->getChunk(i)->serialize();
+    //     terrain.add<uint16_t>(chunk.size());
+    //     terrain.add(chunk);
+    // }
 
-    sendPacket(terrain);
+    // sendPacket(terrain);
 }
 
 void Client::handleLoadPlayers(Packet& packet) {

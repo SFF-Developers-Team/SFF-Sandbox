@@ -50,7 +50,7 @@ public:
     void updateAnimation();
     void updateControls();
 
-    bool isChunkInView(std::shared_ptr<Chunk> chunk);
+    bool isChunkInView(Vec2i chunkPos);
     bool isBlockInView(BlockPosition position);
     bool canDestroyBlock(BlockPosition target);
     bool canPlaceBlock(BlockPosition target);

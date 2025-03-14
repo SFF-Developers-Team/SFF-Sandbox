@@ -10,6 +10,7 @@
 #include <memory>
 #include <cmath>
 #include <map>
+#include <unordered_map>
 
 #define WORLDVER 4
 
@@ -18,38 +19,38 @@ class WorldGen;
 
 class World {
 private:
-    std::map<ChunkPosition, std::shared_ptr<Chunk>> m_chunks;
     std::map<PlayerID, std::shared_ptr<SimplePlayer>> m_players;
+    std::unordered_map<Vec2i, std::shared_ptr<Chunk>, Vec2iHash> m_chunks;
     std::vector<TreeStructure> m_postGenTrees;
     std::shared_ptr<WorldGen> m_worldGen;
     std::filesystem::path m_saveDir;
     PlayerID m_lastPlayerID;
     uint32_t m_version;
-    uint32_t m_height;
     uint64_t m_time;
     uint8_t m_randomTickSpeed;
 
 public:
     uint32_t const WORLD_VERSION = WORLDVER;
 
-    World(uint32_t height, std::filesystem::path const& saveDir);
     World(std::filesystem::path const& saveDir);
 
     void generate();
     void onTick();
 
-    void placeBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block);
-    void destroyBlock(int32_t x, int32_t y, uint8_t layer);
-    Rectf getBlockHitbox(BlockPosition position);
-    bool isBlockClosed(int32_t x, int32_t y, uint8_t layer);
-    void setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block, bool natural = false);
-    std::shared_ptr<Block> getBlock(int32_t x, int32_t y, uint8_t layer);
+    void placeBlock(BlockPosition pos, std::shared_ptr<Block> block) { if (!getBlock(pos)) setBlock(pos, block); }
+    void destroyBlock(BlockPosition pos) { setBlock(pos, nullptr); }
+    bool isBlockClosed(BlockPosition pos);
+    Rectf getBlockHitbox(BlockPosition pos);
+    std::shared_ptr<Block> getBlock(BlockPosition pos);
+    void setBlock(BlockPosition pos, std::shared_ptr<Block> block);
+    bool isOutOfBound(BlockPosition pos);
 
-    void unloadChunk(ChunkPosition pos);
-    void addChunk(std::shared_ptr<Chunk> chunk);
-    std::shared_ptr<Chunk> getChunk(ChunkPosition position);
-    bool saveChunk(ChunkPosition pos);
-    bool loadChunk(ChunkPosition pos);
+    void unloadChunk(Vec2i pos) { m_chunks.erase(pos); }
+    void addChunk(Vec2i pos, std::shared_ptr<Chunk> chunk) { m_chunks[pos] = chunk; }
+
+    std::shared_ptr<Chunk> getChunk(Vec2i position);
+    bool saveChunk(Vec2i pos);
+    bool loadChunk(Vec2i pos);
 
     std::vector<Hitbox> getHitboxes(Hitbox entityHitbox, int radius = 1);
 
@@ -57,26 +58,22 @@ public:
     bool load();
 
 
-    void addPlayer(PlayerID id, std::shared_ptr<SimplePlayer> player, std::string const username = "");
+    void setPlayer(PlayerID id, std::shared_ptr<SimplePlayer> player, std::string const username = "");
     PlayerID addPlayer(std::shared_ptr<SimplePlayer> player, std::string const username = "");
     std::shared_ptr<SimplePlayer> getPlayer(PlayerID id);
     void unloadPlayer(PlayerID id);
     bool savePlayer(PlayerID id);
     bool loadPlayer(std::string const& username = "");
     bool isUsernameAlreadyTaken(std::string const& username);
-    bool isOutOfBound(int x, int y, uint8_t layer);
-
-    ChunkPosition xToChunk(int32_t x) { return static_cast<ChunkPosition>(floor(static_cast<float>(x) / CHUNK_WIDTH)); }
 
     void setGenerator(std::shared_ptr<WorldGen> generator) { m_worldGen = generator; }
 
-    uint32_t getHeight() { return m_height; }
     uint32_t getVersion() { return m_version; }
     uint64_t getTime() { return m_time; }
-    auto const& getGenerator() { return m_worldGen; }
-    auto const& getPlayers() { return m_players; }
-    auto const& getChunks() { return m_chunks; }
+    auto& getGenerator() { return m_worldGen; }
+    auto& getPlayers() { return m_players; }
+    auto& getChunks() { return m_chunks; }
 
     void postGenerateTree(TreeStructure tree) { m_postGenTrees.push_back(tree); }
-    void generateChunk(ChunkPosition xPos);
+    void generateChunk(Vec2i pos);
 };

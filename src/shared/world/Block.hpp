@@ -9,8 +9,7 @@ class World;
 class Block : public Item {
 protected:
     std::mutex m_mutex;
-    MaterialType m_materialType;
-
+    
 public:
     std::shared_ptr<Block> static create(ItemID id);
     std::shared_ptr<Block> static create(Item& block);

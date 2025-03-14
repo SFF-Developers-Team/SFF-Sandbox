@@ -6,60 +6,62 @@
 
 struct Ore {
     ItemID type;
-    int maxHeight;
+    int minHeight;
     int veinSize;
     float density;
 };
 
 std::vector<Ore> ores = {
-    {ItemID::COAL_ORE, 128, 6, 0.025f},
-    {ItemID::IRON_ORE_BLOCK, 64, 6, 0.012f},
-    {ItemID::GOLD_ORE_BLOCK, 16, 4, 0.01f},
-    {ItemID::DIAMOND_ORE, 12, 2, 0.01f}
+    {ItemID::COAL_ORE, 0, 6, 0.025f},
+    {ItemID::IRON_ORE_BLOCK, 256, 6, 0.012f},
+    {ItemID::GOLD_ORE_BLOCK, 464, 4, 0.01f},
+    {ItemID::DIAMOND_ORE, 488, 2, 0.01f}
 };
 
 WorldGenNormal::WorldGenNormal(std::shared_ptr<World> world, uint64_t seed) : WorldGen(world, seed), m_perlinNoise(seed) {
     m_type = NORMAL;
 }
 
-std::shared_ptr<Chunk> WorldGenNormal::generateChunk(int32_t position) {
-    m_random = std::mt19937(m_seed * position);
+std::shared_ptr<Chunk> WorldGenNormal::generateChunk(Vec2i pos) {
+    m_random = std::mt19937(m_seed * pos.x);
     std::uniform_real_distribution<> rdis(0.f, 1.f);
     std::uniform_int_distribution<> idis(0, 99);
 
-    auto ret = std::make_shared<Chunk>(m_world, position);
+    auto ret = std::make_shared<Chunk>();
     int lastTree = 0;
 
     // generating surface
     for (int x = 0u; x < CHUNK_WIDTH; x++) {
         for (uint8_t z = 0u; z < CHUNK_DEPTH; z++) {
-            int grassLevel = m_world->getHeight() - (m_world->getHeight() * 0.5f) * m_perlinNoise.noise2D_01(fabs(INT_MAX / 2 + position * CHUNK_WIDTH + x) * 0.01f, z * 0.01f);
+            int grassLevel = 256 + 128 * m_perlinNoise.noise2D_01((0x7FFFFFFF + pos.x * CHUNK_WIDTH + x) * 0.01f, z * 0.01f);
             int stoneLevel = grassLevel + 4 + m_random() % 3;
 
-            for (int y = 0u; y < m_world->getHeight(); y++) {
-                if (y == m_world->getHeight() - 1) {
+            for (int y = 0; y < CHUNK_HEIGHT; y++) {
+                int wy = pos.y * CHUNK_HEIGHT + y; 
+
+                if (wy == 512) {
                     generateBlock(ret, {x, y, z}, BEDROCK);
                     continue;
                 }
 
-                if (y == grassLevel) {
+                if (wy == grassLevel) {
                     generateBlock(ret, {x, y, z}, GRASS);
                     continue;
                 }
 
-                if (y > grassLevel && y < stoneLevel) {
+                if (wy > grassLevel && y < stoneLevel) {
                     generateBlock(ret, {x, y, z}, DIRT);
                     continue;
                 }
 
-                if (y >= stoneLevel) {
+                if (wy >= stoneLevel) {
                     generateBlock(ret, {x, y, z}, STONE);
                     continue;
                 }
             }
 
             if(z == 0 && idis(m_random) < 10 && x - lastTree > 2) {
-                m_world->postGenerateTree({position * CHUNK_WIDTH + x, grassLevel, idis(m_random) % 3 + 5});
+                m_world->postGenerateTree({pos.x * CHUNK_WIDTH + x, grassLevel, idis(m_random) % 3 + 5});
                 lastTree = x;
             }
         }
@@ -68,14 +70,16 @@ std::shared_ptr<Chunk> WorldGenNormal::generateChunk(int32_t position) {
     // generate ores
     for(auto const& ore : ores) {
         for (auto x = 0u; x < CHUNK_WIDTH; x++) {
-            for (auto y = m_world->getHeight() - ore.maxHeight; y < m_world->getHeight() - 1; y++) {
-                if(rdis(m_random) < ore.density) {
+            for (int y = 0; y < CHUNK_HEIGHT; y++) {
+                int wy = pos.y * CHUNK_HEIGHT + y;
+
+                if(wy >= ore.minHeight && rdis(m_random) < ore.density) {
                     for(int i = 0; i < ore.veinSize; i++) {
                         int veinX = x + (m_random() % 3 - 1);
                         int veinY = y + (m_random() % 3 - 1);
-                        auto block = ret->getBlock(veinX, veinY, 1);
+                        auto block = ret->getBlock({veinX, veinY, 1});
 
-                        if(ret->isOutOfBound(veinX, veinY, 1) || block == nullptr) {
+                        if(ret->isOutOfBound({veinX, veinY, 1}) || block == nullptr) {
                             continue;
                         }
 
@@ -89,12 +93,12 @@ std::shared_ptr<Chunk> WorldGenNormal::generateChunk(int32_t position) {
     }
 
     // generate caves
-    for (auto x = 0u; x < CHUNK_WIDTH; x++) {
-        for (auto y = 0u; y < m_world->getHeight() - 1; y++) {
-            float caveNoise = m_perlinNoise.noise2D_01(fabs(0x7FFFFFFF + position * CHUNK_WIDTH + x) * 0.1f, y * 0.1f);
+    for (int x = 0u; x < CHUNK_WIDTH; x++) {
+        for (int y = 0; y < CHUNK_HEIGHT; y++) {
+            float caveNoise = m_perlinNoise.noise2D_01((0x7FFFFFFF + pos.x * CHUNK_WIDTH + x) * 0.1f, (pos.y * CHUNK_HEIGHT + y) * 0.1f);
 
             if(caveNoise > 0.6f) {
-                ret->setBlock(x, y, 1, nullptr);
+                ret->setBlock({x, y, 1}, nullptr);
             }
         }
     }

@@ -10,7 +10,7 @@
 #include <Logger.hpp>
 #include <world/blocks/Leaves.hpp>
 
-World::World(uint32_t height, std::filesystem::path const& saveDir) : m_height(height), m_saveDir(saveDir), m_version(WORLDVER), m_time(0), m_lastPlayerID(1) {
+World::World(std::filesystem::path const& saveDir) : m_saveDir(saveDir), m_version(WORLDVER), m_time(0), m_lastPlayerID(1), m_randomTickSpeed(3) {
     if (!saveDir.empty() && !std::filesystem::exists(m_saveDir)) {
         std::filesystem::create_directory(m_saveDir);
         std::filesystem::create_directory(m_saveDir / "chunks");
@@ -18,24 +18,22 @@ World::World(uint32_t height, std::filesystem::path const& saveDir) : m_height(h
     }
 }
 
-World::World(std::filesystem::path const& saveDir) : World(256, saveDir) {}
-
 void World::generate() {
-    // spawn area [-3; 3]
+    // spawn area [-3; 3] x [-3; 3]
 
-    for (auto x = -3; x < 3; x++) {
-        generateChunk(x);
+    for (auto i = -9; i < 9; i++) {
+        generateChunk({i / 3, i % 3});
     }
 }
 
 void World::onTick() {
     m_time++;
 
-    for (auto& [x, chunk] : m_chunks) {
+    for (auto& [pos, chunk] : m_chunks) {
         for (auto x = 0; x < CHUNK_WIDTH; x++) {
-            for (auto y = 0; x < CHUNK_HEIGHT; y++) {
-                chunk->getBlock(x, y, 0)->onTick(this, {x, y, 0});
-                chunk->getBlock(x, y, 1)->onTick(this, {x, y, 1});
+            for (uint8_t y = 0; x < CHUNK_HEIGHT; y++) {
+                chunk->getBlock({x, y, 0})->onTick(this, {x, y, 0});
+                chunk->getBlock({x, y, 1})->onTick(this, {x, y, 1});
             }
         }
 
@@ -43,7 +41,7 @@ void World::onTick() {
             int x = rand() % CHUNK_WIDTH;
             int y = rand() % CHUNK_HEIGHT;
             uint8_t z = rand() % CHUNK_DEPTH;
-            auto block = chunk->getBlock(x, y, z);
+            auto block = chunk->getBlock({x, y, z});
         
             if(block) {
                 block->onRandomTick(this, {x, y, z});
@@ -53,50 +51,45 @@ void World::onTick() {
 
     for (auto& [id, player] : m_players) {
         player->onTick(this);
-
-        int x = xToChunk(player->getPosition().x);
+        auto playerPos = player->getPosition();
+        auto pos = TO_CHUNK_POS(playerPos);
         
-        for (int i = x - 2; i < x + 2; i++) {
-            auto chunk = getChunk(i);
+        for (int i = -4; i < 4; i++) {
+            auto chunk = getChunk({i / 2, i % 2});
             
             if (chunk == nullptr) {
-                generateChunk(i);
+                generateChunk({i / 2, i % 2});
             }
         }
     }
 }
 
-bool World::isBlockClosed(int x, int y, uint8_t l) {
-    return getBlock(x - 1, y, l) && getBlock(x + 1, y, l) && getBlock(x, y - 1, l) && getBlock(x, y + 1, l);
-}
-
-void World::unloadChunk(ChunkPosition pos) {
-    if (m_chunks.contains(pos)) {
-        m_chunks.erase(pos);
-    }
-}
-
-std::shared_ptr<Chunk> World::getChunk(ChunkPosition position) {
-    if (m_chunks.contains(position)) {
-        return m_chunks[position];
+bool World::isBlockClosed(BlockPosition pos) {
+    if (!getBlock({pos.x - 1, pos.y, pos.layer}) || 
+        !getBlock({pos.x + 1, pos.y, pos.layer}) || 
+        !getBlock({pos.x, pos.y - 1, pos.layer}) || 
+        !getBlock({pos.x, pos.y + 1, pos.layer}) || 
+        !getBlock({pos.x, pos.y, static_cast<uint8_t>(pos.layer ^ 1)})) {
+        return false;
     }
 
-    return nullptr;
+    return true;
 }
 
-void World::addChunk(std::shared_ptr<Chunk> chunk) {
-    m_chunks[chunk->getPosition()] = chunk;
+std::shared_ptr<Chunk> World::getChunk(Vec2i position) {
+    auto it = m_chunks.find(position);
+    return (it != m_chunks.end()) ? it->second : nullptr;
 }
 
-bool World::saveChunk(ChunkPosition pos) {
+bool World::saveChunk(Vec2i pos) {
     auto chunk = m_chunks[pos];
     auto cbytes = chunk->serialize();
 
     if (!cbytes.size()) {
-        logE("Failed to serialize chunk {}!", pos);
+        logE("Failed to serialize chunk {},{}!", pos.x, pos.y);
     }
 
-    std::ofstream file(m_saveDir / "chunks" / (std::to_string(pos) + ".dat"), std::ios::binary);
+    std::ofstream file(m_saveDir / "chunks" / std::format("{},{}.dat", pos.x, pos.y), std::ios::binary);
     
     if(file.is_open()) {
         file.write((char const*)cbytes.data(), cbytes.size());
@@ -105,21 +98,21 @@ bool World::saveChunk(ChunkPosition pos) {
         return true;
     }
 
-    logE("Failed to save chunk {}!", pos);
+    logE("Failed to save chunk {},{}!", pos.x, pos.y);
     return false;
 }
 
-bool World::loadChunk(ChunkPosition pos) {
+bool World::loadChunk(Vec2i pos) {
     auto chunkIt = m_chunks.find(pos);
 
     if (chunkIt == m_chunks.end()) {
-        m_chunks[pos] = std::make_shared<Chunk>(std::shared_ptr<World>(this));
+        chunkIt->second = std::make_shared<Chunk>();
     }
     
-    std::ifstream file(m_saveDir / "chunks" / (std::to_string(pos) + ".dat"), std::ios::in | std::ios::binary);
+    std::ifstream file(m_saveDir / "chunks" / std::format("{},{}.dat", pos.x, pos.y), std::ios::in | std::ios::binary);
 
     if (!file.is_open()) {
-        logE("Can't load chunk {}", pos);
+        logE("Can't load chunk {},{}!", pos.x, pos.y);
         return false;
     }
 
@@ -130,188 +123,118 @@ bool World::loadChunk(ChunkPosition pos) {
     auto chunkBytes = DataStream(chunkSize);
 
     file.read((char*)chunkBytes.data(), chunkSize);
-    m_chunks[pos]->deserialize(chunkBytes);
+    chunkIt->second->deserialize(chunkBytes);
         
     return true;
 }
 
-void World::placeBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> newBlock) {
-    if (!getBlock(x, y, layer)) {
-        setBlock(x, y, layer, newBlock);
-    }
-}
-
-void World::destroyBlock(int32_t x, int32_t y, uint8_t layer) {
-    if (getBlock(x, y, layer)) {
-        setBlock(x, y, layer, nullptr);
-    }
-}
-
-std::shared_ptr<Block> World::getBlock(int32_t x, int32_t y, uint8_t layer) {
-    if (isOutOfBound(x, y, layer)) {
+std::shared_ptr<Block> World::getBlock(BlockPosition pos) {
+    if (isOutOfBound(pos)) {
         return nullptr;
     }
 
-    auto chunk = getChunk(xToChunk(x));
-    return chunk->getBlock(x % CHUNK_WIDTH, y, layer);
+    auto chunk = getChunk(TO_CHUNK_POS(pos));
+    return chunk->getBlock({pos.x % CHUNK_WIDTH, pos.y % CHUNK_HEIGHT, pos.layer});
 }
 
-void World::setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block, bool natural) {
-    if (isOutOfBound(x, y, layer) || (block && block->getID() == ItemID::AIR)) {
+void World::setBlock(BlockPosition pos, std::shared_ptr<Block> block) {
+    if (isOutOfBound(pos) || (block && block->getID() == ItemID::AIR)) {
         return;
     }
 
-    if (natural) {
-        block->setTag(TAG_NATURAL, true);
-    }
-
-    auto chunk = getChunk(xToChunk(x));
-    auto localx = (x < 0 ? (CHUNK_WIDTH - (-x) % CHUNK_WIDTH) % CHUNK_WIDTH : x % CHUNK_WIDTH);
+    auto chunk = getChunk(TO_CHUNK_POS(pos));
+    auto localx = (pos.x < 0 ? (CHUNK_WIDTH - (-pos.x) % CHUNK_WIDTH) % CHUNK_WIDTH : pos.x % CHUNK_WIDTH);
     
-    chunk->setBlock(localx, y, layer, block);
+    chunk->setBlock({localx, pos.y % CHUNK_HEIGHT, pos.layer}, block);
 }
-#if 0
-ByteVector World::serialize() {
-    DataStream::serialize();
-
-    add(WORLD_VERSION);
-    add(m_height);
-    add(m_worldGen->getType());
-    add(m_worldGen->getSeed());
-    // World version 3
-    add(m_time);
-
-    return bytes();
-}
-
-size_t World::deserialize(ByteVector const& bytes) {
-    DataStream::deserialize(bytes);
-    m_chunks.clear();
-
-    m_version = get<uint32_t>();
-    m_height = get<uint32_t>();
-
-    bool oldVersion = (int)(m_version) == 256 && (int)(m_height) == 128;
-
-    if (!oldVersion) {
-        if (m_version > WORLD_VERSION) {
-            logE("Unsupported world version! (World version: {} | Supported: {})", m_version, WORLD_VERSION);
-            return m_offset;
-        }
-
-        auto generatorType = get<WorldGen::Type>();
-        auto seed = get<int64_t>();
-
-        if(m_version >= 3) {
-            m_time = get<uint64_t>(0);
-        }
-
-        switch (generatorType) {
-            default:
-            case WorldGen::Type::NORMAL: {
-                m_worldGen = std::make_shared<WorldGenNormal>(std::shared_ptr<World>(this), seed);
-            }
-        }
-    } else {
-        logE("Old world version detected.");
-        m_version = 0;
-        m_worldGen = std::make_shared<WorldGenNormal>(std::shared_ptr<World>(this), 0);
-    }
-
-    logD("World version {}", m_version);
-
-    // World version 1-3
-    if (m_version < 4) {
-        auto chunkCount = get<uint32_t>();
-        while (chunkCount-- > 0) {
-            auto csize = get<uint32_t>();
-            auto cbytes = getN(csize);
-
-            auto chunk = std::make_shared<Chunk>(std::shared_ptr<World>(this));
-            chunk->deserialize(cbytes);
-
-            addChunk(chunk);
-        }
-    }
-    // World end
-
-    return m_offset;
-}
-#endif
 
 bool World::save() {
-    // if (!std::filesystem::exists(m_saveDir) && !std::filesystem::create_directory(m_saveDir)) {
-    //     logE("Failed to save world!");
-    //     return false;
-    // }
+    if (!std::filesystem::exists(m_saveDir) && !std::filesystem::create_directory(m_saveDir)) {
+        logE("Failed to save world!");
+        return false;
+    }
 
-    // for (auto [x, chunk] : m_chunks) {
-    //     saveChunk(x);
-    // }
+    for (auto [pos, _] : m_chunks) {
+        saveChunk(pos);
+    }
 
-    // for (auto [id, player] : m_players) {
-    //     savePlayer(id);
-    // }
+    for (auto [id, _] : m_players) {
+        savePlayer(id);
+    }
 
-    // auto worldData = this->serialize();
+    auto worldData = DataStream();
+    worldData.add(WORLD_VERSION);
+    worldData.add(m_worldGen->getType());
+    worldData.add(m_worldGen->getSeed());
+    worldData.add(m_time);
 
-    // if (!worldData.size()) {
-    //     logE("Failed to serialize world!");
-    //     return false;
-    // }
-
-    // std::ofstream file(m_saveDir / "world.dat", std::ios::binary);
-
-    // if (!file.is_open()) {
-    //     logE("Failed to save world!");
-    //     return false;
-    // }
-
-    // file.write((char const*)worldData.data(), worldData.size());
+    auto worldFile = std::ofstream(m_saveDir / "world.dat", std::ios::binary);
+    if(!worldFile.is_open()) {
+        logE("Failed to save world data!");
+        return false;
+    }
+    
+    worldFile.write((char const*)worldData.data(), worldData.size());
 
     return true;
 }
 
 bool World::load() {
-    // if (!std::filesystem::exists(m_saveDir)) {
-    //     logE("World directory not found!");
-    //     return false;
-    // }
+    if (!std::filesystem::exists(m_saveDir)) {
+        logE("World directory not found!");
+        return false;
+    }
 
-    // if (!std::filesystem::exists(m_saveDir / "world.dat")) {
-    //     logE("world.dat not found!");
-    //     return false;
-    // }
+    if (!std::filesystem::exists(m_saveDir / "world.dat")) {
+        logE("world.dat not found!");
+        return false;
+    }
 
-    // std::ifstream file(m_saveDir / "world.dat", std::ios::in | std::ios::binary);
+    std::ifstream file(m_saveDir / "world.dat", std::ios::in | std::ios::binary);
 
-    // if (!file.is_open()) {
-    //     logE("Can't open world.dat");
-    //     return false;
-    // }
+    if (!file.is_open()) {
+        logE("Can't open world.dat");
+        return false;
+    }
+
+    file.seekg(0, std::ios::end);
+    int worldSize = file.tellg();
+
+    file.seekg(0, std::ios::beg);
+    auto worldData = DataStream(worldSize);
+
+    file.read((char*)worldData.data(), worldData.size());
+
+    m_version = worldData.get<uint32_t>();
+
+    if (m_version == 256 && worldData.getI<uint32_t>() == 128) {
+        logE("Old world version detected! We don't support it now...");
+        return false;
+    }
+
+    // We have only one world gen type now...
+    auto genType = worldData.get<WorldGenType>();
+    auto seed = worldData.get<uint64_t>();
+
+    m_worldGen = std::make_shared<WorldGenNormal>(std::shared_ptr<World>(this), seed);
+    m_time = worldData.get<uint64_t>();
+
+    for (const auto& entry : std::filesystem::directory_iterator(m_saveDir / "chunks")) {
+        std::stringstream ss(entry.path().stem().string());
+        std::string part;
+        Vec2i chunkPosition;
+    
+        std::getline(ss, part, ',');
+        chunkPosition.x = std::stoi(part);
+        std::getline(ss, part, ',');
+        chunkPosition.y = std::stoi(part);
+    
+    
+        loadChunk(chunkPosition);
+    }
 
 
-    // file.seekg(0, std::ios::end);
-    // int worldSize = file.tellg();
-
-    // file.seekg(0, std::ios::beg);
-    // auto worldBytes = ByteVector(worldSize);
-
-    // file.read((char*)worldBytes.data(), worldBytes.size());
-    // deserialize(worldBytes);
-
-    // if (m_version >= 4) {
-    //     for (const auto& entry : std::filesystem::directory_iterator(m_saveDir / "chunks")) {
-    //         auto filename = entry.path().stem().string();
-            
-    //         if (!filename.empty() && std::all_of(filename.begin(), filename.end(), ::isdigit)) {
-    //             loadChunk(std::stoi(filename));
-    //         }
-    //     }
-    // }
-
-    // return true;
-    return false;
+    return true;
 }
 
 std::vector<Hitbox> World::getHitboxes(Hitbox entityHitbox, int radius) {
@@ -335,124 +258,133 @@ std::vector<Hitbox> World::getHitboxes(Hitbox entityHitbox, int radius) {
     return ret;
 }
 
-void World::addPlayer(PlayerID id, std::shared_ptr<SimplePlayer> player, std::string const username) {
-    m_players.insert(std::make_pair(id, player));
-    player->setID(id);
+void World::setPlayer(PlayerID id, std::shared_ptr<SimplePlayer> player, std::string const username) {
+    m_players[id] = player;
     player->setUsername(username);
-
-    logD("Added player with id {}", player->getPlayerID());
 }
 
 PlayerID World::addPlayer(std::shared_ptr<SimplePlayer> player, std::string const username) {
-    addPlayer(m_lastPlayerID, player, username);
-    auto ret = m_lastPlayerID;
-    m_lastPlayerID++;
+    auto it = std::find_if(m_players.begin(), m_players.end(), [username](auto& pair) { 
+        return pair.second->getUsername() == username;
+    });
 
-    return ret;
+    if (it != m_players.end()) {
+        return 0;
+    }
+
+    it->second = player;
+    player->setID(m_lastPlayerID);
+    player->setUsername(username);
+
+    logD("Added player with id {}", player->getPlayerID());
+
+    return m_lastPlayerID++;
 }
 
 std::shared_ptr<SimplePlayer> World::getPlayer(PlayerID id) {
-    if (!m_players.contains(id)) {
-        return nullptr;
-    }
-
-    return m_players[id];
+    auto it = m_players.find(id);
+    return (it != m_players.end()) ? it->second : nullptr;
 }
 
 void World::unloadPlayer(PlayerID id) {
+    savePlayer(id);
     m_players.erase(id);
 }
 
 bool World::savePlayer(PlayerID id) {
-    // auto player = m_players[id];
-    // auto pbytes = player->serialize();
+    auto player = m_players[id];
+    auto pbytes = player->serialize();
 
-    // if (!pbytes.size()) {
-    //     logE("Failed to serialize player {}!", id);
-    // }
+    if (!pbytes.size()) {
+        logE("Failed to serialize player {}!", id);
+    }
 
-    // auto username = player->getUsername();
+    auto username = player->getUsername();
 
-    // std::ofstream file(m_saveDir / "players" / ((username.empty() ? "player" : username) + ".dat"), std::ios::binary);
+    std::ofstream file(m_saveDir / "players" / ((username.empty() ? "player" : username) + ".dat"), std::ios::binary);
     
-    // if(file.is_open()) {
-    //     file.write((char const*)pbytes.data(), pbytes.size());
-    //     file.close();
+    if(file.is_open()) {
+        file.write((char const*)pbytes.data(), pbytes.size());
+        file.close();
 
-    //     return true;
-    // }
+        return true;
+    }
 
-    // logE("Failed to save player {}!", id);
+    logE("Failed to save player {}!", id);
     return false;
 }
 
 bool World::loadPlayer(std::string const& username) {
-    // auto playerIt = std::find_if(m_players.begin(), m_players.end(), [username](auto&& pair) {
-    //     return pair.second->getUsername() == username;
-    // });
+    auto it = std::find_if(m_players.begin(), m_players.end(), [username](auto&& pair) {
+        return pair.second->getUsername() == username;
+    });
 
-    // auto player = (playerIt != m_players.end() ? playerIt->second : std::make_shared<SimplePlayer>(std::shared_ptr<World>(this)));
+    if (it == m_players.end()) {
+        it->second = std::make_shared<SimplePlayer>(std::shared_ptr<World>(this));
+    }
 
-    // std::ifstream file(m_saveDir / "players" / ((username.empty() ? "player" : username) + ".dat"), std::ios::in | std::ios::binary);
+    std::ifstream file(m_saveDir / "players" / ((username.empty() ? "player" : username) + ".dat"), std::ios::in | std::ios::binary);
         
-    // if (!file.is_open()) {
-    //     return false;
-    // }
+    if (!file.is_open()) {
+        return false;
+    }
 
-    // file.seekg(0, std::ios::end);
-    // int worldSize = file.tellg();
+    file.seekg(0, std::ios::end);
+    int worldSize = file.tellg();
 
-    // file.seekg(0, std::ios::beg);
-    // auto playerBytes = ByteVector(worldSize);
+    file.seekg(0, std::ios::beg);
+    auto playerBytes = DataStream(worldSize);
 
-    // file.read((char*)playerBytes.data(), playerBytes.size());
-    // file.close();
+    file.read((char*)playerBytes.data(), playerBytes.size());
+    file.close();
 
-    // player->deserialize(playerBytes);
-    // player->setUsername(username);
+    it->second->deserialize(playerBytes);
+    it->second->setUsername(username);
 
     return true;
 }
 
 bool World::isUsernameAlreadyTaken(std::string const& username) {
-    for (auto& [_, player] : m_players) {
-        if (player->getUsername() == username)
-            return true;
-    }
+    auto it = std::find_if(m_players.begin(), m_players.end(), [username](auto&& pair) {
+        return pair.second->getUsername() == username;
+    });
 
-    return false;
+    return it != m_players.end();
 }
 
-Rectf World::getBlockHitbox(BlockPosition position) {
-    if (position.layer > 0) {
-        auto block = getBlock(position.x, position.y, position.layer);
+Rectf World::getBlockHitbox(BlockPosition pos) {
+    if (pos.layer > 0) {
+        auto block = getBlock(pos);
 
         if (block != nullptr) {
-            return Rectf {static_cast<float>(position.x), static_cast<float>(position.y), 1.f, 1.f};
+            return Rectf {static_cast<float>(pos.x), static_cast<float>(pos.y), 1.f, 1.f};
         } 
     }
 
     return Rectf {0.0f, 0.0f, 0.0f, 0.0f};
 }
 
-bool World::isOutOfBound(int x, int y, uint8_t layer) {
-    if (!m_chunks.contains(xToChunk(x))) {
+bool World::isOutOfBound(BlockPosition pos) {
+    if (!m_chunks.contains(TO_CHUNK_POS(pos))) {
         return true;
     }
 
-    return (y < 0 || y >= getHeight() || layer < 0 || layer > CHUNK_DEPTH - 1);
+    return (pos.y < 0 || pos.layer > CHUNK_DEPTH - 1);
 }
 
-void World::generateChunk(ChunkPosition xPos) {
+void World::generateChunk(Vec2i pos) {
     if (m_worldGen == nullptr) {
         return logE("Can't generate chunk without WorldGen ¯\\_(ツ)_/¯");
     }
 
-    m_chunks.insert(std::make_pair(xPos, m_worldGen->generateChunk(xPos)));
+    m_chunks[pos] = m_worldGen->generateChunk(pos);
 
     for (auto& tree : m_postGenTrees) {
         for (auto y = tree.y - tree.trunkHeight; y < tree.y; y++) {
-            setBlock(tree.x, y, 0, Block::create(OAK_LOG), true);
+            auto log = Block::create(OAK_LOG);
+            log->setTag(TAG_NATURAL, true);
+
+            setBlock({tree.x, y, 0}, log);
         }
 
         for (int x = -3; x <= 3; ++x) {
@@ -460,17 +392,19 @@ void World::generateChunk(ChunkPosition xPos) {
                 if (x * x + y * y <= 3 * 2) {
                     Vec2i pos = {tree.x + x, (tree.y - tree.trunkHeight) + y};
                     
-                    auto xChunk = xToChunk(pos.x);
+                    auto chunkPos = TO_CHUNK_POS(pos);
 
-                    if (getChunk(xChunk) == nullptr) {
-                        generateChunk(xChunk);
+                    if (getChunk(chunkPos) == nullptr) {
+                        generateChunk(chunkPos);
                     }
 
-                    if (getBlock(pos.x, pos.y, 0) == nullptr) {
-                        setBlock(pos.x, pos.y, 0, Block::create(LEAVES), true);
+                    auto leaves = Block::create(LEAVES);
+
+                    if (getBlock({pos.x, pos.y, 0}) == nullptr) {
+                        setBlock({pos.x, pos.y, 0}, Block::create(*leaves));
                     }
 
-                    setBlock(pos.x, pos.y, 1, Block::create(LEAVES), true);
+                    setBlock({pos.x, pos.y, 1}, leaves);
                 }
             }
         }
