@@ -233,8 +233,8 @@ enum DisconnectReasonID : uint32_t {
 };
 
 enum Direction : int8_t {
-    LEFT = -1,
-    RIGHT = 1
+    RIGHT = -1,
+    LEFT = 1
 };
 
 enum ControlType : uint8_t {
@@ -259,7 +259,6 @@ enum ItemID : uint8_t {
     BEDROCK,
     BRICKS,
     OAK_LOG,
-    ANOTHER_OAK_LOG,
     LEAVES,
     COAL_ORE,
     IRON_ORE_BLOCK,
@@ -268,7 +267,7 @@ enum ItemID : uint8_t {
     LAPIZ_ORE,
     BOOKSHELF,
     FLOWER_POT,
-    FURHANCE,
+    FURNACE,
     ACTIVE_FURHANCE,
     STICK,
     WOODEN_PICKAXE,
@@ -291,10 +290,11 @@ enum ItemID : uint8_t {
 
 enum MaterialType : uint8_t {
     MATERIAL_NONE,
-    MATERIAL_STONE,
-    MATERIAL_DIRT,
     MATERIAL_WOOD,
-    MATERIAL_WOOL
+    MATERIAL_GOLD,
+    MATERIAL_STONE,
+    MATERIAL_IRON,
+    MATERIAL_DIAMOND
 };
 
 enum ItemType : uint8_t {

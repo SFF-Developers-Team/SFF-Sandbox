@@ -1,5 +1,8 @@
+#include "Types.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <vector>
 #include <world/gen/WorldGenNormal.hpp>
 #include <entity/Player.hpp>
 #include <world/World.hpp>
@@ -11,9 +14,8 @@
 #include <assert.h>
 #include <Logger.hpp>
 #include <world/blocks/Leaves.hpp>
-#include <thread>
 
-#define RENDER_DISTANCE 6
+#define RENDER_DISTANCE 9
 
 World::World(std::filesystem::path const& saveDir) : m_saveDir(saveDir), m_version(WORLDVER), m_time(0), m_lastPlayerID(1), m_randomTickSpeed(3) {
     if (!saveDir.empty() && !std::filesystem::exists(m_saveDir)) {
@@ -25,7 +27,7 @@ World::World(std::filesystem::path const& saveDir) : m_saveDir(saveDir), m_versi
 
 void World::generate() {
     for (auto i = 0; i < 32; i++) {
-        generateChunk({i / 3, i % 3});
+        generateChunk({i % 3, i / 3});
     }
 }
 
@@ -96,6 +98,36 @@ void World::onTick() {
             }
         }
     }
+
+    for (auto& [playerId, info] : m_breakInfo) {
+        auto player = m_players[playerId];
+        auto block = getBlock(info.pos);
+        auto tool = player->getItemHand();
+        auto toolType = (tool != nullptr) ? tool->getType() : TYPE_ITEM;
+        auto toolMaterial = (tool != nullptr) ? tool->getMaterial() : MATERIAL_NONE;
+        float speed = 1.f;
+        float d = block->getDurability();
+
+        if (tool != nullptr && block->getBestTool() == toolType) {
+            speed = tool->getToolSpeed();
+        }
+    
+        info.progress += speed / d * 0.01f;
+    
+        if (info.progress >= d || player->getGamemode() == GAMEMODE_CREATIVE) {
+            if (player->getGamemode() != GAMEMODE_CREATIVE && toolMaterial >= block->getBestToolMaterial()) {
+                player->addItem(block->dropItem(player->getItemHand()));
+            }
+    
+            destroyBlock(info.pos);
+            player->setBreakingBlock(false);
+        }
+    }
+
+    std::erase_if(m_breakInfo, [this](auto& info) {
+        auto block = getBlock(info.second.pos);
+        return block == nullptr;
+    });
 }
 
 bool World::isBlockClosed(BlockPosition pos) {
@@ -416,4 +448,47 @@ void World::generateChunk(Vec2i pos) {
     }
 
     addChunk(pos, m_worldGen->generateChunk(pos));
+}
+
+void World::placeBlock(PlayerID m_id, BlockPosition pos) {
+    auto player = m_players[m_id];
+    auto item = player->getItemHand();
+
+    if (item != nullptr && getBlock(pos) == nullptr) {
+        auto block = Block::create(*item);
+        setBlock(pos, block);
+
+        if(player->getGamemode() == GAMEMODE_SURVIVAL) {
+            item->sub(1);
+        }
+    }
+}
+
+void World::breakBlock(PlayerID id, BlockPosition pos) {
+    auto player = m_players[id];
+    auto block = getBlock(pos);
+
+    if (block->getDurability() < 0) {
+        return;
+    }
+
+    auto it = m_breakInfo.find(id);
+
+    if (it != m_breakInfo.end()) {
+        if(it->second.pos != pos) {
+            it->second.pos = pos;
+            it->second.progress = 0;
+            it->second.time = m_time;
+        }
+        
+        return;
+    }
+
+    m_breakInfo.insert(std::make_pair(id, BreakInfo {pos, m_time, 0}));
+    player->setBreakingBlock(true);
+}
+
+void World::stopBreakingBlock(PlayerID id) {
+    m_players[id]->setBreakingBlock(false);
+    m_breakInfo.erase(id);   
 }

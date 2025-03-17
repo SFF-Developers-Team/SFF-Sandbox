@@ -1,4 +1,5 @@
 #include <inventory/Inventory.hpp>
+#include <vector>
 
 Inventory::Inventory(uint16_t slots) : m_inventory(slots), m_selected(0) {}
 
@@ -24,6 +25,7 @@ bool Inventory::addItem(std::shared_ptr<InventoryItem> item) {
         m_inventory[m_selected]->setCount(0);
         
         item->sub(m_inventory[m_selected]->add(item->getCount()));
+        m_inventory[m_selected]->setListener(this);
 
         if (item->getCount() <= 0) {
             return true;
@@ -37,6 +39,7 @@ bool Inventory::addItem(std::shared_ptr<InventoryItem> item) {
             slot->setCount(0);
 
             item->sub(slot->add(item->getCount()));
+            slot->setListener(this);
 
             if (item->getCount() <= 0) {
                 return true;
@@ -72,5 +75,15 @@ void Inventory::deleteItem(ItemID id, int count) {
         if (count <= 0) {
             return;
         }
+    }
+}
+
+void Inventory::onItemChanged(InventoryItem* item) {
+    // Опа, а вот и костыли пошли...
+    
+    if (item->getCount() == 0) {
+        std::erase_if(m_inventory, [&item] (auto& itemPtr) {
+            return itemPtr.get() == item;
+        });
     }
 }

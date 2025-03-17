@@ -25,4 +25,6 @@ public:
 
     std::shared_ptr<InventoryItem> findItem(ItemID id);
     void deleteItem(ItemID item, int count);
+
+    void onItemChanged(InventoryItem* item);
 };

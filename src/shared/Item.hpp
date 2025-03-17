@@ -29,10 +29,15 @@ public:
     void setTags(ItemTags const& newTags) { m_tags = newTags; }
 
     ItemType getType() { return gItemDatabase[m_id].type; }
+    ItemType getBestTool() { return gItemDatabase[m_id].bestTool; }
+    MaterialType getBestToolMaterial() { return gItemDatabase[m_id].bestToolMaterial; }
     std::string getName() { return gItemDatabase[m_id].name; }
     MaterialType getMaterial() { return gItemDatabase[m_id].material; }
     uint16_t getSpriteIndex() { return gItemDatabase[m_id].spriteIndex; }
-    uint16_t getMaxCount();
+    float getDurability() { return gItemDatabase[m_id].durability; }
+    float getToolSpeed();
+    bool isTool();
+    int getMaxCount();
 
     DataStream serialize();
     bool deserialize(DataStream& bytes);

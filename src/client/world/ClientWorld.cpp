@@ -1,3 +1,6 @@
+#include "world/Block.hpp"
+#include "world/World.hpp"
+#include <memory>
 #include <world/ClientWorld.hpp>
 #include <world/ClientChunk.hpp>
 #include <world/Chunk.hpp>
@@ -44,6 +47,18 @@ void ClientWorld::draw(std::shared_ptr<LocalPlayer> player) {
                     RenderManager::drawRectLines(h.getRect(), COL_RED, 0.05f);
                 }
             }
+        }
+    }
+
+    for (auto& [playerId, info] : m_breakInfo) {
+        Rectf blockRect = {
+            static_cast<float>(info.pos.x), static_cast<float>(info.pos.y), 
+            1.f, 1.f
+        };
+
+        if (player->isRectInView(blockRect)) {
+            auto block = getBlock(info.pos);
+            RenderManager::drawTile("gui.png", 8 + (info.progress / block->getDurability()) * 5.f, blockRect);   
         }
     }
 

@@ -1,3 +1,4 @@
+#pragma once
 #include <entity/Player.hpp>
 
 class ClientPlayer : public Player {

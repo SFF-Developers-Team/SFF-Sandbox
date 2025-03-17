@@ -1,12 +1,10 @@
 #include <entity/OnlinePlayer.hpp>
-#include <entity/LocalPlayer.hpp>
-#include <world/Chunk.hpp>
 #include <world/ClientWorld.hpp>
 #include <net/Multiplayer.hpp>
-#include <Logger.hpp>
 #include <managers/Debug.hpp>
+#include <world/Chunk.hpp>
+#include <Logger.hpp>
 #include <Game.hpp>
-#include <thread>
 
 Multiplayer::Multiplayer() : PacketManager(nullptr), m_client(nullptr) {
     if (enet_initialize() != 0) {

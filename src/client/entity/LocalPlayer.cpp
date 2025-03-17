@@ -1,3 +1,4 @@
+#include "raylib.h"
 #include <managers/SettingsManager.hpp>
 #include <entity/LocalPlayer.hpp>
 #include <world/Block.hpp>
@@ -12,8 +13,9 @@
 #include <ItemDatabase.hpp>
 #include <raymath.h>
 
-LocalPlayer::LocalPlayer(std::shared_ptr<World> world) : Player(world), m_forward(0.f), m_camera{0} {
+LocalPlayer::LocalPlayer(std::shared_ptr<World> world) : ClientPlayer(world), m_forward(0.f), m_camera{0} {
     m_camera.zoom = 50.f;
+    m_camera.offset = {GetScreenWidth() / 2.f, GetScreenHeight() / 2.f};
 }
 
 void LocalPlayer::updateCamera() {
@@ -23,18 +25,19 @@ void LocalPlayer::updateCamera() {
         m_hitbox.y - m_hitbox.height / 2
     };
 
-    m_camera.target = Vector2Lerp({m_hitbox.x, m_hitbox.y}, m_camera.target, 0.1f);
+    m_camera.target = playerCenter;
     
     if (IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0) {
         m_camera.zoom -= wheel;
-    }
 
-    if (IsWindowResized()) {
         float scaleX = static_cast<float>(GetScreenWidth()) / 640;
         float scaleY = static_cast<float>(GetScreenHeight()) / 360;
 
-        m_camera.offset = {GetScreenWidth() / 2.f, GetScreenHeight() / 2.f};
         m_camera.zoom = std::clamp(m_camera.zoom, 5.f * scaleX, 90.f * scaleX);
+    }
+
+    if (IsWindowResized()) {
+        m_camera.offset = {GetScreenWidth() / 2.f, GetScreenHeight() / 2.f};
     }
 }
 
@@ -72,35 +75,31 @@ void LocalPlayer::onTickControls(World* world) {
     auto mp = Multiplayer::get();
     auto ct = Game::get()->getControlType();
 
-    // if (canAccessBlock(target)) {
-    //     m_isBreakingBlock = IsMouseButtonDown(MOUSE_LEFT_BUTTON) && world->getBlock(target);
+    if (canAccessBlock(target)) {
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && canDestroyBlock(world, target)) {
+            if (m_onGround) {
+                setAnimation(PLAYER_HIT);
+            }
 
-    //     if(m_isBreakingBlockPrev && !m_isBreakingBlock) {
-    //         m_breakingBlock = {0, -1};
-    //     }
+            destroyBlock(world);
+        }
 
-    //     m_isBreakingBlockPrev = m_isBreakingBlock;
+        if (m_breakingBlock && IsMouseButtonUp(MOUSE_LEFT_BUTTON)) {
+            world->stopBreakingBlock(m_id);
+        }
 
-    //     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && GetTime() >= m_lastDestroyedBlock + 0.1f && canDestroyBlock(world, target)) {
-    //         if (m_onGround) {
-    //             setAnimation(PLAYER_HIT);
-    //         }
+        if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && canPlaceBlock(world, target)) {
+            if(IsKeyDown(KEY_LEFT_CONTROL)) {
+                destroyBlock(world);
+            }
 
-    //         destroyBlock(world);
-    //     }
+            if (m_onGround) {
+                setAnimation(PLAYER_HIT);
+            }
 
-    //     if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && GetTime() >= m_lastPlacedBlock + 0.05f && canPlaceBlock(world, target)) {
-    //         if(IsKeyDown(KEY_LEFT_CONTROL)) {
-    //             destroyBlock(world);
-    //         }
-
-    //         if (m_onGround) {
-    //             setAnimation(PLAYER_HIT);
-    //         }
-
-    //         placeBlock(world);
-    //     }
-    // }
+            placeBlock(world);
+        }
+    }
 }
 
 void LocalPlayer::onTick(World* world) {
@@ -243,14 +242,14 @@ bool LocalPlayer::isChunkInView(Vec2i chunkPos) {
     return isXIntersect && isYIntersect;
 }
 
-bool LocalPlayer::isBlockInView(BlockPosition position) {
+bool LocalPlayer::isRectInView(Rectf rect) {
     Vec2i zero = {0, 0};
     Vec2i screen = {GetScreenWidth(), GetScreenHeight()};
 
     Vector2 min = TO_CAMERA_POS(m_camera, zero);
     Vector2 max = TO_CAMERA_POS(m_camera, screen);
 
-    return (position.x + 1.0f >= min.x && position.x <= max.x) && (position.y + 1.0f >= min.y && position.y <= max.y);
+    return (rect.x + rect.width >= min.x && rect.x <= max.x) && (rect.y + rect.height >= min.y && rect.y <= max.y);
 }
 
 void LocalPlayer::triggerMove(Direction dir) {
@@ -283,67 +282,22 @@ void LocalPlayer::triggerDuck(bool toggle) {
 
 void LocalPlayer::placeBlock(World* world) {
     if(getItem(m_selected) != nullptr) {
-        auto block = Block::create(reinterpret_cast<Item&>(*m_inventory[m_selected]));
         auto target = getTargetBlock();
         auto mp = Multiplayer::get();
 
-        world->placeBlock(target, block);
-        
-        if(m_gamemode == GAMEMODE_SURVIVAL) {
-            m_inventory[m_selected]->sub(1);
+        world->placeBlock(m_id, target);
 
-            if(m_inventory[m_selected]->getCount() <= 0) {
-                m_inventory[m_selected] = nullptr;
-            }
-        }
-
-        // m_lastPlacedBlock = GetTime();
-
-        if (mp->isConnected()) {
-            mp->sendPacket(Packet(ObjectHeader::BLOCK_PLACE, block->serialize()), BLOCKS);
-        }
+        // if (mp->isConnected()) {
+        //     mp->sendPacket(Packet(ObjectHeader::BLOCK_PLACE, block->serialize()), BLOCKS);
+        // }
     }
 }
 
 void LocalPlayer::destroyBlock(World* world) {
     auto mp = Multiplayer::get();
     auto target = getTargetBlock();
-    auto targetBlock = world->getBlock(target);
 
-    // if (m_gamemode == GAMEMODE_SURVIVAL && targetBlock != nullptr) {
-    //     if (m_breakingBlock != target) {
-    //         m_breakingBlock = target;
-    //         m_breakingBlockDurability = 0.f;
-    //         m_lastPunch = GetTime();
-    //     }
-
-    //     if (GetTime() > m_lastPunch + 0.1f) {
-    //         int strength = 1;
-    //         auto curItem = m_inventory[m_selected];
-
-    //         bool correctItem = (
-    //             curItem != nullptr &&
-    //             gToolForMaterial.find(curItem->getType()) != gToolForMaterial.end() &&
-    //             gToolForMaterial[curItem->getType()] == targetBlock->getMaterial()
-    //         );
-
-    //         if (correctItem && curItem->hasTag(TAG_EFFICIENCY)) {
-    //             strength += curItem->getTag<uint8_t>(TAG_EFFICIENCY);
-    //         }
-
-    //         m_breakingBlockDurability -= strength;
-    //         m_lastPunch = GetTime();
-    //     }
-
-    //     if (m_breakingBlockDurability > 0) {
-    //         return;
-    //     }
-
-    //     addItem(targetBlock->dropItem(m_inventory[m_selected]));
-    // }
-
-    world->destroyBlock(target);
-    // m_lastDestroyedBlock = GetTime();
+    world->breakBlock(m_id, target);
 
     if (mp->isConnected()) {
         mp->sendPacket(Packet(ObjectHeader::BLOCK_DESTROY, target), Channel::BLOCKS);

@@ -1,5 +1,7 @@
+#include "raylib.h"
 #include <world/ClientChunk.hpp>
 #include <managers/RenderManager.hpp>
+#include <managers/Debug.hpp>
 #include <Utils.hpp>
 
 ClientChunk::ClientChunk() : Chunk(), m_render(LoadRenderTexture(16 * CHUNK_WIDTH, 16 * CHUNK_HEIGHT)) {}
@@ -13,6 +15,7 @@ ClientChunk::~ClientChunk() {
 
 void ClientChunk::updateRender() {
     BeginTextureMode(m_render);
+    ClearBackground({0, 0, 0, 0});
     for (int x = 0; x < CHUNK_WIDTH; x++) {
         for (int y = 0; y < CHUNK_HEIGHT; y++) {
             auto block0 = getBlock({x, y, 0});
@@ -48,5 +51,7 @@ void ClientChunk::draw(Vec2i pos) {
         {0.f, 0.f}, 0.f, WHITE
     );
 
-    DrawRectangleLines(pos.x * CHUNK_WIDTH, pos.y * CHUNK_HEIGHT, CHUNK_WIDTH, CHUNK_HEIGHT, YELLOW);
+    if (Debug::get()->isVisible()) {
+        DrawRectangleLines(pos.x * CHUNK_WIDTH, pos.y * CHUNK_HEIGHT, CHUNK_WIDTH, CHUNK_HEIGHT, YELLOW);
+    }
 }

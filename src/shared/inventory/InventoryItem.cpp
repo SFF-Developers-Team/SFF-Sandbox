@@ -1,6 +1,7 @@
 #include <inventory/InventoryItem.hpp>
 #include <Item.hpp>
 #include <ItemDatabase.hpp>
+#include <inventory/Inventory.hpp>
 
 InventoryItem::InventoryItem(ItemID id, int16_t count) : Item(id), m_count(count) {
     if (gItemDatabase.find(id) != gItemDatabase.end()) {
@@ -20,9 +21,13 @@ int16_t InventoryItem::add(int amount) {
     int16_t add = std::min(amount, getMaxCount() - m_count);
     m_count += add;
 
+    if (m_listener) m_listener->onItemChanged(this);
+
     return add;
 }
 
 void InventoryItem::sub(int amount) {
     m_count = std::max(0, m_count - amount);
+
+    if (m_listener) m_listener->onItemChanged(this);
 }

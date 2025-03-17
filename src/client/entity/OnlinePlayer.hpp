@@ -1,4 +1,5 @@
-#include <entity/Player.hpp>
+#pragma once
+#include <entity/ClientPlayer.hpp>
 #include <array>
 
 struct OnlinePosition {
@@ -7,7 +8,7 @@ struct OnlinePosition {
     float time;
 };
 
-class OnlinePlayer : public Player {
+class OnlinePlayer : public ClientPlayer {
 protected:
     std::array<OnlinePosition, 2> m_positions;
     int m_index;

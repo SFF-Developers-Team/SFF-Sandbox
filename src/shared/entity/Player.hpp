@@ -1,5 +1,7 @@
 #pragma once
+#include "inventory/InventoryItem.hpp"
 #include <map>
+#include <memory>
 #include <mutex>
 #include <Types.hpp>
 #include <entity/Mob.hpp>
@@ -18,6 +20,7 @@ protected:
     GameMode m_gamemode;
 
     bool m_fly;
+    bool m_breakingBlock;
 
 public:
     Player(std::shared_ptr<World> world);
@@ -46,8 +49,13 @@ public:
     auto& getUsername() { return m_username; }
     auto getPlayerID() { return m_id; }
 
-    GameMode getGameMode() { return m_gamemode; }
-    void setGameMode(GameMode gamemode);
+    GameMode getGamemode() { return m_gamemode; }
+    void setGamemode(GameMode gamemode);
 
     void toggleFly();
+
+    std::shared_ptr<InventoryItem> getItemHand() { return m_inventory[m_selected]; }
+
+    void setBreakingBlock(bool flag) { m_breakingBlock = flag; }
+    bool isBreakingBlock() { return m_breakingBlock; }
 };

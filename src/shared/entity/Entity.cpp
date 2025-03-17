@@ -2,7 +2,7 @@
 #include <world/Block.hpp>
 #include <world/World.hpp>
 
-Entity::Entity() : Serializable(ENTITY), m_hitbox(0.0f, 0.0f, 0.8f, 1.65f), m_speed({0.f, 0.f}) {}
+Entity::Entity() : Serializable(ENTITY), m_hitbox(0.0f, 0.0f, 0.8f, 1.65f), m_speed({0.f, 0.f}), m_direction(RIGHT) {}
 
 void Entity::setPosition(Vec2f pos) {
     m_hitbox.x = pos.x;

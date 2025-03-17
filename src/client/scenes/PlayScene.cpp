@@ -30,7 +30,6 @@
 #include <Timer.hpp>
 #include <Game.hpp>
 #include <Item.hpp>
-#include <chrono>
 
 PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(60)), m_online(isOnline), m_paused(false), m_inventoryEnabled(false) {
     auto game = Game::get();
@@ -153,7 +152,7 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     if(m_online) {
         auto playerList = std::make_shared<List>(nickList, [](auto, auto) {});
         playerList->setFlags(FLAG_GUI_SCALE);
-        playerList->setPos({static_cast<float>(GetScreenWidth() / 2 + 735), 0});
+        playerList->setPos({static_cast<float>(GetScreenWidth() / 2.f + 735), 0});
         playerList->setVisible(true);
         playerList->setEnabled(true);
         playerList->setAnchorY(0.f);
@@ -164,7 +163,7 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
 
         auto msgInput = std::make_shared<TextInput>("font", "");
         msgInput->setFlags(FLAG_GUI_SCALE);
-        msgInput->setPos({static_cast<float>(GetScreenWidth() / 2), static_cast<float>(GetScreenHeight() / 2)});
+        msgInput->setPos({static_cast<float>(GetScreenWidth() / 2.f), static_cast<float>(GetScreenHeight() / 2.f)});
         msgInput->setTag("inputmsg");
         addChild(msgInput);
     }

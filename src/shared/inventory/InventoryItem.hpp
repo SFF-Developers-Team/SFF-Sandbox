@@ -3,10 +3,12 @@
 
 class Block;
 class Item;
+class Inventory;
 
 class InventoryItem : public Item {
 protected:
     int16_t m_count;
+    Inventory* m_listener;
 
 public:
     InventoryItem(ItemID id, int16_t count = 1);
@@ -21,4 +23,6 @@ public:
 
     int16_t operator+=(int amount) { return add(amount); }
     void operator-=(int amount) { sub(amount); }
+
+    void setListener(Inventory* inv) { m_listener = inv; }
 };

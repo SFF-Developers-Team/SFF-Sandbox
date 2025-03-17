@@ -1,4 +1,5 @@
 #pragma once
+#include "Types.hpp"
 #include <entity/Player.hpp>
 #include <world/Block.hpp>
 #include <world/Chunk.hpp>
@@ -17,11 +18,17 @@
 class LocalPlayer;
 class WorldGen;
 
+struct BreakInfo {
+    BlockPosition pos;
+    uint64_t time;
+    float progress;
+};
+
 class World {
 protected:
     std::map<PlayerID, std::shared_ptr<Player>> m_players;
     std::unordered_map<Vec2i, std::shared_ptr<Chunk>, Vec2iHash> m_chunks;
-    std::vector<TreeStructure> m_postGenTrees;
+    std::unordered_map<PlayerID, BreakInfo> m_breakInfo;
     std::shared_ptr<WorldGen> m_worldGen;
     std::filesystem::path m_saveDir;
     PlayerID m_lastPlayerID;
@@ -39,6 +46,11 @@ public:
 
     void placeBlock(BlockPosition pos, std::shared_ptr<Block> block) { if (!getBlock(pos)) setBlock(pos, block); }
     void destroyBlock(BlockPosition pos) { setBlock(pos, nullptr); }
+
+    void placeBlock(PlayerID m_id, BlockPosition pos);
+    void breakBlock(PlayerID id, BlockPosition pos);
+    void stopBreakingBlock(PlayerID id);
+
     bool isBlockClosed(BlockPosition pos);
     Rectf getBlockHitbox(BlockPosition pos);
     std::shared_ptr<Block> getBlock(BlockPosition pos);
@@ -72,7 +84,6 @@ public:
     auto& getGenerator() { return m_worldGen; }
     auto& getPlayers() { return m_players; }
     auto& getChunks() { return m_chunks; }
-
-    void postGenerateTree(TreeStructure tree) { m_postGenTrees.push_back(tree); }
+    
     void generateChunk(Vec2i pos);
 };

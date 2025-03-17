@@ -1,10 +1,11 @@
+#include "Types.hpp"
 #include <entity/Player.hpp>
 #include <entity/Entity.hpp>
 #include <world/Block.hpp>
 #include <world/World.hpp>
 #include <world/Chunk.hpp>
 
-Player::Player(std::shared_ptr<World> world) : Mob(world), Inventory(36), m_id(0), m_gamemode(GAMEMODE_CREATIVE), m_fly(false) {
+Player::Player(std::shared_ptr<World> world) : Mob(world), Inventory(36), m_id(0), m_gamemode(GAMEMODE_SURVIVAL), m_fly(false), m_breakingBlock(false) {
     m_header = ObjectHeader::PLAYER;
 
     // clang-format off
@@ -139,7 +140,7 @@ bool Player::canPlaceBlock(World* world, BlockPosition target) {
     return !world->getBlock(target) && blockAround;
 }
 
-void Player::setGameMode(GameMode gamemode) {
+void Player::setGamemode(GameMode gamemode) {
     if(gamemode == GAMEMODE_SURVIVAL) {
         m_fly = false;
     }

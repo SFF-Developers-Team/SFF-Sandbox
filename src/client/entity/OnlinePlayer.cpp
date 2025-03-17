@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <raylib.h>
 
-OnlinePlayer::OnlinePlayer(std::shared_ptr<World> world) : Player(world), m_index(0) {}
+OnlinePlayer::OnlinePlayer(std::shared_ptr<World> world) : ClientPlayer(world), m_index(0) {}
 
 void OnlinePlayer::update() {
     if (m_index > 0) {

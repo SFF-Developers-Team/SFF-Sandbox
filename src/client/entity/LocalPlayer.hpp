@@ -1,15 +1,14 @@
 #pragma once
-#include <entity/Player.hpp>
-#include <memory>
-#include <vector>
-#include <raylib.h>
+#include <entity/ClientPlayer.hpp>
 #include <Types.hpp>
+#include <raylib.h>
+#include <memory>
 
 class World;
 class Chunk;
 class Block;
 
-class LocalPlayer : public Player {
+class LocalPlayer : public ClientPlayer {
 private:
     Camera2D m_camera;
 
@@ -29,7 +28,7 @@ public:
     void updateControls();
 
     bool isChunkInView(Vec2i chunkPos);
-    bool isBlockInView(BlockPosition position);
+    bool isRectInView(Rectf rect);
     
     BlockPosition getTargetBlock();
     
@@ -41,5 +40,4 @@ public:
     void triggerMove(Direction dir);
     void triggerJump();
     void triggerDuck(bool toggle);
-    
 };

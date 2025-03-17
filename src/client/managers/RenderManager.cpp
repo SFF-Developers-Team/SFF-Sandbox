@@ -14,8 +14,7 @@
 #include <unordered_map>
 #include <managers/SettingsManager.hpp>
 #include <world/ClientChunk.hpp>
-
-int blocksDrawn = 0;
+#include <rlgl.h>
 
 std::unordered_map<char, Color> colorMap = {
     {'r', RED},
@@ -121,6 +120,11 @@ void RenderManager::drawRect(Rectf rect, Col4u col) {
 }
 
 void RenderManager::drawRectLines(Rectf rect, Col4u col, float thick) {
+    if (thick == 0.f) {
+        auto mat = rlGetMatrixModelview();
+        thick = 1.f / mat.m0;
+    }
+
     DrawRectangleLinesEx(rect.to<Rectangle>(), thick, col.to<Color>());
 }
 
