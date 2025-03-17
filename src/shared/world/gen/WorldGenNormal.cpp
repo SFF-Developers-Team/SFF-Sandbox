@@ -23,11 +23,12 @@ WorldGenNormal::WorldGenNormal(uint64_t seed) : WorldGen(seed), m_perlinNoise(se
 }
 
 std::shared_ptr<Chunk> WorldGenNormal::generateChunk(Vec2i pos) {
+    auto ret = WorldGen::generateChunk(pos);
+
     m_random = std::mt19937(m_seed * pos.x);
     std::uniform_real_distribution<> rdis(0.f, 1.f);
     std::uniform_int_distribution<> idis(0, 99);
 
-    auto ret = std::make_shared<Chunk>();
     int lastTree = 0;
 
     // generating surface

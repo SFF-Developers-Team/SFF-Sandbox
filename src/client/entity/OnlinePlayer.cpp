@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <raylib.h>
 
-OnlinePlayer::OnlinePlayer(std::shared_ptr<World> world) : SimplePlayer(world), m_index(0) {}
+OnlinePlayer::OnlinePlayer(std::shared_ptr<World> world) : Player(world), m_index(0) {}
 
 void OnlinePlayer::update() {
     if (m_index > 0) {
@@ -15,7 +15,7 @@ void OnlinePlayer::update() {
 }
 
 bool OnlinePlayer::deserialize(DataStream& stream) {
-    if(!SimplePlayer::deserialize(stream)) return false;
+    if(!Player::deserialize(stream)) return false;
 
     m_positions[m_index] = {m_hitbox.x, m_hitbox.y, static_cast<float>(GetTime())};
     m_index = (m_index + 1) % m_positions.size();

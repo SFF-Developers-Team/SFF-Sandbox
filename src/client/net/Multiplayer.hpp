@@ -12,7 +12,7 @@
 #endif
 
 #include <managers/PacketManager.hpp>
-#include <entity/Player.hpp>
+#include <entity/LocalPlayer.hpp>
 #include <world/Chunk.hpp>
 #include <Packet.hpp>
 #include <Types.hpp>

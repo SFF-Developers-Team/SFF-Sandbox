@@ -7,6 +7,8 @@
 
 Chunk::Chunk() : Serializable(CHUNK), m_blocks(CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH) {}
 
+Chunk::Chunk(Chunk&& other) noexcept : Serializable(CHUNK), m_blocks(std::move(other.m_blocks)) {}
+
 bool Chunk::isOutOfBound(BlockPosition pos) {
     return (
         pos.x < (pos.x < 0 ? -CHUNK_WIDTH : 0) || 

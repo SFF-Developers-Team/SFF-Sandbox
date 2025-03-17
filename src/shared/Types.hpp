@@ -232,8 +232,8 @@ enum DisconnectReasonID : uint32_t {
     KICKED_BY_SERVER
 };
 
-enum Direction : uint8_t {
-    LEFT = 0,
+enum Direction : int8_t {
+    LEFT = -1,
     RIGHT = 1
 };
 
@@ -368,3 +368,5 @@ enum ObjectHeader : uint8_t {
 enum WorldGenType : uint8_t {
     NORMAL
 };
+
+using PlayerID = uint32_t;

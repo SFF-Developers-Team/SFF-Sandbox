@@ -1,6 +1,6 @@
 #include <managers/RecipesManager.hpp>
 #include <Item.hpp>
-#include <entity/SimplePlayer.hpp>
+#include <entity/Player.hpp>
 
 RecipesManager::RecipesManager() {
     addRecipe({
@@ -19,7 +19,7 @@ RecipesManager::RecipesManager() {
     });
 }
 
-bool RecipesManager::craftItem(std::shared_ptr<SimplePlayer> player, Recipe& recipe) {
+bool RecipesManager::craftItem(std::shared_ptr<Player> player, Recipe& recipe) {
     for (auto& item : recipe.ingredients) {
         auto playerItem = player->findItem(item.id);
 

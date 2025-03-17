@@ -17,8 +17,8 @@
 #include <ui/gameplay/HeartsIndicator.hpp>
 #include <ui/gameplay/IngredientsList.hpp>
 
-#include <entity/Player.hpp>
-#include <world/World.hpp>
+#include <entity/LocalPlayer.hpp>
+#include <world/ClientWorld.hpp>
 
 #include <managers/SettingsManager.hpp>
 #include <managers/RecipesManager.hpp>
@@ -186,31 +186,34 @@ void PlayScene::draw() {
     }
 
     BeginMode2D(m_player->getCamera());
-        RenderManager::renderWorld(m_world, m_player);
+        m_world->draw(m_player);
 
-        if (m_player->isBreakingBlock()) {
-            auto breakingBlock = m_player->getBreakingBlockInfo();
+        // if (m_player->isBreakingBlock()) {
+        //     auto breakingBlock = m_player->getBreakingBlockInfo(m_world.get());
     
-            RenderManager::drawTile("gui.png", 8 + (5.f - (breakingBlock.currentDurability / breakingBlock.totalDurability) * 5.f), BLOCK_RECT(target.x, target.y));
-        }
+        //     RenderManager::drawTile("gui.png", 8 + (5.f - (breakingBlock.currentDurability / breakingBlock.totalDurability) * 5.f), BLOCK_RECT(target.x, target.y));
+        // }
 
         if (m_player->canAccessBlock(target)) {
-            if(m_player->canPlaceBlock(target)) {
+            if(m_player->canPlaceBlock(m_world.get(), target)) {
                 RenderManager::drawTile("gui.png", 1, BLOCK_RECT(target.x, target.y));
             }
 
-            if(m_player->canDestroyBlock(target)) {
+            if(m_player->canDestroyBlock(m_world.get(), target)) {
                 RenderManager::drawTile("gui.png", 2 + IsKeyDown(KEY_LEFT_CONTROL), BLOCK_RECT(target.x, target.y));
             }
         }
     EndMode2D();
+
     if(m_online) {
         auto mp = Multiplayer::get();
         auto messages = mp->getMessages();
+
         for(int i = 0; i < messages.size(); i++) {
             RenderManager::drawText("font", messages[i], {0, static_cast<float>(10 * i)});
         }
     }
+
     RenderManager::drawTile("gui.png", 0, {mouse.x, mouse.y, 16.f, 16.f}, COL_WHITE, 0.f, {0.5f, 0.5f});
 
     if(m_paused) {

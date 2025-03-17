@@ -2,7 +2,7 @@
 #include <thread>
 #include <memory>
 #include <map>
-#include <entity/SimplePlayer.hpp>
+#include <entity/Player.hpp>
 #include <Packet.hpp>
 #include <toml.hpp>
 #include <Client.hpp>

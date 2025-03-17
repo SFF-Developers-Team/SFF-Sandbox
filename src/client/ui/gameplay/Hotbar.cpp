@@ -1,14 +1,14 @@
 #include <ui/gameplay/Hotbar.hpp>
 #include <managers/RenderManager.hpp>
 #include <raylib.h>
-#include <entity/Player.hpp>
+#include <entity/LocalPlayer.hpp>
 #include <world/Block.hpp>
 
 float constexpr cellSize = 26.f;
 float constexpr blockSize = 16.f;
 int constexpr cellsCount = 9;
 
-Hotbar::Hotbar(std::shared_ptr<Player> player, MiniFunction<void()> const& inventoryCallback) : Frame(), m_player(player), m_invCallback(inventoryCallback) {
+Hotbar::Hotbar(std::shared_ptr<LocalPlayer> player, MiniFunction<void()> const& inventoryCallback) : Frame(), m_player(player), m_invCallback(inventoryCallback) {
     setSize({cellSize * (cellsCount + 1) + m_border * (cellsCount + 4), cellSize + m_border * 4});
 }
 

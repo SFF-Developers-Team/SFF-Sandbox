@@ -7,7 +7,7 @@ float constexpr blockSize = 16.f;
 int const columnCount = 9;
 int const rowCount = 4;
 
-InventoryNode::InventoryNode(std::shared_ptr<Player> player) : Frame(), m_player(player) {
+InventoryNode::InventoryNode(std::shared_ptr<LocalPlayer> player) : Frame(), m_player(player) {
     setSize({
         cellSize * columnCount + m_border * (columnCount + 3), 
         cellSize * rowCount + m_border * (rowCount + 4)

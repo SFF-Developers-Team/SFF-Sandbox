@@ -1,17 +1,17 @@
 #include <ui/gameplay/BlockInfo.hpp>
 #include <managers/RenderManager.hpp>
-#include <entity/Player.hpp>
+#include <entity/LocalPlayer.hpp>
 #include <world/World.hpp>
 #include <world/Block.hpp>
 #include <Game.hpp>
 #include <format>
 
 void BlockInfo::draw() {
-    Frame::draw();
+    // Frame::draw();
 
-    auto game = Game::get();
-    auto target = game->getPlayer()->getTargetBlock();
-    auto block = game->getWorld()->getBlock(target);
+    // auto game = Game::get();
+    // auto target = game->getPlayer()->getTargetBlock();
+    // auto block = game->getWorld()->getBlock(target);
 
     // if (block != nullptr) {
     //     Rectf blockDest = {10, (getSize().y - 16) / 2, 16, 16};

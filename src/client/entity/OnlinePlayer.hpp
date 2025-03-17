@@ -1,4 +1,4 @@
-#include <entity/SimplePlayer.hpp>
+#include <entity/Player.hpp>
 #include <array>
 
 struct OnlinePosition {
@@ -7,7 +7,7 @@ struct OnlinePosition {
     float time;
 };
 
-class OnlinePlayer : public SimplePlayer {
+class OnlinePlayer : public Player {
 protected:
     std::array<OnlinePosition, 2> m_positions;
     int m_index;

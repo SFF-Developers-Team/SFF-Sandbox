@@ -1,7 +1,7 @@
 #include <cstdint>
 #include <memory>
 #include <world/gen/WorldGenNormal.hpp>
-#include <entity/SimplePlayer.hpp>
+#include <entity/Player.hpp>
 #include <world/World.hpp>
 #include <world/Chunk.hpp>
 #include <Logger.hpp>
@@ -11,6 +11,9 @@
 #include <assert.h>
 #include <Logger.hpp>
 #include <world/blocks/Leaves.hpp>
+#include <thread>
+
+#define RENDER_DISTANCE 6
 
 World::World(std::filesystem::path const& saveDir) : m_saveDir(saveDir), m_version(WORLDVER), m_time(0), m_lastPlayerID(1), m_randomTickSpeed(3) {
     if (!saveDir.empty() && !std::filesystem::exists(m_saveDir)) {
@@ -28,6 +31,8 @@ void World::generate() {
 
 void World::onTick() {
     m_time++;
+
+    std::vector<Vec2i> unloadList;
 
     for (auto& [pos, chunk] : m_chunks) {
         for (auto x = 0; x < CHUNK_WIDTH; x++) {
@@ -54,19 +59,39 @@ void World::onTick() {
                 block->onRandomTick(this, {x, y, z});
             }
         }
+
+        bool shouldUnload = true;
+
+        for (auto& [id, player] : m_players) {
+            auto playerPos = player->getPosition();
+            auto playerChunk = TO_CHUNK_POS(playerPos);
+            shouldUnload &= playerChunk.distance(pos) > RENDER_DISTANCE;
+        }
+
+        if (shouldUnload) {
+            unloadList.push_back(pos);
+        }
     }
+
+    for (auto& pos : unloadList) {
+        saveChunk(pos);
+        unloadChunk(pos);
+    }
+
+    auto halfDistance = RENDER_DISTANCE / 2;
 
     for (auto& [id, player] : m_players) {
         player->onTick(this);
         auto playerPos = player->getPosition();
         auto pos = TO_CHUNK_POS(playerPos);
         
-        for (int x = pos.x - 4; x < pos.x + 4; x++) {
-            for (int y = pos.y - 4; y < pos.y + 4; y++) {
+        for (int x = pos.x - halfDistance; x < pos.x + halfDistance; x++) {
+            for (int y = pos.y - halfDistance; y < pos.y + halfDistance; y++) {
                 auto chunk = getChunk({x, y});
                 
                 if (chunk == nullptr) {
                     generateChunk({x, y});
+                    break;
                 }
             }
         }
@@ -139,6 +164,11 @@ std::shared_ptr<Block> World::getBlock(BlockPosition pos) {
     }
 
     auto chunk = getChunk(TO_CHUNK_POS(pos));
+
+    if(pos.x < 0) {
+        pos.x = CHUNK_WIDTH - (-pos.x) % CHUNK_WIDTH;
+    }
+    
     return chunk->getBlock({pos.x % CHUNK_WIDTH, pos.y % CHUNK_HEIGHT, pos.layer});
 }
 
@@ -148,9 +178,12 @@ void World::setBlock(BlockPosition pos, std::shared_ptr<Block> block) {
     }
 
     auto chunk = getChunk(TO_CHUNK_POS(pos));
-    auto localx = (pos.x < 0 ? (CHUNK_WIDTH - (-pos.x) % CHUNK_WIDTH) % CHUNK_WIDTH : pos.x % CHUNK_WIDTH);
-    
-    chunk->setBlock({localx, pos.y % CHUNK_HEIGHT, pos.layer}, block);
+
+    if(pos.x < 0) {
+        pos.x = CHUNK_WIDTH - (-pos.x) % CHUNK_WIDTH;
+    }
+
+    chunk->setBlock({pos.x % CHUNK_WIDTH, pos.y % CHUNK_HEIGHT, pos.layer}, block);
 }
 
 bool World::save() {
@@ -263,12 +296,12 @@ std::vector<Hitbox> World::getHitboxes(Hitbox entityHitbox, int radius) {
     return ret;
 }
 
-void World::setPlayer(PlayerID id, std::shared_ptr<SimplePlayer> player, std::string const username) {
+void World::setPlayer(PlayerID id, std::shared_ptr<Player> player, std::string const username) {
     m_players[id] = player;
     player->setUsername(username);
 }
 
-PlayerID World::addPlayer(std::shared_ptr<SimplePlayer> player, std::string const username) {
+PlayerID World::addPlayer(std::shared_ptr<Player> player, std::string const username) {
     auto it = std::find_if(m_players.begin(), m_players.end(), [username](auto& pair) { 
         return pair.second->getUsername() == username;
     });
@@ -286,7 +319,7 @@ PlayerID World::addPlayer(std::shared_ptr<SimplePlayer> player, std::string cons
     return m_lastPlayerID++;
 }
 
-std::shared_ptr<SimplePlayer> World::getPlayer(PlayerID id) {
+std::shared_ptr<Player> World::getPlayer(PlayerID id) {
     auto it = m_players.find(id);
     return (it != m_players.end()) ? it->second : nullptr;
 }
@@ -382,38 +415,5 @@ void World::generateChunk(Vec2i pos) {
         return logE("Can't generate chunk without WorldGen ¯\\_(ツ)_/¯");
     }
 
-    m_chunks[pos] = m_worldGen->generateChunk(pos);
-
-    // for (auto& tree : m_postGenTrees) {
-    //     for (auto y = tree.y - tree.trunkHeight; y < tree.y; y++) {
-    //         auto log = Block::create(OAK_LOG);
-    //         log->setTag(TAG_NATURAL, true);
-
-    //         setBlock({tree.x, y, 0}, log);
-    //     }
-
-    //     for (int x = -3; x <= 3; ++x) {
-    //         for (int y = -2; y <= 2; ++y) {
-    //             if (x * x + y * y <= 3 * 2) {
-    //                 Vec2i pos = {tree.x + x, (tree.y - tree.trunkHeight) + y};
-                    
-    //                 auto chunkPos = TO_CHUNK_POS(pos);
-
-    //                 if (getChunk(chunkPos) == nullptr) {
-    //                     generateChunk(chunkPos);
-    //                 }
-
-    //                 auto leaves = Block::create(LEAVES);
-
-    //                 if (getBlock({pos.x, pos.y, 0}) == nullptr) {
-    //                     setBlock({pos.x, pos.y, 0}, Block::create(*leaves));
-    //                 }
-
-    //                 setBlock({pos.x, pos.y, 1}, leaves);
-    //             }
-    //         }
-    //     }
-    // }
-
-    m_postGenTrees.clear();
+    addChunk(pos, m_worldGen->generateChunk(pos));
 }

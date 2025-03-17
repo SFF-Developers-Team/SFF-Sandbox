@@ -213,7 +213,7 @@ void Server::send(PlayerID pid, Packet const& packet, Channel channel, bool reli
 }
 
 PlayerID Server::joinPlayer(std::string const& username) {
-    auto playerId = m_world->addPlayer(std::make_unique<SimplePlayer>(m_world), username);
+    auto playerId = m_world->addPlayer(std::make_unique<Player>(m_world), username);
     logD("{} joined the game", username);
 
     auto packet = Packet(ObjectHeader::LOAD_PLAYER);

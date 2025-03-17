@@ -4,7 +4,7 @@
 #include <memory>
 #include <unordered_map>
 
-class SimplePlayer;
+class Player;
 
 struct RecipeIngredient {
     ItemID id;
@@ -33,5 +33,5 @@ public:
 
     auto& getRecipes() { return m_recipes; }
 
-    bool craftItem(std::shared_ptr<SimplePlayer> player, Recipe& recipe);
+    bool craftItem(std::shared_ptr<Player> player, Recipe& recipe);
 };

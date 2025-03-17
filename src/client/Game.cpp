@@ -1,7 +1,7 @@
 #include <scenes/MainMenuScene.hpp>
 #include <managers/TextureManager.hpp>
 #include <managers/SoundManager.hpp>
-#include <entity/Player.hpp>
+#include <entity/LocalPlayer.hpp>
 #include <world/World.hpp>
 #include <TileMap.hpp>
 #include <Logger.hpp>

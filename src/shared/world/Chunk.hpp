@@ -10,13 +10,14 @@
 #define TO_CHUNK_POS(pos) (Vec2i {static_cast<int>(pos.x) / CHUNK_WIDTH, static_cast<int>(pos.y) / CHUNK_HEIGHT})
 
 class Chunk : public Serializable {
-private:
+protected:
     std::vector<std::shared_ptr<Block>> m_blocks;
 
 public:
     Chunk();
+    Chunk(Chunk&& other) noexcept;
     
-    void setBlock(BlockPosition pos, std::shared_ptr<Block> block);
+    virtual void setBlock(BlockPosition pos, std::shared_ptr<Block> block);
     std::shared_ptr<Block> getBlock(BlockPosition pos);
 
     int getIndex(BlockPosition pos);

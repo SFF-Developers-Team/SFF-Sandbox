@@ -1,5 +1,5 @@
 #pragma once
-#include <entity/SimplePlayer.hpp>
+#include <entity/Player.hpp>
 #include <world/Block.hpp>
 #include <world/Chunk.hpp>
 #include <entity/Hitbox.hpp>
@@ -14,12 +14,12 @@
 
 #define WORLDVER 4
 
-class Player;
+class LocalPlayer;
 class WorldGen;
 
 class World {
-private:
-    std::map<PlayerID, std::shared_ptr<SimplePlayer>> m_players;
+protected:
+    std::map<PlayerID, std::shared_ptr<Player>> m_players;
     std::unordered_map<Vec2i, std::shared_ptr<Chunk>, Vec2iHash> m_chunks;
     std::vector<TreeStructure> m_postGenTrees;
     std::shared_ptr<WorldGen> m_worldGen;
@@ -46,7 +46,7 @@ public:
     bool isOutOfBound(BlockPosition pos);
 
     void unloadChunk(Vec2i pos) { m_chunks.erase(pos); }
-    void addChunk(Vec2i pos, std::shared_ptr<Chunk> chunk) { m_chunks[pos] = chunk; }
+    virtual void addChunk(Vec2i pos, std::shared_ptr<Chunk> chunk) { m_chunks[pos] = chunk; }
 
     std::shared_ptr<Chunk> getChunk(Vec2i position);
     bool saveChunk(Vec2i pos);
@@ -57,10 +57,9 @@ public:
     bool save();
     bool load();
 
-
-    void setPlayer(PlayerID id, std::shared_ptr<SimplePlayer> player, std::string const username = "");
-    PlayerID addPlayer(std::shared_ptr<SimplePlayer> player, std::string const username = "");
-    std::shared_ptr<SimplePlayer> getPlayer(PlayerID id);
+    void setPlayer(PlayerID id, std::shared_ptr<Player> player, std::string const username = "");
+    PlayerID addPlayer(std::shared_ptr<Player> player, std::string const username = "");
+    std::shared_ptr<Player> getPlayer(PlayerID id);
     void unloadPlayer(PlayerID id);
     bool savePlayer(PlayerID id);
     bool loadPlayer(std::string const& username = "");

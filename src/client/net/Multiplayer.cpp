@@ -1,7 +1,7 @@
 #include <entity/OnlinePlayer.hpp>
-#include <entity/Player.hpp>
+#include <entity/LocalPlayer.hpp>
 #include <world/Chunk.hpp>
-#include <world/World.hpp>
+#include <world/ClientWorld.hpp>
 #include <net/Multiplayer.hpp>
 #include <Logger.hpp>
 #include <managers/Debug.hpp>
@@ -86,7 +86,7 @@ void Multiplayer::update() {
                     m_myPlayerId = packet.get<PlayerID>(0);
                     logD("Received PlayerID from server {}", m_myPlayerId);
                     
-                    Game::get()->setWorld(std::make_shared<World>("mp"));
+                    Game::get()->setWorld(std::make_shared<ClientWorld>("mp"));
 
                     m_connected = true;
                     m_state = LOADING_TERRAIN;
@@ -239,7 +239,7 @@ void Multiplayer::handleTerrain(Packet& packet) {
 
     auto game = Game::get();
     auto world = game->getWorld();
-    auto player = std::make_shared<Player>(world);
+    auto player = std::make_shared<LocalPlayer>(world);
     game->setPlayer(player);
     world->setPlayer(m_myPlayerId, player);
     m_state = PLAYING;

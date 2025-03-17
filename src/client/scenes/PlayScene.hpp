@@ -2,16 +2,16 @@
 #include <ui/basic/Scene.hpp>
 #include <memory>
 
-class World;
-class Player;
+class ClientWorld;
+class LocalPlayer;
 class Timer;
 class Node;
 class List;
 
 class PlayScene : public Scene {
 private:
-    std::shared_ptr<World> m_world;
-    std::shared_ptr<Player> m_player;
+    std::shared_ptr<ClientWorld> m_world;
+    std::shared_ptr<LocalPlayer> m_player;
     std::shared_ptr<Timer> m_timer;
     std::shared_ptr<List> m_playersList;
     
