@@ -3,7 +3,6 @@
 #include <memory>
 #include <world/ClientWorld.hpp>
 #include <world/ClientChunk.hpp>
-#include <world/Chunk.hpp>
 #include <entity/LocalPlayer.hpp>
 #include <cassert>
 #include <managers/Debug.hpp>

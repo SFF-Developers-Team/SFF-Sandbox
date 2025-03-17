@@ -1,5 +1,5 @@
 #pragma once
-#include "inventory/InventoryItem.hpp"
+#include <inventory/InventoryItem.hpp>
 #include <map>
 #include <memory>
 #include <mutex>

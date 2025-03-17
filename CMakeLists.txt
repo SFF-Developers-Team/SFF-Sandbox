@@ -24,6 +24,7 @@ set(SHARED_HEADERS
 )
 
 file(GLOB SHARED_SOURCES CONFIGURE_DEPENDS
+    "src/shared/pch.c"
     "src/shared/entity/*.cpp"
     "src/shared/world/*.cpp"
     "src/shared/world/gen/*.cpp"

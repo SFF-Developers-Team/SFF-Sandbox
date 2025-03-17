@@ -1,16 +1,4 @@
 #pragma once
-#ifdef _WIN32
-    #define NOGDI
-    #define NOUSER
-
-    #ifndef NOMINMAX
-        #define NOMINMAX
-    #endif
-
-    // Type required before windows.h inclusion
-    typedef struct tagMSG *LPMSG;
-#endif
-
 #include <managers/PacketManager.hpp>
 #include <entity/LocalPlayer.hpp>
 #include <world/Chunk.hpp>
