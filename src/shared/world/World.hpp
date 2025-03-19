@@ -17,6 +17,7 @@
 
 class LocalPlayer;
 class WorldGen;
+class Structure;
 
 struct BreakInfo {
     BlockPosition pos;
@@ -28,6 +29,7 @@ class World {
 protected:
     std::map<PlayerID, std::shared_ptr<Player>> m_players;
     std::unordered_map<Vec2i, std::shared_ptr<Chunk>, Vec2iHash> m_chunks;
+    std::vector<std::shared_ptr<Structure>> m_structures;
     std::unordered_map<PlayerID, BreakInfo> m_breakInfo;
     std::shared_ptr<WorldGen> m_worldGen;
     std::filesystem::path m_saveDir;
@@ -86,4 +88,5 @@ public:
     auto& getChunks() { return m_chunks; }
     
     void generateChunk(Vec2i pos);
+    void addStructure(std::shared_ptr<Structure> structure) { m_structures.push_back(structure); }
 };

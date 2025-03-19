@@ -14,7 +14,7 @@ protected:
 public:
     WorldGen(uint64_t seed);
 
-    virtual std::shared_ptr<Chunk> generateChunk(Vec2i position);
+    virtual std::shared_ptr<Chunk> generateChunk(World* world, Vec2i position);
     void generateBlock(std::shared_ptr<Chunk> chunk, BlockPosition position, ItemID id);
 
     WorldGenType getType() { return m_type; }

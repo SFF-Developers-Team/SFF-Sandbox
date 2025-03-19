@@ -1,5 +1,4 @@
 #include <world/Block.hpp>
-#include <cassert>
 #include <world/blocks/Leaves.hpp>
 #include <world/blocks/Stone.hpp>
 #include <world/blocks/Grass.hpp>
@@ -7,6 +6,8 @@
 #include <world/blocks/IronOre.hpp>
 #include <world/blocks/GoldOre.hpp>
 #include <world/blocks/DiamondOre.hpp>
+#include <MiniFunction.hpp>
+#include <cassert>
 
 std::shared_ptr<Block> Block::create(ItemID id) {
     switch (id) {

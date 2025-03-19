@@ -3,7 +3,7 @@
 
 WorldGen::WorldGen(uint64_t seed) : m_seed(seed) {}
 
-std::shared_ptr<Chunk> WorldGen::generateChunk(Vec2i position) {
+std::shared_ptr<Chunk> WorldGen::generateChunk(World* world, Vec2i position) {
     return std::make_shared<Chunk>();
 }
 

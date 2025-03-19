@@ -14,6 +14,7 @@
 #include <assert.h>
 #include <Logger.hpp>
 #include <world/blocks/Leaves.hpp>
+#include <world/Structure.hpp>
 
 #define RENDER_DISTANCE 9
 
@@ -447,7 +448,30 @@ void World::generateChunk(Vec2i pos) {
         return logE("Can't generate chunk without WorldGen ¯\\_(ツ)_/¯");
     }
 
-    addChunk(pos, m_worldGen->generateChunk(pos));
+    addChunk(pos, m_worldGen->generateChunk(this, pos));
+
+    for (auto& structure : m_structures) {
+        auto size = structure->getSize();
+
+        for (auto i = 0; i < size.x * size.y; i++) {
+            Vec2i blockPos = {i % size.x, i / size.y};
+            
+            if (!getChunk(TO_CHUNK_POS(blockPos))) {
+                addChunk(pos, m_worldGen->generateChunk(this, pos));
+            }
+
+            auto block0 = structure->getBlock({blockPos.x, blockPos.y, 0});
+            block0->setTag(TAG_NATURAL, true);
+
+            auto block1 = structure->getBlock({blockPos.x, blockPos.y, 1});
+            block1->setTag(TAG_NATURAL, true);
+
+            setBlock({blockPos.x, blockPos.y, 0}, block0);
+            setBlock({blockPos.x, blockPos.y, 1}, block1);
+        }
+    }
+
+    m_structures.clear();
 }
 
 void World::placeBlock(PlayerID m_id, BlockPosition pos) {

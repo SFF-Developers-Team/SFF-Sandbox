@@ -370,3 +370,4 @@ enum WorldGenType : uint8_t {
 };
 
 using PlayerID = uint32_t;
+using BlockVector = std::vector<std::shared_ptr<class Block>>;

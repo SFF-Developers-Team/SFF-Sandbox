@@ -22,8 +22,8 @@ WorldGenNormal::WorldGenNormal(uint64_t seed) : WorldGen(seed), m_perlinNoise(se
     m_type = NORMAL;
 }
 
-std::shared_ptr<Chunk> WorldGenNormal::generateChunk(Vec2i pos) {
-    auto ret = WorldGen::generateChunk(pos);
+std::shared_ptr<Chunk> WorldGenNormal::generateChunk(World* world, Vec2i pos) {
+    auto ret = WorldGen::generateChunk(world, pos);
 
     m_random = std::mt19937(m_seed * pos.x);
     std::uniform_real_distribution<> rdis(0.f, 1.f);
@@ -61,10 +61,10 @@ std::shared_ptr<Chunk> WorldGenNormal::generateChunk(Vec2i pos) {
                 }
             }
 
-            // if(z == 0 && idis(m_random) < 10 && x - lastTree > 2) {
-            //     m_world->postGenerateTree({pos.x * CHUNK_WIDTH + x, grassLevel, idis(m_random) % 3 + 5});
-            //     lastTree = x;
-            // }
+            if(z == 0 && idis(m_random) < 10 && x - lastTree > 2) {
+                m_world->postGenerateTree({pos.x * CHUNK_WIDTH + x, grassLevel, idis(m_random) % 3 + 5});
+                lastTree = x;
+            }
         }
     }
 
