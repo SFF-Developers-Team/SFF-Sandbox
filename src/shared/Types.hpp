@@ -326,12 +326,6 @@ struct BlockPosition {
     bool operator==(BlockPosition const& other) const { return x == other.x && y == other.y && layer == other.layer; }
 };
 
-struct TreeStructure {
-    int x;
-    int y;
-    int trunkHeight;
-};
-
 enum AnimationType : uint8_t {
     PLAYER_IDLE,
     PLAYER_MOVE,

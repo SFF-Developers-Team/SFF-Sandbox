@@ -1,13 +1,14 @@
+#include "Types.hpp"
 #include <world/Structure.hpp>
 
-Structure::Structure(Vec2i size) : m_size(size) {}
+Structure::Structure(Vec2i pos, Vec2i size) : m_pos(pos), m_size(size), m_blocks(size.x * size.y * 2) {}
 
 
 bool Structure::isOutOfBound(BlockPosition pos) {
     return (
         pos.x < 0 || pos.x > m_size.x || 
-        pos.y < 0 || pos.y > m_size.y || pos.layer < 0 || 
-        pos.layer > 1
+        pos.y < 0 || pos.y > m_size.y || 
+        pos.layer < 0 || pos.layer > 1
     );
 }
 

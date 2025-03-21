@@ -3,5 +3,5 @@
 
 class TreeStructure : public Structure {
 public:
-    TreeStructure(int height);
+    TreeStructure(Vec2i pos, int height);
 };

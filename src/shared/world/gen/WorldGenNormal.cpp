@@ -1,7 +1,11 @@
+#include "Types.hpp"
+#include <memory>
 #include <world/gen/WorldGenNormal.hpp>
 #include <world/Chunk.hpp>
 #include <world/Block.hpp>
 #include <world/World.hpp>
+#include <world/Structure.hpp>
+#include <world/TreeStructure.hpp>
 #include <stdlib.h>
 
 struct Ore {
@@ -62,7 +66,9 @@ std::shared_ptr<Chunk> WorldGenNormal::generateChunk(World* world, Vec2i pos) {
             }
 
             if(z == 0 && idis(m_random) < 10 && x - lastTree > 2) {
-                m_world->postGenerateTree({pos.x * CHUNK_WIDTH + x, grassLevel, idis(m_random) % 3 + 5});
+                auto height = idis(m_random) % 3 + 8;
+                auto tree = std::make_shared<TreeStructure>(Vec2i {pos.x * CHUNK_WIDTH + x - 2, grassLevel - height}, height);
+                world->addStructure(tree);
                 lastTree = x;
             }
         }

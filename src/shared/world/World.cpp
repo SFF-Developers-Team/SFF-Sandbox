@@ -452,22 +452,29 @@ void World::generateChunk(Vec2i pos) {
 
     for (auto& structure : m_structures) {
         auto size = structure->getSize();
+        auto stpos = structure->getPos();
 
         for (auto i = 0; i < size.x * size.y; i++) {
-            Vec2i blockPos = {i % size.x, i / size.y};
-            
-            if (!getChunk(TO_CHUNK_POS(blockPos))) {
-                addChunk(pos, m_worldGen->generateChunk(this, pos));
+            Vec2i localPos = {i % size.x, i / size.y};
+            Vec2i worldPos = {i % size.x + stpos.x, i / size.y + stpos.y};
+            auto chunkPos = TO_CHUNK_POS(worldPos);
+
+            if (!getChunk(chunkPos)) {
+                addChunk(chunkPos, m_worldGen->generateChunk(this, chunkPos));
             }
 
-            auto block0 = structure->getBlock({blockPos.x, blockPos.y, 0});
-            block0->setTag(TAG_NATURAL, true);
+            auto block0 = structure->getBlock({localPos.x, localPos.y, 0});
+            if (block0 != nullptr) {
+                block0->setTag(TAG_NATURAL, true);
+            }
 
-            auto block1 = structure->getBlock({blockPos.x, blockPos.y, 1});
-            block1->setTag(TAG_NATURAL, true);
+            auto block1 = structure->getBlock({localPos.x, localPos.y, 1});
+            if (block1 != nullptr) {
+                block1->setTag(TAG_NATURAL, true);
+            }
 
-            setBlock({blockPos.x, blockPos.y, 0}, block0);
-            setBlock({blockPos.x, blockPos.y, 1}, block1);
+            setBlock({worldPos.x, worldPos.y, 0}, block0);
+            setBlock({worldPos.x, worldPos.y, 1}, block1);
         }
     }
 

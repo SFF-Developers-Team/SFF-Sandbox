@@ -164,7 +164,7 @@ void Client::handleLoadChunk(Packet& packet) {
     auto chunk = world->getChunk(pos);
 
     if (chunk == nullptr) {
-        chunk = world->getGenerator()->generateChunk(pos);
+        chunk = world->getGenerator()->generateChunk(world.get(), pos);
         world->addChunk(pos, chunk);
     }
 

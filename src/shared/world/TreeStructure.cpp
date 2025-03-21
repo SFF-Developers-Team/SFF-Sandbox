@@ -1,7 +1,7 @@
-#include <TreeStructure.hpp>
-#include <Block.hpp>
+#include <world/TreeStructure.hpp>
+#include <world/Block.hpp>
 
-TreeStructure::TreeStructure(int height) : Structure({5, height}) {
+TreeStructure::TreeStructure(Vec2i pos, int height) : Structure(pos, {5, height}) {
     for (auto y = 2; y < height; y++) {
         setBlock({m_size.x / 2, y, 0}, Block::create(OAK_LOG));
     }

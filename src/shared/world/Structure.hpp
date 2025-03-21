@@ -4,11 +4,13 @@
 class Structure {
 protected:
     BlockVector m_blocks;
+    Vec2i m_pos;
     Vec2i m_size;
 
 public:
-    Structure(Vec2i size);
+    Structure(Vec2i pos, Vec2i size);
 
+    Vec2i getPos() { return m_pos; }
     Vec2i getSize() { return m_size; }
     
     int getIndex(BlockPosition pos) { return (pos.layer * m_size.x * m_size.y) + (pos.y * m_size.x) + abs(pos.x); }
