@@ -449,6 +449,7 @@ void World::generateChunk(Vec2i pos) {
     }
 
     addChunk(pos, m_worldGen->generateChunk(this, pos));
+    m_worldGen->setStructures(false);
 
     for (auto& structure : m_structures) {
         auto size = structure->getSize();
@@ -478,6 +479,7 @@ void World::generateChunk(Vec2i pos) {
         }
     }
 
+    m_worldGen->setStructures(true);
     m_structures.clear();
 }
 

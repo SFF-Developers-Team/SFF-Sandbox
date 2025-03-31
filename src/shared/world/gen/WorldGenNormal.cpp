@@ -65,8 +65,8 @@ std::shared_ptr<Chunk> WorldGenNormal::generateChunk(World* world, Vec2i pos) {
                 }
             }
 
-            if(z == 0 && idis(m_random) < 10 && x - lastTree > 2) {
-                auto height = idis(m_random) % 3 + 8;
+            if(m_generateStructures && grassLevel > pos.y * CHUNK_HEIGHT && grassLevel < pos.y * CHUNK_HEIGHT + CHUNK_HEIGHT && z == 0 && idis(m_random) < 10 && x - lastTree > 2) {
+                int height = (m_random() % 5) + 6;
                 auto tree = std::make_shared<TreeStructure>(Vec2i {pos.x * CHUNK_WIDTH + x - 2, grassLevel - height}, height);
                 world->addStructure(tree);
                 lastTree = x;

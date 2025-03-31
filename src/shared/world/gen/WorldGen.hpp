@@ -10,6 +10,7 @@ class WorldGen {
 protected:
     int64_t m_seed = 0;
     WorldGenType m_type;
+    bool m_generateStructures = true;
 
 public:
     WorldGen(uint64_t seed);
@@ -19,4 +20,6 @@ public:
 
     WorldGenType getType() { return m_type; }
     int64_t getSeed() { return m_seed; }
+
+    void setStructures(bool flag) { m_generateStructures = flag; }
 };

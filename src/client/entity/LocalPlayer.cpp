@@ -221,6 +221,10 @@ void LocalPlayer::updateControls() {
     if ((IsKeyReleased(stm->getKeybind("duck"))) || IsKeyReleased(KEY_DOWN)) {
         m_sneak = false;
     }
+
+    if (IsKeyPressed(KEY_F4)) {
+        m_gamemode = (m_gamemode == GAMEMODE_CREATIVE) ? GAMEMODE_SURVIVAL : GAMEMODE_CREATIVE;
+    }
 }
 
 void LocalPlayer::update() {
