@@ -33,7 +33,7 @@ public:
     MaterialType getBestToolMaterial() { return gItemDatabase[m_id].bestToolMaterial; }
     std::string getName() { return gItemDatabase[m_id].name; }
     MaterialType getMaterial() { return gItemDatabase[m_id].material; }
-    uint16_t getSpriteIndex() { return gItemDatabase[m_id].spriteIndex; }
+    uint16_t getSpriteID() { return gItemDatabase[m_id].spriteIndex; }
     float getDurability() { return gItemDatabase[m_id].durability; }
     float getToolSpeed();
     bool isTool();

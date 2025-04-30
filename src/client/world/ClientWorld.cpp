@@ -13,7 +13,7 @@ ClientWorld::ClientWorld(std::filesystem::path const& saveDir) : World(saveDir) 
 
 void ClientWorld::addChunk(Vec2i pos, std::shared_ptr<Chunk> chunk) {
     auto clChunk = std::make_shared<ClientChunk>(std::move(*chunk));
-    clChunk->updateRender();
+    clChunk->rebuild();
     World::addChunk(pos, clChunk);
 }
 

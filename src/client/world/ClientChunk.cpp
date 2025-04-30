@@ -2,36 +2,62 @@
 #include <world/ClientChunk.hpp>
 #include <managers/RenderManager.hpp>
 #include <managers/Debug.hpp>
+#include <managers/TextureManager.hpp>
 #include <Utils.hpp>
+#include <rlgl.h>
 
-ClientChunk::ClientChunk() : Chunk(), m_render(LoadRenderTexture(16 * CHUNK_WIDTH, 16 * CHUNK_HEIGHT)) {}
+ClientChunk::ClientChunk() : Chunk() {}
 
 ClientChunk::ClientChunk(Chunk&& chunk) 
-    : Chunk(std::move(chunk)), m_render(LoadRenderTexture(16 * CHUNK_WIDTH, 16 * CHUNK_HEIGHT)) {} 
+    : Chunk(std::move(chunk)) { rebuild(); } 
 
-ClientChunk::~ClientChunk() {
-    UnloadRenderTexture(m_render);
-}
+void ClientChunk::rebuild() {
+    std::vector<float> vertices;
 
-void ClientChunk::updateRender() {
-    BeginTextureMode(m_render);
-    ClearBackground({0, 0, 0, 0});
-    for (int x = 0; x < CHUNK_WIDTH; x++) {
-        for (int y = 0; y < CHUNK_HEIGHT; y++) {
+    auto tilemap = TextureManager::get()->getTileMap("blocks.png");
+    auto tex = tilemap->getMap();
+
+    for (int y = 0; y < CHUNK_HEIGHT; y++) {
+        for (int x = 0; x < CHUNK_WIDTH; x++) {
             auto block0 = getBlock({x, y, 0});
-            auto block1 = getBlock({x, y, 1});
-            Rectf dest = {static_cast<float>(x * 16), static_cast<float>(y * 16), 16, 16};
+            auto block1 = getBlock({x, y, 0});
+
+            float x0 = x;
+            float y0 = y;
+            float x1 = x + 1;
+            float y1 = y + 1;
 
             if (block0 != nullptr && block1 == nullptr) {
-                RenderManager::renderBlock(dest, {x, y, 0}, block0);
-            }
+                int tileX = block0->getSpriteID() % tex.width;
+                int tileY = block0->getSpriteID() / tex.height;
+                
+                float uvSize = 1.0f / tex.width;
+                float u0 = tileX * uvSize; 
+                float v0 = tileY * uvSize;
+                float u1 = u0 + uvSize;
+                float v1 = v0 + uvSize;
 
-            if (block1 != nullptr) {
-                RenderManager::renderBlock(dest, {x, y, 1}, block1);
+
+                vertices.insert(vertices.end(), {
+                    x0, y0, u0, v0,
+                    x1, y0, u1, v0,
+                    x1, y1, u1, v1,
+    
+                    x0, y0, u0, v0,
+                    x1, y1, u1, v1,
+                    x0, y1, u0, v1 
+                });
             }
         }
     }
-    EndTextureMode();
+
+    m_vao = rlLoadVertexArray(); 
+    rlEnableVertexArray(m_vao);
+
+    m_vbo = rlLoadVertexBuffer(vertices.data(), vertices.size() * sizeof(float), false);
+    rlSetVertexAttribute(0, 3, RL_FLOAT, false, 3 * sizeof(float), 0);
+    
+    rlDisableVertexArray();
 
     // for debug
     m_blockCount = countBlocks();
@@ -39,17 +65,26 @@ void ClientChunk::updateRender() {
 
 void ClientChunk::setBlock(BlockPosition pos, std::shared_ptr<Block> block) {
     Chunk::setBlock(pos, block);
-    updateRender();
+    rebuild();
 }
 
 void ClientChunk::draw(Vec2i pos) {
-    auto posf = pos.to<Vec2f>();
+    auto posf = pos.as<float>();
 
-    DrawTexturePro(m_render.texture, 
-        {0.f, 0.f, 16.f * CHUNK_WIDTH, -16.f * CHUNK_HEIGHT}, 
-        {posf.x * CHUNK_WIDTH, posf.y * CHUNK_HEIGHT, CHUNK_WIDTH, CHUNK_HEIGHT}, 
-        {0.f, 0.f}, 0.f, WHITE
-    );
+
+    auto tilemap = TextureManager::get()->getTileMap("blocks.png");
+    auto tex = tilemap->getMap();
+
+    rlPushMatrix();
+    rlTranslatef(pos.x * CHUNK_WIDTH, pos.y * CHUNK_HEIGHT, 0.0f);
+
+    rlSetTexture(tex.id);
+    rlEnableVertexArray(m_vao);
+    rlDrawVertexArray(0, CHUNK_WIDTH * CHUNK_HEIGHT * 6);
+    rlDisableVertexArray();
+    rlSetTexture(0);
+
+    rlPopMatrix();
 
     if (Debug::get()->isVisible()) {
         DrawRectangleLines(pos.x * CHUNK_WIDTH, pos.y * CHUNK_HEIGHT, CHUNK_WIDTH, CHUNK_HEIGHT, YELLOW);

@@ -165,7 +165,7 @@ void RenderManager::renderBlock(Rectf dest, BlockPosition position, std::shared_
             col.brightness(-(1.f - sm->getValue<float>("video.layer0.brightness", 0.75f)));
         }
 
-        drawTile("blocks.png", block->getSpriteIndex(), dest, {col.r, col.g, col.b, alpha});
+        drawTile("blocks.png", block->getSpriteID(), dest, {col.r, col.g, col.b, alpha});
     }
 }
 
@@ -176,7 +176,7 @@ void RenderManager::renderInventoryItem(Rectf dest, std::shared_ptr<InventoryIte
         col = item->getTag<Col3u>(TagID::TAG_COLOR);
     }
 
-    drawTile((item->getType() == TYPE_BLOCK) ? "blocks.png" : "items.png", item->getSpriteIndex(), dest, {col.r, col.g, col.b, 255});
+    drawTile((item->getType() == TYPE_BLOCK) ? "blocks.png" : "items.png", item->getSpriteID(), dest, {col.r, col.g, col.b, 255});
 
     if(item->getCount() > 1) {
         RenderManager::drawText("font", std::to_string(item->getCount()), {dest.x + dest.width, dest.y + dest.height}, COL_WHITE, 0.f, {1.f, 1.f});

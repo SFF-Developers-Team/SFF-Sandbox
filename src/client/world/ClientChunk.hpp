@@ -1,20 +1,20 @@
 #pragma once
 
+#include "external/glfw/src/internal.h"
 #include <world/Chunk.hpp>
 #include <raylib.h>
 
 class ClientChunk : public Chunk {
 protected:
-    RenderTexture2D m_render;
+    GLuint m_vbo;
+    GLuint m_vao;
     uint16_t m_blockCount;
 
 public:
     ClientChunk();
     ClientChunk(Chunk&& chunk);
-    ~ClientChunk();
 
-    auto& getPreRender() { return m_render; }
-    void updateRender();
+    void rebuild();
 
     void setBlock(BlockPosition pos, std::shared_ptr<Block> block) override;
 

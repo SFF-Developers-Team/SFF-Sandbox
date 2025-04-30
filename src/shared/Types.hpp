@@ -25,10 +25,11 @@ struct Vec2 {
 
     Vec2<T> lerp(Vec2<T> other, float a) { return {x + a * (other.x - x), y + a * (other.y - y)}; }
 
-    template <typename T2>
-    inline T2 to() const {
-        return T2 {x, y};
-    }
+    template <typename U>
+    inline Vec2<U> as() const { return Vec2<U> {static_cast<U>(x), static_cast<U>(y)}; }
+
+    template <typename U>
+    inline U to() const { return U {x, y}; }
 
     template <typename T2>
     inline float distance(T2 other) const {

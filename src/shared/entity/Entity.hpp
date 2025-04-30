@@ -3,9 +3,7 @@
 #include <entity/Hitbox.hpp>
 #include <Types.hpp>
 #include <vector>
-#include <memory>
 
-class World;
 
 class Entity : public Serializable {
 protected:
@@ -20,7 +18,7 @@ protected:
 public:
     Entity();
 
-    virtual void onTick(World* world) {}
+    virtual void onTick(class World* world) {}
     void move(std::vector<Hitbox>& env, float xa, float ya);
 
     DataStream serialize() override;
@@ -36,6 +34,6 @@ public:
     auto getPosition() { return Vec2f {m_hitbox.x, m_hitbox.y}; }
     auto getDirection() { return m_direction; }
     auto getSize() { return Vec2f {m_hitbox.width, m_hitbox.height}; }
-    auto willRemove() { return m_remove; }
+    auto shouldRemove() { return m_remove; }
     auto getSpeed() { return m_speed; }
 };
