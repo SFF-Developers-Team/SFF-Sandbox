@@ -1,15 +1,15 @@
-#ifdef _WIN32
-    #define NOGDI
-    #define NOUSER
-#endif
+#include <raylib.h>
 
-#include <Game.hpp>
-#include <vector>
-#include <string>
+int main() {
+    InitWindow(1280, 720, "SFF Sandbox");
 
-int main(int argc, char* argv[]) {
-    std::vector<std::string> arguments(argv + 1, argv + argc);
-    Game::get()->init(arguments);
+    while (!WindowShouldClose()) {
+        BeginDrawing();
+            ClearBackground(RAYWHITE);
 
-    return EXIT_SUCCESS;
+            DrawText("Hello world!", 1, 1, 100, GRAY);
+        EndDrawing();
+    }
+
+    CloseWindow();
 }
