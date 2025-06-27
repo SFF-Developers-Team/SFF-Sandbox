@@ -9,7 +9,7 @@ class Entity : public Box {
 public:
     Entity(World& world);
 
-    virtual void Update();
+    virtual void OnTick();
 
     RVector2& GetSpeed() noexcept { return m_speed; }
     bool ShouldRemove() const noexcept { return m_shouldRemove; }

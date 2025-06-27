@@ -2,7 +2,7 @@
 
 Entity::Entity(World& world) : Box(), m_world(world) {}
 
-void Entity::Update() {
+void Entity::OnTick() {
     m_speed.y += 0.02f;
 
     MoveInWorld(m_speed.x, m_speed.y);

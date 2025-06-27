@@ -18,7 +18,7 @@ public:
      */
     World(std::string const& path);
 
-    void Update();
+    void OnTick();
 
     BlockID GetBlock(int x, int y);
 

@@ -18,9 +18,9 @@ World::World(std::string const& path) : m_worldGenerator(std::make_unique<Flat>(
     }
 }
 
-void World::Update() {
+void World::OnTick() {
     for (auto& entity : m_entities) {
-        entity->Update();
+        entity->OnTick();
     }
 
     // std::erase_if(m_entities, [](auto& entity) -> bool {

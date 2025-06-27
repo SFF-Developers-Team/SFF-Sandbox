@@ -1,6 +1,5 @@
-#include "Player.hpp"
+#include "PlayerClient.hpp"
 #include "ResourceManager.hpp"
-#include "Tilemap.hpp"
 #include "Timer.hpp"
 #include <World.hpp>
 #include <algorithm>
@@ -17,7 +16,7 @@ int main() {
     Timer timer(60.f);
 
     World world("getoff");
-    Player* player = new Player(world);
+    PlayerClient* player = new PlayerClient(world);
 
     world.AddEntity(player);
 
@@ -32,14 +31,14 @@ int main() {
         timer.AdvanceTime();
 
         for (int i = 0; i < timer.GetTicks(); i++) {
-            world.Update();
+            world.OnTick();
         }
 
         if (float wheel = raylib::Mouse::GetWheelMove(); wheel != 0.f) {
             camera.zoom += wheel;
         }
 
-        camera.zoom = std::clamp(camera.zoom, 5.f, 30.f);
+        camera.zoom = std::clamp(camera.zoom, 5.f, 60.f);
         camera.SetTarget(player->GetPosition() + player->GetSize().Divide(2.f));
         
         window.BeginDrawing();
