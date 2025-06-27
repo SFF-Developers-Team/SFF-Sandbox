@@ -9,7 +9,6 @@ project(SFFSandbox
 )
 
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
@@ -17,21 +16,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(BUILD_SHARED_LIBS OFF)
 
 set(SHARED_HEADERS 
-    ${raylib_SOURCE_DIR}/src
+    "${raylib_cpp_SOURCE_DIR}/src/"
+    "${CMAKE_SOURCE_DIR}/src/shared/"
 )
 
-# file(GLOB SHARED_SOURCES CONFIGURE_DEPENDS
-#     "src/shared/entity/*.cpp"
-#     "src/shared/world/*.cpp"
-#     "src/shared/world/gen/*.cpp"
-#     "src/shared/world/blocks/*.cpp"
-#     "src/shared/managers/*.cpp"
-#     "src/shared/inventory/*.cpp"
-#     "src/shared/*.cpp"
-# )
+file(GLOB SHARED_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_SOURCE_DIR}/src/shared/*.cpp"
+    "${CMAKE_SOURCE_DIR}/src/shared/worldgen/*.cpp"
+)
+
+file(GLOB TEST_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_SOURCE_DIR}/tests/*.cpp"
+)
 
 file(GLOB CLIENT_SOURCES CONFIGURE_DEPENDS
-    "src/client/main.cpp"
+    "src/client/*.cpp"
 )
 
 file(GLOB SERVER_SOURCES CONFIGURE_DEPENDS
@@ -40,17 +39,27 @@ file(GLOB SERVER_SOURCES CONFIGURE_DEPENDS
 )
 
 CPMAddPackage("gh:raysan5/raylib#5.5")
-CPMAddPackage("gh:richgel999/miniz#3.0.2")
+CPMAddPackage("gh:RobLoach/raylib-cpp@5.5.0")
+CPMAddPackage("gh:google/googletest@1.17.0")
+
+add_executable(${PROJECT_NAME}-tests ${SHARED_SOURCES} ${TEST_SOURCES})
+target_include_directories(${PROJECT_NAME}-tests PUBLIC ${SHARED_HEADERS})
+target_link_libraries(${PROJECT_NAME}-tests gtest pthread raylib_cpp)
+
+enable_testing()
+add_test(NAME "test-all" COMMAND ${PROJECT_NAME}-tests)
 
 if(${PLATFORM} STREQUAL "Android")
     set(PLATFORM_LIBS m c log android EGL GLESv2 OpenSLES dl unwind c++_static)
     add_library(${PROJECT_NAME} SHARED ${SHARED_SOURCES} ${CLIENT_SOURCES})
 else()
     add_executable(${PROJECT_NAME} ${SHARED_SOURCES} ${CLIENT_SOURCES})
+    target_include_directories(${PROJECT_NAME} PUBLIC ${SHARED_HEADERS})
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DSANDBOX_CLIENT)
     # add_executable(${PROJECT_NAME}-server ${SHARED_SOURCES} ${SERVER_SOURCES})
 endif()
 
-target_link_libraries(${PROJECT_NAME} raylib miniz ${PLATFORM_LIBS})
+target_link_libraries(${PROJECT_NAME} raylib raylib_cpp ${PLATFORM_LIBS})
 
 # if(NOT ${PLATFORM} STREQUAL "Android")
 #     target_link_libraries(${PROJECT_NAME}-server enet_static ${GITHASH_LIBRARIES} miniz)

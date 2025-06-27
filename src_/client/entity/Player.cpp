@@ -7,7 +7,6 @@
 #include <managers/Debug.hpp>
 #include <Utils.hpp>
 #include <Game.hpp>
-#include <algorithm>
 #include <Types.hpp>
 #include <ItemDatabase.hpp>
 
