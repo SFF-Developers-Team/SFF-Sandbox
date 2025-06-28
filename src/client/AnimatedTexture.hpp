@@ -3,19 +3,28 @@
 #include "Types.hpp"
 #include <Rectangle.hpp>
 #include <Texture.hpp>
-#include <initializer_list>
 
 class AnimatedTexture {
 public:
     /**
      * @brief Construct a new Animated Texture object
      * 
-     * @param texture - texture of animation frames
-     * @param typeList - list with frame offsets for each animation type
+     * @param textureName - name of loaded texture with animation frames
+     * @param types - list with frame offsets for each animation type
      * @param frames - frames count
      * @param tpf - ticks per frame
      */
-    AnimatedTexture(raylib::Texture2D& texture, std::initializer_list<int> const& typeList, int frames, int tpf = 7);
+    AnimatedTexture(std::string const& textureName, int* types, int frames, int tpf = 7);
+
+    /**
+     * @brief Construct a new Animated Texture object
+     * 
+     * @param texture - texture with animation frames
+     * @param types - list with frame offsets for each animation type
+     * @param frames - frames count
+     * @param tpf - ticks per frame
+     */
+    AnimatedTexture(raylib::Texture2D& texture, int* types, int frames, int tpf = 7);
 
     /**
      * @brief Set current frame
@@ -35,7 +44,7 @@ public:
     /**
      * @brief Set animation type
      * 
-     * @param force - instantly set current frame to first frame of type
+     * @param force - instantly set current frame to first frame of animation type
      */
     void SetType(int type, bool force = false);
 
@@ -50,8 +59,8 @@ public:
 protected:
     raylib::Texture2D& m_texture;
     Direction m_direction;
-    std::vector<int> m_typeList; // temp solution i guess?
 
+    int* m_types;
     int m_frames;
     int m_frame;
     int m_tpf;

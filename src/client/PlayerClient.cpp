@@ -3,11 +3,10 @@
 #include "Types.hpp"
 #include "World.hpp"
 #include <raylib-cpp.hpp>
-#include "ResourceManager.hpp"
 
-PlayerClient::PlayerClient(World& world) 
-    : Entity(world), AnimatedTexture(ResourceManager::Get().GetTexture("player.png"), {0, 1, 6, 8, 9, 14, 15, 16}, 17) 
-{
+int playerFrames[] = {0, 1, 6, 8, 9, 14, 15, 16};
+
+PlayerClient::PlayerClient(World& world) : Entity(world), AnimatedTexture("player.png", playerFrames, 17) {
     SetSize(PLAYER_BOX_WIDTH, PLAYER_BOX_HEIGHT);
 }
 

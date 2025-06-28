@@ -1,18 +1,23 @@
 #include "ResourceManager.hpp"
 #include "Tilemap.hpp"
 #include <Texture.hpp>
+#include <filesystem>
 
-bool ResourceManager::LoadTexture(std::filesystem::path const& path) {
-    auto fullPath = (!path.is_absolute()) ? "assets" / path : path;
+raylib::Texture2D& ResourceManager::LoadTexture(std::filesystem::path const& path) {
+    auto const fullPath = (!path.is_absolute()) ? "assets" / path : path;
 
     if(!std::filesystem::exists(fullPath)) {
-        return false;
+        throw std::filesystem::filesystem_error(
+            "Texture not found: ", 
+            fullPath, 
+            std::make_error_code(std::errc::no_such_file_or_directory)
+        );
     }
 
     auto key = fullPath.filename().string();
     m_textures[key] = raylib::Image(fullPath).LoadTexture();
 
-    return true;
+    return m_textures[key];
 }
 
 raylib::Texture2D& ResourceManager::GetTexture(std::string const& filename) {

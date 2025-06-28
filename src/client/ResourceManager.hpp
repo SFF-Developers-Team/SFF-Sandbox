@@ -11,7 +11,7 @@ public:
         return rm;
     }
 
-    bool LoadTexture(std::filesystem::path const& path);
+    raylib::Texture2D& LoadTexture(std::filesystem::path const& path);
     raylib::Texture2D& GetTexture(std::string const& filename);
 
     bool LoadTilemap(std::filesystem::path const& path, int tileCountX, int tileCountY);
