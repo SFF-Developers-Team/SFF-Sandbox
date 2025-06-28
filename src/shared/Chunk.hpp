@@ -18,17 +18,17 @@ public:
     /**
      * @brief Set block at (x, y)
      *
-     * @param x - local x coordinate of block [0; 32]
-     * @param y - local y coordinate of block [0; 32]
-     * @param blockId - id of the block
+     * @param x local x coordinate of block [0; 32]
+     * @param y local y coordinate of block [0; 32]
+     * @param blockId id of the block
      */
     void SetBlock(int x, int y, BlockID blockId);
 
     /**
      * @brief Get block at (x, y)
      * 
-     * @param x - local x coordinate of block [0; 32]
-     * @param y - local y coordinate of block [0; 32]
+     * @param x local x coordinate of block [0; 32]
+     * @param y local y coordinate of block [0; 32]
      * @return BlockID 
      */
     BlockID GetBlock(int x, int y);
