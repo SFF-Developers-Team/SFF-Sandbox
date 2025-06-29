@@ -39,7 +39,7 @@ int main() {
         }
 
         camera.zoom = std::clamp(camera.zoom, 5.f, 60.f);
-        camera.SetTarget(player->GetPosition() + player->GetSize().Divide(2.f));
+        camera.SetTarget(player->GetPosition() + player->GetSize() / 2.f);
         
         window.BeginDrawing();
         window.ClearBackground(SKYBLUE);

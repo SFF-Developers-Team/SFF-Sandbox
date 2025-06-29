@@ -15,9 +15,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 set(BUILD_SHARED_LIBS OFF)
 
+CPMAddPackage("gh:raysan5/raylib#5.5")
+CPMAddPackage("gh:RobLoach/raylib-cpp@5.5.0")
+CPMAddPackage("gh:google/googletest@1.17.0")
+CPMAddPackage("gh:Reputeless/PerlinNoise@3.0.0")
+
 set(SHARED_HEADERS 
     "${raylib_cpp_SOURCE_DIR}/src/"
     "${CMAKE_SOURCE_DIR}/src/shared/"
+    "${PerlinNoise_SOURCE_DIR}"
 )
 
 file(GLOB SHARED_SOURCES CONFIGURE_DEPENDS
@@ -38,10 +44,6 @@ file(GLOB SERVER_SOURCES CONFIGURE_DEPENDS
     "src/server/*.cpp"
 )
 
-CPMAddPackage("gh:raysan5/raylib#5.5")
-CPMAddPackage("gh:RobLoach/raylib-cpp@5.5.0")
-CPMAddPackage("gh:google/googletest@1.17.0")
-
 add_executable(${PROJECT_NAME}-tests ${SHARED_SOURCES} ${TEST_SOURCES})
 target_include_directories(${PROJECT_NAME}-tests PUBLIC ${SHARED_HEADERS})
 target_link_libraries(${PROJECT_NAME}-tests gtest pthread raylib_cpp)
@@ -55,7 +57,7 @@ if(${PLATFORM} STREQUAL "Android")
 else()
     add_executable(${PROJECT_NAME} ${SHARED_SOURCES} ${CLIENT_SOURCES})
     target_include_directories(${PROJECT_NAME} PUBLIC ${SHARED_HEADERS})
-    target_compile_definitions(${PROJECT_NAME} PUBLIC -DSANDBOX_CLIENT)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DSANDBOX_CLIENT -DSUPPORT_IMAGE_GENERATION=0)
     # add_executable(${PROJECT_NAME}-server ${SHARED_SOURCES} ${SERVER_SOURCES})
 endif()
 
