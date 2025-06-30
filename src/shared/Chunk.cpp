@@ -30,8 +30,8 @@ void Chunk::SetBlock(int x, int y, BlockID blockId) {
         return;
     }
 
-    if (x < 0) x = CHUNK_WIDTH - x;
-    if (y < 0) y = CHUNK_HEIGHT - y;
+    if (x < 0) x += CHUNK_WIDTH;
+    if (y < 0) y += CHUNK_HEIGHT;
 
     m_blocks[CHUNK_INDEX(x, y)] = blockId;
 }

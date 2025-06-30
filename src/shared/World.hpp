@@ -22,6 +22,9 @@ public:
 
     BlockID GetBlock(int x, int y);
 
+    void BreakBlock(int x, int y);
+    void SetBlock(int x, int y, BlockID block);
+
     std::vector<Box> GetBlocksAround(Box const& box);
 
     void AddEntity(class Entity* ptr);

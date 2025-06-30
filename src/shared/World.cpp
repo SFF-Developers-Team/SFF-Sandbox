@@ -76,3 +76,21 @@ void World::AddEntity(class Entity* ptr) {
 
     m_entities.push_back(ptr);
 }
+
+void World::BreakBlock(int x, int y) {
+    auto block = GetBlock(x, y);
+    const int chunkX = x / CHUNK_WIDTH;
+    const int chunkY = y / CHUNK_HEIGHT;
+    
+    if (block != BLOCK_ID_AIR && block != BLOCK_ID_ADMINIUM) {
+        // Maybe we need to check gamemode of player to instant breaking block?
+        m_chunks[{chunkX, chunkY}].SetBlock(x % CHUNK_WIDTH, y % CHUNK_HEIGHT, BLOCK_ID_AIR);
+    }
+}
+void World::SetBlock(int x, int y, BlockID block) {
+    auto blockInChunk = GetBlock(x, y);
+    const int chunkX = x / CHUNK_WIDTH;
+    const int chunkY = y / CHUNK_HEIGHT;
+    
+    m_chunks[{chunkX, chunkY}].SetBlock(x % CHUNK_WIDTH, y % CHUNK_HEIGHT, block);
+}

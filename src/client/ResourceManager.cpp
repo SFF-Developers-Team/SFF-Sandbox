@@ -26,8 +26,9 @@ raylib::Texture2D& ResourceManager::GetTexture(std::string const& filename) {
 
 bool ResourceManager::LoadTilemap(std::filesystem::path const& path, int tileCountX, int tileCountY) {
     auto key = path.filename().string();
+    Texture2D& tex = LoadTexture(path);
 
-    if (!m_textures.contains(key) && !LoadTexture(path)) {
+    if (!m_textures.contains(key)) {
         return false;
     }
 
