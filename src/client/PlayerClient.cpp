@@ -28,7 +28,7 @@ void PlayerClient::OnTick() {
     }
     if (raylib::Keyboard::IsKeyDown(KEY_R)) {
         this->x = 0;
-        this->y = 286;
+        this->y = 163;
     }
 
     Entity::OnTick();

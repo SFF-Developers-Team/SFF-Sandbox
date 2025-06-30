@@ -27,7 +27,8 @@ int main() {
 
     world.AddEntity(player);
     // Set Y floor
-    player->SetY(286);
+    // We should compute Y, not set it manually
+    player->SetY(163);
     raylib::Camera2D camera(
         {window.GetWidth() / 2.f, window.GetHeight() / 2.f},
         {0.f, 0.f}
