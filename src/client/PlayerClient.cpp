@@ -2,14 +2,11 @@
 #include "AnimatedTexture.hpp"
 #include "Types.hpp"
 #include "World.hpp"
-#include "Debug.hpp"
-#include <format>
 
 int playerFrames[] = {0, 1, 6, 8, 9, 14, 15, 16};
 
 PlayerClient::PlayerClient(World& world) : Entity(world), AnimatedTexture("player.png", playerFrames, 17) {
-    SetSize(PLAYER_BOX_WIDTH, PLAYER_BOX_HEIGHT);
-    SetDirection(DIRECTION_LEFT);
+    SetSize(PLAYER_BOX_WIDTH * 0.9f, PLAYER_BOX_HEIGHT);
 }
 
 void PlayerClient::OnTick() {
@@ -48,8 +45,6 @@ void PlayerClient::OnTick() {
     AnimatedTexture::OnTick();
 }
 
-void PlayerClient::Draw(raylib::Window& window) {
-    RRectangle dest(this->x, this->y, PLAYER_BOX_WIDTH, PLAYER_BOX_HEIGHT);
-
-    AnimatedTexture::Draw(dest);
+void PlayerClient::Draw() {
+    AnimatedTexture::Draw({this->x, this->y, PLAYER_BOX_WIDTH, PLAYER_BOX_HEIGHT});
 }

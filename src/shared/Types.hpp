@@ -8,6 +8,12 @@ struct Vector2i {
     int x;
     int y;
 
+    Vector2i() : x(0), y(0) {}
+    Vector2i(int x, int y) : x(x), y(y) {}
+    Vector2i(raylib::Vector2 const& v) : x(v.x), y(v.y) {}
+
+    operator raylib::Vector2() { return raylib::Vector2(x, y); }
+
     bool operator==(Vector2i const& other) const {
         return x == other.x && y == other.y;
     }

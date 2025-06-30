@@ -55,13 +55,15 @@ std::vector<Box> World::GetBlocksAround(Box const& box) {
     int minY = box.y - 1;
     int maxY = ceil(box.y + box.height);
 
+    std::array<BlockID, 3> static const ghostBlocks = {BLOCK_ID_AIR, BLOCK_ID_ROSE, BLOCK_ID_DEAD_ROSE}; 
+
     std::vector<Box> ret;
 
     for (int x = minX; x <= maxX; x++) {
         for (int y = minY; y <= maxY; y++) {
             auto const block = GetBlock(x, y);
 
-            if (block != BLOCK_ID_AIR) {
+            if (std::find(ghostBlocks.begin(), ghostBlocks.end(), block) == ghostBlocks.end()) {
                 ret.push_back(Box(x, y, 1.f, 1.f));
             }
         }
