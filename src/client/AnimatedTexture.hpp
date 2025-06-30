@@ -9,20 +9,20 @@ public:
     /**
      * @brief Construct a new Animated Texture object
      * 
-     * @param textureName - name of loaded texture with animation frames
-     * @param types - list with frame offsets for each animation type
-     * @param frames - frames count
-     * @param tpf - ticks per frame
+     * @param textureName name of loaded texture with animation frames
+     * @param types list with frame offsets for each animation type
+     * @param frames frames count
+     * @param tpf ticks per frame
      */
     AnimatedTexture(std::string const& textureName, int* types, int frames, int tpf = 7);
 
     /**
      * @brief Construct a new Animated Texture object
      * 
-     * @param texture - texture with animation frames
-     * @param types - list with frame offsets for each animation type
-     * @param frames - frames count
-     * @param tpf - ticks per frame
+     * @param texture texture with animation frames
+     * @param types list with frame offsets for each animation type
+     * @param frames frames count
+     * @param tpf ticks per frame
      */
     AnimatedTexture(raylib::Texture2D& texture, int* types, int frames, int tpf = 7);
 
@@ -44,7 +44,7 @@ public:
     /**
      * @brief Set animation type
      * 
-     * @param force - instantly set current frame to first frame of animation type
+     * @param force instantly set current frame to first frame of animation type
      */
     void SetType(int type, bool force = false);
 

@@ -1,13 +1,14 @@
 #include "World.hpp"
 #include "Chunk.hpp"
 #include "Types.hpp"
+#include "worldgen/Default.hpp"
 #include "worldgen/Flat.hpp"
 #include <algorithm>
 #include <memory>
 #include <vector>
 #include "Entity.hpp"
 
-World::World(std::string const& path) : m_worldGenerator(std::make_unique<Flat>(0)) {
+World::World(std::string const& path) : m_worldGenerator(std::make_unique<Default>(0)) {
     for (int x = -8; x < 8; x++) {
         for (int y = 0; y < 16; y++) {
             Chunk chunk;

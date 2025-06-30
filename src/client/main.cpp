@@ -53,7 +53,7 @@ int main() {
         if (float wheel = raylib::Mouse::GetWheelMove(); wheel != 0.f && raylib::Keyboard::IsKeyDown(KEY_LEFT_CONTROL)) {
             camera.zoom += wheel;
         }
-        
+
         // We cant use += to blockSelect so i made another var to wheel item swapping
         static int8_t count = 0;
         if (float wheel = raylib::Mouse::GetWheelMove(); wheel != 0.f && !raylib::Keyboard::IsKeyDown(KEY_LEFT_CONTROL)) {

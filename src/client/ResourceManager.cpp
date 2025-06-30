@@ -29,7 +29,7 @@ bool ResourceManager::LoadTilemap(std::filesystem::path const& path, int tileCou
     Texture2D& tex = LoadTexture(path);
 
     if (!m_textures.contains(key)) {
-        return false;
+        LoadTexture(path);
     }
 
     m_tilemaps.emplace(key, Tilemap(m_textures.at(key), tileCountX, tileCountY));

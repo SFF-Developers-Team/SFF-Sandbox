@@ -14,7 +14,7 @@ public:
     /**
      * @brief Construct a new World object
      * 
-     * @param path - path where world stored in (must contain world.dat)
+     * @param path where world stored in (must contain world.dat)
      */
     World(std::string const& path);
 

@@ -1,5 +1,6 @@
 #include "AnimatedTexture.hpp"
 #include "ResourceManager.hpp"
+#include "Types.hpp"
 #include <Rectangle.hpp>
 #include <stdexcept>
 
@@ -7,7 +8,7 @@ AnimatedTexture::AnimatedTexture(std::string const& textureName, int* types, int
     : AnimatedTexture(ResourceManager::Get().GetTexture(textureName), types, frames, tpf) {}
 
 AnimatedTexture::AnimatedTexture(raylib::Texture2D& texture, int* types, int frames, int tpf) 
-    : m_texture(texture), m_types(types), m_frames(frames), m_tpf(tpf), m_ticks(0), m_frame(0), m_type(0), m_newType(0) {}
+    : m_texture(texture), m_types(types), m_frames(frames), m_tpf(tpf), m_ticks(0), m_frame(0), m_type(0), m_newType(0), m_direction(DIRECTION_LEFT) {}
 
 void AnimatedTexture::OnTick() {
     if (m_ticks > m_tpf) {
