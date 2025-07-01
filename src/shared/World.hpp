@@ -33,6 +33,9 @@ public:
     void Draw(raylib::Camera2D& camera, int width, int height);
 #endif
 
+    unsigned long const GetTicks() { return m_ticks; } 
+    float const GetDaylightFactor();
+
 private:
     std::unordered_map<Vector2i, Chunk, Vector2iHash> m_chunks;
     std::unique_ptr<WorldGenerator> m_worldGenerator;

@@ -40,10 +40,6 @@ public:
 
     void Fill(BlockID blockId);
 
-#ifdef SANDBOX_CLIENT
-    void Draw();
-#endif
-
 private:
     std::array<BlockID, CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH> m_blocks;
 };

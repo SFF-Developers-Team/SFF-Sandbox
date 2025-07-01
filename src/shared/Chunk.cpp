@@ -1,5 +1,4 @@
 #include "Chunk.hpp"
-#include "Types.hpp"
 #include <algorithm>
 
 Chunk::Chunk() {

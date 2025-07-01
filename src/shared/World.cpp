@@ -8,7 +8,7 @@
 #include "Entity.hpp"
 #include "worldgen/WorldGenerator.hpp"
 
-World::World(std::string const& path, std::unique_ptr<WorldGenerator> worldgen) : m_worldGenerator(std::move(worldgen)), m_ticks(0) {
+World::World(std::string const& path, std::unique_ptr<WorldGenerator> worldgen) : m_worldGenerator(std::move(worldgen)), m_ticks(10000) {
     for (int x = -8; x < 8; x++) {
         for (int y = 0; y < 16; y++) {
             Chunk chunk;
@@ -88,4 +88,12 @@ void World::SetBlock(int x, int y, int z, BlockID block) {
     const int chunkY = y / CHUNK_HEIGHT;
     
     m_chunks[{chunkX, chunkY}].SetBlock(x % CHUNK_WIDTH, y % CHUNK_HEIGHT, z, block);
+}
+
+float const World::GetDaylightFactor() {
+    int const ticksInDay = 24000;
+    float const t = static_cast<float>(m_ticks % ticksInDay) / static_cast<float>(ticksInDay);
+    float const phase = t * 2.0f * PI;  // Convert to radians
+
+    return (std::sin(phase - PI/2) + 1.f) / 2.f;  // [0, 1]
 }

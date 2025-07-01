@@ -16,6 +16,9 @@ void World::Draw(raylib::Camera2D& camera, int width, int height) {
     
     raylib::Color const backgroundBlock(0x7F7F7FFF);
 
+    float const brightness = -0.8f + GetDaylightFactor();
+    raylib::Color tint = raylib::Color::White().Brightness(brightness);
+
     if (startPos.x < 0.f) startPos.x -= 1.f;
 
     for (int x = startPos.GetX(); x < endPos.GetX(); x++) {
@@ -32,12 +35,12 @@ void World::Draw(raylib::Camera2D& camera, int width, int height) {
                 bool isBlock1Transperent = gTransperentBlocks.contains(blockId1);
 
                 if ((!blockId1 || isBlock1Transperent) && blockId0) {
-                    blocksTilemap.DrawTile(blockId0 - 1, {(float)x, (float)y, 1.f, 1.f}, backgroundBlock);
+                    blocksTilemap.DrawTile(blockId0 - 1, {(float)x, (float)y, 1.f, 1.f}, tint.Brightness(-0.5f));
                     continue;
                 }
                 
                 if (blockId1) {
-                    blocksTilemap.DrawTile(blockId1 - 1, {(float)x, (float)y, 1.f, 1.f});
+                    blocksTilemap.DrawTile(blockId1 - 1, {(float)x, (float)y, 1.f, 1.f}, tint);
                 }
             }
         }

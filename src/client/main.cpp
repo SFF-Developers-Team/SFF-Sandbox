@@ -60,7 +60,7 @@ int main() {
     bool inventory = false;
 
     HideCursor();
-    menuMusic.Play().SetLooping(true);
+    menuMusic.Play().SetVolume(0.5f).SetLooping(true);
 
     while (!window.ShouldClose()) {
         rm.UpdateMusic();
@@ -144,8 +144,12 @@ int main() {
             inventory ^= 1;
         }
 
+        raylib::Color dayColor   = {102, 191, 255, 255};
+        raylib::Color nightColor = {10,   10,  30, 255};
+        raylib::Color skyColor = nightColor.Lerp(dayColor, world.GetDaylightFactor());
+
         window.BeginDrawing();
-        window.ClearBackground(SKYBLUE);
+        window.ClearBackground(skyColor);
 
         camera.BeginMode();
 
