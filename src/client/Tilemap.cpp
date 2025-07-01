@@ -24,10 +24,10 @@ RRectangle Tilemap::GetRectForTile(int index) {
     return r;
 }
 
-void Tilemap::DrawTile(int index, RVector2 position) {
-    m_texture.Draw(GetRectForTile(index), position);
+void Tilemap::DrawTile(int index, RVector2 position, raylib::Color color) {
+    m_texture.Draw(GetRectForTile(index), position, color);
 }
 
-void Tilemap::DrawTile(int index, RRectangle dest) {
-    m_texture.Draw(GetRectForTile(index), dest);
+void Tilemap::DrawTile(int index, RRectangle dest, raylib::Color color) {
+    m_texture.Draw(GetRectForTile(index), dest, raylib::Vector2::Zero(), 0.f, color);
 }

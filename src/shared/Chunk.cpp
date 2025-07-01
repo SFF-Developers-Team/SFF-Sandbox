@@ -6,7 +6,7 @@ Chunk::Chunk() {
     Fill(BLOCK_ID_AIR);
 }
 
-BlockID Chunk::GetBlock(int x, int y) {
+BlockID Chunk::GetBlock(int x, int y, int z) {
     if (x > CHUNK_WIDTH || y > CHUNK_HEIGHT) {
         return BLOCK_ID_AIR;
     }
@@ -18,10 +18,10 @@ BlockID Chunk::GetBlock(int x, int y) {
     if (x < 0) x += CHUNK_WIDTH;
     if (y < 0) y += CHUNK_HEIGHT;
 
-    return m_blocks[CHUNK_INDEX(x, y)];
+    return m_blocks[CHUNK_INDEX(x, y, z)];
 }
 
-void Chunk::SetBlock(int x, int y, BlockID blockId) {
+void Chunk::SetBlock(int x, int y, int z, BlockID blockId) {
     if (x > CHUNK_WIDTH || y > CHUNK_HEIGHT) {
         return;
     }
@@ -33,7 +33,7 @@ void Chunk::SetBlock(int x, int y, BlockID blockId) {
     if (x < 0) x += CHUNK_WIDTH;
     if (y < 0) y += CHUNK_HEIGHT;
 
-    m_blocks[CHUNK_INDEX(x, y)] = blockId;
+    m_blocks[CHUNK_INDEX(x, y, z)] = blockId;
 }
 
 void Chunk::Fill(BlockID blockId) {

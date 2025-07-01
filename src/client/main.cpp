@@ -1,9 +1,12 @@
+#include "Chunk.hpp"
 #include "PlayerClient.hpp"
 #include "ResourceManager.hpp"
 #include "Timer.hpp"
 #include "Types.hpp"
+#include "worldgen/Default.hpp"
 #include <Vector2.hpp>
 #include <World.hpp>
+#include <memory>
 #include <raylib-cpp.hpp>
 #include <Utils.hpp>
 #include <raylib.h>
@@ -18,11 +21,13 @@ int main() {
     auto& menuMusic = rm.LoadMusic("menu.mp3");
     rm.LoadTexture("player.png");
 
+    std::srand(std::time(0));
+
     // Setup timer
     Timer timer(60.f);
 
     // Create world
-    World world("getoff");
+    World world("getoff", std::make_unique<Default>(std::rand()));
     
     // Create player
     PlayerClient* player = new PlayerClient(world);
@@ -33,7 +38,7 @@ int main() {
     RVector2 spawn;
 
     for (int y = 0; y < 1000; y++) {
-        if (world.GetBlock(0, y) != BLOCK_ID_AIR) {
+        if (world.GetBlock(0, y, CHUNK_FOREGROUND_LAYER) != BLOCK_ID_AIR) {
             spawn.y = y - 2;
             break;
         }
@@ -81,9 +86,10 @@ int main() {
         camera.zoom = std::clamp(camera.zoom, 5.f, 60.f);
         camera.SetTarget(player->GetPosition() + player->GetSize() / 2.f);
 
+        int const selectedLayer = !raylib::Keyboard::IsKeyDown(KEY_LEFT_ALT);
 
         // Screen float cursor
-        raylib::Vector2 cursor = raylib::Mouse::GetPosition();
+        raylib::Vector2 const cursor = raylib::Mouse::GetPosition();
 
         // World float cursor
         raylib::Vector2 cursorWorld = camera.GetScreenToWorld(cursor);
@@ -95,7 +101,7 @@ int main() {
         Vector2i cursorWorldI(cursorWorld);
 
         if (raylib::Mouse::IsButtonDown(MOUSE_BUTTON_LEFT) && player->GetPosition().Distance(cursorWorld) < 5.f) {
-            world.BreakBlock(cursorWorldI.x, cursorWorldI.y);
+            world.BreakBlock(cursorWorldI.x, cursorWorldI.y, selectedLayer);
         }
 
         // Here check if blocks around this pos exists and if pos doesnt equals pos of player
@@ -114,23 +120,24 @@ int main() {
             }
 
             // Check if block in cursor position is air (or change block, if ctrl pressed)
-            if (world.GetBlock(cursorWorldI.x, cursorWorldI.y) != BLOCK_ID_AIR && !raylib::Keyboard::IsKeyDown(KEY_LEFT_CONTROL)) {
+            if (world.GetBlock(cursorWorldI.x, cursorWorldI.y, selectedLayer) != BLOCK_ID_AIR && !raylib::Keyboard::IsKeyDown(KEY_LEFT_CONTROL)) {
                 return false;
             }
 
             // Check if there is at least one block near
             bool const hasAdjacentBlock = {
-                world.GetBlock(cursorWorldI.x + 1, cursorWorldI.y) != BLOCK_ID_AIR || 
-                world.GetBlock(cursorWorldI.x - 1, cursorWorldI.y) != BLOCK_ID_AIR ||
-                world.GetBlock(cursorWorldI.x, cursorWorldI.y + 1) != BLOCK_ID_AIR || 
-                world.GetBlock(cursorWorldI.x, cursorWorldI.y - 1) != BLOCK_ID_AIR
+                world.GetBlock(cursorWorldI.x + 1, cursorWorldI.y, selectedLayer) != BLOCK_ID_AIR || 
+                world.GetBlock(cursorWorldI.x - 1, cursorWorldI.y, selectedLayer) != BLOCK_ID_AIR ||
+                world.GetBlock(cursorWorldI.x, cursorWorldI.y + 1, selectedLayer) != BLOCK_ID_AIR || 
+                world.GetBlock(cursorWorldI.x, cursorWorldI.y - 1, selectedLayer) != BLOCK_ID_AIR ||
+                world.GetBlock(cursorWorldI.x, cursorWorldI.y, !selectedLayer) != BLOCK_ID_AIR
             };
 
             return hasAdjacentBlock;
         }();
 
         if (raylib::Mouse::IsButtonDown(MOUSE_BUTTON_RIGHT) && canPlaceBlock) {
-            world.SetBlock(cursorWorldI.x, cursorWorldI.y, blockList[selectedBlock]);
+            world.SetBlock(cursorWorldI.x, cursorWorldI.y, selectedLayer, blockList[selectedBlock]);
         }
 
         if (raylib::Keyboard::IsKeyPressed(KEY_E)) {
@@ -146,7 +153,7 @@ int main() {
         player->Draw();
 
         if (canAccessBlock && !inventory) {
-            bool const isAir = (world.GetBlock(cursorWorldI.x, cursorWorldI.y) == BLOCK_ID_AIR);
+            bool const isAir = (world.GetBlock(cursorWorldI.x, cursorWorldI.y, selectedLayer) == BLOCK_ID_AIR);
             bool const isCtrlDown = raylib::Keyboard::IsKeyDown(KEY_LEFT_CONTROL);
             bool const canReplaceBlock = (isCtrlDown && !isAir);
 

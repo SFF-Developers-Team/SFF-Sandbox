@@ -16,14 +16,14 @@ public:
      * 
      * @param path where world stored in (must contain world.dat)
      */
-    World(std::string const& path);
+    World(std::string const& path, std::unique_ptr<WorldGenerator> worldgen);
 
     void OnTick();
 
-    BlockID GetBlock(int x, int y);
+    BlockID GetBlock(int x, int y, int z);
 
-    void BreakBlock(int x, int y);
-    void SetBlock(int x, int y, BlockID block);
+    void BreakBlock(int x, int y, int z);
+    void SetBlock(int x, int y, int z, BlockID block);
 
     std::vector<Box> GetBlocksAround(Box const& box);
 
@@ -37,4 +37,6 @@ private:
     std::unordered_map<Vector2i, Chunk, Vector2iHash> m_chunks;
     std::unique_ptr<WorldGenerator> m_worldGenerator;
     std::vector<class Entity*> m_entities;
+
+    unsigned long m_ticks;
 };

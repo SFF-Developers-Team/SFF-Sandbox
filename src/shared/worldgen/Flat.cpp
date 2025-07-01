@@ -7,7 +7,8 @@ void Flat::GenerateChunk(Chunk& chunk, Vector2i pos) {
 
     if (pos.y == 9) {
         for (int x = 0; x < CHUNK_WIDTH; x++) {
-            chunk.SetBlock(x, 0, BLOCK_ID_GRASS);
+            chunk.SetBlock(x, 0, CHUNK_FOREGROUND_LAYER, BLOCK_ID_GRASS);
+            chunk.SetBlock(x, 0, CHUNK_BACKGROUND_LAYER, BLOCK_ID_GRASS);
         }
     }
 }

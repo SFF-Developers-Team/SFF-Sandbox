@@ -3,6 +3,7 @@
 #include "Chunk.hpp"
 #include <cstdint>
 #include <PerlinNoise.hpp>
+#include "Types.hpp"
 
 class WorldGenerator {
 public:
