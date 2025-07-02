@@ -13,7 +13,7 @@ void Default::GenerateChunk(Chunk& chunk, Vector2i pos) {
     for (int z = 0; z < CHUNK_DEPTH; z++) {
         for (int x = 0; x < CHUNK_WIDTH; x++) {
             int worldX = x + CHUNK_WIDTH * pos.x;
-            int surface = 150 + 20.f * m_perlin.octave2D_01(worldX * 0.01, z, 4);
+            int surface = 150 + 20.f * m_perlin.octave2D_01(worldX * 0.01, z * 0.1f, 4);
             int ground = m_perlin.octave2D_01(worldX * 0.1, z * 0.1f, 2) * 8;
             float roseNoise = m_perlin.octave2D_01(x * 0.3, 0, 1);
 
