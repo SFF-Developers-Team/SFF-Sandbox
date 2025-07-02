@@ -3,44 +3,67 @@
 #include "ResourceManager.hpp"
 #include "Vector2.hpp"
 #include <Color.hpp>
-#include <algorithm>
 #include <raylib-cpp.hpp>
 #include <World.hpp>
 
 void World::Draw(raylib::Camera2D& camera, int width, int height) {
-    auto startPos = camera.GetScreenToWorld({0, 0});
-    auto endPos = camera.GetScreenToWorld({(float)width, (float)height});
+    auto const startPos = camera.GetScreenToWorld({0, 0});
+    auto const endPos = camera.GetScreenToWorld({(float)width, (float)height});
 
     auto& rm = ResourceManager::Get();
     auto& blocksTilemap = rm.GetTilemap("blocks.png");
-    
     raylib::Color const backgroundBlock(0x7F7F7FFF);
 
     float const brightness = -0.8f + GetDaylightFactor();
-    raylib::Color tint = raylib::Color::White().Brightness(brightness);
+    raylib::Color baseTint = raylib::Color::White().Brightness(brightness);
+    raylib::Color const darkerTint = baseTint.Brightness(-0.5f);
 
-    if (startPos.x < 0.f) startPos.x -= 1.f;
+    int const startX = static_cast<int>(std::floor(startPos.x));
+    int const startY = static_cast<int>(std::floor(startPos.y));
+    int const endX = static_cast<int>(std::ceil(endPos.x));
+    int const endY = static_cast<int>(std::ceil(endPos.y));
 
-    for (int x = startPos.GetX(); x < endPos.GetX(); x++) {
-        for (int y = startPos.GetY(); y < endPos.GetY(); y++) {
-            int chunkX = x / CHUNK_WIDTH;
-            int chunkY = y / CHUNK_HEIGHT;
+    int const startChunkX = (startX < 0) ? startX / CHUNK_WIDTH - 1 : startX / CHUNK_WIDTH;
+    int const startChunkY = (startY < 0) ? startY / CHUNK_HEIGHT - 1 : startY / CHUNK_HEIGHT;
+    int const endChunkX = endX / CHUNK_WIDTH;
+    int const endChunkY = endY / CHUNK_HEIGHT;
 
-            if (m_chunks.contains({chunkX, chunkY})) {
-                auto& chunk = m_chunks.at({chunkX, chunkY});
+    for (int chunkY = startChunkY; chunkY <= endChunkY; chunkY++) {
+        for (int chunkX = startChunkX; chunkX <= endChunkX; chunkX++) {
+            auto const chunkPos = Vector2i {chunkX, chunkY};
+            auto const it = m_chunks.find(chunkPos);
 
-                auto blockId0 = chunk.GetBlock(x % CHUNK_WIDTH, y % CHUNK_HEIGHT, 0);
-                auto blockId1 = chunk.GetBlock(x % CHUNK_WIDTH, y % CHUNK_HEIGHT, 1);
+            if (it == m_chunks.end()) {
+                continue;
+            }
 
-                bool isBlock1Transperent = gTransperentBlocks.contains(blockId1);
+            auto& chunk = it->second;
 
-                if ((!blockId1 || isBlock1Transperent) && blockId0) {
-                    blocksTilemap.DrawTile(blockId0 - 1, {(float)x, (float)y, 1.f, 1.f}, tint.Brightness(-0.5f));
-                    continue;
-                }
-                
-                if (blockId1) {
-                    blocksTilemap.DrawTile(blockId1 - 1, {(float)x, (float)y, 1.f, 1.f}, tint);
+            int const chunkStartX = std::max(startX, chunkX * CHUNK_WIDTH);
+            int const chunkStartY = std::max(startY, chunkY * CHUNK_HEIGHT);
+            int const chunkEndX = std::min(endX, (chunkX + 1) * CHUNK_WIDTH);
+            int const chunkEndY = std::min(endY, (chunkY + 1) * CHUNK_HEIGHT);
+
+            for (int y = chunkStartY; y < chunkEndY; ++y) {
+                int const localY = y % CHUNK_HEIGHT;
+
+                for (int x = chunkStartX; x < chunkEndX; ++x) {
+                    int const localX = x % CHUNK_WIDTH;
+
+                    auto const blockId0 = chunk.GetBlock(localX, localY, 0);
+                    auto const blockId1 = chunk.GetBlock(localX, localY, 1);
+
+                    if (!blockId0 && !blockId1) continue;
+
+                    bool const isBlock1Transparent = blockId1 ? gTransperentBlocks.contains(blockId1) : false;
+
+                    if (blockId0 && (!blockId1 || isBlock1Transparent)) {
+                        blocksTilemap.DrawTile(blockId0 - 1, {(float)x, (float)y, 1.f, 1.f}, darkerTint);
+                    }
+
+                    if (blockId1) {
+                        blocksTilemap.DrawTile(blockId1 - 1, {(float)x, (float)y, 1.f, 1.f}, baseTint);
+                    }
                 }
             }
         }

@@ -4,10 +4,12 @@
 #include "Types.hpp"
 #include <Camera2D.hpp>
 #include "worldgen/WorldGenerator.hpp"
+#include <RenderTexture.hpp>
 #include <string>
-#include <unordered_map>
 #include <vector>
 #include <memory>
+#include <flat_hash_map.hpp>
+
 
 class World {
 public:
@@ -21,8 +23,6 @@ public:
     void OnTick();
 
     BlockID GetBlock(int x, int y, int z);
-
-    void BreakBlock(int x, int y, int z);
     void SetBlock(int x, int y, int z, BlockID block);
 
     std::vector<Box> GetBlocksAround(Box const& box);
@@ -36,8 +36,10 @@ public:
     unsigned long const GetTicks() { return m_ticks; } 
     float const GetDaylightFactor();
 
+    void AddChunk(Vector2i pos, Chunk&& chunk);
+
 private:
-    std::unordered_map<Vector2i, Chunk, Vector2iHash> m_chunks;
+    ska::flat_hash_map<Vector2i, Chunk, Vector2iHash> m_chunks;
     std::unique_ptr<WorldGenerator> m_worldGenerator;
     std::vector<class Entity*> m_entities;
 

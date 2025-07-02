@@ -1,3 +1,4 @@
+#include "Blocks.hpp"
 #include "Chunk.hpp"
 #include "PlayerClient.hpp"
 #include "ResourceManager.hpp"
@@ -52,7 +53,7 @@ int main() {
     std::array<BlockID, 24> static const blockList = {
         BLOCK_ID_GRASS,     BLOCK_ID_DIRT,      BLOCK_ID_STONE,     BLOCK_ID_COBBLESTONE, BLOCK_ID_PLANKS,    BLOCK_ID_WOOL,
         BLOCK_ID_BRICKS,    BLOCK_ID_WOOD_1,    BLOCK_ID_WOOD_2,    BLOCK_ID_LEAVES,      BLOCK_ID_BOOKSHELF, BLOCK_ID_FLOWER_POT,
-        BLOCK_ID_FURNACE_1, BLOCK_ID_WORKBENCH, BLOCK_ID_CHEST,     BLOCK_ID_BED_1,     BLOCK_ID_DEAD_ROSE,
+        BLOCK_ID_FURNACE_1, BLOCK_ID_WORKBENCH, BLOCK_ID_CHEST,     BLOCK_ID_BED_1, BLOCK_ID_BED_2,     BLOCK_ID_DEAD_ROSE,
         BLOCK_ID_ROSE,      BLOCK_ID_IRON_ORE,  BLOCK_ID_COAL_ORE,  BLOCK_ID_DIAMOND_ORE, BLOCK_ID_GOLD_ORE,  BLOCK_ID_TORCH_1
     };
 
@@ -94,14 +95,14 @@ int main() {
         // World float cursor
         raylib::Vector2 cursorWorld = camera.GetScreenToWorld(cursor);
 
-        if (cursorWorld.x < 0.f) cursorWorld.x -= 1.f;
-        if (cursorWorld.y < 0.f) cursorWorld.y -= 1.f;
-
         // World int cursor
-        Vector2i cursorWorldI(cursorWorld);
+        Vector2i cursorWorldI(
+            static_cast<int>(std::floor(cursorWorld.x)),
+            static_cast<int>(std::floor(cursorWorld.y))
+        );
 
         if (raylib::Mouse::IsButtonDown(MOUSE_BUTTON_LEFT) && player->GetPosition().Distance(cursorWorld) < 5.f) {
-            world.BreakBlock(cursorWorldI.x, cursorWorldI.y, selectedLayer);
+            world.SetBlock(cursorWorldI.x, cursorWorldI.y, selectedLayer, BLOCK_ID_AIR);
         }
 
         // Here check if blocks around this pos exists and if pos doesnt equals pos of player
@@ -203,8 +204,10 @@ int main() {
             }
         }
 
-        guiTilemap.DrawTile(0, {cursor, {16.f, 16.f}});
+        guiTilemap.DrawTile(0, {cursor.Subtract({8.f, 8.f}), {16.f, 16.f}});
         blocksTilemap.DrawTile(blockList[selectedBlock] - 1, {window.GetWidth() - 48.f, 16.f, 32.f, 32.f});
+
+        window.DrawFPS();
 
         window.EndDrawing();
     }

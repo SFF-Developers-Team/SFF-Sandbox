@@ -19,11 +19,13 @@ CPMAddPackage("gh:raysan5/raylib#5.5")
 CPMAddPackage("gh:RobLoach/raylib-cpp@5.5.0")
 CPMAddPackage("gh:google/googletest@1.17.0")
 CPMAddPackage("gh:Reputeless/PerlinNoise@3.0.0")
+CPMAddPackage("gh:skarupke/flat_hash_map#master")
 
 set(SHARED_HEADERS 
     "${raylib_cpp_SOURCE_DIR}/src/"
     "${CMAKE_SOURCE_DIR}/src/shared/"
-    "${PerlinNoise_SOURCE_DIR}"
+    "${PerlinNoise_SOURCE_DIR}/"
+    "${flat_hash_map_SOURCE_DIR}/"
 )
 
 file(GLOB SHARED_SOURCES CONFIGURE_DEPENDS
