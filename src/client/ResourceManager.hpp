@@ -2,10 +2,10 @@
 
 #include "Tilemap.hpp"
 #include <Music.hpp>
+#include <Shader.hpp>
 #include <Sound.hpp>
 #include <filesystem>
 #include <unordered_map>
-#include <optional>
 
 class ResourceManager { 
 public:
@@ -26,6 +26,9 @@ public:
     raylib::Music& LoadMusic(std::filesystem::path const& path);
     [[nodiscard]] raylib::Music& GetMusic(std::string const& key);
 
+    raylib::Shader& LoadShader(std::filesystem::path const& vsPath, std::filesystem::path const& fsPath);
+    [[nodiscard]] raylib::Shader& GetShader(std::string const& key);
+
     void UpdateMusic();
 
     ResourceManager(ResourceManager const&) = delete;
@@ -41,4 +44,6 @@ private:
 
     std::unordered_map<std::string, raylib::Sound> m_sounds;
     std::unordered_map<std::string, raylib::Music> m_soundtracks;
+
+    std::unordered_map<std::string, raylib::Shader> m_shaders;
 };
