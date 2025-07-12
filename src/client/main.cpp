@@ -5,6 +5,8 @@
 #include "Timer.hpp"
 #include "Types.hpp"
 #include "worldgen/Default.hpp"
+#include <Rectangle.hpp>
+#include <RenderTexture.hpp>
 #include <Vector2.hpp>
 #include <World.hpp>
 #include <memory>
@@ -62,6 +64,9 @@ int main() {
 
     HideCursor();
     menuMusic.Play().SetVolume(0.5f).SetLooping(true);
+
+    raylib::RenderTexture2D light(window.GetWidth(), window.GetHeight());
+    auto lightTex = light.GetTexture();
 
     while (!window.ShouldClose()) {
         rm.UpdateMusic();
@@ -137,10 +142,12 @@ int main() {
             return hasAdjacentBlock;
         }();
 
+        // Place block
         if (raylib::Mouse::IsButtonDown(MOUSE_BUTTON_RIGHT) && canPlaceBlock) {
             world.SetBlock(cursorWorldI.x, cursorWorldI.y, selectedLayer, blockList[selectedBlock]);
         }
 
+        // Open inventory
         if (raylib::Keyboard::IsKeyPressed(KEY_E)) {
             inventory ^= 1;
         }
@@ -148,6 +155,8 @@ int main() {
         raylib::Color dayColor   = {102, 191, 255, 255};
         raylib::Color nightColor = {10,   10,  30, 255};
         raylib::Color skyColor = nightColor.Lerp(dayColor, world.GetDaylightFactor());
+
+        world.PrepareLightmap(camera, light, window.GetWidth(), window.GetHeight());
 
         window.BeginDrawing();
         window.ClearBackground(skyColor);
@@ -157,6 +166,7 @@ int main() {
         world.Draw(camera, window.GetWidth(), window.GetHeight());
         player->Draw();
 
+        // Draw tile selector
         if (canAccessBlock && !inventory) {
             bool const isAir = (world.GetBlock(cursorWorldI.x, cursorWorldI.y, selectedLayer) == BLOCK_ID_AIR);
             bool const isCtrlDown = raylib::Keyboard::IsKeyDown(KEY_LEFT_CONTROL);
@@ -169,6 +179,10 @@ int main() {
 
         camera.EndMode();
 
+        // Draw Lightmap
+        lightTex.Draw(RRectangle {0.f, 0.f, (float)lightTex.width, (float)-lightTex.height}, RRectangle {0.f, 0.f, (float)window.GetWidth(), (float)window.GetHeight()});
+
+        // Draw inventory
         if (inventory) {
             RRectangle background = {(window.GetWidth() - 1000.f) / 2.f, (window.GetHeight() - 500.f) / 2.f, 1000.f, 500.f};
 

@@ -165,3 +165,45 @@ void ResourceManager::UpdateMusic() {
         }
     }
 }
+
+raylib::Shader& ResourceManager::LoadShader(std::filesystem::path const& vsPath, std::filesystem::path const& fsPath) {
+    auto const vsFullPath = GetAssetsPath(vsPath);
+    auto const fsFullPath = GetAssetsPath(fsPath);
+
+    if(!std::filesystem::exists(vsFullPath)) {
+        throw std::filesystem::filesystem_error(
+            "Shader not found", vsFullPath, 
+            std::make_error_code(std::errc::no_such_file_or_directory)
+        );
+    }
+
+    if(!std::filesystem::exists(fsFullPath)) {
+        throw std::filesystem::filesystem_error(
+            "Shader not found", fsFullPath, 
+            std::make_error_code(std::errc::no_such_file_or_directory)
+        );
+    }
+
+    auto const key = vsFullPath.stem().string();
+
+    if (auto it = m_shaders.find(key); it != m_shaders.end()) {
+        return it->second;
+    }
+
+    try {
+        raylib::Shader shader(vsFullPath.string(), fsFullPath.string());
+        auto [it, inserted] = m_shaders.try_emplace(key, std::move(shader));
+        
+        return it->second;
+    } catch (const std::exception& e) {
+        throw std::runtime_error("Failed to load shader " + key + ": " + e.what());
+    }
+}
+
+raylib::Shader& ResourceManager::GetShader(std::string const& key) {
+    if (auto it = m_shaders.find(key); it != m_shaders.end()) {
+        return it->second;
+    }
+
+    throw std::runtime_error("Shader " + key + " not found!");
+}

@@ -2,8 +2,11 @@
 #include "Blocks.hpp"
 #include "Chunk.hpp"
 #include "Types.hpp"
+#include <ShaderUnmanaged.hpp>
 #include <algorithm>
+#include <cstdio>
 #include <memory>
+#include <raylib.h>
 #include <vector>
 #include "Entity.hpp"
 #include "worldgen/WorldGenerator.hpp"
@@ -24,6 +27,8 @@ void World::OnTick() {
     for (auto& entity : m_entities) {
         entity->OnTick();
     }
+
+    UpdateLightning();
 
     m_ticks++;
 }
@@ -117,4 +122,27 @@ float const World::GetDaylightFactor() {
 
 void World::AddChunk(Vector2i pos, Chunk&& chunk) {
     m_chunks.emplace(pos, std::move(chunk));
+}
+
+void World::UpdateLightning() {
+    for (auto& [position, chunk] : m_chunks) {
+        if (!chunk.IsLightDirty()) {
+            continue;
+        }
+
+        printf("Updating chunk light [%d, %d]\n", position.x, position.y);
+
+        for (int localX = 0; localX < CHUNK_WIDTH; ++localX) {
+            int worldX = position.x * CHUNK_WIDTH + localX;
+
+            int light = 255;
+            for (int localY = 0; localY < CHUNK_HEIGHT; ++localY) {
+                int worldY = position.y * CHUNK_WIDTH + localY;
+
+                // TODO
+            }
+        }
+
+        chunk.SetLightDirty(false);
+    }
 }

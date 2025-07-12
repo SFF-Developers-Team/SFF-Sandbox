@@ -23,12 +23,9 @@ void PlayerClient::OnTick() {
     if ((raylib::Keyboard::IsKeyDown(KEY_W) || raylib::Keyboard::IsKeyDown(KEY_SPACE)) && m_onGround) {
         m_speed.SetY(-0.3f);
     }
-    if (raylib::Keyboard::IsKeyDown(KEY_R)) {
-        this->x = 0;
-        this->y = 163;
-    }
 
     Entity::OnTick();
+
     if (m_speed.x != 0.f) {
         SetType(PLAYER_ANIMATION_TYPE_WALK);
     } 

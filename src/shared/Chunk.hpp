@@ -3,6 +3,7 @@
 #include "Blocks.hpp"
 #include "Utils.hpp"
 #include <array>
+#include <cstdint>
 
 #define CHUNK_WIDTH 32
 #define CHUNK_HEIGHT 32
@@ -32,14 +33,22 @@ public:
     /**
      * @brief Get block at (x, y)
      * 
-     * @param x local x coordinate of block [0; 32]
-     * @param y local y coordinate of block [0; 32]
+     * @param x local x coordinate of block [0; CHUNK_WIDTH]
+     * @param y local y coordinate of block [0; CHUNK_HEIGHT]
      * @return BlockID 
      */
-    BlockID GetBlock(int x, int y, int z);
+    BlockID GetBlock(int x, int y, int z) noexcept;
 
     void Fill(BlockID blockId);
 
+    bool IsLightDirty() const noexcept { return m_dirtyLightning; }
+    void SetLightDirty(bool dirty = true) { m_dirtyLightning = dirty; }
+
+    void SetLight(int x, int y, uint8_t level);
+    uint8_t GetLight(int x, int y) const noexcept;
+
 private:
     std::array<BlockID, CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH> m_blocks;
+    std::array<uint8_t, CHUNK_WIDTH * CHUNK_HEIGHT> m_lightmap;
+    bool m_dirtyLightning;
 };

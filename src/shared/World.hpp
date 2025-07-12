@@ -31,12 +31,15 @@ public:
 
 #ifdef SANDBOX_CLIENT
     void Draw(raylib::Camera2D& camera, int width, int height);
+    void PrepareLightmap(raylib::Camera2D& camera, raylib::RenderTexture2D& lightmap, int width, int height);
 #endif
 
     unsigned long const GetTicks() { return m_ticks; } 
     float const GetDaylightFactor();
 
     void AddChunk(Vector2i pos, Chunk&& chunk);
+
+    void UpdateLightning();
 
 private:
     ska::flat_hash_map<Vector2i, Chunk, Vector2iHash> m_chunks;

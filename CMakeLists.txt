@@ -9,9 +9,13 @@ project(SFFSandbox
 )
 
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+set(CMAKE_POLICY_DEFAULT_CMP0079 NEW)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+set(BUILD_EXAMPLES OFF)
+set(BUILD_RAYLIB_CPP_STATIC TRUE)
 
 set(BUILD_SHARED_LIBS OFF)
 
@@ -53,17 +57,25 @@ target_link_libraries(${PROJECT_NAME}-tests gtest pthread raylib_cpp)
 enable_testing()
 add_test(NAME "test-all" COMMAND ${PROJECT_NAME}-tests)
 
-if(${PLATFORM} STREQUAL "Android")
-    set(PLATFORM_LIBS m c log android EGL GLESv2 OpenSLES dl unwind c++_static)
+if(${PLATFORM} MATCHES "Android")
     add_library(${PROJECT_NAME} SHARED ${SHARED_SOURCES} ${CLIENT_SOURCES})
 else()
     add_executable(${PROJECT_NAME} ${SHARED_SOURCES} ${CLIENT_SOURCES})
     target_include_directories(${PROJECT_NAME} PUBLIC ${SHARED_HEADERS})
-    target_compile_definitions(${PROJECT_NAME} PUBLIC -DSANDBOX_CLIENT -DSUPPORT_IMAGE_GENERATION=0)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE SANDBOX_CLIENT SUPPORT_IMAGE_GENERATION=0 SUPPORT_MODULE_RTEXTURES)
     # add_executable(${PROJECT_NAME}-server ${SHARED_SOURCES} ${SERVER_SOURCES})
 endif()
 
-target_link_libraries(${PROJECT_NAME} raylib raylib_cpp ${PLATFORM_LIBS})
+target_link_libraries(${PROJECT_NAME} PUBLIC raylib raylib_cpp)
+
+if(UNIX AND NOT APPLE)
+    target_link_libraries(${PROJECT_NAME} PUBLIC m pthread dl rt X11)
+endif()
+
+if(${PLATFORM} MATCHES "Android") 
+    target_link_libraries(${PROJECT_NAME} PUBLIC c log android EGL GLESv2 OpenSLES unwind c++_static)
+endif()
+
 
 # if(NOT ${PLATFORM} STREQUAL "Android")
 #     target_link_libraries(${PROJECT_NAME}-server enet_static ${GITHASH_LIBRARIES} miniz)
