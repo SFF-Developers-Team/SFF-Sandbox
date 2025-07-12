@@ -22,6 +22,7 @@ CPMAddPackage("gh:Reputeless/PerlinNoise@3.0.0")
 CPMAddPackage("gh:skarupke/flat_hash_map#master")
 
 set(SHARED_HEADERS 
+    "${raylib_SOURCE_DIR}/src/"
     "${raylib_cpp_SOURCE_DIR}/src/"
     "${CMAKE_SOURCE_DIR}/src/shared/"
     "${PerlinNoise_SOURCE_DIR}/"
