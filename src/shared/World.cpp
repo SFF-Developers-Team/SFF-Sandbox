@@ -4,8 +4,6 @@
 #include "Types.hpp"
 #include <ShaderUnmanaged.hpp>
 #include <algorithm>
-#include <cstdio>
-#include <map>
 #include <memory>
 #include <raylib.h>
 #include <vector>
@@ -127,8 +125,8 @@ void World::AddChunk(Vector2i pos, Chunk&& chunk) {
 }
 
 void World::UpdateLightning() {
-    std::map<int, uint8_t> highestBlockIndex;
-
+    chunkLightUpdates = 0;
+    
     for (auto& [position, chunk] : m_chunks) {
         chunk.UpdateLighting(*this, position);
     }

@@ -56,6 +56,8 @@ public:
         return nullptr;
     }
 
+    int chunkLightUpdates; // for debugging
+
 private:
     ska::flat_hash_map<Vector2i, Chunk, Vector2iHash> m_chunks;
     std::unique_ptr<WorldGenerator> m_worldGenerator;

@@ -22,7 +22,11 @@ int main() {
     auto& blocksTilemap = rm.LoadTilemap("blocks.png", 16, 16);
     auto& guiTilemap = rm.LoadTilemap("gui.png", 8, 8);
     auto& menuMusic = rm.LoadMusic("menu.mp3");
+    auto& blurShader = rm.LoadShader("vertexShader.glsl", "blurFragShader.glsl");
     rm.LoadTexture("player.png");
+
+    // float blurRadius = 10;
+    // blurShader.SetValue(blurShader.GetLocation("blurRadius"), &blurRadius, SHADER_UNIFORM_FLOAT);
 
     std::srand(std::time(0));
 
@@ -175,7 +179,9 @@ int main() {
         camera.EndMode();
 
         // Draw Lightmap
+        blurShader.BeginMode();
         lightTex.Draw(RRectangle {0.f, 0.f, (float)lightTex.width, (float)-lightTex.height}, RRectangle {0.f, 0.f, (float)window.GetWidth(), (float)window.GetHeight()});
+        blurShader.EndMode();
 
         // Draw inventory
         if (inventory) {
@@ -220,6 +226,10 @@ int main() {
         char _temp[64];
         sprintf(_temp, "Pos: %f %f", player->GetPosition().x, player->GetPosition().y);
         DrawText(_temp, 0, 30, 20, DARKGREEN);
+        sprintf(_temp, "Chunk: %i %i", (int)(player->GetPosition().x / CHUNK_WIDTH), (int)(player->GetPosition().y / CHUNK_HEIGHT));
+        DrawText(_temp, 0, 60, 20, DARKGREEN);
+        sprintf(_temp, "Chunk light updates: %i", world.chunkLightUpdates);
+        DrawText(_temp, 0, 80, 20, DARKGREEN);
 
         window.DrawFPS();
 

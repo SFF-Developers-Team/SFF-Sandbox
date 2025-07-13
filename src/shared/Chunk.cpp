@@ -93,7 +93,9 @@ void Chunk::UpdateLighting(World& world, const Vector2i& pos) {
         return;
     }
 
-    printf("Updating chunk light [%d, %d]\n", pos.x, pos.y);
+    // printf("Updating chunk light [%d, %d]\na", pos.x, pos.y);
+
+    world.chunkLightUpdates++;
 
     if (pos.y <= MAX_LIGHT_Y) {
         std::fill(m_lightmap.begin(), m_lightmap.end(), 0xFF);
@@ -164,6 +166,15 @@ void Chunk::UpdateLighting(World& world, const Vector2i& pos) {
     }
     // }
 
+    auto leftChunk = world.GetChunk({pos.x - 1, pos.y});
+    if (leftChunk) {
+        leftChunk->UpdateLighting(world, {pos.x - 1, pos.y});
+    }
+    auto rightChunk = world.GetChunk({pos.x + 1, pos.y});
+    if (rightChunk) {
+        rightChunk->UpdateLighting(world, {pos.x + 1, pos.y});
+    }
+
     while (queue.size() > 0) {
         auto l = queue.front();
         queue.pop_front();
@@ -178,11 +189,33 @@ void Chunk::UpdateLighting(World& world, const Vector2i& pos) {
         uint8_t newLight = std::max(0, l.strength - LIGHT_DECAY);
 
         if (newLight > 0) {
-            for (auto const& pos : newPos) {
-                if (pos.x < 0 || pos.y < 0 || pos.x >= CHUNK_WIDTH || pos.y >= CHUNK_HEIGHT)
+            for (auto& pos : newPos) {
+                // if (pos.x < 0 || pos.y < 0 || pos.x >= CHUNK_WIDTH || pos.y >= CHUNK_HEIGHT)
+                //     continue;
+                int localX = pos.x;
+                int localY = pos.y;
+                Chunk* curChunk = this;
+                // this doesnt really work =(
+                if (pos.x < 0) {
+                    if (leftChunk) {
+                        curChunk = leftChunk;
+                        localX += CHUNK_WIDTH;
+                    } else {
+                        continue;
+                    }
+                }
+                if (pos.x >= CHUNK_WIDTH) {
+                    if (rightChunk) {
+                        curChunk = rightChunk;
+                        localX -= CHUNK_WIDTH;
+                    } else {
+                        continue;
+                    }
+                }
+                if (pos.y < 0 || pos.y >= CHUNK_HEIGHT)
                     continue;
-                auto block = GetBlock(pos.x, pos.y, 1);
-                auto bg = GetBlock(pos.x, pos.y, 0);
+                auto block = curChunk->GetBlock(localX, localY, 1);
+                auto bg = curChunk->GetBlock(localX, localY, 0);
 
                 auto curNewLight = newLight;
                 if (block != BLOCK_ID_AIR && block != BLOCK_ID_ROSE) {
@@ -190,7 +223,7 @@ void Chunk::UpdateLighting(World& world, const Vector2i& pos) {
                     if (curNewLight == 0)
                         continue;
                 }
-                uint8_t& addr = m_lightmap[INDEX_2D(pos.x, pos.y, CHUNK_WIDTH)];
+                uint8_t& addr = curChunk->m_lightmap[INDEX_2D(localX, localY, CHUNK_WIDTH)];
                 if (curNewLight > addr) {
                     addr = curNewLight;
                     queue.emplace_back(_light_struct {pos.x, pos.y, curNewLight});
