@@ -113,12 +113,18 @@ void Chunk::UpdateLighting(World& world, const Vector2i& pos) {
 
     uint8_t* lastRow = upChunk->m_lightmap.data() + (CHUNK_WIDTH * (CHUNK_HEIGHT - 1));
 
+    bool thisLastRowChanged = false;
     for (int localX = 0; localX < CHUNK_WIDTH; ++localX) {
         int light = lastRow[localX];
         for (int localY = 0; localY < CHUNK_HEIGHT; ++localY) {
+            uint8_t oldLight;
+            if (!thisLastRowChanged && localY == CHUNK_HEIGHT - 1) {
+                oldLight = m_lightmap[INDEX_2D(localX, localY, CHUNK_WIDTH)];
+            }
+
             if (auto block = GetBlock(localX, localY, 1); block != BLOCK_ID_AIR && block != BLOCK_ID_ROSE) {
-                light = std::max(0, light - 50);
                 SetLight(localX, localY, light);
+                light = std::max(0, light - 50);
             } else {
                 if (GetBlock(localX, localY, 0) != BLOCK_ID_AIR) {
                     SetLight(localX, localY, light);
@@ -126,15 +132,22 @@ void Chunk::UpdateLighting(World& world, const Vector2i& pos) {
                     SetLight(localX, localY, 0xFF);
                 }
             }
+
+            if (!thisLastRowChanged && localY == CHUNK_HEIGHT - 1) {
+                uint8_t newLight = m_lightmap[INDEX_2D(localX, localY, CHUNK_WIDTH)];
+                thisLastRowChanged = newLight != oldLight;
+            }
         }
     }
 
     SetLightDirty(false);
 
-    Vector2i const downChunkCoord = {pos.x, pos.y + 1};
-    Chunk* downChunk = world.GetChunk(downChunkCoord);
-    if (downChunk) {
-        downChunk->SetLightDirty();
-        downChunk->UpdateLighting(world, downChunkCoord);
+    if (thisLastRowChanged) {
+        Vector2i const downChunkCoord = {pos.x, pos.y + 1};
+        Chunk* downChunk = world.GetChunk(downChunkCoord);
+        if (downChunk) {
+            downChunk->SetLightDirty();
+            downChunk->UpdateLighting(world, downChunkCoord);
+        }
     }
 }
