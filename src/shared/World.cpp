@@ -5,6 +5,7 @@
 #include <ShaderUnmanaged.hpp>
 #include <algorithm>
 #include <cstdio>
+#include <map>
 #include <memory>
 #include <raylib.h>
 #include <vector>
@@ -67,7 +68,8 @@ std::vector<Box> World::GetBlocksAround(Box const& box) {
     for (int chunkY = chunkMinY; chunkY <= chunkMaxY; ++chunkY) {
         for (int chunkX = chunkMinX; chunkX <= chunkMaxX; ++chunkX) {
             auto const it = m_chunks.find({chunkX, chunkY});
-            if (it == m_chunks.end()) continue;
+            if (it == m_chunks.end())
+                continue;
 
             auto& chunk = it->second;
 
@@ -82,7 +84,7 @@ std::vector<Box> World::GetBlocksAround(Box const& box) {
             for (int localY = localMinY; localY <= localMaxY; localY++) {
                 for (int localX = localMinX; localX <= localMaxX; localX++) {
                     BlockID id = chunk.GetBlock(localX, localY, 1);
-                    
+
                     if (!gGhostBlocks.contains(id)) {
                         ret.emplace_back(chunkWorldX + localX, chunkWorldY + localY, 1.f, 1.f);
                     }
@@ -125,24 +127,15 @@ void World::AddChunk(Vector2i pos, Chunk&& chunk) {
 }
 
 void World::UpdateLightning() {
+    std::map<int, uint8_t> highestBlockIndex;
+
     for (auto& [position, chunk] : m_chunks) {
-        if (!chunk.IsLightDirty()) {
-            continue;
-        }
-
-        printf("Updating chunk light [%d, %d]\n", position.x, position.y);
-
-        for (int localX = 0; localX < CHUNK_WIDTH; ++localX) {
-            int worldX = position.x * CHUNK_WIDTH + localX;
-
-            int light = 255;
-            for (int localY = 0; localY < CHUNK_HEIGHT; ++localY) {
-                int worldY = position.y * CHUNK_WIDTH + localY;
-
-                // TODO
-            }
-        }
-
-        chunk.SetLightDirty(false);
+        chunk.UpdateLighting(*this, position);
     }
+}
+
+void World::GenerateChunk(Vector2i const& pos) {
+    Chunk chunk {};
+    m_worldGenerator->GenerateChunk(chunk, pos);
+    AddChunk(pos, std::move(chunk));
 }

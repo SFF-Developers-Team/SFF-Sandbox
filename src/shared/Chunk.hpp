@@ -4,6 +4,7 @@
 #include "Utils.hpp"
 #include <array>
 #include <cstdint>
+#include "Types.hpp"
 
 #define CHUNK_WIDTH 32
 #define CHUNK_HEIGHT 32
@@ -13,6 +14,8 @@
 #define CHUNK_FOREGROUND_LAYER 1
 
 #define CHUNK_INDEX(x, y, z) INDEX_3D(x, y, z, CHUNK_WIDTH, CHUNK_HEIGHT)
+
+class World;
 
 class Chunk {
 public:
@@ -46,6 +49,8 @@ public:
 
     void SetLight(int x, int y, uint8_t level);
     uint8_t GetLight(int x, int y) const noexcept;
+
+    void UpdateLighting(World& world, const Vector2i& pos);
 
 private:
     std::array<BlockID, CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH> m_blocks;

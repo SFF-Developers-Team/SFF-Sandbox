@@ -220,6 +220,10 @@ int main() {
 
         guiTilemap.DrawTile(0, {cursor.Subtract({8.f, 8.f}), {16.f, 16.f}});
         blocksTilemap.DrawTile(blockList[selectedBlock] - 1, {window.GetWidth() - 48.f, 16.f, 32.f, 32.f});
+        
+        char _temp[64];
+        sprintf(_temp, "Pos: %f %f", player->GetPosition().x, player->GetPosition().y);
+        DrawText(_temp, 0, 30, 20, DARKGREEN);
 
         window.DrawFPS();
 
