@@ -31,7 +31,7 @@ int main() {
 
     // Create world
     World world("getoff", std::make_unique<Default>(std::rand()));
-    
+
     // Create player
     PlayerClient* player = new PlayerClient(world);
 
@@ -52,12 +52,10 @@ int main() {
     // Setup camera
     raylib::Camera2D camera({window.GetWidth() / 2.f, window.GetHeight() / 2.f}, {0.f, 0.f}, 0.f, 50.f);
 
-    std::array<BlockID, 24> static const blockList = {
-        BLOCK_ID_GRASS,     BLOCK_ID_DIRT,      BLOCK_ID_STONE,     BLOCK_ID_COBBLESTONE, BLOCK_ID_PLANKS,    BLOCK_ID_WOOL,
-        BLOCK_ID_BRICKS,    BLOCK_ID_WOOD_1,    BLOCK_ID_WOOD_2,    BLOCK_ID_LEAVES,      BLOCK_ID_BOOKSHELF, BLOCK_ID_FLOWER_POT,
-        BLOCK_ID_FURNACE_1, BLOCK_ID_WORKBENCH, BLOCK_ID_CHEST,     BLOCK_ID_BED_1, BLOCK_ID_BED_2,     BLOCK_ID_DEAD_ROSE,
-        BLOCK_ID_ROSE,      BLOCK_ID_IRON_ORE,  BLOCK_ID_COAL_ORE,  BLOCK_ID_DIAMOND_ORE, BLOCK_ID_GOLD_ORE,  BLOCK_ID_TORCH_1
-    };
+    std::array<BlockID, 24> static const blockList = {BLOCK_ID_GRASS,     BLOCK_ID_DIRT,      BLOCK_ID_STONE,    BLOCK_ID_COBBLESTONE, BLOCK_ID_PLANKS,    BLOCK_ID_WOOL,
+                                                      BLOCK_ID_BRICKS,    BLOCK_ID_WOOD_1,    BLOCK_ID_WOOD_2,   BLOCK_ID_LEAVES,      BLOCK_ID_BOOKSHELF, BLOCK_ID_FLOWER_POT,
+                                                      BLOCK_ID_FURNACE_1, BLOCK_ID_WORKBENCH, BLOCK_ID_CHEST,    BLOCK_ID_BED_1,       BLOCK_ID_BED_2,     BLOCK_ID_DEAD_ROSE,
+                                                      BLOCK_ID_ROSE,      BLOCK_ID_IRON_ORE,  BLOCK_ID_COAL_ORE, BLOCK_ID_DIAMOND_ORE, BLOCK_ID_GOLD_ORE,  BLOCK_ID_TORCH_1};
 
     int selectedBlock = 0;
     bool inventory = false;
@@ -85,8 +83,10 @@ int main() {
         if (wheel != 0.f && !raylib::Keyboard::IsKeyDown(KEY_LEFT_CONTROL)) {
             selectedBlock += (wheel < 0.f) ? -1 : 1;
 
-            if (selectedBlock > blockList.size() - 1) selectedBlock = 0;
-            if (selectedBlock < 0) selectedBlock = blockList.size() - 1;
+            if (selectedBlock > blockList.size() - 1)
+                selectedBlock = 0;
+            if (selectedBlock < 0)
+                selectedBlock = blockList.size() - 1;
         }
 
         camera.zoom = std::clamp(camera.zoom, 5.f, 60.f);
@@ -101,10 +101,7 @@ int main() {
         raylib::Vector2 cursorWorld = camera.GetScreenToWorld(cursor);
 
         // World int cursor
-        Vector2i cursorWorldI(
-            static_cast<int>(std::floor(cursorWorld.x)),
-            static_cast<int>(std::floor(cursorWorld.y))
-        );
+        Vector2i cursorWorldI(static_cast<int>(std::floor(cursorWorld.x)), static_cast<int>(std::floor(cursorWorld.y)));
 
         if (raylib::Mouse::IsButtonDown(MOUSE_BUTTON_LEFT) && player->GetPosition().Distance(cursorWorld) < 5.f) {
             world.SetBlock(cursorWorldI.x, cursorWorldI.y, selectedLayer, BLOCK_ID_AIR);
@@ -131,13 +128,11 @@ int main() {
             }
 
             // Check if there is at least one block near
-            bool const hasAdjacentBlock = {
-                world.GetBlock(cursorWorldI.x + 1, cursorWorldI.y, selectedLayer) != BLOCK_ID_AIR || 
-                world.GetBlock(cursorWorldI.x - 1, cursorWorldI.y, selectedLayer) != BLOCK_ID_AIR ||
-                world.GetBlock(cursorWorldI.x, cursorWorldI.y + 1, selectedLayer) != BLOCK_ID_AIR || 
-                world.GetBlock(cursorWorldI.x, cursorWorldI.y - 1, selectedLayer) != BLOCK_ID_AIR ||
-                world.GetBlock(cursorWorldI.x, cursorWorldI.y, !selectedLayer) != BLOCK_ID_AIR
-            };
+            bool const hasAdjacentBlock = {world.GetBlock(cursorWorldI.x + 1, cursorWorldI.y, selectedLayer) != BLOCK_ID_AIR ||
+                                           world.GetBlock(cursorWorldI.x - 1, cursorWorldI.y, selectedLayer) != BLOCK_ID_AIR ||
+                                           world.GetBlock(cursorWorldI.x, cursorWorldI.y + 1, selectedLayer) != BLOCK_ID_AIR ||
+                                           world.GetBlock(cursorWorldI.x, cursorWorldI.y - 1, selectedLayer) != BLOCK_ID_AIR ||
+                                           world.GetBlock(cursorWorldI.x, cursorWorldI.y, !selectedLayer) != BLOCK_ID_AIR};
 
             return hasAdjacentBlock;
         }();
@@ -152,8 +147,8 @@ int main() {
             inventory ^= 1;
         }
 
-        raylib::Color dayColor   = {102, 191, 255, 255};
-        raylib::Color nightColor = {10,   10,  30, 255};
+        raylib::Color dayColor = {102, 191, 255, 255};
+        raylib::Color nightColor = {10, 10, 30, 255};
         raylib::Color skyColor = nightColor.Lerp(dayColor, world.GetDaylightFactor());
 
         world.PrepareLightmap(camera, light, window.GetWidth(), window.GetHeight());
@@ -194,33 +189,34 @@ int main() {
 
             RVector2 start = {
                 (background.width - 880.f) / 2.f,
-                (background.height - 80.f * (int)(blockList.size() / 11)) / 2.f
+                (background.height - 80.f * (int)(blockList.size() / 11)) / 2.f,
             };
 
             for (int i = 0; i < blockList.size(); i++) {
                 RRectangle blockIcon = {
-                    background.x + start.x + 80.f * (int)(i % 11), 
-                    background.y + start.y + 80.f * (int)(i / 11), 
-                    32.f, 32.f
+                    background.x + start.x + 80.f * (int)(i % 11),
+                    background.y + start.y + 80.f * (int)(i / 11),
+                    32.f,
+                    32.f,
                 };
 
                 if (blockIcon.CheckCollision(raylib::Mouse::GetPosition())) {
                     blockIcon.SetPosition({blockIcon.x - 8.f, blockIcon.y - 8.f});
                     blockIcon.SetSize({48.f, 48.f});
-                        
+
                     if (raylib::Mouse::IsButtonDown(MOUSE_BUTTON_LEFT)) {
                         selectedBlock = i;
                         inventory = false;
                     }
                 }
-                
+
                 blocksTilemap.DrawTile(blockList[i] - 1, blockIcon);
             }
         }
 
         guiTilemap.DrawTile(0, {cursor.Subtract({8.f, 8.f}), {16.f, 16.f}});
         blocksTilemap.DrawTile(blockList[selectedBlock] - 1, {window.GetWidth() - 48.f, 16.f, 32.f, 32.f});
-        
+
         char _temp[64];
         sprintf(_temp, "Pos: %f %f", player->GetPosition().x, player->GetPosition().y);
         DrawText(_temp, 0, 30, 20, DARKGREEN);

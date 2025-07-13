@@ -3,6 +3,7 @@
 #include <RenderTexture.hpp>
 #include <algorithm>
 #include <cstdint>
+#include <queue>
 #include "World.hpp"
 
 Chunk::Chunk() : m_dirtyLightning(true) {
@@ -84,6 +85,8 @@ uint8_t Chunk::GetLight(int x, int y) const noexcept {
 }
 
 #define MAX_LIGHT_Y 0 // above this height will only be light (chunk coord y)
+#define LIGHT_DECAY 30
+#define LIGHT_SOLID_DECAY 30
 
 void Chunk::UpdateLighting(World& world, const Vector2i& pos) {
     if (!IsLightDirty()) {
@@ -96,6 +99,7 @@ void Chunk::UpdateLighting(World& world, const Vector2i& pos) {
         std::fill(m_lightmap.begin(), m_lightmap.end(), 0xFF);
         return;
     }
+    // std::fill(m_lightmap.begin(), m_lightmap.end(), 0x00);
 
     Vector2i const upChunkCoord = {pos.x, pos.y - 1};
     Chunk* upChunk = world.GetChunk(upChunkCoord);
@@ -113,25 +117,34 @@ void Chunk::UpdateLighting(World& world, const Vector2i& pos) {
 
     uint8_t* lastRow = upChunk->m_lightmap.data() + (CHUNK_WIDTH * (CHUNK_HEIGHT - 1));
 
+    // flood fill
+    struct _light_struct {
+        int x;
+        int y;
+        uint8_t strength;
+    };
+
+    std::deque<_light_struct> queue;
+
     bool thisLastRowChanged = false;
     for (int localX = 0; localX < CHUNK_WIDTH; ++localX) {
-        int light = lastRow[localX];
+        uint8_t light = lastRow[localX];
         for (int localY = 0; localY < CHUNK_HEIGHT; ++localY) {
             uint8_t oldLight;
             if (!thisLastRowChanged && localY == CHUNK_HEIGHT - 1) {
                 oldLight = m_lightmap[INDEX_2D(localX, localY, CHUNK_WIDTH)];
             }
 
-            if (auto block = GetBlock(localX, localY, 1); block != BLOCK_ID_AIR && block != BLOCK_ID_ROSE) {
-                SetLight(localX, localY, light);
-                light = std::max(0, light - 50);
-            } else {
-                if (GetBlock(localX, localY, 0) != BLOCK_ID_AIR) {
-                    SetLight(localX, localY, light);
-                } else {
-                    SetLight(localX, localY, 0xFF);
-                }
+            auto block = GetBlock(localX, localY, 1);
+            auto bg = GetBlock(localX, localY, 0);
+
+            if (block == BLOCK_ID_AIR || block == BLOCK_ID_ROSE) { // if block is transparent
+                queue.emplace_back(_light_struct {localX, localY, light});
+            } else { // if block is solid
+                light = 0;
             }
+
+            SetLight(localX, localY, light);
 
             if (!thisLastRowChanged && localY == CHUNK_HEIGHT - 1) {
                 uint8_t newLight = m_lightmap[INDEX_2D(localX, localY, CHUNK_WIDTH)];
@@ -142,12 +155,47 @@ void Chunk::UpdateLighting(World& world, const Vector2i& pos) {
 
     SetLightDirty(false);
 
-    if (thisLastRowChanged) {
-        Vector2i const downChunkCoord = {pos.x, pos.y + 1};
-        Chunk* downChunk = world.GetChunk(downChunkCoord);
-        if (downChunk) {
-            downChunk->SetLightDirty();
-            downChunk->UpdateLighting(world, downChunkCoord);
+    // if (thisLastRowChanged) {
+    Vector2i const downChunkCoord = {pos.x, pos.y + 1};
+    Chunk* downChunk = world.GetChunk(downChunkCoord);
+    if (downChunk) {
+        downChunk->SetLightDirty();
+        downChunk->UpdateLighting(world, downChunkCoord);
+    }
+    // }
+
+    while (queue.size() > 0) {
+        auto l = queue.front();
+        queue.pop_front();
+
+        Vector2i newPos[4] = {
+            {l.x - 1, l.y},
+            {l.x + 1, l.y},
+            {l.x, l.y - 1},
+            {l.x, l.y + 1},
+        };
+
+        uint8_t newLight = std::max(0, l.strength - LIGHT_DECAY);
+
+        if (newLight > 0) {
+            for (auto const& pos : newPos) {
+                if (pos.x < 0 || pos.y < 0 || pos.x >= CHUNK_WIDTH || pos.y >= CHUNK_HEIGHT)
+                    continue;
+                auto block = GetBlock(pos.x, pos.y, 1);
+                auto bg = GetBlock(pos.x, pos.y, 0);
+
+                auto curNewLight = newLight;
+                if (block != BLOCK_ID_AIR && block != BLOCK_ID_ROSE) {
+                    curNewLight = std::max(0, curNewLight - LIGHT_SOLID_DECAY);
+                    if (curNewLight == 0)
+                        continue;
+                }
+                uint8_t& addr = m_lightmap[INDEX_2D(pos.x, pos.y, CHUNK_WIDTH)];
+                if (curNewLight > addr) {
+                    addr = curNewLight;
+                    queue.emplace_back(_light_struct {pos.x, pos.y, curNewLight});
+                }
+            }
         }
     }
 }
