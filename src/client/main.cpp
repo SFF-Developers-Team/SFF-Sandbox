@@ -399,8 +399,6 @@ int main() {
             raylib::DrawText(deathText, (window.GetWidth() - raylib::MeasureText(deathText, 25)) / 2, (window.GetHeight() - 25) / 2, 25, WHITE);
         }
 
-        raylib::DrawText(std::format("{} FPS", window.GetFPS()), 10, 20, 20, WHITE);
-
         RRectangle itemsBG(window.GetWidth() / 3.5f, 0, 64 * HOTBAR_CELL_COUNT, 64.f);
         itemsBG.Draw(DARKGRAY);
 

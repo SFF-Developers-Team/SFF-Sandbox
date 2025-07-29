@@ -5,6 +5,7 @@
 #include <Camera2D.hpp>
 #include "worldgen/WorldGenerator.hpp"
 #include <string>
+#include <raylib-cpp.hpp>
 #include <vector>
 #include <memory>
 #include <flat_hash_map.hpp>
