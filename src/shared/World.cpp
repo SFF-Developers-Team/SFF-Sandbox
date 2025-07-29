@@ -2,8 +2,10 @@
 #include "Blocks.hpp"
 #include "Chunk.hpp"
 #include "Types.hpp"
+#include <ShaderUnmanaged.hpp>
 #include <algorithm>
 #include <memory>
+#include <raylib.h>
 #include <vector>
 #include "Entity.hpp"
 #include "worldgen/WorldGenerator.hpp"
@@ -26,6 +28,8 @@ void World::OnTick() {
             entity->OnTick();
         }
     }
+
+    UpdateLightning();
 
     m_ticks++;
 }
@@ -64,7 +68,8 @@ std::vector<Box> World::GetBlocksAround(Box const& box) {
     for (int chunkY = chunkMinY; chunkY <= chunkMaxY; ++chunkY) {
         for (int chunkX = chunkMinX; chunkX <= chunkMaxX; ++chunkX) {
             auto const it = m_chunks.find({chunkX, chunkY});
-            if (it == m_chunks.end()) continue;
+            if (it == m_chunks.end())
+                continue;
 
             auto& chunk = it->second;
 
@@ -79,7 +84,7 @@ std::vector<Box> World::GetBlocksAround(Box const& box) {
             for (int localY = localMinY; localY <= localMaxY; localY++) {
                 for (int localX = localMinX; localX <= localMaxX; localX++) {
                     BlockID id = chunk.GetBlock(localX, localY, 1);
-                    
+
                     if (!gGhostBlocks.contains(id)) {
                         ret.emplace_back(chunkWorldX + localX, chunkWorldY + localY, 1.f, 1.f);
                     }
@@ -119,4 +124,18 @@ float const World::GetDaylightFactor() {
 
 void World::AddChunk(Vector2i pos, Chunk&& chunk) {
     m_chunks.emplace(pos, std::move(chunk));
+}
+
+void World::UpdateLightning() {
+    chunkLightUpdates = 0;
+    
+    for (auto& [position, chunk] : m_chunks) {
+        chunk.UpdateLighting(*this, position);
+    }
+}
+
+void World::GenerateChunk(Vector2i const& pos) {
+    Chunk chunk {};
+    m_worldGenerator->GenerateChunk(chunk, pos);
+    AddChunk(pos, std::move(chunk));
 }

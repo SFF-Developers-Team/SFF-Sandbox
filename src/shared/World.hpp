@@ -13,7 +13,7 @@ class World {
 public:
     /**
      * @brief Construct a new World object
-     * 
+     *
      * @param path where world stored in (must contain world.dat)
      */
     World(std::string const& path, std::unique_ptr<WorldGenerator> worldgen);
@@ -29,12 +29,33 @@ public:
 
 #ifdef SANDBOX_CLIENT
     void Draw(raylib::Camera2D& camera, int width, int height);
+    void PrepareLightmap(raylib::Camera2D& camera, raylib::RenderTexture2D& lightmap, int width, int height);
 #endif
 
-    unsigned long const GetTicks() { return m_ticks; } 
+    unsigned long const GetTicks() {
+        return m_ticks;
+    }
     float const GetDaylightFactor();
 
     void AddChunk(Vector2i pos, Chunk&& chunk);
+
+    void UpdateLightning();
+
+    void GenerateChunk(Vector2i const& pos);
+
+    inline bool HasChunk(Vector2i const& pos) const {
+        return m_chunks.count(pos) != 0;
+    }
+
+    inline Chunk* GetChunk(Vector2i const& pos) {
+        if (auto it = m_chunks.find(pos); it != m_chunks.end()) {
+            return &it->second;
+        }
+
+        return nullptr;
+    }
+
+    int chunkLightUpdates; // for debugging
 
 private:
     ska::flat_hash_map<Vector2i, Chunk, Vector2iHash> m_chunks;

@@ -10,6 +10,8 @@
 #include "Food.hpp"
 #include "BlockItem.hpp"
 #include "FoodDatabase.hpp"
+#include <Rectangle.hpp>
+#include <RenderTexture.hpp>
 #include <Vector2.hpp>
 #include <World.hpp>
 #include <memory>
@@ -30,7 +32,11 @@ int main() {
     auto& indicatorsTileMap = rm.LoadTilemap("indicators.png", 6, 1);
     auto& itemsTilemap = rm.LoadTilemap("items.png", 16, 16);
     auto& menuMusic = rm.LoadMusic("menu.mp3");
+    auto& blurShader = rm.LoadShader("vertexShader.glsl", "blurFragShader.glsl");
     rm.LoadTexture("player.png");
+
+    // float blurRadius = 10;
+    // blurShader.SetValue(blurShader.GetLocation("blurRadius"), &blurRadius, SHADER_UNIFORM_FLOAT);
 
     std::srand(std::time(0));
 
@@ -39,6 +45,11 @@ int main() {
 
     // Create world
     World world("getoff", std::make_unique<Default>(std::rand()));
+
+    // Create player
+    PlayerClient* player = new PlayerClient(world);
+
+    world.AddEntity(player);
 
     // Calculate spawn position
     RVector2 spawn;
@@ -81,6 +92,9 @@ int main() {
     uint8_t cellSlot = 0;
 
     player->SetHealth(1);
+
+    raylib::RenderTexture2D light(window.GetWidth(), window.GetHeight());
+    auto lightTex = light.GetTexture();
 
     while (!window.ShouldClose()) {
         rm.UpdateMusic();
@@ -246,6 +260,8 @@ int main() {
             }
         }
 
+        world.PrepareLightmap(camera, light, window.GetWidth(), window.GetHeight());
+
         window.BeginDrawing();
         window.ClearBackground(skyColor);
 
@@ -257,6 +273,7 @@ int main() {
             player->Draw();
         }
 
+        // Draw tile selector
         if (canAccessBlock && !inventory && player->GetHealth() > 0) {
             bool const isAir = (world.GetBlock(cursorWorldI.x, cursorWorldI.y, selectedLayer) == BLOCK_ID_AIR);
             bool const isCtrlDown = raylib::Keyboard::IsKeyDown(KEY_LEFT_CONTROL);
@@ -272,161 +289,59 @@ int main() {
         }
         camera.EndMode();
 
+        // Draw Lightmap
+        blurShader.BeginMode();
+        lightTex.Draw(RRectangle {0.f, 0.f, (float)lightTex.width, (float)-lightTex.height}, RRectangle {0.f, 0.f, (float)window.GetWidth(), (float)window.GetHeight()});
+        blurShader.EndMode();
+
+        // Draw inventory
         if (inventory) {
             RRectangle background = {(window.GetWidth() - 800.f) / 2.f, (window.GetHeight() - 64 * 4) / 2.f, 800.f, 64 * 4};
 
-            background.Draw(DARKGRAY);
-            background.DrawLines(GRAY, 5.f);
+            background.DrawRounded(0.05, 0, {0, 0, 0, 100});
 
-            float x = 0;
-            float y = 0;
+            raylib::Text title("Select block", 30.f);
+            title.SetSpacing(2.f);
+            title.Draw((window.GetWidth() - title.Measure()) / 2.f, background.y);
 
-            for (auto i = 0; i < inventoryItems.size(); i++) {
-                if (x >= 9) {
-                    x = 0;
-                    y++;
-                }
-                x++;
+            RVector2 start = {
+                (background.width - 880.f) / 2.f,
+                (background.height - 80.f * (int)(blockList.size() / 11)) / 2.f
+            };
 
-                RRectangle cell = {background.x + 64 * (x - 1), background.y + 64 * y, 64, 64};
-                cell.DrawLines(GRAY, 5.f);
-                auto& invItem = inventoryItems.at(i);
-                if (cell.CheckCollision(cursor)) {
-                    cell.DrawLines(WHITE, 2.f);
+            for (int i = 0; i < blockList.size(); i++) {
+                RRectangle blockIcon = {
+                    background.x + start.x + 80.f * (int)(i % 11), 
+                    background.y + start.y + 80.f * (int)(i / 11), 
+                    32.f, 32.f
+                };
 
-                    if (raylib::Mouse::IsButtonPressed(MOUSE_BUTTON_LEFT)) {
-                        if (tempItem.item != invItem.item) {
-                            std::swap(tempItem, invItem);
-                        } else {
-                            invItem.count += tempItem.count;
-                            tempItem.item = nullptr;
-                            tempItem.count = 0;
-                        }
-                    }
-
-                    if (raylib::Mouse::IsButtonPressed(MOUSE_BUTTON_RIGHT)) {
-                        if (tempItem.item == nullptr) {
-                            tempItem = {invItem.item, 1};
-                            invItem.count--;
-                            if (invItem.count <= 0) {
-                                invItem.item = nullptr;
-                            }
-                        } else if (tempItem.item == invItem.item) {
-                            tempItem.count++;
-                            invItem.count--;
-                            if (invItem.count <= 0) {
-                                invItem.item = nullptr;
-                            }
-                        }
+                if (blockIcon.CheckCollision(raylib::Mouse::GetPosition())) {
+                    blockIcon.SetPosition({blockIcon.x - 8.f, blockIcon.y - 8.f});
+                    blockIcon.SetSize({48.f, 48.f});
+                        
+                    if (raylib::Mouse::IsButtonDown(MOUSE_BUTTON_LEFT)) {
+                        selectedBlock = i;
+                        inventory = false;
                     }
                 }
-
-                if (inventoryItems.at(i).count > 0) {
-                    auto textSize = raylib::MeasureText(std::to_string(inventoryItems.at(i).count), 25);
-                    auto& itemDraw = inventoryItems.at(i).item;
-                    auto itemCheck = std::dynamic_pointer_cast<BlockItem>(inventoryItems.at(i).item);
-                    // Non BlockItem
-                    if (itemCheck == nullptr) {
-                        raylib::Rectangle dest = {static_cast<float>(cell.x + 8), static_cast<float>(cell.y + 8), 48, 48};
-                        itemsTilemap.DrawTile(itemDraw->GetSpriteIndex(), dest);
-                    } else {
-                        raylib::Rectangle dest = {static_cast<float>(cell.x + 16), static_cast<float>(cell.y + 16), 32, 32};
-                        blocksTilemap.DrawTile(itemCheck->GetID() - 1, dest);
-                    }
-                    if (inventoryItems.at(i).count > 1) {
-                        raylib::DrawText(std::format("{}", inventoryItems.at(i).count), cell.x + (64 - textSize - 10), cell.y + (64 - 30), 25, WHITE);
-                    }
-                }
-            }
-
-            raylib::DrawText("Crafting\nsystem\nsoon :)", background.x + 64 * 9 + 10, background.y + 25, 40, WHITE);
-
-            if (tempItem.item != nullptr) {
-                auto textSize = raylib::MeasureText(std::to_string(tempItem.count), 25);
-                auto itemCheck = std::dynamic_pointer_cast<BlockItem>(tempItem.item);
-
-                // Non BlockItem
-                if (itemCheck == nullptr) {
-                    itemsTilemap.DrawTile(tempItem.item->GetSpriteIndex(), {cursor.x - 24, cursor.y - 24, 48.f, 48.f});
-                } else {
-                    blocksTilemap.DrawTile(tempItem.item->GetID() - 1, {cursor.x - 16, cursor.y - 16, 32.f, 32.f});
-                }
-
-                if (tempItem.count > 1) {
-                    raylib::DrawText(std::format("{}", tempItem.count), cursor.x + textSize, cursor.y, 25, WHITE);
-                }
+                
+                blocksTilemap.DrawTile(blockList[i] - 1, blockIcon);
             }
         }
-
-        auto health = player->GetHealth();
-        auto add = (world.GetTicks() < player->GetLastTimeHurt() + 10) * 3;
-
-        for (auto i = 0; i < 10; i++) {
-            if (health / 2 >= i + 1.f) {
-                indicatorsTileMap.DrawTile(add, {static_cast<float>(16 * i), 0, 16, 14});
-                continue;
-            }
-            if (health / 2 >= i + 0.5f) {
-                indicatorsTileMap.DrawTile(add + 1, {static_cast<float>(16 * i), 0, 16, 14});
-                continue;
-            }
-            indicatorsTileMap.DrawTile(add + 2, {static_cast<float>(16 * i), 0, 16, 14});
-        }
-
-        if (health <= 0) {
-            RRectangle dieScr = {0, 0, static_cast<float>(window.GetWidth()), static_cast<float>(window.GetHeight())};
-            std::string deathText = "TODO: Make good death screen, when we do good gui framework :P\nTo respawn, press R key";
-
-            dieScr.Draw({255, 0, 0, 140});
-            raylib::DrawText(deathText, (window.GetWidth() - raylib::MeasureText(deathText, 25)) / 2, (window.GetHeight() - 25) / 2, 25, WHITE);
-        }
-
-        raylib::DrawText(std::format("{} FPS", window.GetFPS()), 10, 20, 20, WHITE);
-
-        RRectangle itemsBG(window.GetWidth() / 3.5f, 0, 64 * HOTBAR_CELL_COUNT, 64.f);
-        itemsBG.Draw(DARKGRAY);
-
-        // 9 containers with items
-        for (auto i = cellSlot; i < cellSlot + 9; i++) {
-            RRectangle selectedRec(window.GetWidth() / 3.5f + (i - cellSlot) * 64, 0, 64.f, 64.f);
-            selectedRec.DrawLines(GRAY, 5);
-
-            auto invItem = inventoryItems.at(i);
-            auto textSize = raylib::MeasureText(std::to_string(invItem.count), 25);
-
-            if (invItem.count > 0) {
-                auto& itemDraw = inventoryItems.at(i).item;
-                auto itemCheck = std::dynamic_pointer_cast<BlockItem>(inventoryItems.at(i).item);
-                // Non BlockItem
-                if (itemCheck == nullptr) {
-                    raylib::Rectangle dest = {static_cast<float>(selectedRec.x + 8), static_cast<float>(selectedRec.y + 8), 48, 48};
-                    itemsTilemap.DrawTile(itemDraw->GetSpriteIndex(), dest);
-                } else {
-                    raylib::Rectangle dest = {static_cast<float>(selectedRec.x + 16), static_cast<float>(selectedRec.y + 16), 32, 32};
-                    blocksTilemap.DrawTile(itemCheck->GetID() - 1, dest);
-                }
-                if (inventoryItems.at(i).count > 1) {
-                    raylib::DrawText(std::format("{}", inventoryItems.at(i).count), selectedRec.x + (64 - textSize - 10), selectedRec.y + (64 - 30), 25, WHITE);
-                }
-                // }
-                if (invItem.count > 1) {
-                    raylib::DrawText(std::format("{}", invItem.count), selectedRec.x + (64 - textSize - 10), 64 - 30, 25, WHITE);
-                }
-            }
-        }
-
-        RRectangle selectedRec(window.GetWidth() / 3.5 + (currentItem - cellSlot) * 64, 0, 64.f, 64.f);
-        selectedRec.DrawLines(WHITE, 2);
-
-        for (int i = 0; i < 36; i += 9) {
-            RRectangle hotbarNonSelected = {itemsBG.x - 29, static_cast<float>((i * 1.65) + 5), 10.f, 10.f};
-            hotbarNonSelected.Draw(GRAY);
-        }
-
-        RRectangle hotbarPos = {itemsBG.x - 29, static_cast<float>((cellSlot * 1.65) + 5), 10.f, 10.f};
-        hotbarPos.Draw(WHITE);
 
         guiTilemap.DrawTile(0, {cursor.Subtract({8.f, 8.f}), {16.f, 16.f}});
+
+        char _temp[64];
+        sprintf(_temp, "Pos: %f %f", player->GetPosition().x, player->GetPosition().y);
+        DrawText(_temp, 0, 30, 20, DARKGREEN);
+        sprintf(_temp, "Chunk: %i %i", (int)(player->GetPosition().x / CHUNK_WIDTH), (int)(player->GetPosition().y / CHUNK_HEIGHT));
+        DrawText(_temp, 0, 60, 20, DARKGREEN);
+        sprintf(_temp, "Chunk light updates: %i", world.chunkLightUpdates);
+        DrawText(_temp, 0, 80, 20, DARKGREEN);
+
+        window.DrawFPS();
+
         window.EndDrawing();
     }
 

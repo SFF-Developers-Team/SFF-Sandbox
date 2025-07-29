@@ -11,17 +11,16 @@ void Default::GenerateChunk(Chunk& chunk, Vector2i pos) {
 
     // Generate terrain
     for (int z = 0; z < CHUNK_DEPTH; z++) {
-        for (int x = 0; x < CHUNK_WIDTH; x++) {
-            int worldX = x + CHUNK_WIDTH * pos.x;
+        int worldX = CHUNK_WIDTH * pos.x;
+        for (int x = 0; x < CHUNK_WIDTH; ++x, ++worldX) {
             int surface = 150 + 20.f * m_perlin.octave2D_01(worldX * 0.01, z * 0.1f, 4);
             int ground = m_perlin.octave2D_01(worldX * 0.1, z * 0.1f, 2) * 8;
             float roseNoise = m_perlin.octave2D_01(x * 0.3, 0, 1);
 
             int const stoneLayer = surface + 10 + ground;
 
-            for (int y = 0; y < CHUNK_HEIGHT; y++) {
-                int worldY = y + CHUNK_HEIGHT * pos.y;
-
+            int worldY = CHUNK_HEIGHT * pos.y;
+            for (int y = 0; y < CHUNK_HEIGHT; ++y, ++worldY) {
                 if (worldY > surface) {
                     chunk.SetBlock(x, y, z, (worldY < stoneLayer) ? BLOCK_ID_DIRT : BLOCK_ID_STONE);
                 } else if (worldY == surface) {
