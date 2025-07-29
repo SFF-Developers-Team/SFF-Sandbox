@@ -444,15 +444,8 @@ int main() {
 
         guiTilemap.DrawTile(0, {cursor.Subtract({8.f, 8.f}), {16.f, 16.f}});
 
-        char _temp[64];
-        sprintf(_temp, "Pos: %f %f", player->GetPosition().x, player->GetPosition().y);
-        DrawText(_temp, 0, 30, 20, DARKGREEN);
-        sprintf(_temp, "Chunk: %i %i", (int)(player->GetPosition().x / CHUNK_WIDTH), (int)(player->GetPosition().y / CHUNK_HEIGHT));
-        DrawText(_temp, 0, 60, 20, DARKGREEN);
-        sprintf(_temp, "Chunk light updates: %i", world.chunkLightUpdates);
-        DrawText(_temp, 0, 80, 20, DARKGREEN);
-
-        window.DrawFPS();
+        raylib::DrawText(std::format("Pos: {} {}\nChunk: {} {}\nChunk light updates: {}\nFPS: {}", player->GetPosition().x, player->GetPosition().y, 
+        (int)(player->GetPosition().x / CHUNK_WIDTH), (int)(player->GetPosition().y / CHUNK_HEIGHT), world.chunkLightUpdates, window.GetFPS()), 20, 20, 20, DARKGREEN);
 
         window.EndDrawing();
     }
