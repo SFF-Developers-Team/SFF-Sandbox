@@ -22,7 +22,9 @@ World::World(std::string const& path, std::unique_ptr<WorldGenerator> worldgen) 
 
 void World::OnTick() {
     for (auto& entity : m_entities) {
-        entity->OnTick();
+        if(entity->GetHealth() > 0) {
+            entity->OnTick();
+        }
     }
 
     m_ticks++;

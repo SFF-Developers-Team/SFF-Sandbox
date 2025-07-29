@@ -24,6 +24,7 @@ CPMAddPackage("gh:skarupke/flat_hash_map#master")
 set(SHARED_HEADERS 
     "${raylib_cpp_SOURCE_DIR}/src/"
     "${CMAKE_SOURCE_DIR}/src/shared/"
+    "${CMAKE_SOURCE_DIR}/src/shared/items"
     "${PerlinNoise_SOURCE_DIR}/"
     "${flat_hash_map_SOURCE_DIR}/"
 )
@@ -38,6 +39,7 @@ file(GLOB TEST_SOURCES CONFIGURE_DEPENDS
 )
 
 file(GLOB CLIENT_SOURCES CONFIGURE_DEPENDS
+    "src/client/main.cpp"
     "src/client/*.cpp"
 )
 
@@ -57,7 +59,7 @@ if(${PLATFORM} STREQUAL "Android")
     set(PLATFORM_LIBS m c log android EGL GLESv2 OpenSLES dl unwind c++_static)
     add_library(${PROJECT_NAME} SHARED ${SHARED_SOURCES} ${CLIENT_SOURCES})
 else()
-    add_executable(${PROJECT_NAME} ${SHARED_SOURCES} ${CLIENT_SOURCES})
+    add_executable(${PROJECT_NAME} ${CLIENT_SOURCES} ${SHARED_SOURCES})
     target_include_directories(${PROJECT_NAME} PUBLIC ${SHARED_HEADERS})
     target_compile_definitions(${PROJECT_NAME} PUBLIC -DSANDBOX_CLIENT -DSUPPORT_IMAGE_GENERATION=0)
     # add_executable(${PROJECT_NAME}-server ${SHARED_SOURCES} ${SERVER_SOURCES})

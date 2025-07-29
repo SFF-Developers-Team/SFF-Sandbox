@@ -1,6 +1,8 @@
 #include "Entity.hpp"
 
-Entity::Entity(World& world) : Box(), m_world(world) {}
+Entity::Entity(World& world, RVector2 position) : Box(), m_world(world), m_groundY(position.y) {
+    SetPosition(position);
+}
 
 void Entity::OnTick() {
     m_speed.y += 0.02f;
@@ -11,6 +13,12 @@ void Entity::OnTick() {
     m_speed.y *= 0.98f;
     
     if (m_onGround) {
+        if (y - m_groundY > 4) {
+            m_lastTimeHurt = m_world.GetTicks();
+            m_hp -= y - m_groundY - 4;
+        }
+        m_groundY = y;
+
         m_speed.x *= 0.7f;
         m_speed.y *= 0.7f;
     }

@@ -4,12 +4,10 @@
 #include "Types.hpp"
 #include <Camera2D.hpp>
 #include "worldgen/WorldGenerator.hpp"
-#include <RenderTexture.hpp>
 #include <string>
 #include <vector>
 #include <memory>
 #include <flat_hash_map.hpp>
-
 
 class World {
 public:
