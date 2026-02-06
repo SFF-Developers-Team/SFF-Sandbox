@@ -3,8 +3,6 @@ Welcome to **SFF Sandbox** - a 2D sandbox game that combines the best elements o
 
 ## Features
 - Placing/destroying blocks.
-- Procedurally generated world.
-- Multiplayer.
 
 ## Credits
 [@Kolyah35](https://github.com/Kolyah35) - Lead developer\
@@ -16,16 +14,8 @@ Welcome to **SFF Sandbox** - a 2D sandbox game that combines the best elements o
 [@DeL](https://www.discord.com/users/1015611842858602506) - Artist
 
 ## Build
-### For Windows
-- Install [MinGW](https://sourceforge.net/projects/mingw/files/latest/download)
-- ```
-    git clone https://github.com/Kolyah35/SFF-Sandbox.git --recursive && cd SFF-Sandbox
-    ./build-windows.bat
-  ```
-
-### For Android
-- Install [MinGW](https://sourceforge.net/projects/mingw/files/latest/download)
-- ```
-    git clone https://github.com/Kolyah35/SFF-Sandbox.git --recursive && cd SFF-Sandbox
-    ./build-android.bat
-  ```
+### CMake
+``` bash
+cmake -B build
+cmake --build build
+```

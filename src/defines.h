@@ -1,0 +1,16 @@
+#ifndef DEFINES_H
+#define DEFINES_H
+
+#define MAX_LOCAL_PLAYERS 2
+
+#define MAX_PATH 128
+#define MAX_WORLD_NAME 64
+
+#define MAX_USERNAME 32
+
+#define SCREEN_WIDTH 1280
+#define SCREEN_HEIGHT 720
+
+#define TICKS_PER_SECOND 60.f
+
+#endif
