@@ -125,6 +125,8 @@ void Game_RenderFrame(int player, int x, int y, int w, int h) {
 
     // DrawTilePro(*blocksTilemap, localPlayers[player].player.currentBlock-1, (Rectangle){(float)(GetScreenWidth() - 16), (float)(GetScreenHeight() - 16), 32.0f, 32.0f}, Vector2Zero(), 0.0f, WHITE);
 
+
+    // TODO: local pause screen for each player
     if (isPaused) {
         DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), (Color){0, 0, 0, 100});
 
@@ -132,7 +134,15 @@ void Game_RenderFrame(int player, int x, int y, int w, int h) {
 
         switch (selected) {
             case 0: isPaused = false; break;
-            case 1: World_Reset(); Gui_ChangeScreen(&MainMenu); isPaused = false; break;
+            case 1: 
+                World_Save();
+                World_Reset(); 
+
+                Gui_ChangeScreen(&MainMenu); 
+                
+                isPaused = false;
+                localPlayersCount = 0; 
+                break;
         }
     }
 }
@@ -153,7 +163,7 @@ void Game_Update(float dt) {
         }
     }
 
-    if (IsKeyPressed(KEY_ESCAPE)) {
+    if (IsKeyPressed(KEY_ESCAPE) || IsGamepadButtonPressed(mainGamepad, GAMEPAD_BUTTON_MIDDLE_RIGHT)) {
         isPaused = !isPaused;
     }
 }

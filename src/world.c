@@ -236,8 +236,6 @@ int World_Load(const char* name) {
 }
 
 void World_Reset() {
-    World_Save();
-    
     World.loaded = false;
     World.width = 0;
     World.height = 0;
