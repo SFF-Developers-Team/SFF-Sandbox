@@ -13,7 +13,7 @@ Tilemap* blocksTilemap = NULL;
 LocalPlayer localPlayers[MAX_LOCAL_PLAYERS] = { 0 };
 int localPlayersCount = 0;
 
-bool isPaused = 0;
+bool isPaused = false;
 
 void Game_UpdateWindow(void) {
     int screenW = GetScreenWidth();
@@ -122,6 +122,8 @@ void Game_RenderFrame(int player, int x, int y, int w, int h) {
     DrawText(TextFormat("RDC: [%.02f, %.02f]", rightBottomCorner.x, rightBottomCorner.y), 0, 60, 20, WHITE);
     DrawText(TextFormat("LOOK: [%d, %d]", lookAt.x, lookAt.y), 0, 80, 20, WHITE);
     DrawText(TextFormat("SPEED: [%.02f, %.02f]", localPlayers[0].player.speed.x, localPlayers[0].player.speed.y), 0, 100, 20, WHITE);
+
+    // DrawTilePro(*blocksTilemap, localPlayers[player].player.currentBlock-1, (Rectangle){(float)(GetScreenWidth() - 16), (float)(GetScreenHeight() - 16), 32.0f, 32.0f}, Vector2Zero(), 0.0f, WHITE);
 
     if (isPaused) {
         DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), (Color){0, 0, 0, 100});

@@ -11,6 +11,8 @@ typedef enum {
 } ControlType;
 
 typedef struct {
+    Block currentBlock;
+    
     Vector2 position;
     Vector2 prevPosition;
 

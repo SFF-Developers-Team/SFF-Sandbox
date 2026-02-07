@@ -132,7 +132,7 @@ void LocalPlayer_UpdateControls(LocalPlayer* localPlayer) {
             }
 
             if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) && validLook && (!World_GetBlock(bx, by) || localPlayer->replaceBlockMode)) {
-                World_SetBlock(localPlayer->lookAt.x, localPlayer->lookAt.y, STONE);
+                World_SetBlock(localPlayer->lookAt.x, localPlayer->lookAt.y, localPlayer->player.currentBlock);
                 localPlayer->player.animation.type = ENTITY_HIT;
             }
 
@@ -149,7 +149,14 @@ void LocalPlayer_UpdateControls(LocalPlayer* localPlayer) {
             if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) {
                 horizontal += 0.2f;
             }
-
+            
+            // Block choose
+            for (int i = 0; i < 13; i++) {
+                if (IsKeyDown(KEY_ONE + i)) {
+                    localPlayer->player.currentBlock = i + 1;
+                }
+            }
+            
             localPlayer->player.speed.x = horizontal;
             break;
         }
@@ -197,8 +204,25 @@ void LocalPlayer_UpdateControls(LocalPlayer* localPlayer) {
             }
 
             if (GetGamepadAxisMovement(localPlayer->gamepad, GAMEPAD_AXIS_RIGHT_TRIGGER) > 0.0f && validLook && canPlaceBlock) {
-                World_SetBlock(localPlayer->lookAt.x, localPlayer->lookAt.y, STONE);
+                World_SetBlock(localPlayer->lookAt.x, localPlayer->lookAt.y, localPlayer->player.currentBlock);
                 localPlayer->player.animation.type = ENTITY_HIT;
+            }
+            
+            // Block choose
+            if (IsGamepadButtonPressed(localPlayer->gamepad, GAMEPAD_BUTTON_RIGHT_TRIGGER_1)) {
+                localPlayer->player.currentBlock++;
+
+                if (localPlayer->player.currentBlock >= 17) {
+                    localPlayer->player.currentBlock = GRASS;
+                } 
+            }
+
+            if (IsGamepadButtonPressed(localPlayer->gamepad, GAMEPAD_BUTTON_LEFT_TRIGGER_1)) {
+                localPlayer->player.currentBlock--;
+
+                if (localPlayer->player.currentBlock < 1) {
+                    localPlayer->player.currentBlock = CHEST;
+                } 
             }
 
             if (IsGamepadButtonPressed(localPlayer->gamepad, GAMEPAD_BUTTON_RIGHT_FACE_DOWN) && localPlayer->player.onGround) {
