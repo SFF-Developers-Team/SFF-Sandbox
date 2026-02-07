@@ -13,6 +13,8 @@ Tilemap* blocksTilemap = NULL;
 LocalPlayer localPlayers[MAX_LOCAL_PLAYERS] = { 0 };
 int localPlayersCount = 0;
 
+bool isPaused = false;
+
 void Game_UpdateWindow(void) {
     int screenW = GetScreenWidth();
     int screenH = GetScreenHeight();
@@ -74,7 +76,7 @@ void Game_RenderFrame(int player, int x, int y, int w, int h) {
     if (IsWindowResized()) {
         Game_UpdateWindow();
     }
-
+    
     BeginMode2D(localPlayers[player].camera);
 
     Vector2 leftUpCorner = GetScreenToWorld2D((Vector2){(float)x, (float)y}, localPlayers[player].camera);
@@ -120,6 +122,19 @@ void Game_RenderFrame(int player, int x, int y, int w, int h) {
     DrawText(TextFormat("RDC: [%.02f, %.02f]", rightBottomCorner.x, rightBottomCorner.y), 0, 60, 20, WHITE);
     DrawText(TextFormat("LOOK: [%d, %d]", lookAt.x, lookAt.y), 0, 80, 20, WHITE);
     DrawText(TextFormat("SPEED: [%.02f, %.02f]", localPlayers[0].player.speed.x, localPlayers[0].player.speed.y), 0, 100, 20, WHITE);
+
+    // DrawTilePro(*blocksTilemap, localPlayers[player].player.currentBlock-1, (Rectangle){(float)(GetScreenWidth() - 16), (float)(GetScreenHeight() - 16), 32.0f, 32.0f}, Vector2Zero(), 0.0f, WHITE);
+
+    if (isPaused) {
+        DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), (Color){0, 0, 0, 100});
+
+        int selected = Gui_CenterMenu("Resume;Quit", (Vector2){200.0f, 40.0f});
+
+        switch (selected) {
+            case 0: isPaused = false; break;
+            case 1: World_Reset(); Gui_ChangeScreen(&MainMenu); isPaused = false; break;
+        }
+    }
 }
 
 void Game_DrawSplitscreen(int player, int x, int y, int w, int h) {
@@ -131,14 +146,22 @@ void Game_DrawSplitscreen(int player, int x, int y, int w, int h) {
 void Game_Update(float dt) {
     float alpha = dt / TICKS_PER_SECOND;
 
-    for (int i = 0; i < localPlayersCount; i++) {
-        LocalPlayer_UpdateControls(&localPlayers[i]);
-        localPlayers[i].camera.target = Vector2Lerp(localPlayers[i].player.prevPosition, localPlayers[i].player.position, alpha);
+    if (!isPaused && World.loaded) {
+        for (int i = 0; i < localPlayersCount; i++) {
+            LocalPlayer_UpdateControls(&localPlayers[i]);
+            localPlayers[i].camera.target = Vector2Lerp(localPlayers[i].player.prevPosition, localPlayers[i].player.position, alpha);
+        }
+    }
+
+    if (IsKeyPressed(KEY_ESCAPE)) {
+        isPaused = !isPaused;
     }
 }
 
 void Game_OnTick(void) {
-    for (int i = 0; i < localPlayersCount; i++) Player_Tick(&localPlayers[i].player);
+    if (!isPaused && World.loaded) {
+        for (int i = 0; i < localPlayersCount; i++) Player_Tick(&localPlayers[i].player);
+    }
 }
 
 void Game_Draw(void) {

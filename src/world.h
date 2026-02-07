@@ -33,6 +33,8 @@ extern struct WorldData {
     WorldType type;
     
     uint8_t* data;
+
+    bool loaded;
 } World;
 
 Texture2D World_GeneratePreview(int seed, int worldType, int worldSize);
@@ -41,6 +43,7 @@ Texture2D World_GeneratePreview(int seed, int worldType, int worldSize);
 int World_Generate(WorldType wType, WorldSize wSize, int seed);
 void World_GetSize(WorldSize worldSize, int* w, int* h);
 
+void World_Reset();
 int World_Save();
 int World_Load(const char* name);
 
