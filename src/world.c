@@ -231,5 +231,18 @@ int World_Load(const char* name) {
     stream.Read(&stream, World.data, World.width * World.height);
     stream.Close(&stream);
 
+    World.loaded = true;
     return 0;
+}
+
+void World_Reset() {
+    World_Save();
+    
+    World.loaded = false;
+    World.width = 0;
+    World.height = 0;
+    World.size = 0;
+    World.seed = 0;
+    World.type = 0;
+    MemFree(World.data);
 }
