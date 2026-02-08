@@ -175,7 +175,7 @@ int World_Generate(WorldType wType, WorldSize wSize, int seed) {
 }
 
 int World_Save() {
-    const char* path = GetDataSubdirectory("saves/");
+    char* path = GetDataSubdirectory("saves/");
     strcat(path, World.name);
     strcat(path, ".dat");
 
@@ -206,7 +206,6 @@ int World_Load(const char* name) {
     char* path = GetDataSubdirectory("saves/");
     strcat(path, name);
     strcat(path, ".dat");
-
 
     struct Stream stream = { 0 };
     int res = Stream_OpenFile(&stream, path);

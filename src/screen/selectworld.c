@@ -16,7 +16,7 @@ void SelectWorld_Init(void) {
         worldList = NULL;
     }
 
-    const char* saves = GetDataSubdirectory("saves");
+    char* saves = GetDataSubdirectory("saves");
 
     FilePathList list = LoadDirectoryFilesEx(saves, ".dat", false);
 
@@ -63,7 +63,7 @@ void SelectWorld_Draw(void) {
     }
 
     if (Gui_Button("Delete World")) {
-        const char* saves = GetDataSubdirectory("saves/");
+        char* saves = GetDataSubdirectory("saves/");
         int length = 0;
         const char* worldName = GetListElementByIndex(worldList, selectedWorld, &length);
         strncat(saves, worldName, length);

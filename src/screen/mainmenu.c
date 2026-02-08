@@ -8,7 +8,7 @@ void MainMenu_Draw(void) {
 
     switch (selected) {
         case 0: Gui_ChangeScreen(&SelectWorld); break;
-        case 1: /* Gui_ChangeScreen(&SelectSkin); */ break;
+        case 1: Gui_ChangeScreen(&SelectSkin); break;
         case 2: CloseWindow();
     }
 }

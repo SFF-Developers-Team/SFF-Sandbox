@@ -555,7 +555,7 @@ int Gui_CustomElement(float height, bool reg, const char* label, DrawElementCall
         Gui_RegisterElement(label, b);
     }
 
-    ret = drawCallback(b, Gui_RemoveHash(label));
+    ret = drawCallback(b, (label != NULL)? Gui_RemoveHash(label) : NULL);
 
     Gui_Next();
 

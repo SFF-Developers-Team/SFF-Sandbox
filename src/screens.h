@@ -34,6 +34,7 @@ extern Screen* currentScreen;
 extern Screen MainMenu;
 extern Screen SelectWorld;
 extern Screen CreateWorld;
+extern Screen SelectSkin;
 extern Screen GameplayScreen;
 
 extern bool shouldGenerateWorld;
@@ -94,7 +95,7 @@ int Gui_ListView(float height, const char* list, int* scrollIndex, int* selected
 bool Gui_TextInput(const char* label, char* out, int outSize);
 int Gui_ComboBox(const char* list, int* selected);
 void Gui_Texture(Texture2D* tex, Rectangle* src, float height);
-int Gui_CustomElement(float height, bool register, const char* label, DrawElementCallback drawCallback);
+int Gui_CustomElement(float height, bool reg, const char* label, DrawElementCallback drawCallback);
 
 void Gui_SkinSlot(Skin* skin, float frameThick, float width);
 

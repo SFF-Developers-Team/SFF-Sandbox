@@ -7,6 +7,7 @@
 #include "files.h"
 #include <stdio.h>
 #include "skin.h"
+#include <string.h>
 
 Texture2D* skins = NULL;
 const char* skinNames = NULL;
@@ -19,7 +20,7 @@ void SelectSkin_Init(void) {
         skinNames = NULL;
     }
 
-    const char* dir = GetDataSubdirectory("skins");
+    char* dir = GetDataSubdirectory("skins");
 
     FilePathList list = LoadDirectoryFilesEx(dir, ".png", false);
     loadedSkins = list.count;
@@ -66,64 +67,68 @@ void SkinSelect_Deinit(void) {
     loadedSkins = 0;
 }
 
-void SelectSkin_Draw(void) {
-    // int x, y, w, baseY;
-    // Gui_WorldScreenBase("SELECT SKIN", &x, &y, &w, &baseY); 
+int DrawSkinFrame(Rectangle bounds, const char* label) {
+    DrawRectangleLinesEx(bounds, 1.f, WHITE); // TODO: Do a gui function for color-themed rectangle draw
 
-    // int tempy = y;
-    // y = baseY + MENU_WINDOW_HEIGHT - (BUTTON_HEIGHT + ELEMENT_PADDING) * 3;
+    int skinH = bounds.height - ELEMENT_PADDING * 2;
+    int skinW = SKIN_FRAME_WIDTH * (skinH / SKIN_FRAME_HEIGHT);
 
-    // int skinH = y - tempy - ELEMENT_PADDING * 2;
-    // int skinW = SKIN_FRAME_WIDTH * (skinH / SKIN_FRAME_HEIGHT);
+    Skin_Draw((loadedSkins > 0)? &(Skin){0,  skins[selectedSkin]} : defaultSkin, (Rectangle){bounds.x + (bounds.width - skinW) / 2, bounds.y + ELEMENT_PADDING, skinW, skinH});
 
-    // EntityAnimation_DrawDummyPlayer(ENTITY_IDLE, (Rectangle){x + (w - skinW) / 2, tempy, skinW, skinH}, (loadedSkins > 0)? skins[selectedSkin].id : 0);
-
-    // GuiComboBox((Rectangle){x, y, w, INPUT_HEIGHT}, (loadedSkins > 0)? skinNames : "Default", &selectedSkin);
-    // NEXT_ELEMENT(y, INPUT_HEIGHT);
-
-    // int half = w / 2 - ELEMENT_PADDING;
-
-    // if (GuiButton((Rectangle){x, y, half, BUTTON_HEIGHT}, "Download more skins")) {
-    //     CHANGE_SCREEN(SCREEN_DOWNLOADSKINS);
-    // }
-    
-    // if (GuiButton((Rectangle){x + half + ELEMENT_PADDING, y, half + ELEMENT_PADDING, BUTTON_HEIGHT}, "Open skins dir")) {
-    //     OpenURL(GetDataSubdirectory("skins"));
-    // }
-
-    // NEXT_ELEMENT(y, INPUT_HEIGHT);
-
-    // if (GuiButton((Rectangle){x, y, half, BUTTON_HEIGHT}, "Back")) {
-    //     currentSkin = skins[selectedSkin];
-    //     CHANGE_SCREEN(SCREEN_MAINMENU);
-    //     SkinSelect_Deinit();
-    //     return;
-    // }
-    // if (GuiButton((Rectangle){x + half + ELEMENT_PADDING, y, half + ELEMENT_PADDING, BUTTON_HEIGHT}, "Delete skin")) {
-    //     const char* path = GetDataSubdirectory("skins/");
-    //     int length = 0;
-    //     const char* skinName = GetListElementByIndex(skinNames, selectedSkin, &length);
-    //     strncat(path, skinName, length);
-    //     strcat(path, ".png");
-        
-    //     FileRemove(path);
-
-    //     SelectSkin_Init();
-    //     selectedSkin = -1;
-    // }
-
-    // if (IsFileDropped()) {
-    //     FilePathList list = LoadDroppedFiles();
-
-    //     const char* skins = GetDataSubdirectory("skins");
-
-    //     for (int i = 0; i < list.count; i++) {
-    //         if (IsFileExtension(list.paths[i], ".png")) {
-    //             FileCopy(list.paths[i], skins);
-    //         }
-    //     }
-
-    //     UnloadDroppedFiles(list);
-    //     SelectSkin_Init();
-    // }
+    return 0;
 }
+
+void SelectSkin_Draw(void) {
+    Gui_BeginWindow("SELECT SKIN");
+
+    Gui_SetPositionMode(FROM_BOTTOM);
+    Gui_SameLine(2, NULL);
+    if (Gui_Button("Delete skin")) {
+        char* path = GetDataSubdirectory("skins/");
+        int length = 0;
+        const char* skinName = GetListElementByIndex(skinNames, selectedSkin, &length);
+        strncat(path, skinName, length);
+        strcat(path, ".png");
+        
+        FileRemove(path);
+
+        SelectSkin_Init();
+        selectedSkin = -1;
+    }
+
+    if (Gui_Button("Back") || Gui_IsNavBack()) {
+        // TODO: Make this work
+        // currentSkin->texture = skins[selectedSkin];
+        Gui_ChangeScreen(&MainMenu);
+        SkinSelect_Deinit();
+    }
+
+    Gui_SameLine(2, NULL);
+    Gui_Button("Download more skins");
+
+    if (Gui_Button("Open skins dir")) OpenURL(GetDataSubdirectory("skins"));
+    Gui_ComboBox((loadedSkins > 0)? skinNames : "Default", &selectedSkin);
+
+    Gui_CustomElement(Gui_GetRemainingSpace(), false, NULL, DrawSkinFrame);
+    Gui_EndWindow();
+
+    if (IsFileDropped()) {
+        FilePathList list = LoadDroppedFiles();
+
+        const char* skins = GetDataSubdirectory("skins");
+
+        for (int i = 0; i < list.count; i++) {
+            if (IsFileExtension(list.paths[i], ".png")) {
+                FileCopy(list.paths[i], skins);
+            }
+        }
+
+        UnloadDroppedFiles(list);
+        SelectSkin_Init();
+    }
+}
+
+Screen SelectSkin = {
+    SelectSkin_Init,
+    SelectSkin_Draw
+};
