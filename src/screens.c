@@ -19,24 +19,24 @@ struct CustomStyleProp {
 };
 
 struct CustomStyleProp CustomGuiStyle[] = {
-    {BORDER_COLOR_NORMAL, (Color){79, 108, 212, 255}},
-    {BASE_COLOR_NORMAL, (Color){41, 41, 91, 255}},
-    {TEXT_COLOR_NORMAL, (Color){255, 255, 255, 255}},
+    {BORDER_COLOR_NORMAL, {79, 108, 212, 255}},
+    {BASE_COLOR_NORMAL, {41, 41, 91, 255}},
+    {TEXT_COLOR_NORMAL, {255, 255, 255, 255}},
     
-    {BORDER_COLOR_FOCUSED, (Color){154, 157, 255, 255}},
-    {BASE_COLOR_FOCUSED, (Color){91, 95, 237, 255}},
-    {TEXT_COLOR_FOCUSED, (Color){255, 255, 255, 255}},
+    {BORDER_COLOR_FOCUSED, {154, 157, 255, 255}},
+    {BASE_COLOR_FOCUSED, {91, 95, 237, 255}},
+    {TEXT_COLOR_FOCUSED, {255, 255, 255, 255}},
 
-    {BORDER_COLOR_PRESSED, (Color){0, 0, 134, 255}},
-    {BASE_COLOR_PRESSED, (Color){0, 127, 255, 255}},
-    {TEXT_COLOR_PRESSED, (Color){255, 255, 255, 255}},
+    {BORDER_COLOR_PRESSED, {0, 0, 134, 255}},
+    {BASE_COLOR_PRESSED, {0, 127, 255, 255}},
+    {TEXT_COLOR_PRESSED, {255, 255, 255, 255}},
 
-    {BORDER_COLOR_DISABLED, (Color){16, 10, 124, 255}},
-    {BASE_COLOR_DISABLED, (Color){0, 0, 93, 255}},
-    {TEXT_COLOR_DISABLED, (Color){128, 128, 128, 255}},
+    {BORDER_COLOR_DISABLED, {16, 10, 124, 255}},
+    {BASE_COLOR_DISABLED, {0, 0, 93, 255}},
+    {TEXT_COLOR_DISABLED, {128, 128, 128, 255}},
     
-    {BACKGROUND_COLOR, (Color){0, 0, 73, 255}},
-    {LINE_COLOR, (Color){50, 92, 203, 255}},
+    {BACKGROUND_COLOR, {0, 0, 73, 255}},
+    {LINE_COLOR, {50, 92, 203, 255}},
 };
 
 Font customGuiFont;
