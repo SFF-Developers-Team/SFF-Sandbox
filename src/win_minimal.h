@@ -49,6 +49,7 @@
 // Type required before windows.h inclusion
 typedef struct tagMSG *LPMSG;
 
+#include <winsock2.h>
 #include <windows.h>
 
 // Type required by some unused function...

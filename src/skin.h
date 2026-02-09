@@ -7,7 +7,7 @@
 #include "raylib.h"
 #include "animation.h"
 
-typedef struct {
+typedef struct Skin {
     int id;
     Texture2D texture;
 } Skin;

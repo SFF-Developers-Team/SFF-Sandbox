@@ -98,7 +98,10 @@ int Gui_ComboBox(const char* list, int* selected);
 void Gui_Texture(Texture2D* tex, Rectangle* src, float height);
 int Gui_CustomElement(float height, bool reg, const char* label, DrawElementCallback drawCallback);
 
-void Gui_ScrollPanel(float height, Rectangle content, float* scroll, DrawScrollPanelContent drawCallback);
+void Gui_BeginScrollPanel(const char* label, float height, Rectangle content, Vector2* scroll, Rectangle* view);
+void Gui_EndScrollPanel();
+
+void Gui_Tabs(const char* list, int* selected);
 
 void Gui_SkinSlot(Skin* skin, float height);
 

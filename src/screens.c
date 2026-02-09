@@ -578,6 +578,44 @@ void Gui_SkinSlot(Skin* skin, float height) {
     Gui_Next();
 }
 
+void Gui_BeginScrollPanel(const char* label, float height, Rectangle content, Vector2* scroll, Rectangle* view) {
+    Rectangle b = Gui_CalculateBounds(height);
+
+    bool pressed = Gui_RegisterElement(label, b);
+
+    if (Gui_CurrentSelected() && pressed && !GuiIsLocked()) {
+        GuiLock();
+    }
+
+    if (Gui_CurrentSelected() && Gui_IsNavBack() && GuiIsLocked()) {
+        GuiUnlock(); 
+    }
+
+    GuiScrollPanel(b, NULL, content, scroll, view);
+
+    BeginScissorMode(view->x, view->y, view->width, view->height);
+}
+
+void Gui_EndScrollPanel() {
+    EndScissorMode();
+
+    Gui_Next();
+}
+
+void Gui_Tabs(const char* list, int* selected) {
+    Rectangle b = Gui_CalculateBounds(INPUT_HEIGHT);
+
+    Gui_RegisterElement(list, b);
+    int count = Gui_CountListElements(list);
+
+    b.width /= count;
+    b.width -= GuiGetStyle(GROUP_PADDING, GROUP_PADDING);
+
+    GuiToggleGroup(b, list, selected);
+
+    Gui_Next();
+}
+
 // Auto layout
 
 int Gui_CenterMenu(const char* names, Vector2 buttonSize) {

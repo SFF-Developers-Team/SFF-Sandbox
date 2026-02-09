@@ -13,7 +13,7 @@
 SkinMetadata metadataCache[5][512];
 int metadataCount[5];
 
-struct SkinCached {int id; Texture2D tex;} skinCache[1024];
+Skin skinCache[1024];
 int cachedSkins = 0;
 
 enum SkinPageState {
@@ -23,7 +23,7 @@ enum SkinPageState {
 } pageState[5] = { 0 };
 int currentPage[5] = { 0 };
 
-struct SkinCached* FindSkin(int id) {
+Skin* FindSkin(int id) {
     for (int i = 0; i < cachedSkins; i++) {
         if (skinCache[i].id == id) return &skinCache[i];
     }
@@ -37,7 +37,7 @@ void SkinDownloaded(HttpError error, int id) {
 
     if (FindSkin(id) != NULL) return;
 
-    skinCache[cachedSkins++] = (struct SkinCached){id, LoadSkinTexture(path)};
+    skinCache[cachedSkins++] = (Skin){id, LoadSkinTexture(path)};
 }
 
 void SkinListDownloaded(HttpError error, SkinList* response) {
@@ -57,107 +57,104 @@ void SkinListDownloaded(HttpError error, SkinList* response) {
         if (!FileExists(path)) {
             Http_DownloadSkin(response->skins[i].id, path, SkinDownloaded);
         } else {
-            if (FindSkin(response->skins[i].id) == NULL) skinCache[cachedSkins++] = (struct SkinCached){response->skins[i].id, LoadSkinTexture(path)};
+            if (FindSkin(response->skins[i].id) == NULL) skinCache[cachedSkins++] = (Skin){response->skins[i].id, LoadSkinTexture(path)};
         }
     }
 
     pageState[response->type] = PAGE_STATE_DONE;
 }
 
+int viewingId = -1;
+
 void DownloadSkins_Init(void) {
     memset(metadataCache, 0, sizeof(metadataCache));
     memset(metadataCount, 0, sizeof(metadataCount));
     memset(pageState, 0, sizeof(pageState));
     for (int i = 0; i < sizeof(currentPage) / sizeof(int); i++) currentPage[i] = 1;
+
+    viewingId = -1;
 }
 
 void DownloadSkins_Draw(void) {
+    static int curTab = 0;
+
     Gui_BeginWindow("BROWSE SKINS");
+
+    if (viewingId <= 0) {
+        static bool searching = false;
+        static char searchKey[256];
+
+        Gui_Tabs("Featured;New;Best;Search", &curTab);
+        Gui_SameLine(2, (float[]){0.8f, 0.2f});
+
+        if (curTab == SKINS_TYPE_SEARCH) {
+            Gui_TextInput("search_input", searchKey, sizeof(searchKey));
+            if (Gui_Button("Search") && strlen(searchKey)) searching = true;
+        }
+
+        float listHeight = Gui_GetRemainingSpace();
+
+        static Rectangle content = { 0 }; 
+        static Vector2 scroll = { 0 };
+        static Rectangle view = { 0 };
+        static Rectangle cell = { 0 };
+
+        bool skinsLoading = curTab != SKINS_TYPE_SEARCH || (curTab == SKINS_TYPE_SEARCH && searching);
+
+        Gui_BeginScrollPanel("skin_browser", listHeight, content, &scroll, &view); 
+        {   
+            // calculating shit
+            // TODO: Review it
+            const Vector2 skinSize = {SKIN_FRAME_WIDTH, SKIN_FRAME_HEIGHT}; 
+            int skinColumns = 4;
+            float skinRows = metadataCount[curTab] / skinColumns;
+
+            float cellW = (view.width - ELEMENT_PADDING * (skinColumns+2)) / skinColumns;
+            float cellH = (cellW * skinSize.y) / skinSize.x;
+            cell = (Rectangle){view.x, view.y + scroll.y + ELEMENT_PADDING, cellW, cellH};
+
+            content.height = MAX(listHeight, MENU_TEXT_SIZE + skinRows * (cellH + BUTTON_HEIGHT) + (ELEMENT_PADDING * (skinRows+1)));
+
+            for (int i = 0; i < metadataCount[curTab]; i++) {
+                // TODO: Gui free draw
+
+                cell.x = view.x + ELEMENT_PADDING * (i % skinColumns + 1) + cellW * (i % skinColumns);
+
+                DrawRectangleLinesEx(cell, 1.f, BLACK);
+
+                Skin* skin = FindSkin(metadataCache[curTab][i].id);
+
+                if (skin != NULL) {
+                    int skinW = cellW - ELEMENT_PADDING * 2;
+                    int skinH = (skinW * skinSize.y) / skinSize.x;
+                    Skin_Draw(skin, (Rectangle){cell.x + ELEMENT_PADDING, cell.y + ELEMENT_PADDING, skinW, skinH});
+                }
+
+                if (GuiButton((Rectangle){cell.x, cell.y + cell.height, cell.width, BUTTON_HEIGHT}, "View")) viewingId = i;
+
+                if (i % skinColumns == skinColumns-1) cell.y += cell.height + BUTTON_HEIGHT + ELEMENT_PADDING;
+            }
+
+            if (pageState[curTab] == PAGE_STATE_LOADING) {
+                GuiLabel((Rectangle){view.x, cell.y, view.width, MENU_TEXT_SIZE}, "Loading skins...");
+            }
+        }
+        Gui_EndScrollPanel();
+
+        bool canLoadNewSkins = cell.y < view.y + view.height && pageState[curTab] == PAGE_STATE_DONE && skinsLoading;
+
+        if (canLoadNewSkins) {
+            Http_GetSkins(currentPage[curTab], curTab, searchKey, SkinListDownloaded);
+
+            pageState[curTab] = PAGE_STATE_LOADING;
+            currentPage[curTab]++;
+        }
+    }
 
     Gui_EndWindow();
 
-    // int x, y, w, baseY;
-    // Gui_WorldScreenBase("BROWSE SKINS", &x, &y, &w, &baseY);
 
-    // int searchBtnWidth = 100;
-    // int textboxWidth = w - searchBtnWidth - ELEMENT_PADDING;
-    // static int activeInput = 0;
-    // static int curTab = 0;
-    // static int viewingMeta = -1;
-
-    // if (viewingMeta < 0) {
-    //     GuiToggleGroup((Rectangle){x, y, w / 4.0f - GuiGetStyle(TOGGLE, GROUP_PADDING), BUTTON_HEIGHT}, "Featured;New;Best;Search", &curTab);
-    //     NEXT_ELEMENT(y, BUTTON_HEIGHT);
-
-    //     static bool searching = false;
-    //     static char searchKey[256];
-
-    //     if (curTab == SKINS_TYPE_SEARCH) {
-    //         STYLE_BACKUP(DEFAULT, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
-    //         if (GuiTextBox((Rectangle){x, y, textboxWidth, INPUT_HEIGHT}, searchKey, 10, activeInput == 0) && strlen(searchKey)) {
-    //             activeInput = 0;
-    //             searching = true;
-    //         }
-    //         STYLE_RESTORE(DEFAULT, TEXT_ALIGNMENT);
-
-    //         if (GuiButton((Rectangle){x + textboxWidth + ELEMENT_PADDING, y, searchBtnWidth, INPUT_HEIGHT}, "Search") && strlen(searchKey)) {
-    //             searching = true;
-    //         }
-
-    //         NEXT_ELEMENT(y, INPUT_HEIGHT);
-    //     }
-
-    //     static Vector2 skinSize = {16, 22}; 
-    //     int skinColumns = 4;
-    //     float skinRows = metadataCount[curTab] / skinColumns;
-    //     float cellW = (w - ELEMENT_PADDING * (skinColumns+2)) / skinColumns;
-    //     float cellH = (cellW * skinSize.y) / skinSize.x;
-
-    //     Rectangle bounds = {x, y, w, baseY + MENU_WINDOW_HEIGHT - y - ELEMENT_PADDING * 2 - BUTTON_HEIGHT};
-    //     Rectangle content = {0, 0, 0, MAX(bounds.height, MENU_TEXT_SIZE + skinRows * (cellH + BUTTON_HEIGHT) + (ELEMENT_PADDING * (skinRows+1)))};
-    //     static Vector2 scroll = { 0 };
-    //     static Rectangle view = { 0 };
-    //     Rectangle cell = {x, y + scroll.y + ELEMENT_PADDING, cellW, cellH};
-
-    //     bool skinsLoading = curTab != SKINS_TYPE_SEARCH || (curTab == SKINS_TYPE_SEARCH && searching);
-
-    //     GuiScrollPanel(bounds, NULL, content, &scroll, &view);
-    //     BeginScissorMode(view.x, view.y, w, view.height);
-    //         for (int i = 0; i < metadataCount[curTab]; i++) {
-    //             cell.x = x + ELEMENT_PADDING * (i % skinColumns + 1) + cellW * (i % skinColumns);
-    //             DrawRectangleLinesEx(cell, 1.f, BLACK);
-
-    //             struct SkinCached* skin = FindSkin(metadataCache[curTab][i].id);
-                
-    //             if (skin != NULL) {
-    //                 int skinW = cellW - ELEMENT_PADDING * 2;
-    //                 int skinH = (skinW * skinSize.y) / skinSize.x;
-    //                 EntityAnimation_DrawDummyPlayer(ENTITY_IDLE, (Rectangle){cell.x + ELEMENT_PADDING, cell.y + ELEMENT_PADDING, skinW, skinH}, skin->tex.id);
-    //             }
-
-    //             if (GuiButton((Rectangle){cell.x, cell.y + cell.height, cell.width, BUTTON_HEIGHT}, "View")) viewingMeta = i;
-
-    //             if (i % skinColumns == skinColumns-1) cell.y += cell.height + BUTTON_HEIGHT + ELEMENT_PADDING;
-    //         }
-
-    //         if (pageState[curTab] == PAGE_STATE_LOADING) {
-    //             STYLE_BACKUP(DEFAULT, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
-    //             GuiLabel((Rectangle){x, cell.y, w, MENU_TEXT_SIZE}, "Loading skins...");
-    //             STYLE_RESTORE(DEFAULT, TEXT_ALIGNMENT);
-    //         }
-    //     EndScissorMode();
-
-    //     bool canLoadNewSkins = cell.y < view.y + view.height && pageState[curTab] == PAGE_STATE_DONE && skinsLoading;
-
-    //     if (canLoadNewSkins) {
-    //         Http_GetSkins(currentPage[curTab], curTab, searchKey, SkinListDownloaded);
-
-    //         pageState[curTab] = PAGE_STATE_LOADING;
-    //         currentPage[curTab]++;
-    //     }
-
-    //     NEXT_ELEMENT(y, bounds.y);
-    // } else {
+    // VIEW SKIN META SCREEN
     //     static int prevMeta = -1;
     //     static struct SkinCached* viewingSkin;
     //     static SkinMetadata* viewingMetadata;
