@@ -58,7 +58,7 @@ jobs:
     - name: Pack
       run: |
         cd ${{ steps.strings.outputs.build-output-dir }}
-        cpack
+        cpack -C ${{ matrix.build_type }}
 
     - name: Create or Update Development Release
       uses: softprops/action-gh-release@v1
