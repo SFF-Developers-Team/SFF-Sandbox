@@ -50,6 +50,7 @@ typedef enum TextWeight {
 typedef enum PositionMode {FROM_TOP = 1, FROM_BOTTOM = 0} PositionMode;
 
 typedef int(*DrawElementCallback)(Rectangle bounds, const char* label);
+typedef void(*DrawScrollPanelContent)(Rectangle view);
 
 void Gui_Init(void);
 
@@ -97,7 +98,9 @@ int Gui_ComboBox(const char* list, int* selected);
 void Gui_Texture(Texture2D* tex, Rectangle* src, float height);
 int Gui_CustomElement(float height, bool reg, const char* label, DrawElementCallback drawCallback);
 
-void Gui_SkinSlot(Skin* skin, float frameThick, float width);
+void Gui_ScrollPanel(float height, Rectangle content, float* scroll, DrawScrollPanelContent drawCallback);
+
+void Gui_SkinSlot(Skin* skin, float height);
 
 // WARNING: This function dont need context (you may not call Gui_WindowBegin() and Gui_WindowEnd() as well) and this menu WON'T render in window
 int Gui_CenterMenu(const char* names, Vector2 buttonSize);

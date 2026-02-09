@@ -562,25 +562,18 @@ int Gui_CustomElement(float height, bool reg, const char* label, DrawElementCall
     return ret;
 }
 
-void Gui_SkinSlot(Skin* skin, float frameThick, float width) {
-    Rectangle rect = Gui_CalculateBounds(0.0f);
+void Gui_SkinSlot(Skin* skin, float height) {
+    Rectangle rect = Gui_CalculateBounds(height);
 
-    // if (width != 0.f) {
-    //     rect.width = width;
-    // }
+    GuiDrawRectangle(rect, 1, 
+        GetColor(GuiGetStyle(LISTVIEW, BORDER_COLOR_NORMAL)), 
+        GetColor(GuiGetStyle(LISTVIEW, BASE_COLOR_NORMAL))
+    );
 
-    // rect.height = (rect.width * SKIN_FRAME_HEIGHT) / SKIN_FRAME_WIDTH;
+    int skinH = rect.height - ELEMENT_PADDING * 2;
+    int skinW = SKIN_FRAME_WIDTH * (skinH / SKIN_FRAME_HEIGHT);
 
-    // Gui_SetLastSize(rect.height);
-    // DrawRectangleLinesEx(rect, frameThick, BLACK);
-
-    // REDUCE_RECT(rect, ELEMENT_PADDING);
-
-    // if (skin != NULL) {
-    //     Skin_Draw(skin, rect);
-    // } else {
-    //     GuiLabel(rect, "FREE SLOT");
-    // }
+    Skin_Draw(skin, (Rectangle){rect.x + (rect.width - skinW) / 2, rect.y + ELEMENT_PADDING, skinW, skinH});
 
     Gui_Next();
 }
