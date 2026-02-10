@@ -198,17 +198,17 @@ void LocalPlayer_UpdateControls(LocalPlayer* localPlayer) {
             bool canPlaceBlock = (!World_GetBlock(bx, by) || localPlayer->replaceBlockMode);
 
 
-            if (GetGamepadAxisMovement(localPlayer->gamepad, GAMEPAD_AXIS_LEFT_TRIGGER) > 0.0f && validLook) {
+            if (GetGamepadAxisMovement(localPlayer->gamepad, GAMEPAD_AXIS_RIGHT_TRIGGER) > 0.0f && validLook) {
                 World_SetBlock(localPlayer->lookAt.x, localPlayer->lookAt.y, AIR);
                 localPlayer->player.animation.type = ENTITY_HIT;
             }
 
-            if (GetGamepadAxisMovement(localPlayer->gamepad, GAMEPAD_AXIS_RIGHT_TRIGGER) > 0.0f && validLook && canPlaceBlock) {
+            if (GetGamepadAxisMovement(localPlayer->gamepad, GAMEPAD_AXIS_LEFT_TRIGGER) > 0.0f && validLook && canPlaceBlock) {
                 World_SetBlock(localPlayer->lookAt.x, localPlayer->lookAt.y, localPlayer->player.currentBlock);
                 localPlayer->player.animation.type = ENTITY_HIT;
             }
             
-            // Block choose
+            // Block select
             if (IsGamepadButtonPressed(localPlayer->gamepad, GAMEPAD_BUTTON_RIGHT_TRIGGER_1)) {
                 localPlayer->player.currentBlock++;
 

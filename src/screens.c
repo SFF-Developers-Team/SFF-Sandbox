@@ -61,12 +61,12 @@ struct GuiContext {
     unsigned int lastId;
     unsigned int selectedId;
     
-    float x, /*y,*/ w;
-    float startY, endY;
+    float x, startY, endY, w;
 
     bool fromStart;
     bool labelNext;
-    bool controlLocked; 
+    bool controlLocked;
+    bool scrollPanel;
 
     int sameLine;
     int cols;
@@ -75,7 +75,6 @@ struct GuiContext {
     int activeInput;
 
     Vector2 windowSize;
-    Vector2 lastSize;
 
     Rectangle lastBounds;
     TextWeight textWeight;
@@ -109,7 +108,7 @@ int Gui_GetStyle(int control, int prop) {
         return Context.textWeight;
     }
 
-    GuiGetStyle(control, prop);
+    return GuiGetStyle(control, prop);
 }
 
 void Gui_Init(void) {
@@ -338,6 +337,7 @@ void Gui_BeginWindow(const char* name) {
     Context.fromStart = true;
     Context.labelNext = false;
     Context.controlLocked = false;
+    Context.scrollPanel = false;
     
     Context.navCount = 0;
 
@@ -372,7 +372,7 @@ void Gui_EndWindow(void) {
 
     if (!current) { Context.selectedId = 0; return; }
 
-    if (GuiIsLocked() || Context.navItems == 0) return;
+    if (GuiIsLocked() || Context.navCount == 0) return;
 
     if (Gui_IsNavUp()) {
         Gui_MoveFocus(current, 0, -1);
@@ -578,7 +578,11 @@ void Gui_SkinSlot(Skin* skin, float height) {
     Gui_Next();
 }
 
+static float x, sy, ey, w;
+
 void Gui_BeginScrollPanel(const char* label, float height, Rectangle content, Vector2* scroll, Rectangle* view) {
+    if (Context.scrollPanel) TraceLog(LOG_FATAL, "Rendering scroll panel inside a scroll panel is not allowed.");
+    
     Rectangle b = Gui_CalculateBounds(height);
 
     bool pressed = Gui_RegisterElement(label, b);
@@ -593,12 +597,35 @@ void Gui_BeginScrollPanel(const char* label, float height, Rectangle content, Ve
 
     GuiScrollPanel(b, NULL, content, scroll, view);
 
+    view->width = b.width - ELEMENT_PADDING * 2;
+
     BeginScissorMode(view->x, view->y, view->width, view->height);
+
+    Context.scrollPanel = true;
+
+    // Save context
+    x = Context.x;
+    sy = Context.startY;
+    ey = Context.endY;
+    w = Context.w;
+
+    // Inner context
+    Context.x = view->x + ELEMENT_PADDING + scroll->x;
+    Context.startY = view->y + ELEMENT_PADDING + scroll->y;
+    Context.endY = view->y + view->height - ELEMENT_PADDING + scroll->y;
+    Context.w = view->width - ELEMENT_PADDING * 2;
 }
 
 void Gui_EndScrollPanel() {
-    EndScissorMode();
+    Context.scrollPanel = false;
 
+    // Restore context
+    Context.x = x;
+    Context.startY = sy;
+    Context.endY = ey;
+    Context.w = w;
+    
+    EndScissorMode();
     Gui_Next();
 }
 
@@ -609,7 +636,7 @@ void Gui_Tabs(const char* list, int* selected) {
     int count = Gui_CountListElements(list);
 
     b.width /= count;
-    b.width -= GuiGetStyle(GROUP_PADDING, GROUP_PADDING);
+    b.width -= GuiGetStyle(TOGGLE, GROUP_PADDING);
 
     GuiToggleGroup(b, list, selected);
 

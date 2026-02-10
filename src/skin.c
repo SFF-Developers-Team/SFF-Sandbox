@@ -54,7 +54,6 @@ void Skin_Draw(Skin* skin, Rectangle dest) {
 struct SkinEntry* loadedSkinHead;
 struct SkinEntry* loadedSkinTail;
 
-Skin* defaultSkin;
 Skin* currentSkin;
 
 void Skin_Load(struct SkinEntry* entry) {

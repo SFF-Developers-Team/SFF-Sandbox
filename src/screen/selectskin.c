@@ -9,63 +9,56 @@
 #include "skin.h"
 #include <string.h>
 
-// TODO: Store and load skins with ids
-Texture2D* skins = NULL;
-const char* skinNames = NULL;
-int selectedSkin = 0;
-int loadedSkins = 0;
+Skin* skins = NULL;
+const char* names = NULL;
+
+int selected = 0;
+int amount = 0;
 
 void SelectSkin_Init(void) {
-    if (skinNames != NULL) {
-        MemFree(skinNames);
-        skinNames = NULL;
-    }
-
     char* dir = GetDataSubdirectory("skins");
 
     FilePathList list = LoadDirectoryFilesEx(dir, ".png", false);
-    loadedSkins = list.count;
 
-    if (list.count == 0) {
-        return;
-    }
+    if (list.count > 0) {
+        skins = MemAlloc(list.count * sizeof(Texture2D));
 
-    if (skins == NULL) {
-        skins = MemAlloc((list.count + 1) * sizeof(Texture2D));
-    }
+        for (int i = 0; i < list.count; i++) {
+            int scaned = sscanf(list.paths[i], "%i_", &skins[i].id);
+            skins[i].texture = LoadSkinTexture(list.paths[i]);
 
-    skins[0] = defaultSkin->texture;
-
-    for (int i = 0; i < loadedSkins; i++) {
-        skins[i+1] = LoadTexture(list.paths[i]);
-    }
+            if (skins[i].texture.id) {
+                amount++;
+            }
+        }
     
-    skinNames = JoinFilePathListFilenames(list);
+        names = JoinFilePathListFilenames(list);
+    }
 
     UnloadDirectoryFiles(list);
 
-    // TODO: review this
-    // I had to do this due to TextInsert function don't work
-    char* temp[] = {"Default", skinNames};
-    const char* full = TextJoin(temp, 2, ";");
-    MemFree(skinNames);
-    skinNames = MemAlloc(TextLength(full));
-    TextCopy(skinNames, full);
+    char* full = MemAlloc(TextLength(names) + 8);
+    strcpy(full, "Default;");
+    strcat(full, names);
+
+    MemFree(names);
+
+    names = full;
 }
 
 void SkinSelect_Deinit(void) {
-    for (int i = 0; i < loadedSkins; i++) {
-        if (i == selectedSkin) continue;
-        UnloadTexture(skins[i+1]);
+    for (int i = 0; i < amount; i++) {
+        if (i == selected-1) continue;
+        UnloadTexture(skins[i].texture);
     }
 
     if (skins != NULL) MemFree(skins);
     skins = NULL;
 
-    if (skinNames != NULL) MemFree(skinNames);
-    skinNames = NULL;
+    if (names != NULL) MemFree(names);
+    names = NULL;
 
-    loadedSkins = 0;
+    amount = 0;
 }
 
 void SelectSkin_Draw(void) {
@@ -76,30 +69,33 @@ void SelectSkin_Draw(void) {
     if (Gui_Button("Delete skin")) {
         char* path = GetDataSubdirectory("skins/");
         int length = 0;
-        const char* skinName = GetListElementByIndex(skinNames, selectedSkin, &length);
+        const char* skinName = GetListElementByIndex(names, selected, &length);
         strncat(path, skinName, length);
         strcat(path, ".png");
         
         FileRemove(path);
 
         SelectSkin_Init();
-        selectedSkin = -1;
+        selected = -1;
     }
 
     if (Gui_Button("Back") || Gui_IsNavBack()) {
-        // TODO: Make this work
-        // currentSkin->texture = skins[selectedSkin];
-        Gui_ChangeScreen(&MainMenu);
+        static Skin selectedSkin;
+        selectedSkin = skins[selected-1];
+
+        currentSkin = &selectedSkin;
+
         SkinSelect_Deinit();
+        Gui_ChangeScreen(&MainMenu);
     }
 
     Gui_SameLine(2, NULL);
-    Gui_Button("Download more skins");
+    if (Gui_Button("Download more skins")) Gui_ChangeScreen(&DownloadSkins);
 
     if (Gui_Button("Open skins dir")) OpenURL(GetDataSubdirectory("skins"));
-    Gui_ComboBox((loadedSkins > 0)? skinNames : "Default", &selectedSkin);
+    Gui_ComboBox((amount > 0)? names : "Default", &selected);
 
-    Gui_SkinSlot((loadedSkins > 0)? &(Skin){0,  skins[selectedSkin]} : defaultSkin, Gui_GetRemainingSpace());
+    Gui_SkinSlot((selected > 0)? &skins[selected-1] : &defaultSkin, Gui_GetRemainingSpace());
     Gui_EndWindow();
 
     if (IsFileDropped()) {

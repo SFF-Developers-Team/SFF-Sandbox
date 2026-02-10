@@ -10,18 +10,24 @@
 #include "skin.h"
 #include <time.h>
 
-SkinMetadata metadataCache[5][512];
-int metadataCount[5];
-
 Skin skinCache[1024];
 int cachedSkins = 0;
+
+const char* state;
 
 enum SkinPageState {
     PAGE_STATE_DONE,
     PAGE_STATE_LOADING,
     PAGE_STATE_END
-} pageState[5] = { 0 };
-int currentPage[5] = { 0 };
+};
+
+struct CategoryState {
+    enum SkinPageState pageState;
+    int curPage;
+
+    SkinMetadata metadataCache[512];
+    int cacheSize;
+} categoryState[SKINS_TYPE_COUNT] = { 0 };
 
 Skin* FindSkin(int id) {
     for (int i = 0; i < cachedSkins; i++) {
@@ -31,7 +37,12 @@ Skin* FindSkin(int id) {
     return NULL;
 }
 
-void SkinDownloaded(HttpError error, int id) {
+void SkinDownloaded(int error, int id) {
+    if (error != 0) {
+        TraceLog(LOG_ERROR, "Could not download skin %i: %s", id, Http_Error(error));
+        return;
+    }
+
     char* path = GetDataSubdirectory("cache");
     sprintf(path + strlen(path), "/%d.png", id);
 
@@ -40,16 +51,23 @@ void SkinDownloaded(HttpError error, int id) {
     skinCache[cachedSkins++] = (Skin){id, LoadSkinTexture(path)};
 }
 
-void SkinListDownloaded(HttpError error, SkinList* response) {
-    if (error != HTTP_NO_ERROR) return;
+void SkinListDownloaded(int error, SkinList* response) {
+    if (error != 0) {
+        state = "Error";
+        TraceLog(LOG_ERROR, "Could not download skin list: %s", Http_Error(error));
+        return;
+    }
+
+    TraceLog(LOG_DEBUG, "Skin list downloaded page: %i", response->page);
 
     for (int i = 0; i < 4; i++) {
         if (response->skins[i].id == 0) {
-            pageState[response->type] = PAGE_STATE_END;
+            categoryState[response->type].pageState = PAGE_STATE_END;
+            state = NULL;
             return;
         }
 
-        metadataCache[response->type][metadataCount[response->type]++] = response->skins[i];
+        categoryState[response->type].metadataCache[categoryState[response->type].cacheSize++] = response->skins[i];
 
         const char* path = GetDataSubdirectory("cache");
         sprintf((char*)(path + strlen(path)), "/%d.png", response->skins[i].id);
@@ -61,16 +79,15 @@ void SkinListDownloaded(HttpError error, SkinList* response) {
         }
     }
 
-    pageState[response->type] = PAGE_STATE_DONE;
+    categoryState[response->type].pageState = PAGE_STATE_DONE;
+    state = NULL;
 }
 
 int viewingId = -1;
 
 void DownloadSkins_Init(void) {
-    memset(metadataCache, 0, sizeof(metadataCache));
-    memset(metadataCount, 0, sizeof(metadataCount));
-    memset(pageState, 0, sizeof(pageState));
-    for (int i = 0; i < sizeof(currentPage) / sizeof(int); i++) currentPage[i] = 1;
+    memset(categoryState, 0, sizeof(categoryState));
+    for (int i = 0; i < sizeof(categoryState) / sizeof(struct CategoryState); i++) categoryState[i].curPage = 1;
 
     viewingId = -1;
 }
@@ -80,14 +97,25 @@ void DownloadSkins_Draw(void) {
 
     Gui_BeginWindow("BROWSE SKINS");
 
+    Gui_SetPositionMode(FROM_BOTTOM);
+    if(Gui_Button("Back")) {
+        if (viewingId <= 0) {
+            for (int i = 0; i < cachedSkins; i++) UnloadTexture(skinCache[i].texture);
+            cachedSkins = 0;
+            Gui_ChangeScreen(&SelectSkin);
+        } else 
+            viewingId = -1;
+    }
+    Gui_SetPositionMode(FROM_TOP);
+
     if (viewingId <= 0) {
         static bool searching = false;
         static char searchKey[256];
 
         Gui_Tabs("Featured;New;Best;Search", &curTab);
-        Gui_SameLine(2, (float[]){0.8f, 0.2f});
-
+       
         if (curTab == SKINS_TYPE_SEARCH) {
+            Gui_SameLine(2, (float[]){0.8f, 0.2f});
             Gui_TextInput("search_input", searchKey, sizeof(searchKey));
             if (Gui_Button("Search") && strlen(searchKey)) searching = true;
         }
@@ -97,74 +125,95 @@ void DownloadSkins_Draw(void) {
         static Rectangle content = { 0 }; 
         static Vector2 scroll = { 0 };
         static Rectangle view = { 0 };
-        static Rectangle cell = { 0 };
 
         bool skinsLoading = curTab != SKINS_TYPE_SEARCH || (curTab == SKINS_TYPE_SEARCH && searching);
 
         Gui_BeginScrollPanel("skin_browser", listHeight, content, &scroll, &view); 
         {   
-            // calculating shit
-            // TODO: Review it
             const Vector2 skinSize = {SKIN_FRAME_WIDTH, SKIN_FRAME_HEIGHT}; 
             int skinColumns = 4;
-            float skinRows = metadataCount[curTab] / skinColumns;
+            int skinRows = categoryState[curTab].cacheSize / skinColumns;
 
-            float cellW = (view.width - ELEMENT_PADDING * (skinColumns+2)) / skinColumns;
+            float cellW = view.width / skinColumns;
             float cellH = (cellW * skinSize.y) / skinSize.x;
-            cell = (Rectangle){view.x, view.y + scroll.y + ELEMENT_PADDING, cellW, cellH};
 
-            content.height = MAX(listHeight, MENU_TEXT_SIZE + skinRows * (cellH + BUTTON_HEIGHT) + (ELEMENT_PADDING * (skinRows+1)));
+            for (int i = 0; i < categoryState[curTab].cacheSize / skinColumns; i++) {
+                Gui_SameLine(skinColumns, NULL);
 
-            for (int i = 0; i < metadataCount[curTab]; i++) {
-                // TODO: Gui free draw
+                for (int j = 0; j < categoryState[curTab].cacheSize % skinColumns; j++) {
+                    int index = i * skinColumns + j;
 
-                cell.x = view.x + ELEMENT_PADDING * (i % skinColumns + 1) + cellW * (i % skinColumns);
+                    if (index >= categoryState[curTab].cacheSize) break;
 
-                DrawRectangleLinesEx(cell, 1.f, BLACK);
-
-                Skin* skin = FindSkin(metadataCache[curTab][i].id);
-
-                if (skin != NULL) {
-                    int skinW = cellW - ELEMENT_PADDING * 2;
-                    int skinH = (skinW * skinSize.y) / skinSize.x;
-                    Skin_Draw(skin, (Rectangle){cell.x + ELEMENT_PADDING, cell.y + ELEMENT_PADDING, skinW, skinH});
+                    Skin* skin = FindSkin(categoryState[curTab].metadataCache[index].id);
+                    Gui_SkinSlot(skin, cellH);
                 }
 
-                if (GuiButton((Rectangle){cell.x, cell.y + cell.height, cell.width, BUTTON_HEIGHT}, "View")) viewingId = i;
+                Gui_SameLine(skinColumns, NULL);
 
-                if (i % skinColumns == skinColumns-1) cell.y += cell.height + BUTTON_HEIGHT + ELEMENT_PADDING;
+                static char viewBtnName[16] = {"View##"};
+
+                for (int j = 0; j < categoryState[curTab].cacheSize % skinColumns; j++) {
+                    int index = i * skinColumns + j;
+
+                    if (index >= categoryState[curTab].cacheSize) break;
+
+                    snprintf(viewBtnName + 8, sizeof(viewBtnName) - 8, "%i", categoryState[curTab].metadataCache[index].id);
+                    Gui_Button(viewBtnName);
+                }
             }
 
-            if (pageState[curTab] == PAGE_STATE_LOADING) {
-                GuiLabel((Rectangle){view.x, cell.y, view.width, MENU_TEXT_SIZE}, "Loading skins...");
+            Gui_SameLine(1, NULL);
+
+
+            //     cell.x = view.x + ELEMENT_PADDING * (i % skinColumns + 1) + cellW * (i % skinColumns);
+
+            //     DrawRectangleLinesEx(cell, 1.f, BLACK);
+
+            //     Skin* skin = FindSkin(categoryState[curTab].metadataCache[i].id);
+
+            //     if (skin != NULL) {
+            //         int skinW = cellW - ELEMENT_PADDING * 2;
+            //         int skinH = (skinW * skinSize.y) / skinSize.x;
+            //         Skin_Draw(skin, (Rectangle){cell.x + ELEMENT_PADDING, cell.y + ELEMENT_PADDING, skinW, skinH});
+            //     }
+
+            //     if (GuiButton((Rectangle){cell.x, cell.y + cell.height, cell.width, BUTTON_HEIGHT}, "View")) viewingId = i;
+
+            //     if (i % skinColumns == skinColumns-1) cell.y += cell.height + BUTTON_HEIGHT + ELEMENT_PADDING;
+            // }
+
+            // if (state) {
+            //     GuiLabel((Rectangle){view.x, view.y, view.width, MENU_TEXT_SIZE}, state);
+            // }
+
+            Rectangle last = Gui_GetLastBounds();
+
+            content.height = MAX(listHeight, last.y);
+
+            bool canLoadNewSkins = last.y < view.y + view.height && categoryState[curTab].pageState == PAGE_STATE_DONE && skinsLoading;
+
+            if (canLoadNewSkins) {
+                Http_GetSkins(categoryState[curTab].curPage, curTab, searchKey, SkinListDownloaded);
+
+                categoryState[curTab].pageState = PAGE_STATE_LOADING;
+                categoryState[curTab].curPage++;
+
+                state = "Loading skins...";
             }
         }
         Gui_EndScrollPanel();
-
-        bool canLoadNewSkins = cell.y < view.y + view.height && pageState[curTab] == PAGE_STATE_DONE && skinsLoading;
-
-        if (canLoadNewSkins) {
-            Http_GetSkins(currentPage[curTab], curTab, searchKey, SkinListDownloaded);
-
-            pageState[curTab] = PAGE_STATE_LOADING;
-            currentPage[curTab]++;
-        }
-    }
-
-    Gui_EndWindow();
-
-
-    // VIEW SKIN META SCREEN
+    } // else {
     //     static int prevMeta = -1;
-    //     static struct SkinCached* viewingSkin;
+    //     static struct Skin* viewingSkin;
     //     static SkinMetadata* viewingMetadata;
     //     static char dateBuffer[80];
     //     static bool skinInLibrary = false;
 
-    //     if (prevMeta != viewingMeta && viewingMeta >= 0) {
+    //     if (prevMeta != viewingId && viewingId >= 0) {
     //         // init this subscreen
-    //         viewingSkin = FindSkin(metadataCache[curTab][viewingMeta].id);
-    //         viewingMetadata = &metadataCache[viewingMeta];
+    //         viewingSkin = FindSkin(categoryState[curTab].metadataCache[viewingId].id);
+    //         viewingMetadata = &categoryState[curTab].metadataCache[viewingId];
 
     //         struct tm *ptm;
     //         time_t date = viewingMetadata->date;
@@ -177,12 +226,9 @@ void DownloadSkins_Draw(void) {
     //         sprintf(path + strlen(path), "/%s.png", viewingMetadata->name);
     //         skinInLibrary = FileExists(path);
     //     }
-    //     prevMeta = viewingMeta;
+    //     prevMeta = viewingId;
 
     //     if (viewingSkin != NULL) {
-    //         int tempy = y;
-    //         y = baseY + MENU_WINDOW_HEIGHT - ELEMENT_PADDING * 2 - BUTTON_HEIGHT * 2;
-
     //         if (skinInLibrary) GuiSetState(STATE_DISABLED);
 
     //         if (GuiButton((Rectangle){x, y, w, BUTTON_HEIGHT}, "Add to my skins")) {
@@ -224,16 +270,12 @@ void DownloadSkins_Draw(void) {
 
     //         EntityAnimation_DrawDummyPlayer(currentType, (Rectangle){x + (w - skinW) / 2, tempy, skinW, skinH}, viewingSkin->tex.id);
     //     }
-
     // }
 
-    // if(GuiButton((Rectangle){x, baseY + MENU_WINDOW_HEIGHT - BUTTON_HEIGHT - ELEMENT_PADDING, w, BUTTON_HEIGHT}, "Back")) {
-    //     if (viewingMeta >= 0) {
-    //         viewingMeta = -1;
-    //     } else {
-    //         for (int i = 0; i < cachedSkins; i++) UnloadTexture(skinCache[i].tex);
-    //         cachedSkins = 0;
-    //         CHANGE_SCREEN(SCREEN_SELECTSKIN);
-    //     }
-    // }
+    Gui_EndWindow();
 }
+
+Screen DownloadSkins = {
+    DownloadSkins_Init,
+    DownloadSkins_Draw
+};

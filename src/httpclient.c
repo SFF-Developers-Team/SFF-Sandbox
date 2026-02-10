@@ -41,9 +41,7 @@ void Http_Update(void) {
             HttpResponse resp = {0};
             resp.data = ctx->buffer;
             resp.length = ctx->size;
-            resp.error = (msg->data.result == CURLE_OK)
-                ? 0
-                : msg->data.result;
+            resp.error = msg->data.result;
 
             ctx->callback(&resp, ctx->userdata);
 
@@ -92,6 +90,8 @@ void Http_Get(const char* url, HttpResponseCallback callback, void* userdata, in
     curl_easy_setopt(ctx->handle, CURLOPT_WRITEFUNCTION, Curl_Write);
     curl_easy_setopt(ctx->handle, CURLOPT_WRITEDATA, ctx);
     curl_easy_setopt(ctx->handle, CURLOPT_USERAGENT, "sandbox-for-friends/1.0");
+    curl_easy_setopt(ctx->handle, CURLOPT_SSL_VERIFYHOST, 0L);
+    curl_easy_setopt(ctx->handle, CURLOPT_SSL_VERIFYPEER, 0L);
 
     curl_easy_setopt(ctx->handle, CURLOPT_PRIVATE, ctx);
 
@@ -119,7 +119,7 @@ void Http_URLDecode(char *s) {
 
 // Skins
 void Http_GetSkinsResp(HttpResponse* resp, void* userdata) {
-    if (resp->error != HTTP_NO_ERROR) goto done;
+    if (resp->error != CURLE_OK) goto done;
 
     SkinList list = {0};
 
@@ -190,10 +190,12 @@ done:
 }
 
 void Http_GetSkins(int page, SkinsType type, char* search, SkinListCallback responseCallback) {
+    TraceLog(LOG_DEBUG, "Http_GetSkins called");
+
     static char url[128];
     static char* types[] = {"featured", "new", "best", "search"};
 
-    snprintf(url, sizeof(url), "http://mineblocks.com/1/scripts/getSkins?page=%d&type=%s", page, types[type]);
+    snprintf(url, sizeof(url), "https://mineblocks.com/1/scripts/getSkins?page=%d&type=%s", page, types[type]);
 
     if (type == SKINS_TYPE_SEARCH && search != NULL) {
         int pos = strlen(url);
@@ -210,7 +212,7 @@ typedef struct {
 } SkinDownloadCtx;
 
 void Http_DownloadSkinResp(HttpResponse* resp, void* userdata) {
-    if (resp->error != HTTP_NO_ERROR) goto done;
+    if (resp->error != 0) goto done;
     SkinDownloadCtx* ctx = (SkinDownloadCtx*)userdata;
 
     SaveFileData(ctx->path, resp->data, resp->length);
@@ -227,7 +229,7 @@ done:
 void Http_DownloadSkin(int id, const char* path, SkinDownloadCallback callback) {
     static char url[64];
 
-    snprintf(url, sizeof(url), "http://mineblocks.com/1/skins/%d.png", id);
+    snprintf(url, sizeof(url), "https://mineblocks.com/1/skins/%d.png", id);
 
     SkinDownloadCtx* ctx = MemAlloc(sizeof(SkinDownloadCtx));
     ctx->callback = callback;
@@ -236,4 +238,8 @@ void Http_DownloadSkin(int id, const char* path, SkinDownloadCallback callback) 
     TextCopy(ctx->path, path);
 
     Http_Get(url, Http_DownloadSkinResp, ctx, 8192);
+}
+
+const char* Http_Error(int err) {
+    return curl_easy_strerror(err);
 }

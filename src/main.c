@@ -29,6 +29,8 @@ const char* error = NULL;
 ControlType mainControlType;
 int mainGamepad = -1;
 
+Skin defaultSkin;
+
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
 //----------------------------------------------------------------------------------
@@ -41,7 +43,7 @@ void InitGame(void);            // Init game
 int main() {
     // Initialization
     //--------------------------------------------------------------------------------------
-    InitWindow(0, 0, "sandbox");
+    InitWindow(1280, 720, "sandbox");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetExitKey(0);
 
@@ -84,11 +86,8 @@ void InitGame(void) {
 
     LoadTilemapEntry(&tlBlocks);
 
-    static struct SkinEntry defaultSkinEntry;
-    defaultSkinEntry = (struct SkinEntry){(Skin){0, player.texture}};
-    currentSkin = defaultSkin = &defaultSkinEntry.skin;
-
-    Skin_Load(&defaultSkinEntry);
+    defaultSkin = (Skin){0, player.texture};
+    currentSkin = &defaultSkin;
 
     SetRandomSeed((unsigned int)time(0));
 

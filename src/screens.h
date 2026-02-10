@@ -35,6 +35,7 @@ extern Screen MainMenu;
 extern Screen SelectWorld;
 extern Screen CreateWorld;
 extern Screen SelectSkin;
+extern Screen DownloadSkins;
 extern Screen GameplayScreen;
 
 extern bool shouldGenerateWorld;

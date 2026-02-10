@@ -22,7 +22,7 @@ struct SkinEntry {
 extern struct SkinEntry* loadedSkinHead;
 extern struct SkinEntry* loadedSkinTail;
 
-extern Skin* defaultSkin;
+extern Skin defaultSkin;
 extern Skin* currentSkin;
 
 Texture2D LoadSkinTexture(const char* path);

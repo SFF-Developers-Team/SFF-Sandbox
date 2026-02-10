@@ -14,7 +14,7 @@ Welcome to **SFF Sandbox** - a 2D sandbox game that combines the best elements o
 - [@DeL](https://www.discord.com/users/1015611842858602506) - Artist
 
 ## Build
-### CMake
+### CMake (MinGW is unsupported, clang is recommended)
 ``` bash
 cmake -B build
 cmake --build build

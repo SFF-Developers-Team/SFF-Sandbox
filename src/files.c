@@ -10,8 +10,13 @@
 char* GetDataDirectory(void) {
     static char path[MAX_PATH] = { 0 };
 
-#ifdef WIN32
+#ifdef _WIN32
     const char* appdata = getenv("AppData");
+
+    if (appdata == NULL) {
+        TraceLog(LOG_FATAL, "AppData PATH variable is not set!");
+    }
+
     strcpy(path, appdata);
     strcat(path, "\\sandboxforfriends\\");
 #else 
