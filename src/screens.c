@@ -60,6 +60,7 @@ int Gui_CountListElements(const char* list) {
 struct GuiContext {
     unsigned int lastId;
     unsigned int selectedId;
+    int activeInput;
     
     float x, startY, endY, w;
 
@@ -67,14 +68,12 @@ struct GuiContext {
     bool labelNext;
     bool controlLocked;
     bool scrollPanel;
+    bool inScrollPanel;
+    bool wasScrollPanel;
 
     int sameLine;
     int cols;
     float* ratios;
-
-    int activeInput;
-
-    Vector2 windowSize;
 
     Rectangle lastBounds;
     TextWeight textWeight;
@@ -148,7 +147,7 @@ Rectangle Gui_CalculateBounds(float height) {
     }
 
     Context.lastBounds = (Rectangle){x, (Context.fromStart)? Context.startY : Context.endY - height, w, height};
-    
+
     return Context.lastBounds;
 }
 
@@ -228,7 +227,7 @@ bool Gui_PrevScreenCalled() {
 bool Gui_RegisterElement(const char* name, Rectangle bounds) {
     bool pressed = false;
 
-    if (name == NULL) {
+    if (name == NULL || (Context.scrollPanel && !Context.inScrollPanel) || (!Context.scrollPanel && Context.inScrollPanel)) {
         return false;
     }
 
@@ -330,24 +329,25 @@ void Gui_BeginWindow(const char* name) {
     Context.sameLine = 1;
     Context.cols = 0;
     Context.ratios = NULL;
-    Context.windowSize.x = MENU_WINDOW_WIDTH;
-    Context.windowSize.y = MENU_WINDOW_HEIGHT;
+
+    Vector2 windowSize = {MENU_WINDOW_WIDTH, MENU_WINDOW_HEIGHT};
     
     // flags
     Context.fromStart = true;
     Context.labelNext = false;
     Context.controlLocked = false;
     Context.scrollPanel = false;
+    Context.wasScrollPanel = false;
     
     Context.navCount = 0;
 
     // position context
-    Context.x = (scrWidth - Context.windowSize.x) / 2 + ELEMENT_PADDING * 2;
-    Context.startY = (scrHeight - Context.windowSize.y) / 2;
+    Context.x = (scrWidth - windowSize.x) / 2 + ELEMENT_PADDING * 2;
+    Context.startY = (scrHeight - windowSize.y) / 2;
     Context.endY = Context.startY + MENU_WINDOW_HEIGHT - ELEMENT_PADDING;
-    Context.w = Context.windowSize.x - ELEMENT_PADDING * 2;
+    Context.w = windowSize.x - ELEMENT_PADDING * 2;
 
-    Rectangle panelBounds = (Rectangle){Context.x, Context.startY, Context.windowSize.x, Context.windowSize.y}; 
+    Rectangle panelBounds = (Rectangle){Context.x, Context.startY, windowSize.x, windowSize.y}; 
 
     GuiPanel(panelBounds, NULL);
     Context.x += ELEMENT_PADDING;
@@ -367,7 +367,6 @@ void Gui_BeginWindow(const char* name) {
 }
 
 void Gui_EndWindow(void) {
-
     struct GuiNavItem* current = Gui_FindItem(Context.selectedId);
 
     if (!current) { Context.selectedId = 0; return; }
@@ -385,6 +384,10 @@ void Gui_EndWindow(void) {
     }
     else if (Gui_IsNavRight()) {
         Gui_MoveFocus(current, 1, 0);
+    }
+
+    if (!Context.wasScrollPanel && Context.inScrollPanel) {
+        Context.inScrollPanel = false;
     }
 }
 
@@ -446,12 +449,17 @@ void Gui_Label(const char* label) {
     Gui_Next();
 }
 
+bool Gui_RawButton(const char* label, Rectangle bounds) {
+    bool pressed = Gui_RegisterElement(label, bounds);
+    bool ret = GuiButton(bounds, Gui_RemoveHash(label)) || pressed;
+
+    return ret;
+}
+
 bool Gui_Button(const char* label) {
     Rectangle b = Gui_CalculateBounds(BUTTON_HEIGHT);
 
-    bool pressed = Gui_RegisterElement(label, b);
-    bool ret = GuiButton(b, Gui_RemoveHash(label)) || pressed;
-
+    bool ret = Gui_RawButton(label, b);
     Gui_Next();
 
     return ret;
@@ -547,19 +555,33 @@ void Gui_Texture(Texture2D* tex, Rectangle* src, float height) {
     Gui_Next();
 }
 
-int Gui_CustomElement(float height, bool reg, const char* label, DrawElementCallback drawCallback) {
+int Gui_CustomElement(float height, const char* label, DrawElementCallback drawCallback, void* userdata, int flags) {
     Rectangle b = Gui_CalculateBounds(height);
     int ret = 0;
 
-    if (reg) {
+    if (flags & FLAG_CUSTOM_REGISTER) {
         Gui_RegisterElement(label, b);
     }
 
-    ret = drawCallback(b, (label != NULL)? Gui_RemoveHash(label) : NULL);
+    if (flags & FLAG_CUSTOM_DRAW_BG) {
+        GuiDrawRectangle(b, 1, 
+            GetColor(GuiGetStyle(LISTVIEW, BORDER_COLOR_NORMAL)), 
+            GetColor(GuiGetStyle(LISTVIEW, BASE_COLOR_NORMAL))
+        );
+    }
+
+    ret = drawCallback(b, (label != NULL)? Gui_RemoveHash(label) : NULL, userdata);
 
     Gui_Next();
 
     return ret;
+}
+
+void Gui_RawSkinSlot(Skin* skin, Rectangle bounds) {
+    int skinH = bounds.height - ELEMENT_PADDING * 2;
+    int skinW = SKIN_FRAME_WIDTH * (skinH / SKIN_FRAME_HEIGHT);
+
+    Skin_Draw(skin, (Rectangle){bounds.x + (bounds.width - skinW) / 2, bounds.y + ELEMENT_PADDING, skinW, skinH});
 }
 
 void Gui_SkinSlot(Skin* skin, float height) {
@@ -570,11 +592,7 @@ void Gui_SkinSlot(Skin* skin, float height) {
         GetColor(GuiGetStyle(LISTVIEW, BASE_COLOR_NORMAL))
     );
 
-    int skinH = rect.height - ELEMENT_PADDING * 2;
-    int skinW = SKIN_FRAME_WIDTH * (skinH / SKIN_FRAME_HEIGHT);
-
-    Skin_Draw(skin, (Rectangle){rect.x + (rect.width - skinW) / 2, rect.y + ELEMENT_PADDING, skinW, skinH});
-
+    Gui_RawSkinSlot(skin, rect);
     Gui_Next();
 }
 
@@ -587,15 +605,21 @@ void Gui_BeginScrollPanel(const char* label, float height, Rectangle content, Ve
 
     bool pressed = Gui_RegisterElement(label, b);
 
-    if (Gui_CurrentSelected() && pressed && !GuiIsLocked()) {
-        GuiLock();
+    if (Gui_CurrentSelected() && pressed) {
+        Context.inScrollPanel = true;
+        // GuiLock();
     }
 
-    if (Gui_CurrentSelected() && Gui_IsNavBack() && GuiIsLocked()) {
-        GuiUnlock(); 
+    if (Context.inScrollPanel && Gui_IsNavBack()) {
+        Context.inScrollPanel = false;
+        // GuiUnlock(); 
     }
+
+    struct GuiNavItem* current = Gui_FindItem(Context.selectedId);
 
     GuiScrollPanel(b, NULL, content, scroll, view);
+
+    // TODO: auto scroll on gamepad
 
     view->width = b.width - ELEMENT_PADDING * 2;
 
@@ -613,11 +637,12 @@ void Gui_BeginScrollPanel(const char* label, float height, Rectangle content, Ve
     Context.x = view->x + ELEMENT_PADDING + scroll->x;
     Context.startY = view->y + ELEMENT_PADDING + scroll->y;
     Context.endY = view->y + view->height - ELEMENT_PADDING + scroll->y;
-    Context.w = view->width - ELEMENT_PADDING * 2;
+    Context.w = view->width;
 }
 
 void Gui_EndScrollPanel() {
     Context.scrollPanel = false;
+    Context.wasScrollPanel = true;
 
     // Restore context
     Context.x = x;

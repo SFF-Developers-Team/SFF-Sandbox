@@ -86,9 +86,13 @@ void SkinListDownloaded(int error, SkinList* response) {
 int viewingId = -1;
 
 void DownloadSkins_Init(void) {
-    memset(categoryState, 0, sizeof(categoryState));
-    for (int i = 0; i < sizeof(categoryState) / sizeof(struct CategoryState); i++) categoryState[i].curPage = 1;
+    for (int i = 0; i < sizeof(categoryState) / sizeof(struct CategoryState); i++) {
+        categoryState[i].cacheSize = 0;
+        categoryState[i].curPage = 1;
+        categoryState[i].pageState = PAGE_STATE_DONE;
+    }
 
+    cachedSkins = 0;
     viewingId = -1;
 }
 
@@ -98,11 +102,11 @@ void DownloadSkins_Draw(void) {
     Gui_BeginWindow("BROWSE SKINS");
 
     Gui_SetPositionMode(FROM_BOTTOM);
-    if(Gui_Button("Back")) {
+    if(Gui_Button("Back") || Gui_IsNavBack()) {
         if (viewingId <= 0) {
             for (int i = 0; i < cachedSkins; i++) UnloadTexture(skinCache[i].texture);
-            cachedSkins = 0;
             Gui_ChangeScreen(&SelectSkin);
+            return;
         } else 
             viewingId = -1;
     }
@@ -126,6 +130,8 @@ void DownloadSkins_Draw(void) {
         static Vector2 scroll = { 0 };
         static Rectangle view = { 0 };
 
+        content.height += ELEMENT_PADDING;
+
         bool skinsLoading = curTab != SKINS_TYPE_SEARCH || (curTab == SKINS_TYPE_SEARCH && searching);
 
         Gui_BeginScrollPanel("skin_browser", listHeight, content, &scroll, &view); 
@@ -137,10 +143,10 @@ void DownloadSkins_Draw(void) {
             float cellW = view.width / skinColumns;
             float cellH = (cellW * skinSize.y) / skinSize.x;
 
-            for (int i = 0; i < categoryState[curTab].cacheSize / skinColumns; i++) {
+            for (int i = 0; i < skinRows; i++) {
                 Gui_SameLine(skinColumns, NULL);
 
-                for (int j = 0; j < categoryState[curTab].cacheSize % skinColumns; j++) {
+                for (int j = 0; j < skinColumns; j++) {
                     int index = i * skinColumns + j;
 
                     if (index >= categoryState[curTab].cacheSize) break;
@@ -153,45 +159,30 @@ void DownloadSkins_Draw(void) {
 
                 static char viewBtnName[16] = {"View##"};
 
-                for (int j = 0; j < categoryState[curTab].cacheSize % skinColumns; j++) {
+                for (int j = 0; j < skinColumns; j++) {
                     int index = i * skinColumns + j;
 
                     if (index >= categoryState[curTab].cacheSize) break;
 
-                    snprintf(viewBtnName + 8, sizeof(viewBtnName) - 8, "%i", categoryState[curTab].metadataCache[index].id);
-                    Gui_Button(viewBtnName);
+                    int skinid = categoryState[curTab].metadataCache[index].id;
+
+                    snprintf(viewBtnName + 6, sizeof(viewBtnName) - 6, "%i", skinid);
+                    if (Gui_Button(viewBtnName)) viewingId = skinid;
                 }
             }
 
+            content.height = BUTTON_HEIGHT * skinRows + cellH * skinRows + ELEMENT_PADDING * (skinRows * 2 + 1);
+
             Gui_SameLine(1, NULL);
 
+            if (state) {
+                Gui_Label(state);
 
-            //     cell.x = view.x + ELEMENT_PADDING * (i % skinColumns + 1) + cellW * (i % skinColumns);
+                Rectangle last = Gui_GetLastBounds();
+                content.height += last.height;
+            }
 
-            //     DrawRectangleLinesEx(cell, 1.f, BLACK);
-
-            //     Skin* skin = FindSkin(categoryState[curTab].metadataCache[i].id);
-
-            //     if (skin != NULL) {
-            //         int skinW = cellW - ELEMENT_PADDING * 2;
-            //         int skinH = (skinW * skinSize.y) / skinSize.x;
-            //         Skin_Draw(skin, (Rectangle){cell.x + ELEMENT_PADDING, cell.y + ELEMENT_PADDING, skinW, skinH});
-            //     }
-
-            //     if (GuiButton((Rectangle){cell.x, cell.y + cell.height, cell.width, BUTTON_HEIGHT}, "View")) viewingId = i;
-
-            //     if (i % skinColumns == skinColumns-1) cell.y += cell.height + BUTTON_HEIGHT + ELEMENT_PADDING;
-            // }
-
-            // if (state) {
-            //     GuiLabel((Rectangle){view.x, view.y, view.width, MENU_TEXT_SIZE}, state);
-            // }
-
-            Rectangle last = Gui_GetLastBounds();
-
-            content.height = MAX(listHeight, last.y);
-
-            bool canLoadNewSkins = last.y < view.y + view.height && categoryState[curTab].pageState == PAGE_STATE_DONE && skinsLoading;
+            bool canLoadNewSkins = -scroll.y + view.height > content.height && categoryState[curTab].pageState == PAGE_STATE_DONE && skinsLoading;
 
             if (canLoadNewSkins) {
                 Http_GetSkins(categoryState[curTab].curPage, curTab, searchKey, SkinListDownloaded);

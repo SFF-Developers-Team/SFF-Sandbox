@@ -24,6 +24,9 @@
     Gui_SetStyle(control, prop, backup_##control##prop)
 
 
+#define FLAG_CUSTOM_DRAW_BG     (1 << 0)
+#define FLAG_CUSTOM_REGISTER    (1 << 1)
+
 typedef struct Screen {
     void(*Init)(void);
     void(*Draw)(void);
@@ -50,7 +53,7 @@ typedef enum TextWeight {
 
 typedef enum PositionMode {FROM_TOP = 1, FROM_BOTTOM = 0} PositionMode;
 
-typedef int(*DrawElementCallback)(Rectangle bounds, const char* label);
+typedef int(*DrawElementCallback)(Rectangle bounds, const char* label, void* userdata);
 typedef void(*DrawScrollPanelContent)(Rectangle view);
 
 void Gui_Init(void);
@@ -79,6 +82,12 @@ bool Gui_IsNavDown();
 bool Gui_IsNavEnter();
 bool Gui_IsNavBack();
 
+/**
+ * @name Should be unique!! Use ## for unique names Example: "View skin##267316"
+ * @return Is element pressed
+ */
+bool Gui_RegisterElement(const char* name, Rectangle bounds);
+
 // Get free height between last top y and last bottom y
 float Gui_GetRemainingSpace(void);
 Rectangle Gui_GetLastBounds(void);
@@ -97,7 +106,7 @@ int Gui_ListView(float height, const char* list, int* scrollIndex, int* selected
 bool Gui_TextInput(const char* label, char* out, int outSize);
 int Gui_ComboBox(const char* list, int* selected);
 void Gui_Texture(Texture2D* tex, Rectangle* src, float height);
-int Gui_CustomElement(float height, bool reg, const char* label, DrawElementCallback drawCallback);
+int Gui_CustomElement(float height, const char* label, DrawElementCallback drawCallback, void* userdata, int flags);
 
 void Gui_BeginScrollPanel(const char* label, float height, Rectangle content, Vector2* scroll, Rectangle* view);
 void Gui_EndScrollPanel();
@@ -105,6 +114,10 @@ void Gui_EndScrollPanel();
 void Gui_Tabs(const char* list, int* selected);
 
 void Gui_SkinSlot(Skin* skin, float height);
+
+// Raw widgets
+bool Gui_RawButton(const char* label, Rectangle bounds);
+void Gui_RawSkinSlot(Skin* skin, Rectangle bounds);
 
 // WARNING: This function dont need context (you may not call Gui_WindowBegin() and Gui_WindowEnd() as well) and this menu WON'T render in window
 int Gui_CenterMenu(const char* names, Vector2 buttonSize);

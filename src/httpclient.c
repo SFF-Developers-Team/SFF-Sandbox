@@ -198,8 +198,7 @@ void Http_GetSkins(int page, SkinsType type, char* search, SkinListCallback resp
     snprintf(url, sizeof(url), "https://mineblocks.com/1/scripts/getSkins?page=%d&type=%s", page, types[type]);
 
     if (type == SKINS_TYPE_SEARCH && search != NULL) {
-        int pos = strlen(url);
-        snprintf(url + pos, sizeof(url) - pos, "&key=%s", search);
+        strncat(url, TextFormat("&key=%s"), sizeof(url));
     }
 
     Http_Get(url, Http_GetSkinsResp, (void*)responseCallback, 1024);
