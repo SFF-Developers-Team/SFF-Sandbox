@@ -95,7 +95,14 @@ Rectangle Gui_GetLastBounds(void);
 void Gui_SameLine(int elements, float* ratios);
 void Gui_LabelNextElement(const char* label);
 
+/**
+ * @brief Make next elements unclickable
+ */
 void Gui_Disable();
+
+/**
+ * @brief Make next elements clickable
+ */
 void Gui_Enable();
 
 // Widgets

@@ -30,6 +30,11 @@ typedef enum {
     SKINS_TYPE_COUNT
 } SkinsType;
 
+typedef enum {
+    PATH_CACHE,
+    PATH_SKINS
+} SkinDownloadPath;
+
 typedef struct {
     int id;
     char name[64];
@@ -48,7 +53,7 @@ typedef void(*SkinDownloadCallback)(int error, int id);
 
 void Http_GetSkins(int page, SkinsType type, char* search, SkinListCallback responseCallback);
 
-void Http_DownloadSkin(int id, const char* path, SkinDownloadCallback callback);
+void Http_DownloadSkin(int id, SkinDownloadPath path, SkinDownloadCallback callback);
 
 const char* Http_Error(int err);
 #endif // HTTP_H

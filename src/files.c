@@ -74,11 +74,21 @@ const char* JoinFilePathListFilenames(FilePathList list) {
     char* result = (char*)MemAlloc(totalLength + 1);
     if (!result) return NULL;
 
-    result[0] = '\0'; // cuz allocated array contains junk 
+    *result = '\0'; // cuz allocated array contains junk 
+    char* ptr = result;
+
     for (int i = 0; i < list.count; i++) {
-        strcat(result, GetFileNameWithoutExt(list.paths[i]));
-        if (i + 1 < list.count) strcat(result, ";");
+        const char* name = GetFileNameWithoutExt(list.paths[i]);
+        int len = TextLength(name);
+
+        memcpy(ptr, name, len);
+        ptr += len;
+
+        if (i + 1 < list.count)
+            *ptr++ = ';';
     }
+
+    *ptr = '\0';
 
     return result;
 }

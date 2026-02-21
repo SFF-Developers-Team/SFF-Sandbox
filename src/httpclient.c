@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <files.h>
 
 static CURLM* g_multi;
 
@@ -190,15 +191,13 @@ done:
 }
 
 void Http_GetSkins(int page, SkinsType type, char* search, SkinListCallback responseCallback) {
-    TraceLog(LOG_DEBUG, "Http_GetSkins called");
-
     static char url[128];
     static char* types[] = {"featured", "new", "best", "search"};
 
     snprintf(url, sizeof(url), "https://mineblocks.com/1/scripts/getSkins?page=%d&type=%s", page, types[type]);
 
     if (type == SKINS_TYPE_SEARCH && search != NULL) {
-        strncat(url, TextFormat("&key=%s"), sizeof(url));
+        strncat(url, TextFormat("&key=%s", search), sizeof(url) - strlen(url) - 1);
     }
 
     Http_Get(url, Http_GetSkinsResp, (void*)responseCallback, 1024);
@@ -207,25 +206,24 @@ void Http_GetSkins(int page, SkinsType type, char* search, SkinListCallback resp
 typedef struct {
     SkinDownloadCallback callback;
     int id;
-    const char* path;
+    SkinDownloadPath path;
 } SkinDownloadCtx;
 
 void Http_DownloadSkinResp(HttpResponse* resp, void* userdata) {
     if (resp->error != 0) goto done;
     SkinDownloadCtx* ctx = (SkinDownloadCtx*)userdata;
 
-    SaveFileData(ctx->path, resp->data, resp->length);
+    SaveFileData(TextFormat("%s/%d.png", GetDataSubdirectory((ctx->path == PATH_SKINS)? "skins" : "cache"), ctx->id), resp->data, resp->length);
 
 done:
     SkinDownloadCallback callback = ctx->callback;
     int id = ctx->id;
-    MemFree(ctx->path);
     MemFree(ctx);
 
     callback(resp->error, id);
 }
 
-void Http_DownloadSkin(int id, const char* path, SkinDownloadCallback callback) {
+void Http_DownloadSkin(int id, SkinDownloadPath path, SkinDownloadCallback callback) {
     static char url[64];
 
     snprintf(url, sizeof(url), "https://mineblocks.com/1/skins/%d.png", id);
@@ -233,8 +231,7 @@ void Http_DownloadSkin(int id, const char* path, SkinDownloadCallback callback) 
     SkinDownloadCtx* ctx = MemAlloc(sizeof(SkinDownloadCtx));
     ctx->callback = callback;
     ctx->id = id;
-    ctx->path = MemAlloc(TextLength(path));
-    TextCopy(ctx->path, path);
+    ctx->path = path;
 
     Http_Get(url, Http_DownloadSkinResp, ctx, 8192);
 }

@@ -12,7 +12,7 @@ const char* worldList = NULL;
 
 void SelectWorld_Init(void) {
     if (worldList != NULL) {
-        MemFree(worldList);
+        MemFree((void*)worldList);
         worldList = NULL;
     }
 

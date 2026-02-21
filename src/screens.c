@@ -592,7 +592,10 @@ void Gui_SkinSlot(Skin* skin, float height) {
         GetColor(GuiGetStyle(LISTVIEW, BASE_COLOR_NORMAL))
     );
 
-    Gui_RawSkinSlot(skin, rect);
+    if (skin) {
+        Gui_RawSkinSlot(skin, rect);
+    }
+    
     Gui_Next();
 }
 
