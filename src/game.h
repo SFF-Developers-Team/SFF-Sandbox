@@ -11,6 +11,8 @@ extern int localPlayersCount;
 extern ControlType mainControlType;
 extern int mainGamepad;
 
+extern bool shouldClose;
+
 void Game_Init(void);
 void Game_Update(float dt);
 void Game_Draw(void);

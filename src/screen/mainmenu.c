@@ -1,6 +1,7 @@
 #include "screens.h"
 #include "raygui.h"
 #include "raymath.h"
+#include "game.h"
 #include <stddef.h> // NULL
 
 void MainMenu_Draw(void) {
@@ -9,7 +10,7 @@ void MainMenu_Draw(void) {
     switch (selected) {
         case 0: Gui_ChangeScreen(&SelectWorld); break;
         case 1: Gui_ChangeScreen(&SelectSkin); break;
-        case 2: CloseWindow();
+        case 2: shouldClose = true;
     }
 }
 

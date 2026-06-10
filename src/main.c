@@ -29,6 +29,8 @@ const char* error = NULL;
 ControlType mainControlType;
 int mainGamepad = -1;
 
+bool shouldClose = false;
+
 Skin defaultSkin;
 
 //----------------------------------------------------------------------------------
@@ -56,7 +58,7 @@ int main() {
     //--------------------------------------------------------------------------------------
 
     // Main game loop
-    while (!WindowShouldClose()) {   // Detect window close button or ESC key
+    while (!shouldClose) {   // Detect window close button or ESC key
         UpdateDrawFrame();
     }
 #endif
@@ -103,6 +105,8 @@ void UpdateDrawFrame(void) {
         ToggleBorderlessWindowed();
     }
 
+    if (WindowShouldClose()) shouldClose = true;
+    
     Timer_Update();
     Http_Update();
 

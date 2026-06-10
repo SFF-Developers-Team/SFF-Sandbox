@@ -100,10 +100,12 @@ void SelectSkin_Draw(void) {
     }
 
     if (Gui_Button("Back") || Gui_IsNavBack()) {
-        static Skin selectedSkin;
-        selectedSkin = skins[selected-1];
+        if (skins != NULL) {
+            static Skin selectedSkin;
+            selectedSkin = skins[selected-1];
 
-        currentSkin = &selectedSkin;
+            currentSkin = &selectedSkin;
+        }
 
         SkinSelect_Deinit();
         Gui_ChangeScreen(&MainMenu);

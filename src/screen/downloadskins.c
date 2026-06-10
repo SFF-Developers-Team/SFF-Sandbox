@@ -187,7 +187,7 @@ void DownloadSkin_CatalogDraw() {
     static char searchKey[256];
     
     Gui_SetPositionMode(FROM_TOP);
-    Gui_Tabs("Featured;New;Best;Search", &CatalogCtx.tab);
+    Gui_Tabs("Featured;New;Best;Search", (int*)&CatalogCtx.tab);
     
     if (CatalogCtx.tab == SKINS_TYPE_SEARCH) {
         Gui_SameLine(2, (float[]){0.8f, 0.2f});
