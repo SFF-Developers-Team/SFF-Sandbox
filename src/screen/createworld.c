@@ -85,7 +85,7 @@ void CreateWorld_Draw(void) {
             // SHOW_ERROR("Out of memory. Try load or join to another world.");
             return;
         }
-        
+                
         World.name = worldName;
         result = World_Save();
 
@@ -97,6 +97,8 @@ void CreateWorld_Draw(void) {
         Game_AddLocalPlayer(mainControlType, mainGamepad);
 
         Gui_ChangeScreen(&GameplayScreen);
+
+        World.loaded = true;
     }
     Gui_Enable();
     if (Gui_Button("Back") || Gui_PrevScreenCalled()) Gui_ChangeScreen(&SelectWorld);
