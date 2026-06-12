@@ -5,6 +5,7 @@
 #include "blocks.h"
 #include "defines.h"
 #include <stdint.h>
+#include "utils.h"
 
 #define PACK_INDEX(x, y, width) (y * width + x)
 
@@ -52,6 +53,18 @@ static inline void World_SetBlock(int x, int y, Block id) {
 }
 
 static inline Block World_GetBlock(int x, int y) {
-    return World.data[PACK_INDEX(x, y, World.width)];
+    int w = 0;
+    int h = 0;
+
+    int convX = MAX(0, x);
+    int convY = MAX(0, y);
+
+    World_GetSize(World.size, &w, &h);
+
+    if (convX < w || convY < h) {
+        return World.data[PACK_INDEX(convX, convY, World.width)];
+    } else {
+        return 0;
+    }
 }
 #endif
