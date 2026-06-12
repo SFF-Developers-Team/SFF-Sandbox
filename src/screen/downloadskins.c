@@ -53,31 +53,10 @@ void DownloadSkins_DrawView() {
         strcpy(src, path);
         
         path = DownloadSkins_GetSkinPath(PATH_SKINS, ViewCtx.meta);
+    
+        int result = FileCopy(src, path);
         
-        // TEMP FIX TEMP FIX TEMP FIX 
-        int result = -1;
-        int srcDataSize = 0;
-
-        unsigned char *srcFileData = LoadFileData(src, &srcDataSize);
-
-        // Create required paths if they do not exist
-        result = DirectoryExists(GetDirectoryPath(path)) ? 0 : MakeDirectory(GetDirectoryPath(path));
-
-        if (result == 0) // Directory created successfully (or already exists)
-        {
-            if ((srcFileData != NULL) && (srcDataSize > 0))
-            {
-                bool saved = SaveFileData(path, srcFileData, srcDataSize);
-                if (saved) result = 0;
-            }
-        }
-
-        UnloadFileData(srcFileData);
-        // 
-        
-        // int result = FileCopy(src, path);
-        
-        if (result != 0) {
+        if (result != 1) {
             TRACELOG(LOG_ERROR, TextFormat("Error while trying to save the skin (Error code: %d)", result));
         } else {
             ViewCtx.isInLibrary = true;
