@@ -3,7 +3,6 @@
 
 class Stone : public Block {
 public:
-    Stone();
-
-    std::shared_ptr<InventoryItem> dropItem(std::shared_ptr<Item> tool) override;
+    BlockID getId() const override { return BlockID::STONE; }
+    std::unique_ptr<Item> dropItem(Item* tool) override;
 };

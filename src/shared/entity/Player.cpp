@@ -1,11 +1,9 @@
 #include "Types.hpp"
 #include <entity/Player.hpp>
 #include <entity/Entity.hpp>
-#include <world/Block.hpp>
 #include <world/World.hpp>
-#include <world/Chunk.hpp>
 
-Player::Player(std::shared_ptr<World> world) : Mob(world), Inventory(36), m_id(0), m_gamemode(GAMEMODE_SURVIVAL), m_fly(false), m_breakingBlock(false) {
+Player::Player(World& world) : Mob(world), Inventory(36), m_id(0), m_gamemode(GAMEMODE_SURVIVAL), m_fly(false), m_breakingBlock(false) {
     m_header = ObjectHeader::PLAYER;
 
     // clang-format off
@@ -29,18 +27,18 @@ Player::Player(std::shared_ptr<World> world) : Mob(world), Inventory(36), m_id(0
 
     if(m_gamemode == GAMEMODE_CREATIVE) {
         for(int i = 1; i < 20; i++) {
-            if(i == ItemID::BEDROCK) {
+            if(i == (int)BlockID::BEDROCK) {
                 continue;
             }
 
-            addItem(std::make_shared<InventoryItem>(static_cast<ItemID>(i), 64));
+            addItem(std::make_unique<Item>(static_cast<ItemID>(i)), 64);
         }
 
-        for (auto& col : colors) {
-            auto wool = std::make_shared<InventoryItem>(WOOL, 64);
-            wool->setTag(TagID::TAG_COLOR, col);
-            addItem(wool);
-        }
+        // for (auto& col : colors) {
+        //     auto wool = std::make_shared<InventoryItem>(WOOL, 64);
+        //     wool->setTag(TagID::TAG_COLOR, col);
+        //     addItem(wool);
+        // }
     }
 }
 
@@ -84,12 +82,6 @@ DataStream Player::serialize() {
     ret.add(m_animFrame);
     ret.add<uint8_t>('I');
 
-    for (auto i = 0; i < m_inventory.size(); i++) {
-        if (m_inventory[i]) {
-            ret.add<uint8_t>(i);
-        }
-    }
-
     return ret;
 }
 
@@ -108,36 +100,32 @@ bool Player::canAccessBlock(BlockPosition target) {
     return playerPos.distance(Vec2f {static_cast<float>(target.x), static_cast<float>(target.y)}) <= 4.f;
 }
 
-bool Player::canDestroyBlock(World* world, BlockPosition target) {
-    if (world->isOutOfBound(target)) {
+bool Player::canDestroyBlock(World& world, BlockPosition target) {
+    if (world.isOutOfBound(target)) {
         return false;
     }
 
-    if (auto block = world->getBlock(target)) {
-        if(block == nullptr) return false;
+    auto block = world.getBlock(target);
 
-        ItemID type = block->getID();
+    if (block == BlockID::AIR || block == BlockID::BEDROCK) return false;
 
-        return type != ItemID::BEDROCK && type > 0;
-    }
-
-    return false;
+    return true;
 }
 
-bool Player::canPlaceBlock(World* world, BlockPosition target) {
-    if (world->isOutOfBound(target)) {
+bool Player::canPlaceBlock(World& world, BlockPosition target) {
+    if (world.isOutOfBound(target)) {
         return false;
     }
 
     bool blockAround = (
-        world->getBlock({target.x - 1, target.y, target.layer}) || 
-        world->getBlock({target.x + 1, target.y, target.layer}) ||
-        world->getBlock({target.x, target.y - 1, target.layer}) || 
-        world->getBlock({target.x, target.y + 1, target.layer}) ||
-        world->getBlock({target.x, target.y, !target.layer})
+        BlockID::AIR != world.getBlock({target.x - 1, target.y, target.layer}) || 
+        BlockID::AIR != world.getBlock({target.x + 1, target.y, target.layer}) ||
+        BlockID::AIR != world.getBlock({target.x, target.y - 1, target.layer}) || 
+        BlockID::AIR != world.getBlock({target.x, target.y + 1, target.layer}) ||
+        BlockID::AIR != world.getBlock({target.x, target.y, !target.layer})
     );
 
-    return !world->getBlock(target) && blockAround;
+    return world.getBlock(target) == BlockID::AIR && blockAround;
 }
 
 void Player::setGamemode(GameMode gamemode) {

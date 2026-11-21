@@ -1,8 +1,7 @@
+#include <net/Multiplayer.hpp>
 #include <entity/OnlinePlayer.hpp>
 #include <world/ClientWorld.hpp>
-#include <net/Multiplayer.hpp>
 #include <managers/Debug.hpp>
-#include <world/Chunk.hpp>
 #include <Logger.hpp>
 #include <Game.hpp>
 
@@ -176,7 +175,7 @@ void Multiplayer::handlePlayer(Packet& packet) {
         auto otherPlayer = world->getPlayer(id);
 
         if(!otherPlayer) {
-            otherPlayer = std::make_shared<OnlinePlayer>(world);
+            otherPlayer = std::make_shared<OnlinePlayer>(*world);
             world->setPlayer(id, otherPlayer);
         }
 
@@ -200,7 +199,7 @@ void Multiplayer::handleLoadPlayer(Packet& packet) {
         std::string username = packet.get("");
         
         if(!player) {
-            player = std::make_shared<OnlinePlayer>(world);
+            player = std::make_shared<OnlinePlayer>(*world);
             world->setPlayer(id, player);
         }
 
@@ -220,14 +219,14 @@ void Multiplayer::handleUnloadPlayer(Packet& packet) {
 }
 
 void Multiplayer::handleChunk(Packet& packet) {
-    auto game = Game::get();
-    auto world = game->getWorld();
-    auto pos = packet.get<Vec2i>();
-    packet.reset();
+    // auto game = Game::get();
+    // auto world = game->getWorld();
+    // auto pos = packet.get<Vec2i>();
+    // packet.reset();
 
-    auto chunk = std::make_shared<Chunk>();
-    chunk->deserialize(packet);
-    world->addChunk(pos, chunk);
+    // auto chunk = std::make_shared<Chunk>();
+    // chunk->deserialize(packet);
+    // world->addChunk(pos, chunk);
 }
 
 void Multiplayer::handleTerrain(Packet& packet) {
@@ -237,7 +236,7 @@ void Multiplayer::handleTerrain(Packet& packet) {
 
     auto game = Game::get();
     auto world = game->getWorld();
-    auto player = std::make_shared<LocalPlayer>(world);
+    auto player = std::make_shared<LocalPlayer>(*world);
     game->setPlayer(player);
     world->setPlayer(m_myPlayerId, player);
     m_state = PLAYING;

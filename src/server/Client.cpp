@@ -1,7 +1,6 @@
 #include <Client.hpp>
 #include <Server.hpp>
 #include <world/World.hpp>
-#include <world/Chunk.hpp>
 #include <entity/Player.hpp>
 #include <Logger.hpp>
 #include <Timer.hpp>

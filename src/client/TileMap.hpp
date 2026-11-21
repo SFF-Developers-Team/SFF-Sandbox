@@ -1,4 +1,5 @@
 #pragma once
+#include <fix_win32_compatibility.h>
 #include <raylib.h>
 #include <vector>
 #include <string>

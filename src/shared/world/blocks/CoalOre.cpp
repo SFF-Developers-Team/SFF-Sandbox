@@ -1,10 +1,8 @@
 #include <world/blocks/CoalOre.hpp>
 
-CoalOre::CoalOre() : Stone() {}
-
-std::shared_ptr<InventoryItem> CoalOre::dropItem(std::shared_ptr<Item> tool) {
+std::unique_ptr<Item> CoalOre::dropItem(Item* tool) {
     if (tool && tool->getType() == TYPE_TOOL_PICKAXE) {
-        return std::make_shared<InventoryItem>(COAL);
+        return std::make_unique<Item>(ItemID::COAL);
     }
 
     return nullptr;

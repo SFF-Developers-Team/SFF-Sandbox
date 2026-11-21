@@ -3,13 +3,7 @@
 #include <ItemDatabase.hpp>
 #include <world/Block.hpp>
 
-Item::Item(ItemID id) : Serializable(ObjectHeader::ITEM), m_id(id) {}
-
-Item::Item(Item& item) : Item(item.m_id) {
-    m_tags = item.m_tags;
-}
-
-int Item::getMaxCount() {
+int Item::getMaxCount() const {
     return (isTool()) ? 1 : 64;
 }
 
@@ -17,18 +11,7 @@ DataStream Item::serialize() {
     auto ret = Serializable::serialize();
 
     ret.add(m_id);
-    ret.add<uint8_t>('T');
-    ret.add<uint8_t>(m_tags.size());
-
-    for(auto& [key, value] : m_tags) {
-        ret.add<TagID>(key);
-
-        switch(key) {
-            case TAG_COLOR: ret.add<Col3u>(std::get<Col3u>(value)); break;
-            case TAG_NATURAL:
-            case TAG_GHOST: ret.add<bool>(std::get<bool>(value)); break;
-        }
-    }
+    ret.add(m_aux);
 
     return ret;
 }
@@ -36,30 +19,18 @@ DataStream Item::serialize() {
 bool Item::deserialize(DataStream& stream) {
     if(!Serializable::deserialize(stream)) return false;
     
-    m_id = stream.get<ItemID>();
-
-    if(stream.get<uint8_t>() == 'T') {
-        auto tagsc = stream.get<uint8_t>();
-
-        for(auto i = 0; i < tagsc; i++) {
-            TagID key = stream.get<TagID>();
-
-            switch(key) {
-                case TAG_COLOR: m_tags[key] = stream.get<Col3u>({255, 255, 255}); break;
-                case TAG_GHOST: m_tags[key] = stream.get<bool>(); break;
-            }
-        }
-    }
+    m_id = stream.get<int>();
+    m_aux = stream.get<int>();
 
     return true;
 }
 
-bool Item::isTool() {
+bool Item::isTool() const {
     auto type = getType();
     return type > TYPE_ITEM;
 }
 
-float Item::getToolSpeed() {
+float Item::getToolSpeed() const {
     auto type = getType();
 
     if (type > TYPE_ITEM) {

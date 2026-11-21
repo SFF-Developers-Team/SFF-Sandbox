@@ -2,7 +2,6 @@
 #include <managers/RenderManager.hpp>
 #include <entity/LocalPlayer.hpp>
 #include <world/World.hpp>
-#include <raylib.h>
 
 HeartsIndicator::HeartsIndicator(std::shared_ptr<LocalPlayer> player) : m_player(player) {
     // maxHealth = 20; spriteSize = 8;

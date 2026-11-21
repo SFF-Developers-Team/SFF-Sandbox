@@ -3,7 +3,7 @@
 #include <managers/RenderManager.hpp>
 #include <managers/Debug.hpp>
 
-ClientPlayer::ClientPlayer(std::shared_ptr<World> world) : Player(world) {}
+ClientPlayer::ClientPlayer(World& world) : Player(world) {}
 
 void ClientPlayer::draw() {
     auto tex = TextureManager::get()->getTexture("player.png");

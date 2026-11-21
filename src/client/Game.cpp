@@ -84,7 +84,7 @@ void Game::init(std::vector<std::string>& args) {
     });
 #endif
 
-    InitWindow(GetScreenWidth(), GetScreenHeight(), "SFF Sandbox");
+    InitWindow(1280, 720, "SFF Sandbox");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetWindowMinSize(640, 360);
     InitAudioDevice();
@@ -128,6 +128,7 @@ void Game::init(std::vector<std::string>& args) {
     StyleManager::get();
     RecipesManager::get();
     // Debug::get()->allocateConsole();
+    Block::init();
 
     // Load main menu
     pushScene(std::make_shared<MainMenuScene>());

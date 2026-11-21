@@ -249,7 +249,9 @@ enum GameMode : uint8_t {
     GAMEMODE_SURVIVAL
 };
 
-enum ItemID : uint8_t {
+#define ITEM_ID_BEGIN 7000
+
+enum class BlockID : uint16_t {
     AIR = 0,
     GRASS,
     DIRT,
@@ -262,15 +264,18 @@ enum ItemID : uint8_t {
     OAK_LOG,
     LEAVES,
     COAL_ORE,
-    IRON_ORE_BLOCK,
-    GOLD_ORE_BLOCK,
+    IRON_ORE,
+    GOLD_ORE,
     DIAMOND_ORE,
     LAPIZ_ORE,
     BOOKSHELF,
     FLOWER_POT,
     FURNACE,
-    ACTIVE_FURHANCE,
-    STICK,
+    ACTIVE_FURHANCE
+};
+
+enum class ItemID : uint16_t {
+    STICK = ITEM_ID_BEGIN,
     WOODEN_PICKAXE,
     WOODEN_SWORD,
     STONE_PICKAXE,
@@ -307,17 +312,6 @@ enum ItemType : uint8_t {
     TYPE_TOOL_HOE,
     TYPE_WEAPON
 };
-
-enum TagID : uint8_t {
-    TAG_COLOR,
-    TAG_GHOST,
-    TAG_EFFICIENCY,
-    TAG_DAMAGE,
-    TAG_NATURAL
-};
-
-using TagValue = std::variant<Col3u, bool, uint8_t>;
-using ItemTags = std::map<TagID, TagValue>;
 
 struct BlockPosition {
     int x;

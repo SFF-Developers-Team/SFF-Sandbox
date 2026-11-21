@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.10)
 project(SFFSandbox 
     DESCRIPTION "SFF Sandbox Game"
     HOMEPAGE_URL "https://github.com/Kolyah35/SFF-Sandbox"
@@ -52,10 +52,13 @@ file(GLOB SERVER_SOURCES CONFIGURE_DEPENDS
     "src/server/*.cpp"
 )
 
-add_subdirectory(libs/raylib)
-add_subdirectory(libs/GitHash)
-add_subdirectory(libs/miniz)
-add_subdirectory(libs/enet)
+include(cmake/CPM.cmake)
+
+CPMAddPackage("gh:raysan5/raylib#6.2")
+CPMAddPackage("gh:robloach/raylib-cpp@6.0.3")
+CPMAddPackage("gh:Svalorzen/GitHash#master")
+CPMAddPackage("gh:richgel999/miniz#3.1.2")
+CPMAddPackage("gh:zpl-c/enet@2.7.0")
 
 if(${PLATFORM} STREQUAL "Android")
     set(PLATFORM_LIBS m c log android EGL GLESv2 OpenSLES dl unwind c++_static)

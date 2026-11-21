@@ -3,7 +3,6 @@
 
 class Grass : public Block {
 public:
-    Grass();
-
-    std::shared_ptr<InventoryItem> dropItem(std::shared_ptr<Item> tool) override;
+    BlockID getId() const override { return BlockID::GRASS; }
+    std::unique_ptr<Item> dropItem(Item* tool) override;
 };

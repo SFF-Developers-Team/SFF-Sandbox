@@ -1,4 +1,5 @@
 #include <ui/basic/ToggleButton.hpp>
+#include <fix_win32_compatibility.h>
 #include <raylib.h>
 #include <format>
 #include <managers/RenderManager.hpp>

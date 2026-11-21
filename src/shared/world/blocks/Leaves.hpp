@@ -3,8 +3,7 @@
 
 class Leaves : public Block {
 public:
-    Leaves();
-
-    void onRandomTick(World* world, BlockPosition position) override;
-    std::shared_ptr<InventoryItem> dropItem(std::shared_ptr<Item> tool) override;
+    BlockID getId() const override { return BlockID::LEAVES; }
+    void onRandomTick(World& world, BlockPosition position) override;
+    std::unique_ptr<Item> dropItem(Item* tool) override;
 };

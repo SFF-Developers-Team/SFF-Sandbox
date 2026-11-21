@@ -2,6 +2,7 @@
 #include <managers/RenderManager.hpp>
 #include <managers/TextureManager.hpp>
 #include <managers/StyleManager.hpp>
+#include <fix_win32_compatibility.h>
 #include <raylib.h>
 #include <algorithm>
 

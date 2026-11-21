@@ -65,25 +65,25 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
         float const elementWidth = video->getWidth() - video->getBorderWidth() * 4;
         
 #ifdef PLATFORM_DESKTOP
-        video->addChild(std::make_shared<SettingsToggle>("video.fullscreen", "Fullscreen", [stm, this](ToggleButton*, bool flag) {
-            // auto modes = stm->getModes();
-            auto mon = GetCurrentMonitor();
-            auto game =  Game::get();
-            // auto mode = stm->getValue<int>("video.resolution", modes.size());
+        // video->addChild(std::make_shared<SettingsToggle>("video.fullscreen", "Fullscreen", [stm, this](ToggleButton*, bool flag) {
+        //     // auto modes = stm->getModes();
+        //     auto mon = GetCurrentMonitor();
+        //     auto game =  Game::get();
+        //     // auto mode = stm->getValue<int>("video.resolution", modes.size());
 
-            Vec2i windowSize = game->getLastWindowSize();
-            Vec2i fullscreenSize = {GetMonitorWidth(mon), GetMonitorHeight(mon)};
+        //     Vec2i windowSize = game->getLastWindowSize();
+        //     Vec2i fullscreenSize = {GetMonitorWidth(mon), GetMonitorHeight(mon)};
 
-            auto states = FLAG_WINDOW_UNDECORATED;
+        //     auto states = FLAG_WINDOW_UNDECORATED;
 
-            (flag) ? SetWindowState(states) : ClearWindowState(states);
-            SetWindowSize((flag) ? fullscreenSize.x : windowSize.x, (flag) ? fullscreenSize.y : windowSize.y);
-            SetWindowPosition((flag) ? 0 : (GetMonitorWidth(mon) - windowSize.x) / 2, (flag) ? 0 : (GetMonitorHeight(mon) - windowSize.y) / 2);
+        //     (flag) ? SetWindowState(states) : ClearWindowState(states);
+        //     SetWindowSize((flag) ? fullscreenSize.x : windowSize.x, (flag) ? fullscreenSize.y : windowSize.y);
+        //     SetWindowPosition((flag) ? 0 : (GetMonitorWidth(mon) - windowSize.x) / 2, (flag) ? 0 : (GetMonitorHeight(mon) - windowSize.y) / 2);
         
-            game->updateGuiScale();
-            game->checkSceneFlags(game->getScene());
-            onShow();
-        }));
+        //     game->updateGuiScale();
+        //     game->checkSceneFlags(game->getScene());
+        //     onShow();
+        // }));
 
         video->addChild(std::make_shared<SettingsToggle>("video.vsync", "VSYNC", [stm](ToggleButton*, bool flag) {
             if(!flag && IsWindowState(FLAG_VSYNC_HINT)) {

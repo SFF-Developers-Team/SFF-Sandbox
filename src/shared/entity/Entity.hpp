@@ -4,6 +4,7 @@
 #include <Types.hpp>
 #include <vector>
 
+class World;
 
 class Entity : public Serializable {
 protected:
@@ -18,7 +19,7 @@ protected:
 public:
     Entity();
 
-    virtual void onTick(class World* world) {}
+    virtual void onTick(World& world) {}
     void move(std::vector<Hitbox>& env, float xa, float ya);
 
     DataStream serialize() override;

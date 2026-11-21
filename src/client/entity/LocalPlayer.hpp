@@ -1,12 +1,11 @@
 #pragma once
+#include <fix_win32_compatibility.h>
+#include <raylib.h>
 #include <entity/ClientPlayer.hpp>
 #include <Types.hpp>
-#include <raylib.h>
 #include <memory>
 
 class World;
-class Chunk;
-class Block;
 
 class LocalPlayer : public ClientPlayer {
 private:
@@ -18,22 +17,21 @@ private:
     float m_forward;
     
 public:
-    LocalPlayer(std::shared_ptr<World> world);
+    LocalPlayer(World& world);
 
-    void onTick(World* world) override;
+    void onTick(World& world) override;
     void update();
-    void onTickControls(World* world);
+    void onTickControls(World& world);
     void updateCamera();
     void updateAnimation();
     void updateControls();
 
-    bool isChunkInView(Vec2i chunkPos);
     bool isRectInView(Rectf rect);
     
     BlockPosition getTargetBlock();
     
-    void placeBlock(World* world);
-    void destroyBlock(World* world);
+    void placeBlock(World& world);
+    void destroyBlock(World& world);
 
     Camera2D& getCamera() { return m_camera; }
 

@@ -3,6 +3,7 @@
 #include <managers/TextureManager.hpp>
 #include <managers/StyleManager.hpp>
 #include <algorithm>
+#include <fix_win32_compatibility.h>
 #include <raylib.h>
 #include <format>
 #include <rlgl.h>

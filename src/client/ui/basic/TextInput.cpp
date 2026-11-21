@@ -2,6 +2,7 @@
 #include <managers/StyleManager.hpp>
 #include <managers/TextureManager.hpp>
 #include <managers/RenderManager.hpp>
+#include <fix_win32_compatibility.h>
 #include <raylib.h>
 #include <Logger.hpp>
 

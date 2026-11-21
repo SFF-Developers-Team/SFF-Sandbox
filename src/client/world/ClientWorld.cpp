@@ -1,21 +1,15 @@
+#include <entity/LocalPlayer.hpp>
 #include "world/Block.hpp"
 #include "world/World.hpp"
 #include <memory>
 #include <world/ClientWorld.hpp>
-#include <world/ClientChunk.hpp>
-#include <entity/LocalPlayer.hpp>
-#include <cassert>
 #include <managers/Debug.hpp>
 #include <managers/RenderManager.hpp>
 #include <entity/ClientPlayer.hpp>
+#include <raylib.h>
+#include <raymath.h>
 
 ClientWorld::ClientWorld(std::filesystem::path const& saveDir) : World(saveDir) {}
-
-void ClientWorld::addChunk(Vec2i pos, std::shared_ptr<Chunk> chunk) {
-    auto clChunk = std::make_shared<ClientChunk>(std::move(*chunk));
-    clChunk->rebuild();
-    World::addChunk(pos, clChunk);
-}
 
 void ClientWorld::draw(std::shared_ptr<LocalPlayer> player) {
     auto dbg = Debug::get();
@@ -23,13 +17,23 @@ void ClientWorld::draw(std::shared_ptr<LocalPlayer> player) {
     auto blockCount = 0;
     auto playersCount = 0;
 
-    for (auto& [pos, chunk] : getChunks()) {
-        if (player->isChunkInView(pos)) {
-            auto clChunk = std::dynamic_pointer_cast<ClientChunk>(chunk);
-            clChunk->draw(pos);
+    Camera2D& camera = player->getCamera();
+    Vector2 min = GetScreenToWorld2D(Vector2Zero(), camera);
+    Vector2 max = GetScreenToWorld2D(Vector2 {float(GetScreenWidth()), float(GetScreenHeight())}, camera);
 
-            chunkCount++;
-            blockCount += clChunk->getBlockCount();
+    for (int y = min.y; y < max.y; y++) {
+        for (int x = min.x; x < max.x; x++) {
+            BlockID block0 = getBlock({x, y, 0});
+            BlockID block1 = getBlock({x, y, 1});
+
+            if (block1 != BlockID::AIR) {
+                RenderManager::renderBlock(Rectf {float(x), float(y), 1.f, 1.f}, {x, y, 1}, block1);
+                continue;
+            }
+
+            if (block0 != BlockID::AIR) {
+                RenderManager::renderBlock(Rectf {float(x), float(y), 1.f, 1.f}, {x, y, 0}, block0);
+            }
         }
     }
 
@@ -57,7 +61,7 @@ void ClientWorld::draw(std::shared_ptr<LocalPlayer> player) {
 
         if (player->isRectInView(blockRect)) {
             auto block = getBlock(info.pos);
-            RenderManager::drawTile("gui.png", 8 + (info.progress / block->getDurability()) * 5.f, blockRect);   
+            RenderManager::drawTile("gui.png", 8 + (info.progress / Block::getDurability(block)) * 5.f, blockRect);   
         }
     }
 

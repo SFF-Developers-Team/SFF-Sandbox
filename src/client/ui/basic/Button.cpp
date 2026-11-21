@@ -1,5 +1,6 @@
 #include <ui/basic/Button.hpp>
 #include <ui/basic/Text.hpp>
+#include <fix_win32_compatibility.h>
 #include <raylib.h>
 #include <managers/StyleManager.hpp>
 #include <managers/RenderManager.hpp>

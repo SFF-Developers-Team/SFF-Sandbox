@@ -1,20 +1,17 @@
 #include <managers/TextureManager.hpp>
 #include <managers/RenderManager.hpp>
 #include <entity/LocalPlayer.hpp>
-#include <world/Chunk.hpp>
 #include <world/ClientWorld.hpp>
-#include <inventory/InventoryItem.hpp>
 #include <TileMap.hpp>
 #include <Types.hpp>
 #include <managers/Debug.hpp>
 #include <Game.hpp>
-#include <assert.h>
 #include <Utils.hpp>
 #include <string>
 #include <unordered_map>
 #include <managers/SettingsManager.hpp>
-#include <world/ClientChunk.hpp>
 #include <rlgl.h>
+#include <cmath>
 
 std::unordered_map<char, Color> colorMap = {
     {'r', RED},
@@ -64,7 +61,7 @@ void RenderManager::drawText(std::string const& fontKey, std::string const& text
         pos.y -= size.y * origin.y;
     }
 
-    DrawTextEx(font, text.c_str(), {roundf(pos.x), roundf(pos.y)}, fontSize, spacing, color.to<Color>());
+    DrawTextEx(font, text.c_str(), {std::round(pos.x), std::round(pos.y)}, fontSize, spacing, color.to<Color>());
 }
 
 void RenderManager::drawColoredText(std::string const& fontKey, std::string const& text, Vec2f pos, Col4u color, float fontSize, Vec2f origin, float spacing) {
@@ -151,35 +148,26 @@ Vec2f RenderManager::getTextSize(std::string const& text, std::string const& fon
     return Vec2f {size.x, size.y}; 
 }
 
-void RenderManager::renderBlock(Rectf dest, BlockPosition position, std::shared_ptr<Block> block, uint8_t alpha) {
-    if (block != nullptr) {
+void RenderManager::renderBlock(Rectf dest, BlockPosition position, BlockID block, uint8_t alpha) {
+    if (block != BlockID::AIR) {
         auto sm = SettingsManager::get();
         
         Col3u col = {255, 255, 255};
-
-        if (block->hasTag(TagID::TAG_COLOR)) { 
-            col = block->getTag<Col3u>(TagID::TAG_COLOR);
-        }
 
         if(position.layer < 1) {
             col.brightness(-(1.f - sm->getValue<float>("video.layer0.brightness", 0.75f)));
         }
 
-        drawTile("blocks.png", block->getSpriteID(), dest, {col.r, col.g, col.b, alpha});
+        drawTile("blocks.png", (int)block - 1, dest, {col.r, col.g, col.b, alpha});
     }
 }
 
-void RenderManager::renderInventoryItem(Rectf dest, std::shared_ptr<InventoryItem> item) {
-    Col3u col = {255, 255, 255};
+void RenderManager::renderInventoryItem(Rectf dest, Item const& item, int count) {
+    auto id = item.isBlockItem() ? item.getID() : item.getID() - ITEM_ID_BEGIN;
+    drawTile((item.isBlockItem() ? "blocks.png" : "items.png"), id - 1, dest);
 
-    if (item->hasTag(TagID::TAG_COLOR)) { 
-        col = item->getTag<Col3u>(TagID::TAG_COLOR);
-    }
-
-    drawTile((item->getType() == TYPE_BLOCK) ? "blocks.png" : "items.png", item->getSpriteID(), dest, {col.r, col.g, col.b, 255});
-
-    if(item->getCount() > 1) {
-        RenderManager::drawText("font", std::to_string(item->getCount()), {dest.x + dest.width, dest.y + dest.height}, COL_WHITE, 0.f, {1.f, 1.f});
+    if(count > 1) {
+        RenderManager::drawText("font", std::to_string(count), {dest.x + dest.width, dest.y + dest.height}, COL_WHITE, 0.f, {1.f, 1.f});
     }
 }
 

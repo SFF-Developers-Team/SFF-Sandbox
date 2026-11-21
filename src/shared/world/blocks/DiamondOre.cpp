@@ -1,10 +1,8 @@
 #include <world/blocks/DiamondOre.hpp>
 
-DiamondOre::DiamondOre() : Stone() {}
-
-std::shared_ptr<InventoryItem> DiamondOre::dropItem(std::shared_ptr<Item> tool) {
+std::unique_ptr<Item> DiamondOre::dropItem(Item* tool) {
     if (tool && tool->getType() == TYPE_TOOL_PICKAXE) {
-        return std::make_shared<InventoryItem>(DIAMOND);
+        return std::make_unique<Item>(ItemID::DIAMOND);
     }
 
     return nullptr;

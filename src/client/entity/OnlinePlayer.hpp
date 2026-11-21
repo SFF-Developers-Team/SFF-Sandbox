@@ -14,7 +14,7 @@ protected:
     int m_index;
 
 public:
-    OnlinePlayer(std::shared_ptr<World> world);
+    OnlinePlayer(World& world);
 
     void update();
     bool deserialize(DataStream& bytes);

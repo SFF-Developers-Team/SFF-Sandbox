@@ -1,46 +1,189 @@
-#include <world/Block.hpp>
-#include <world/blocks/Leaves.hpp>
-#include <world/blocks/Stone.hpp>
-#include <world/blocks/Grass.hpp>
-#include <world/blocks/CoalOre.hpp>
-#include <world/blocks/IronOre.hpp>
-#include <world/blocks/GoldOre.hpp>
-#include <world/blocks/DiamondOre.hpp>
-#include <MiniFunction.hpp>
-#include <cassert>
+#include "Block.hpp"
+#include "blocks/CoalOre.hpp"
+#include "blocks/DiamondOre.hpp"
+#include "blocks/GoldOre.hpp"
+#include "blocks/Grass.hpp"
+#include "blocks/IronOre.hpp"
+#include "blocks/Leaves.hpp"
+#include "blocks/Stone.hpp"
 
-std::shared_ptr<Block> Block::create(ItemID id) {
-    switch (id) {
-        case LEAVES: return std::make_shared<Leaves>();
-        case STONE: return std::make_shared<Stone>();
-        case GRASS: return std::make_shared<Grass>();
-        case COAL_ORE: return std::make_shared<CoalOre>();
-        case IRON_ORE: return std::make_shared<IronOre>();
-        case GOLD_ORE: return std::make_shared<GoldOre>();
-        case DIAMOND_ORE: return std::make_shared<DiamondOre>();
-        default: return std::make_shared<Block>(id);
+struct BlockInfo {
+    std::string_view name;
+    float durability;
+    MaterialType material;
+};
+
+bool Block::m_inited = false;
+std::unordered_map<BlockID, std::unique_ptr<Block>> Block::m_blocksDb;
+
+std::unordered_map<BlockID, BlockInfo> BlocksDB = {
+    {BlockID::GRASS, {
+        .name = "Grass", 
+       //.type = TYPE_BLOCK,
+        //.spriteIndex = 0,
+        .durability = 0.6f,
+        //.bestTool = TYPE_TOOL_SHOVEL
+    }},
+    {BlockID::DIRT, {
+        .name = "Dirt", 
+       //.type = TYPE_BLOCK, 
+        //.spriteIndex = 1,
+        .durability = 0.5f,
+        //.bestTool = TYPE_TOOL_SHOVEL
+    }},
+    {BlockID::STONE, {
+        .name = "Stone", 
+       //.type = TYPE_BLOCK, 
+        .material = MATERIAL_STONE, 
+        //.spriteIndex = 2,
+        .durability = 1.5f,
+        //.bestTool = TYPE_TOOL_PICKAXE
+    }},
+    {BlockID::COBBLESTONE, {
+        .name = "Cobblestone", 
+       //.type = TYPE_BLOCK, 
+        .material = MATERIAL_STONE, 
+        //.spriteIndex = 3,
+        .durability = 2.f,
+        //.bestTool = TYPE_TOOL_PICKAXE
+    }},
+    {BlockID::PLANKS, {
+        .name = "Planks", 
+       //.type = TYPE_BLOCK, 
+        .material = MATERIAL_WOOD, 
+        //.spriteIndex = 4,
+        .durability = 2.f,
+        //.bestTool = TYPE_TOOL_AXE
+    }},
+    {BlockID::WOOL, {
+        .name = "Wool", 
+       //.type = TYPE_BLOCK, 
+        //.spriteIndex = 5,
+        .durability = 0.8f,
+    }},
+    {BlockID::BEDROCK, {
+        .name = "Bedrock", 
+       //.type = TYPE_BLOCK, 
+        .material = MATERIAL_NONE, 
+        //.spriteIndex = 6,
+        .durability = -1.f
+    }},
+    {BlockID::BRICKS, {
+        .name = "Bricks", 
+       //.type = TYPE_BLOCK, 
+        .material = MATERIAL_STONE, 
+        //.spriteIndex = 7,
+        .durability = 2.f,
+        //.bestTool = TYPE_TOOL_PICKAXE
+    }},
+    {BlockID::OAK_LOG, {
+        .name = "Oak log",
+       //.type = TYPE_BLOCK,
+        .material = MATERIAL_WOOD,
+        //.spriteIndex = 8,
+        .durability = 2.f,
+        //.bestTool = TYPE_TOOL_AXE
+    }},
+    {BlockID::LEAVES, {
+        .name = "Leaves",
+       //.type = TYPE_BLOCK,
+        .material = MATERIAL_NONE,
+        //.spriteIndex = 10,
+        .durability = 0.2f
+    }},
+    {BlockID::COAL_ORE, {
+        .name = "Coal ore",
+       //.type = TYPE_BLOCK,
+        .material = MATERIAL_STONE,
+        //.spriteIndex = 11,
+        .durability = 3.f,
+        //.bestTool = TYPE_TOOL_PICKAXE
+    }},
+    {BlockID::IRON_ORE, {
+        .name = "Iron ore",
+       //.type = TYPE_BLOCK,
+        .material = MATERIAL_STONE,
+        //.spriteIndex = 12,
+        .durability = 3.f,
+        //.bestTool = TYPE_TOOL_PICKAXE,
+        //.bestToolMaterial = MATERIAL_STONE
+    }},
+    {BlockID::GOLD_ORE, {
+        .name = "Gold ore",
+       //.type = TYPE_BLOCK,
+        .material = MATERIAL_STONE,
+        //.spriteIndex = 13,
+        .durability = 3.f,
+        //.bestTool = TYPE_TOOL_PICKAXE,
+        //.bestToolMaterial = MATERIAL_IRON
+    }},
+    {BlockID::DIAMOND_ORE, {
+        .name = "Diamond ore",
+       //.type = TYPE_BLOCK,
+        .material = MATERIAL_STONE,
+        //.spriteIndex = 14,
+        .durability = 3.f,
+        //.bestTool = TYPE_TOOL_PICKAXE,
+        //.bestToolMaterial = MATERIAL_IRON
+    }},
+    {BlockID::LAPIZ_ORE, {
+        .name = "Lapiz ore",
+       //.type = TYPE_BLOCK,
+        .material = MATERIAL_STONE,
+        //.spriteIndex = 15,
+        .durability = 3.f,
+        //.bestTool = TYPE_TOOL_PICKAXE,
+        //.bestToolMaterial = MATERIAL_STONE
+    }},
+    {BlockID::BOOKSHELF, {
+        .name = "Bookshelf",
+       //.type = TYPE_BLOCK,
+        .material = MATERIAL_WOOD,
+        //.spriteIndex = 16,
+        .durability = 2.f,
+        //.bestTool = TYPE_TOOL_AXE
+    }},
+    {BlockID::FLOWER_POT, {
+        .name = "Flower pot",
+       //.type = TYPE_BLOCK,
+        //.spriteIndex = 17,
+        .durability = 0.f,
+    }},
+    {BlockID::FURNACE, {
+        .name = "Furnace",
+       //.type = TYPE_BLOCK,
+        .material = MATERIAL_STONE,
+        //.spriteIndex = 18,
+        .durability = 3.5f,
+        //.bestTool = TYPE_TOOL_PICKAXE,
+    }},
+};
+
+void Block::init() {
+    if (m_inited) return;
+
+    m_blocksDb.try_emplace(BlockID::COAL_ORE, std::make_unique<CoalOre>());
+    m_blocksDb.try_emplace(BlockID::DIAMOND_ORE, std::make_unique<DiamondOre>());
+    m_blocksDb.try_emplace(BlockID::GOLD_ORE, std::make_unique<GoldOre>());
+    m_blocksDb.try_emplace(BlockID::GRASS, std::make_unique<Grass>());
+    m_blocksDb.try_emplace(BlockID::IRON_ORE, std::make_unique<IronOre>());
+    m_blocksDb.try_emplace(BlockID::LEAVES, std::make_unique<Leaves>());
+    m_blocksDb.try_emplace(BlockID::STONE, std::make_unique<Stone>());
+
+    m_inited = true;
+}
+
+Block* Block::get(BlockID id) {
+    auto it = m_blocksDb.find(id);
+
+    if (it != m_blocksDb.end()) {
+        return it->second.get();
     }
+
+    return nullptr;
 }
 
-std::shared_ptr<Block> Block::create(Item& block) {
-    auto ret = Block::create(block.getID());
-    ret->setTags(block.getTags());
-
-    return ret;
-}
-
-Block::Block(ItemID id) : Item(id) {
-    m_header = BLOCK;
-}
-
-Block::Block(Block& block) : Item(reinterpret_cast<Item&>(block)) {
-    m_header = BLOCK;
-}
-
-Block::Block(InventoryItem& item) : Block(item.getID()) {
-    m_tags = item.getTags();
-}
-
-std::shared_ptr<InventoryItem> Block::dropItem(std::shared_ptr<Item> tool) {
-    return std::make_shared<InventoryItem>(*this, 1);
+float Block::getDurability(BlockID id) {
+    auto it = BlocksDB.find(id);
+    return (it != BlocksDB.end() ? it->second.durability : 0.f);
 }

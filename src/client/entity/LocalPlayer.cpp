@@ -1,8 +1,8 @@
-#include "raylib.h"
+#include <fix_win32_compatibility.h>
+#include <raylib.h>
 #include <managers/SettingsManager.hpp>
 #include <entity/LocalPlayer.hpp>
 #include <world/Block.hpp>
-#include <world/Chunk.hpp>
 #include <world/World.hpp>
 #include <net/Multiplayer.hpp>
 #include <managers/Debug.hpp>
@@ -13,7 +13,7 @@
 #include <ItemDatabase.hpp>
 #include <raymath.h>
 
-LocalPlayer::LocalPlayer(std::shared_ptr<World> world) : ClientPlayer(world), m_forward(0.f), m_camera{0} {
+LocalPlayer::LocalPlayer(World& world) : ClientPlayer(world), m_forward(0.f), m_camera{0} {
     m_camera.zoom = 50.f;
     m_camera.offset = {GetScreenWidth() / 2.f, GetScreenHeight() / 2.f};
 }
@@ -70,7 +70,7 @@ BlockPosition LocalPlayer::getTargetBlock() {
     return {static_cast<int>(floorl(cur.x)), static_cast<int>(floorl(cur.y)), layer};
 }
 
-void LocalPlayer::onTickControls(World* world) {
+void LocalPlayer::onTickControls(World& world) {
     auto target = getTargetBlock();
     auto mp = Multiplayer::get();
     auto ct = Game::get()->getControlType();
@@ -85,7 +85,7 @@ void LocalPlayer::onTickControls(World* world) {
         }
 
         if (m_breakingBlock && IsMouseButtonUp(MOUSE_LEFT_BUTTON)) {
-            world->stopBreakingBlock(m_id);
+            world.stopBreakingBlock(m_id);
         }
 
         if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && canPlaceBlock(world, target)) {
@@ -102,7 +102,7 @@ void LocalPlayer::onTickControls(World* world) {
     }
 }
 
-void LocalPlayer::onTick(World* world) {
+void LocalPlayer::onTick(World& world) {
     Player::onTick(world);
 
     auto static prevAnimType = m_animType;
@@ -115,7 +115,7 @@ void LocalPlayer::onTick(World* world) {
     m_speed.x += (m_onGround ? (m_sneak ? 0.0025f : 0.06f) : 0.02f) * m_forward;
     m_speed.y += (!m_fly) ? 0.02f : 0.0f;
 
-    auto hitboxesAround = world->getHitboxes(m_hitbox.expand(m_speed.x, m_speed.y));
+    auto hitboxesAround = world.getHitboxes(m_hitbox.expand(m_speed.x, m_speed.y));
     move(hitboxesAround, m_speed.x, m_speed.y);
 
     m_speed.x *= 0.91f;
@@ -151,7 +151,7 @@ void LocalPlayer::onTick(World* world) {
         setAnimation(PLAYER_JUMP);
     }
 
-    if (world->getTime() < m_lastHurtTime + 15) {
+    if (world.getTime() < m_lastHurtTime + 15) {
         setAnimation(PLAYER_HURT);
     }
 
@@ -179,9 +179,9 @@ void LocalPlayer::onTick(World* world) {
 
     auto dbg = Debug::get();
     auto target = getTargetBlock();
-    auto block = world->getBlock(target);
+    auto block = world.getBlock(target);
 
-    dbg->setString(PLAYER_TARGET_BLOCK, "Target block: [{}, {}] ({})", target.x, target.y, (block ? block->getName() : "nullptr"));
+    // dbg->setString(PLAYER_TARGET_BLOCK, "Target block: [{}, {}] ({})", target.x, target.y, (block ? block->getName() : "nullptr"));
     dbg->setString(PLAYER_POSITION, "Position: [{:.2f}, {:.2f}]", m_hitbox.x, m_hitbox.y);
     dbg->setString(PLAYER_HEALTH, "Health: {}", m_health);
 }
@@ -232,20 +232,6 @@ void LocalPlayer::update() {
     updateAnimation();
 }
 
-bool LocalPlayer::isChunkInView(Vec2i chunkPos) {
-    Vec2i minPos = {chunkPos.x * CHUNK_WIDTH, chunkPos.y * CHUNK_HEIGHT};
-    Vec2i maxPos = {minPos.x + CHUNK_WIDTH, minPos.y + CHUNK_HEIGHT};
-    Vec2i zero = {0, 0};
-    Vec2i screen = {GetScreenWidth(), GetScreenHeight()};
-    Vector2 min = TO_CAMERA_POS(m_camera, zero);
-    Vector2 max = TO_CAMERA_POS(m_camera, screen);
-
-    bool isXIntersect = (min.x <= maxPos.x && max.x >= minPos.x);
-    bool isYIntersect = (min.y <= maxPos.y && max.y >= minPos.y);
-
-    return isXIntersect && isYIntersect;
-}
-
 bool LocalPlayer::isRectInView(Rectf rect) {
     Vec2i zero = {0, 0};
     Vec2i screen = {GetScreenWidth(), GetScreenHeight()};
@@ -284,12 +270,12 @@ void LocalPlayer::triggerDuck(bool toggle) {
     }
 }
 
-void LocalPlayer::placeBlock(World* world) {
-    if(getItem(m_selected) != nullptr) {
+void LocalPlayer::placeBlock(World& world) {
+    if(getItem(m_selected).item != nullptr) {
         auto target = getTargetBlock();
         auto mp = Multiplayer::get();
 
-        world->placeBlock(m_id, target);
+        world.placeBlock(m_id, target);
 
         // if (mp->isConnected()) {
         //     mp->sendPacket(Packet(ObjectHeader::BLOCK_PLACE, block->serialize()), BLOCKS);
@@ -297,11 +283,11 @@ void LocalPlayer::placeBlock(World* world) {
     }
 }
 
-void LocalPlayer::destroyBlock(World* world) {
+void LocalPlayer::destroyBlock(World& world) {
     auto mp = Multiplayer::get();
     auto target = getTargetBlock();
 
-    world->breakBlock(m_id, target);
+    world.breakBlock(m_id, target);
 
     if (mp->isConnected()) {
         mp->sendPacket(Packet(ObjectHeader::BLOCK_DESTROY, target), Channel::BLOCKS);

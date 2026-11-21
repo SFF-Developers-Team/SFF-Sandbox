@@ -10,7 +10,6 @@
 #include <managers/StyleManager.hpp>
 #include <world/ClientWorld.hpp>
 #include <entity/LocalPlayer.hpp>
-#include <world/gen/WorldGenNormal.hpp>
 #include <Game.hpp>
 #include <Platform.hpp>
 #include <list>
@@ -25,11 +24,11 @@ MainMenuScene::MainMenuScene() : MenuBase() {
             srand(time(0));
 
             // if (!world->load()) {
-                world->setGenerator(std::make_shared<WorldGenNormal>(rand()));
+                // world->setGenerator(std::make_shared<WorldGenNormal>(rand()));
                 world->generate();
             // }
 
-            auto player = std::make_shared<LocalPlayer>(world);
+            auto player = std::make_shared<LocalPlayer>(*world);
 
             game->setWorld(world);
             game->setPlayer(player);

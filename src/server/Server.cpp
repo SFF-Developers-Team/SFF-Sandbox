@@ -1,6 +1,5 @@
 #include <world/gen/WorldGenNormal.hpp>
 #include <DefaultConfig.hpp>
-#include <world/Chunk.hpp>
 #include <world/World.hpp>
 #include <Packet.hpp>
 #include <Server.hpp>

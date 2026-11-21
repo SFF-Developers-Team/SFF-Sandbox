@@ -1,4 +1,3 @@
-#include <world/gen/WorldGenNormal.hpp>
 #include <scenes/PlayScene.hpp>
 #include <scenes/ErrorScene.hpp>
 #include <scenes/MainMenuScene.hpp>
@@ -88,9 +87,9 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
 
     std::vector<std::string> recipesList;
 
-    for (auto& recipe : RecipesManager::get()->getRecipes()) {
-        recipesList.push_back(recipe.result->getName());
-    }
+    // for (auto& recipe : RecipesManager::get()->getRecipes()) {
+    //     recipesList.push_back(recipe.result->getName());
+    // }
 
     auto craftList = std::make_shared<List>(recipesList, [inventoryContainer](auto, int id) {
         auto ingredients = inventoryContainer->getChild<IngredientsList>("ingredients");
@@ -124,7 +123,7 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
         auto rm = RecipesManager::get();
         auto recipes = rm->getRecipes();
 
-        rm->craftItem(m_player, recipes[selected]);
+        rm->craftItem(*m_player, recipes[selected]);
     });
     craftBtn->setPos({craftList->getX(), craftList->getBottomY() + border});
     craftBtn->setAnchor({0.f, 0.f});
@@ -194,11 +193,11 @@ void PlayScene::draw() {
         // }
 
         if (m_player->canAccessBlock(target)) {
-            if(m_player->canPlaceBlock(m_world.get(), target)) {
+            if(m_player->canPlaceBlock(*m_world, target)) {
                 RenderManager::drawTile("gui.png", 1, BLOCK_RECT(target.x, target.y));
             }
 
-            if(m_player->canDestroyBlock(m_world.get(), target)) {
+            if(m_player->canDestroyBlock(*m_world, target)) {
                 RenderManager::drawTile("gui.png", 2 + IsKeyDown(KEY_LEFT_CONTROL), BLOCK_RECT(target.x, target.y));
             }
         }
@@ -253,10 +252,10 @@ void PlayScene::update() {
     auto playerList = getChild<List>("playerlist"); 
     auto inputMsg = getChild<TextInput>("inputmsg");
 
-    auto enabledBlockInfo = stm->getValue<bool>("video.blockinfo", true) && block != nullptr && !m_inventoryEnabled && !m_paused;
+    // auto enabledBlockInfo = stm->getValue<bool>("video.blockinfo", true) && block != nullptr && !m_inventoryEnabled && !m_paused;
 
-    blockInfo->setVisible(enabledBlockInfo);
-    blockInfo->setEnabled(enabledBlockInfo);
+    // blockInfo->setVisible(enabledBlockInfo);
+    // blockInfo->setEnabled(enabledBlockInfo);
 
     if (playerList != nullptr) {
         playerList->setVisible(m_paused);

@@ -9,38 +9,34 @@ class Block;
 
 class Item : public Serializable {
 protected:
-    ItemID m_id;
-    ItemTags m_tags;
+    int m_id;
+    int m_aux;
 
 public:
-    Item(ItemID id);
-    Item(Item& item);
+    Item(int id) : Serializable(ObjectHeader::ITEM), m_id(id), m_aux(0) {}
+    Item(ItemID id) : Item(static_cast<int>(id)) {}
+    Item(BlockID id) : Item(static_cast<int>(id)) {}
 
-    ItemID getID() { return m_id; }
-    void setID(ItemID id) { m_id = id; }
+    int getID() const { return m_id; }
+    int getAux() const {return m_aux; }
+    // void setID(int id) { m_id = id; }
 
-    void setTag(TagID key, TagValue value) { m_tags[key] = value; }
-    bool hasTag(TagID key) { return m_tags.contains(key); }
-    void removeTag(TagID key) { m_tags.erase(key); }
+    bool isBlockItem() const { return m_id < ITEM_ID_BEGIN; }
 
-    template <typename T>
-    T getTag(TagID key) { return std::get<T>(m_tags[key]); }
-    auto& getTags() { return m_tags; }
-    void setTags(ItemTags const& newTags) { m_tags = newTags; }
+    ItemType getType() const { return gItemDatabase[(ItemID)m_id].type; }
+    ItemType getBestTool() const { return gItemDatabase[(ItemID)m_id].bestTool; }
+    MaterialType getBestToolMaterial() const { return gItemDatabase[(ItemID)m_id].bestToolMaterial; }
+    std::string_view getName() const { return gItemDatabase[(ItemID)m_id].name; }
+    MaterialType getMaterial() const { return gItemDatabase[(ItemID)m_id].material; }
+    uint16_t getSpriteID() const { return gItemDatabase[(ItemID)m_id].spriteIndex; }
+    float getDurability() const { return gItemDatabase[(ItemID)m_id].durability; }
 
-    ItemType getType() { return gItemDatabase[m_id].type; }
-    ItemType getBestTool() { return gItemDatabase[m_id].bestTool; }
-    MaterialType getBestToolMaterial() { return gItemDatabase[m_id].bestToolMaterial; }
-    std::string getName() { return gItemDatabase[m_id].name; }
-    MaterialType getMaterial() { return gItemDatabase[m_id].material; }
-    uint16_t getSpriteID() { return gItemDatabase[m_id].spriteIndex; }
-    float getDurability() { return gItemDatabase[m_id].durability; }
-    float getToolSpeed();
-    bool isTool();
-    int getMaxCount();
+    float getToolSpeed() const;
+    bool isTool() const;
+    int getMaxCount() const;
 
     DataStream serialize();
     bool deserialize(DataStream& bytes);
 
-    bool operator==(Item const& other) const { return m_id == other.m_id && m_tags == other.m_tags; }
+    bool operator==(Item const& other) const { return m_id == other.m_id && m_aux == other.m_aux; }
 };

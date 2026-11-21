@@ -1,7 +1,6 @@
 #pragma once
-#include <managers/PacketManager.hpp>
 #include <entity/LocalPlayer.hpp>
-#include <world/Chunk.hpp>
+#include <managers/PacketManager.hpp>
 #include <Packet.hpp>
 #include <Types.hpp>
 #include <memory>

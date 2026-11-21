@@ -1,25 +1,30 @@
 #pragma once
 #include <Item.hpp>
 #include <Types.hpp>
-#include <cstddef>
-#include <inventory/InventoryItem.hpp>
 
 class World;
 
-class Block : public Item {
-protected:
-    std::mutex m_mutex;
-    
+class Block {
+private:
+    static bool m_inited;
+    static std::unordered_map<BlockID, std::unique_ptr<Block>> m_blocksDb;
+
 public:
-    std::shared_ptr<Block> static create(ItemID id);
-    std::shared_ptr<Block> static create(Item& block);
+    Block() = default;
+    Block(Block& block) = delete;
 
-    Block(ItemID id = ItemID::AIR);
-    Block(Block& block);
-    Block(InventoryItem& item);
+    virtual ~Block() = default;
 
-    virtual void onTick(World* world, BlockPosition position) {}
-    virtual void onRandomTick(World* world, BlockPosition position) {}
+    static void init();
+    static Block* get(BlockID id);
+    static float getDurability(BlockID id);
 
-    virtual std::shared_ptr<InventoryItem> dropItem(std::shared_ptr<Item> tool);
+    virtual BlockID getId() const = 0;
+
+    virtual void onTick(World& world, BlockPosition position) {}
+    virtual void onRandomTick(World& world, BlockPosition position) {}
+
+    virtual std::unique_ptr<Item> dropItem(Item* tool) {
+        return std::make_unique<Item>(getId());
+    }
 };

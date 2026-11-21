@@ -1,6 +1,7 @@
 #include <ui/basic/Container.hpp>
 #include <managers/RenderManager.hpp>
 #include <algorithm>
+#include <fix_win32_compatibility.h>
 #include <raylib.h>
 #include <rlgl.h>
 #include <Logger.hpp>

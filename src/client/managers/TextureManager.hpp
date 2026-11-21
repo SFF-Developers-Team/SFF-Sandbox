@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <fix_win32_compatibility.h>
 #include <raylib.h>
 #include <TileMap.hpp>
 

@@ -1,4 +1,5 @@
 #include <ui/basic/TouchControlButton.hpp>
+#include <fix_win32_compatibility.h>
 #include <raylib.h>
 
 TouchControlButton::TouchControlButton(uint16_t tileIndex, bool hold, MiniFunction<void()> const& callback) 

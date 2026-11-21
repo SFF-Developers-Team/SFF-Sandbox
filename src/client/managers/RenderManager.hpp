@@ -2,14 +2,14 @@
 #include <memory>
 #include <string>
 #include <Types.hpp>
+// #include <Item.hpp>
 
 class World;
 class LocalPlayer;
 class Entity;
-class Chunk;
 class Player;
-class InventoryItem;
-class Block;
+class InventorySlot;
+class Item;
 
 namespace RenderManager {
     void drawTexture(std::string const& key, Rectf dest, Col4u color = COL_WHITE, float rot = 0.f, Vec2f origin = {0.f, 0.f});
@@ -22,8 +22,8 @@ namespace RenderManager {
 
     Vec2f getTextSize(std::string const& text, std::string const& font, float fontSize = 0.f, float spacing = 1.f);
 
-    void renderBlock(Rectf dest, BlockPosition position, std::shared_ptr<Block> block, uint8_t alpha = 255);
-    void renderInventoryItem(Rectf dest, std::shared_ptr<InventoryItem> item);
+    void renderBlock(Rectf dest, BlockPosition position, BlockID block, uint8_t alpha = 255);
+    void renderInventoryItem(Rectf dest, Item const& item, int count = 1);
     void renderEntity(std::string& textureKey, std::shared_ptr<Entity> entity);
     void renderPlayerTexture(Vec2f pos, std::string const& key = "player.png", Vec2f size = {16.f, 22.f}, int animFrame = 0, Direction dir = LEFT, std::string const& username = "", float nameHeight = 11.f, float nameSpacing = 1.f);
 };

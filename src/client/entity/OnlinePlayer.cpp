@@ -1,8 +1,9 @@
 #include <entity/OnlinePlayer.hpp>
 #include <algorithm>
+#include <fix_win32_compatibility.h>
 #include <raylib.h>
 
-OnlinePlayer::OnlinePlayer(std::shared_ptr<World> world) : ClientPlayer(world), m_index(0) {}
+OnlinePlayer::OnlinePlayer(World& world) : ClientPlayer(world), m_index(0) {}
 
 void OnlinePlayer::update() {
     if (m_index > 0) {

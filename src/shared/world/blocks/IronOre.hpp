@@ -3,7 +3,6 @@
 
 class IronOre : public Stone {
 public:
-    IronOre();
-
-    std::shared_ptr<InventoryItem> dropItem(std::shared_ptr<Item> tool) override;
+    BlockID getId() const override { return BlockID::IRON_ORE; }
+    std::unique_ptr<Item> dropItem(Item* tool) override;
 };

@@ -1,5 +1,6 @@
 #include <ui/gameplay/Hotbar.hpp>
 #include <managers/RenderManager.hpp>
+#include <fix_win32_compatibility.h>
 #include <raylib.h>
 #include <entity/LocalPlayer.hpp>
 #include <world/Block.hpp>
@@ -20,7 +21,7 @@ void Hotbar::draw() {
     for (auto i = 0; i <= cellsCount; i++) {
         Rectf cellRect = {m_border * 2 + cellSize * i + m_border * i, m_border * 2, cellSize, cellSize};
         Rectf itemRect = {cellRect.x + (cellRect.width - blockSize) / 2, cellRect.y + (cellRect.height - blockSize) / 2, blockSize, blockSize};
-        auto item = m_player->getItem(i);
+        auto& slot = m_player->getItem(i);
 
         RenderManager::drawFrame(cellRect, m_color, m_border);
 
@@ -29,8 +30,8 @@ void Hotbar::draw() {
             break;
         }
 
-        if(item != nullptr) {
-            RenderManager::renderInventoryItem(itemRect, item);
+        if(slot.item != nullptr) {
+            RenderManager::renderInventoryItem(itemRect, *slot.item, slot.count);
         }
 
         if(i == selected) {

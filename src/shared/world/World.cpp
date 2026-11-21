@@ -1,24 +1,19 @@
 #include "Types.hpp"
-#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include <world/gen/WorldGenNormal.hpp>
 #include <entity/Player.hpp>
 #include <world/World.hpp>
-#include <world/Chunk.hpp>
 #include <Logger.hpp>
 #include <filesystem>
 #include <fstream>
 #include <cmath>
-#include <assert.h>
 #include <Logger.hpp>
-#include <world/blocks/Leaves.hpp>
 #include <world/Structure.hpp>
 
 #define RENDER_DISTANCE 9
 
-World::World(std::filesystem::path const& saveDir) : m_saveDir(saveDir), m_version(WORLDVER), m_time(0), m_lastPlayerID(1), m_randomTickSpeed(3) {
+World::World(std::filesystem::path const& saveDir) : m_saveDir(saveDir), m_version(World::WORLD_VERSION), m_time(0), m_lastPlayerID(1), m_randomTickSpeed(3) {
     if (!saveDir.empty() && !std::filesystem::exists(m_saveDir)) {
         std::filesystem::create_directory(m_saveDir);
         std::filesystem::create_directory(m_saveDir / "chunks");
@@ -27,8 +22,19 @@ World::World(std::filesystem::path const& saveDir) : m_saveDir(saveDir), m_versi
 }
 
 void World::generate() {
-    for (auto i = 0; i < 32; i++) {
-        generateChunk({i % 3, i / 3});
+    for (auto y = 0; y < WORLD_SIZE; y++) {
+        for (auto x = 0; x < WORLD_SIZE; x++) {
+            if (y == 255) {
+                setBlock({x, y, 0}, BlockID::GRASS);
+                setBlock({x, y, 1}, BlockID::GRASS);
+            } else if (y < 255) {
+                setBlock({x, y, 0}, BlockID::AIR);
+                setBlock({x, y, 1}, BlockID::AIR);
+            } else {
+                setBlock({x, y, 0}, BlockID::DIRT);
+                setBlock({x, y, 1}, BlockID::DIRT);
+            }
+        }
     }
 }
 
@@ -37,89 +43,95 @@ void World::onTick() {
 
     std::vector<Vec2i> unloadList;
 
-    for (auto& [pos, chunk] : m_chunks) {
-        for (auto x = 0; x < CHUNK_WIDTH; x++) {
-            for (auto y = 0; y < CHUNK_HEIGHT; y++) {
-                auto block0 = chunk->getBlock({x, y, 0});
-                if (block0 != nullptr) {
-                    block0->onTick(this, {x, y, 0});
-                }
+    // for (auto& [pos, chunk] : m_chunks) {
+    //     for (auto x = 0; x < CHUNK_WIDTH; x++) {
+    //         for (auto y = 0; y < CHUNK_HEIGHT; y++) {
+    //             auto block0 = chunk->getBlock({x, y, 0});
+    //             if (block0 != nullptr) {
+    //                 block0->onTick(this, {x, y, 0});
+    //             }
 
-                auto block1 = chunk->getBlock({x, y, 1});
-                if (block1 != nullptr) {
-                    block1->onTick(this, {x, y, 0});
-                }
-            }
-        }
+    //             auto block1 = chunk->getBlock({x, y, 1});
+    //             if (block1 != nullptr) {
+    //                 block1->onTick(this, {x, y, 0});
+    //             }
+    //         }
+    //     }
 
-        for (int i = 0; i < m_randomTickSpeed; i++) {
-            int x = rand() % CHUNK_WIDTH;
-            int y = rand() % CHUNK_HEIGHT;
-            uint8_t z = rand() % CHUNK_DEPTH;
-            auto block = chunk->getBlock({x, y, z});
+    //     for (int i = 0; i < m_randomTickSpeed; i++) {
+    //         int x = rand() % CHUNK_WIDTH;
+    //         int y = rand() % CHUNK_HEIGHT;
+    //         uint8_t z = rand() % CHUNK_DEPTH;
+    //         auto block = chunk->getBlock({x, y, z});
         
-            if(block != nullptr) {
-                block->onRandomTick(this, {x, y, z});
-            }
-        }
+    //         if(block != nullptr) {
+    //             block->onRandomTick(this, {x, y, z});
+    //         }
+    //     }
 
-        bool shouldUnload = true;
+    //     bool shouldUnload = true;
 
-        for (auto& [id, player] : m_players) {
-            auto playerPos = player->getPosition();
-            auto playerChunk = TO_CHUNK_POS(playerPos);
-            shouldUnload &= playerChunk.distance(pos) > RENDER_DISTANCE;
-        }
+    //     for (auto& [id, player] : m_players) {
+    //         auto playerPos = player->getPosition();
+    //         auto playerChunk = TO_CHUNK_POS(playerPos);
+    //         shouldUnload &= playerChunk.distance(pos) > RENDER_DISTANCE;
+    //     }
 
-        if (shouldUnload) {
-            unloadList.push_back(pos);
-        }
-    }
+    //     if (shouldUnload) {
+    //         unloadList.push_back(pos);
+    //     }
+    // }
 
-    for (auto& pos : unloadList) {
-        saveChunk(pos);
-        unloadChunk(pos);
-    }
+    // for (auto& pos : unloadList) {
+    //     saveChunk(pos);
+    //     unloadChunk(pos);
+    // }
 
     auto halfDistance = RENDER_DISTANCE / 2;
 
     for (auto& [id, player] : m_players) {
-        player->onTick(this);
-        auto playerPos = player->getPosition();
-        auto pos = TO_CHUNK_POS(playerPos);
+        player->onTick(*this);
+        // auto playerPos = player->getPosition();
+        // auto pos = TO_CHUNK_POS(playerPos);
         
-        for (int x = pos.x - halfDistance; x < pos.x + halfDistance; x++) {
-            for (int y = pos.y - halfDistance; y < pos.y + halfDistance; y++) {
-                auto chunk = getChunk({x, y});
+        // for (int x = pos.x - halfDistance; x < pos.x + halfDistance; x++) {
+        //     for (int y = pos.y - halfDistance; y < pos.y + halfDistance; y++) {
+        //         auto chunk = getChunk({x, y});
                 
-                if (chunk == nullptr) {
-                    generateChunk({x, y});
-                    break;
-                }
-            }
-        }
+        //         if (chunk == nullptr) {
+        //             generateChunk({x, y});
+        //             break;
+        //         }
+        //     }
+        // }
     }
 
     for (auto& [playerId, info] : m_breakInfo) {
         auto player = m_players[playerId];
         auto block = getBlock(info.pos);
         auto tool = player->getItemHand();
-        auto toolType = (tool != nullptr) ? tool->getType() : TYPE_ITEM;
-        auto toolMaterial = (tool != nullptr) ? tool->getMaterial() : MATERIAL_NONE;
+        // auto toolType = (tool != nullptr) ? tool->getType() : TYPE_ITEM;
+        // auto toolMaterial = (tool != nullptr) ? tool->getMaterial() : MATERIAL_NONE;
         float speed = 1.f;
-        float d = block->getDurability();
+        float d = Block::getDurability(block);
 
-        if (tool != nullptr && block->getBestTool() == toolType) {
-            speed = tool->getToolSpeed();
-        }
+        // if (tool != nullptr && block->getBestTool() == toolType) {
+        //     speed = tool->getToolSpeed();
+        // }
     
         info.progress += speed / d * 0.01f;
     
         if (info.progress >= d || player->getGamemode() == GAMEMODE_CREATIVE) {
-            if (player->getGamemode() != GAMEMODE_CREATIVE && toolMaterial >= block->getBestToolMaterial()) {
-                player->addItem(block->dropItem(player->getItemHand()));
+            if (player->getGamemode() != GAMEMODE_CREATIVE /* && toolMaterial >= block->getBestToolMaterial() */) {
+                auto blockObject = Block::get(block);
+                
+                if (blockObject != nullptr) {
+                    player->addItem(blockObject->dropItem(player->getItemHand()->item.get()));
+                } else {
+                    player->addItem(std::make_unique<Item>(block));
+                }
             }
-    
+            
             destroyBlock(info.pos);
             player->setBreakingBlock(false);
         }
@@ -127,182 +139,106 @@ void World::onTick() {
 
     std::erase_if(m_breakInfo, [this](auto& info) {
         auto block = getBlock(info.second.pos);
-        return block == nullptr;
+        return block == BlockID::AIR;
     });
 }
 
 bool World::isBlockClosed(BlockPosition pos) {
-    if (!getBlock({pos.x - 1, pos.y, pos.layer}) || 
-        !getBlock({pos.x + 1, pos.y, pos.layer}) || 
-        !getBlock({pos.x, pos.y - 1, pos.layer}) || 
-        !getBlock({pos.x, pos.y + 1, pos.layer}) || 
-        !getBlock({pos.x, pos.y, static_cast<uint8_t>(pos.layer ^ 1)})) {
+    if (BlockID::AIR != getBlock({pos.x - 1, pos.y, pos.layer}) || 
+        BlockID::AIR != getBlock({pos.x + 1, pos.y, pos.layer}) || 
+        BlockID::AIR != getBlock({pos.x, pos.y - 1, pos.layer}) || 
+        BlockID::AIR != getBlock({pos.x, pos.y + 1, pos.layer}) || 
+        BlockID::AIR != getBlock({pos.x, pos.y, static_cast<uint8_t>(pos.layer ^ 1)})) {
         return false;
     }
 
     return true;
-}
-
-std::shared_ptr<Chunk> World::getChunk(Vec2i position) {
-    auto it = m_chunks.find(position);
-    return (it != m_chunks.end()) ? it->second : nullptr;
-}
-
-bool World::saveChunk(Vec2i pos) {
-    auto chunk = m_chunks[pos];
-    auto cbytes = chunk->serialize();
-
-    if (!cbytes.size()) {
-        logE("Failed to serialize chunk {},{}!", pos.x, pos.y);
-    }
-
-    std::ofstream file(m_saveDir / "chunks" / std::format("{},{}.dat", pos.x, pos.y), std::ios::binary);
-    
-    if(file.is_open()) {
-        file.write((char const*)cbytes.data(), cbytes.size());
-        file.close();
-
-        return true;
-    }
-
-    logE("Failed to save chunk {},{}!", pos.x, pos.y);
-    return false;
-}
-
-bool World::loadChunk(Vec2i pos) {
-    auto [chunkIt, inserted] = m_chunks.try_emplace(pos, std::make_shared<Chunk>());
-    
-    std::ifstream file(m_saveDir / "chunks" / std::format("{},{}.dat", pos.x, pos.y), std::ios::in | std::ios::binary);
-
-    if (!file.is_open()) {
-        logE("Can't load chunk {},{}!", pos.x, pos.y);
-        return false;
-    }
-
-    file.seekg(0, std::ios::end);
-    int chunkSize = file.tellg();
-
-    file.seekg(0, std::ios::beg);
-    auto chunkBytes = DataStream(chunkSize);
-
-    file.read((char*)chunkBytes.data(), chunkSize);
-    chunkIt->second->deserialize(chunkBytes);
-        
-    return true;
-}
-
-std::shared_ptr<Block> World::getBlock(BlockPosition pos) {
-    if (isOutOfBound(pos)) {
-        return nullptr;
-    }
-
-    auto chunk = getChunk(TO_CHUNK_POS(pos));
-
-    if(pos.x < 0) {
-        pos.x = CHUNK_WIDTH - (-pos.x) % CHUNK_WIDTH;
-    }
-    
-    return chunk->getBlock({pos.x % CHUNK_WIDTH, pos.y % CHUNK_HEIGHT, pos.layer});
-}
-
-void World::setBlock(BlockPosition pos, std::shared_ptr<Block> block) {
-    if (isOutOfBound(pos) || (block && block->getID() == ItemID::AIR)) {
-        return;
-    }
-
-    auto chunk = getChunk(TO_CHUNK_POS(pos));
-
-    if(pos.x < 0) {
-        pos.x = CHUNK_WIDTH - (-pos.x) % CHUNK_WIDTH;
-    }
-
-    chunk->setBlock({pos.x % CHUNK_WIDTH, pos.y % CHUNK_HEIGHT, pos.layer}, block);
 }
 
 bool World::save() {
-    if (!std::filesystem::exists(m_saveDir) && !std::filesystem::create_directory(m_saveDir)) {
-        logE("Failed to save world!");
-        return false;
-    }
+    // if (!std::filesystem::exists(m_saveDir) && !std::filesystem::create_directory(m_saveDir)) {
+    //     logE("Failed to save world!");
+    //     return false;
+    // }
 
-    for (auto [pos, _] : m_chunks) {
-        saveChunk(pos);
-    }
+    // // for (auto [pos, _] : m_chunks) {
+    // //     saveChunk(pos);
+    // // }
 
-    for (auto [id, _] : m_players) {
-        savePlayer(id);
-    }
+    // for (auto [id, _] : m_players) {
+    //     savePlayer(id);
+    // }
 
-    auto worldData = DataStream();
-    worldData.add(WORLD_VERSION);
-    worldData.add(m_worldGen->getType());
-    worldData.add(m_worldGen->getSeed());
-    worldData.add(m_time);
+    // auto worldData = DataStream();
+    // worldData.add(WORLD_VERSION);
+    // // worldData.add(m_worldGen->getType());
+    // // worldData.add(m_worldGen->getSeed());
+    // worldData.add(m_time);
 
-    auto worldFile = std::ofstream(m_saveDir / "world.dat", std::ios::binary);
-    if(!worldFile.is_open()) {
-        logE("Failed to save world data!");
-        return false;
-    }
+    // auto worldFile = std::ofstream(m_saveDir / "world.dat", std::ios::binary);
+    // if(!worldFile.is_open()) {
+    //     logE("Failed to save world data!");
+    //     return false;
+    // }
     
-    worldFile.write((char const*)worldData.data(), worldData.size());
+    // worldFile.write((char const*)worldData.data(), worldData.size());
 
     return true;
 }
 
 bool World::load() {
-    if (!std::filesystem::exists(m_saveDir)) {
-        logE("World directory not found!");
-        return false;
-    }
+    // if (!std::filesystem::exists(m_saveDir)) {
+    //     logE("World directory not found!");
+    //     return false;
+    // }
 
-    if (!std::filesystem::exists(m_saveDir / "world.dat")) {
-        logE("world.dat not found!");
-        return false;
-    }
+    // if (!std::filesystem::exists(m_saveDir / "world.dat")) {
+    //     logE("world.dat not found!");
+    //     return false;
+    // }
 
-    std::ifstream file(m_saveDir / "world.dat", std::ios::in | std::ios::binary);
+    // std::ifstream file(m_saveDir / "world.dat", std::ios::in | std::ios::binary);
 
-    if (!file.is_open()) {
-        logE("Can't open world.dat");
-        return false;
-    }
+    // if (!file.is_open()) {
+    //     logE("Can't open world.dat");
+    //     return false;
+    // }
 
-    file.seekg(0, std::ios::end);
-    int worldSize = file.tellg();
+    // file.seekg(0, std::ios::end);
+    // int worldSize = file.tellg();
 
-    file.seekg(0, std::ios::beg);
-    auto worldData = DataStream(worldSize);
+    // file.seekg(0, std::ios::beg);
+    // auto worldData = DataStream(worldSize);
 
-    file.read((char*)worldData.data(), worldData.size());
+    // file.read((char*)worldData.data(), worldData.size());
 
-    m_version = worldData.get<uint32_t>();
+    // m_version = worldData.get<uint32_t>();
 
-    if (m_version == 256 && worldData.getI<uint32_t>() == 128) {
-        logE("Old world version detected! We don't support it now...");
-        return false;
-    }
+    // if (m_version == 256 && worldData.getI<uint32_t>() == 128) {
+    //     logE("Old world version detected! We don't support it now...");
+    //     return false;
+    // }
 
-    // We have only one world gen type now...
-    auto genType = worldData.get<WorldGenType>();
-    auto seed = worldData.get<uint64_t>();
+    // // We have only one world gen type now...
+    // auto genType = worldData.get<WorldGenType>();
+    // auto seed = worldData.get<uint64_t>();
 
-    m_worldGen = std::make_shared<WorldGenNormal>(seed);
-    m_time = worldData.get<uint64_t>();
+    // // m_worldGen = std::make_shared<WorldGenNormal>(seed);
+    // m_time = worldData.get<uint64_t>();
 
-    for (const auto& entry : std::filesystem::directory_iterator(m_saveDir / "chunks")) {
-        std::stringstream ss(entry.path().stem().string());
-        std::string part;
-        Vec2i chunkPosition;
+    // for (const auto& entry : std::filesystem::directory_iterator(m_saveDir / "chunks")) {
+    //     std::stringstream ss(entry.path().stem().string());
+    //     std::string part;
+    //     Vec2i chunkPosition;
     
-        std::getline(ss, part, ',');
-        chunkPosition.x = std::stoi(part);
-        std::getline(ss, part, ',');
-        chunkPosition.y = std::stoi(part);
+    //     std::getline(ss, part, ',');
+    //     chunkPosition.x = std::stoi(part);
+    //     std::getline(ss, part, ',');
+    //     chunkPosition.y = std::stoi(part);
     
     
-        loadChunk(chunkPosition);
-    }
+    //     loadChunk(chunkPosition);
+    // }
 
 
     return true;
@@ -320,8 +256,8 @@ std::vector<Hitbox> World::getHitboxes(Hitbox entityHitbox, int radius) {
         for (int y = minY; y <= maxY; y++) {
             auto hitbox = getBlockHitbox({x, y, 1});
 
-            if (hitbox.width > 0.f && hitbox.height > 0.f) {
-                ret.push_back(hitbox);
+            if (hitbox.has_value()) {
+                ret.push_back(hitbox.value());
             }
         }
     }
@@ -423,85 +359,42 @@ bool World::isUsernameAlreadyTaken(std::string const& username) {
     return it != m_players.end();
 }
 
-Rectf World::getBlockHitbox(BlockPosition pos) {
+std::optional<Rectf> World::getBlockHitbox(BlockPosition pos) {
     if (pos.layer > 0) {
         auto block = getBlock(pos);
 
-        if (block != nullptr) {
+        if (block != BlockID::AIR) {
             return Rectf {static_cast<float>(pos.x), static_cast<float>(pos.y), 1.f, 1.f};
         } 
     }
 
-    return Rectf {0.0f, 0.0f, 0.0f, 0.0f};
+    return std::nullopt;
 }
 
 bool World::isOutOfBound(BlockPosition pos) {
-    if (!m_chunks.contains(TO_CHUNK_POS(pos))) {
-        return true;
-    }
-
-    return (pos.y < 0 || pos.layer > CHUNK_DEPTH - 1);
-}
-
-void World::generateChunk(Vec2i pos) {
-    if (m_worldGen == nullptr) {
-        return logE("Can't generate chunk without WorldGen ¯\\_(ツ)_/¯");
-    }
-
-    addChunk(pos, m_worldGen->generateChunk(this, pos));
-    m_worldGen->setStructures(false);
-
-    for (auto& structure : m_structures) {
-        auto size = structure->getSize();
-        auto stpos = structure->getPos();
-
-        for (auto i = 0; i < size.x * size.y; i++) {
-            Vec2i localPos = {i % size.x, i / size.y};
-            Vec2i worldPos = {i % size.x + stpos.x, i / size.y + stpos.y};
-            auto chunkPos = TO_CHUNK_POS(worldPos);
-
-            if (!getChunk(chunkPos)) {
-                addChunk(chunkPos, m_worldGen->generateChunk(this, chunkPos));
-            }
-
-            auto block0 = structure->getBlock({localPos.x, localPos.y, 0});
-            if (block0 != nullptr) {
-                block0->setTag(TAG_NATURAL, true);
-            }
-
-            auto block1 = structure->getBlock({localPos.x, localPos.y, 1});
-            if (block1 != nullptr) {
-                block1->setTag(TAG_NATURAL, true);
-            }
-
-            setBlock({worldPos.x, worldPos.y, 0}, block0);
-            setBlock({worldPos.x, worldPos.y, 1}, block1);
-        }
-    }
-
-    m_worldGen->setStructures(true);
-    m_structures.clear();
+    return pos.x < 0 || pos.x >= WORLD_SIZE || pos.y < 0 || pos.y >= WORLD_SIZE && pos.layer < 0 && pos.layer >= WORLD_LAYERS;
 }
 
 void World::placeBlock(PlayerID m_id, BlockPosition pos) {
     auto player = m_players[m_id];
-    auto item = player->getItemHand();
+    auto slot = player->getItemHand();
 
-    if (item != nullptr && getBlock(pos) == nullptr) {
-        auto block = Block::create(*item);
-        setBlock(pos, block);
+    if (slot != nullptr && slot->item->isBlockItem() && getBlock(pos) == BlockID::AIR) {
+        setBlock(pos, (BlockID)slot->item->getID());
 
         if(player->getGamemode() == GAMEMODE_SURVIVAL) {
-            item->sub(1);
+            slot->count--;
+            player->gc();
         }
     }
 }
 
 void World::breakBlock(PlayerID id, BlockPosition pos) {
     auto player = m_players[id];
-    auto block = getBlock(pos);
+    auto blockId = getBlock(pos);
 
-    if (block->getDurability() < 0) {
+    // Bedrock has -1.f
+    if (Block::getDurability(blockId) < 0) {
         return;
     }
 

@@ -6,7 +6,7 @@
 class InventoryNode : public Frame {
 private:
     std::shared_ptr<LocalPlayer> m_player;
-    std::shared_ptr<InventoryItem> m_selected;
+    InventorySlot* m_selected;
 
     using Frame::setSize;
 

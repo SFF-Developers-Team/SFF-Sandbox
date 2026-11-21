@@ -1,7 +1,5 @@
 #include <world/blocks/Grass.hpp>
 
-Grass::Grass() : Block(GRASS) {}
-
-std::shared_ptr<InventoryItem> Grass::dropItem(std::shared_ptr<Item> tool) {
-    return std::make_shared<InventoryItem>(DIRT);
+std::unique_ptr<Item> Grass::dropItem(Item* tool) {
+    return std::make_unique<Item>(BlockID::DIRT);
 }

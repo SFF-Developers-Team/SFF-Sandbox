@@ -3,7 +3,7 @@
 
 class ClientPlayer : public Player {
 public:
-    ClientPlayer(std::shared_ptr<World> world);
+    ClientPlayer(World& world);
 
     void draw();
 };

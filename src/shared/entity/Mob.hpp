@@ -8,9 +8,9 @@ protected:
     uint64_t m_lastHurtTime;
 
 public:
-    Mob(std::shared_ptr<World> world);
+    Mob(World& world);
 
-    void onTick(World* world);
+    void onTick(World& world);
 
     virtual int getMaxHealth() { return 20; }
     int getHealth() { return m_health; }

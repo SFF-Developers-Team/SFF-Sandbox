@@ -2,7 +2,6 @@
 #include "Types.hpp"
 #include <entity/Player.hpp>
 #include <world/Block.hpp>
-#include <world/Chunk.hpp>
 #include <entity/Hitbox.hpp>
 
 #include <filesystem>
@@ -11,9 +10,9 @@
 #include <memory>
 #include <cmath>
 #include <map>
+#include <array>
 #include <unordered_map>
-
-#define WORLDVER 4
+#include <optional>
 
 class LocalPlayer;
 class WorldGen;
@@ -25,10 +24,15 @@ struct BreakInfo {
     float progress;
 };
 
+#define WORLD_SIZE 512
+#define WORLD_LAYERS 2
+
 class World {
+private:
+    std::array<BlockID, WORLD_SIZE*WORLD_SIZE*WORLD_LAYERS> m_blocks;
+
 protected:
     std::map<PlayerID, std::shared_ptr<Player>> m_players;
-    std::unordered_map<Vec2i, std::shared_ptr<Chunk>, Vec2iHash> m_chunks;
     std::vector<std::shared_ptr<Structure>> m_structures;
     std::unordered_map<PlayerID, BreakInfo> m_breakInfo;
     std::shared_ptr<WorldGen> m_worldGen;
@@ -39,33 +43,23 @@ protected:
     uint8_t m_randomTickSpeed;
 
 public:
-    uint32_t const WORLD_VERSION = WORLDVER;
+    uint32_t const static WORLD_VERSION = 5;
 
     World(std::filesystem::path const& saveDir);
 
     void generate();
     void onTick();
 
-    void placeBlock(BlockPosition pos, std::shared_ptr<Block> block) { if (!getBlock(pos)) setBlock(pos, block); }
-    void destroyBlock(BlockPosition pos) { setBlock(pos, nullptr); }
+    void placeBlock(BlockPosition pos, BlockID blockId) { if (getBlock(pos) != BlockID::AIR) setBlock(pos, blockId); }
+    void destroyBlock(BlockPosition pos) { setBlock(pos, BlockID::AIR); }
 
-    void placeBlock(PlayerID m_id, BlockPosition pos);
+    void placeBlock(PlayerID id, BlockPosition pos);
     void breakBlock(PlayerID id, BlockPosition pos);
     void stopBreakingBlock(PlayerID id);
 
     bool isBlockClosed(BlockPosition pos);
-    Rectf getBlockHitbox(BlockPosition pos);
-    std::shared_ptr<Block> getBlock(BlockPosition pos);
-    void setBlock(BlockPosition pos, std::shared_ptr<Block> block);
     bool isOutOfBound(BlockPosition pos);
-
-    void unloadChunk(Vec2i pos) { m_chunks.erase(pos); }
-    virtual void addChunk(Vec2i pos, std::shared_ptr<Chunk> chunk) { m_chunks[pos] = chunk; }
-
-    std::shared_ptr<Chunk> getChunk(Vec2i position);
-    bool saveChunk(Vec2i pos);
-    bool loadChunk(Vec2i pos);
-
+    std::optional<Rectf> getBlockHitbox(BlockPosition pos);
     std::vector<Hitbox> getHitboxes(Hitbox entityHitbox, int radius = 1);
 
     bool save();
@@ -85,8 +79,22 @@ public:
     uint64_t getTime() { return m_time; }
     auto& getGenerator() { return m_worldGen; }
     auto& getPlayers() { return m_players; }
-    auto& getChunks() { return m_chunks; }
-    
-    void generateChunk(Vec2i pos);
+
     void addStructure(std::shared_ptr<Structure> structure) { m_structures.push_back(structure); }
+
+    inline BlockID getBlock(BlockPosition pos) {
+        if (isOutOfBound(pos)) {
+            return BlockID::AIR;
+        }
+
+        return m_blocks[pos.layer * (WORLD_SIZE * WORLD_SIZE) + pos.y * WORLD_SIZE + pos.x];
+    }
+
+    inline void setBlock(BlockPosition pos, BlockID block) {
+        if (isOutOfBound(pos)) {
+            return;
+        }
+
+        m_blocks[pos.layer * (WORLD_SIZE * WORLD_SIZE) + pos.y * WORLD_SIZE + pos.x] = block;
+    }
 };

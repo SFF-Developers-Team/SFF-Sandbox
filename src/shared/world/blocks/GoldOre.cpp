@@ -1,10 +1,8 @@
 #include <world/blocks/GoldOre.hpp>
 
-GoldOre::GoldOre() : Stone() {}
-
-std::shared_ptr<InventoryItem> GoldOre::dropItem(std::shared_ptr<Item> tool) {
+std::unique_ptr<Item> GoldOre::dropItem(Item* tool) {
     if (tool && tool->getType() == TYPE_TOOL_PICKAXE) {
-        return std::make_shared<InventoryItem>(GOLD_ORE);
+        return std::make_unique<Item>(ItemID::GOLD_ORE);
     }
 
     return nullptr;

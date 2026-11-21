@@ -1,5 +1,4 @@
 #pragma once
-#include <inventory/InventoryItem.hpp>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -23,7 +22,7 @@ protected:
     bool m_breakingBlock;
 
 public:
-    Player(std::shared_ptr<World> world);
+    Player(World& world);
 
     uint8_t animationClamp(uint8_t value, uint8_t min, uint8_t max) { return (value > max || value < min) ? min : value; }
     void setAnimation(AnimationType type);
@@ -41,8 +40,8 @@ public:
     void setAnimCurrentFrame(uint8_t frame) { m_animFrame = frame; }
     void setID(PlayerID id) { m_id = id; }
 
-    bool canDestroyBlock(World* world, BlockPosition target);
-    bool canPlaceBlock(World* world, BlockPosition target);
+    bool canDestroyBlock(World& world, BlockPosition target);
+    bool canPlaceBlock(World& world, BlockPosition target);
     bool canAccessBlock(BlockPosition target);
 
     auto getAnimCurrentFrame() { return m_animFrame; }
@@ -54,7 +53,7 @@ public:
 
     void toggleFly();
 
-    std::shared_ptr<InventoryItem> getItemHand() { return m_inventory[m_selected]; }
+    InventorySlot* getItemHand() { return &m_inventory[m_selected]; }
 
     void setBreakingBlock(bool flag) { m_breakingBlock = flag; }
     bool isBreakingBlock() { return m_breakingBlock; }
