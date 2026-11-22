@@ -1,18 +1,19 @@
 #pragma once
-#include <inventory/InventoryItem.hpp>
 #include <list>
 #include <memory>
 #include <unordered_map>
 
-class SimplePlayer;
+class Player;
 
 struct RecipeIngredient {
-    ItemID id;
+    int id;
     uint16_t count;
 };
 
 struct Recipe {
-    std::shared_ptr<InventoryItem> result;
+    int resultId;
+    int count;
+
     std::vector<RecipeIngredient> ingredients;
     bool workbenchRequired = false;
 };
@@ -33,5 +34,5 @@ public:
 
     auto& getRecipes() { return m_recipes; }
 
-    bool craftItem(std::shared_ptr<SimplePlayer> player, Recipe& recipe);
+    bool craftItem(Player& player, Recipe& recipe);
 };

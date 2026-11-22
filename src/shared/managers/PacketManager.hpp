@@ -1,16 +1,16 @@
 #pragma once
+
 #include <deque>
 #include <Packet.hpp>
+#include <Serializable.hpp>
 #include <memory>
 #include <map>
 #include <mutex>
 #include <enet.h>
 
-using Header = SerializedObject::Header;
-
 enum Channel : uint8_t {
     EVERYTHING,
-    BLOCKS,
+    TILES,
     NOTIFICATIONS,
     LAST_CHANNEL
 };
@@ -23,7 +23,7 @@ public:
     PacketManager(ENetPeer* sock);
     ~PacketManager();
 
-    bool sendObj(std::shared_ptr<SerializedObject> obj, Channel channel = EVERYTHING, bool reliable = true);
+    bool sendObj(std::shared_ptr<Serializable> obj, Channel channel = EVERYTHING, bool reliable = true);
     bool sendPacket(Packet const& packet, Channel channel = EVERYTHING, bool reliable = true);
     virtual void packetReceived(Packet& packet);
 

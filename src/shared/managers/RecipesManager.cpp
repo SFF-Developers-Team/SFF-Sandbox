@@ -1,38 +1,44 @@
 #include <managers/RecipesManager.hpp>
 #include <Item.hpp>
-#include <entity/SimplePlayer.hpp>
+#include <entity/Player.hpp>
 
 RecipesManager::RecipesManager() {
     addRecipe({
-        std::make_shared<InventoryItem>(PLANKS, 4),
-        {{OAK_LOG, 1}}
+        .resultId = (int)TileID::PLANKS, 
+        .count = 4,
+        .ingredients = {{(int)TileID::OAK_LOG, 1}},
+        .workbenchRequired = false
     });
 
     addRecipe({
-        std::make_shared<InventoryItem>(STICK, 4),
-        {{PLANKS, 2}}
+        .resultId = (int)ItemID::STICK, 
+        .count = 4,
+        .ingredients = {{(int)TileID::PLANKS, 2}},
+        .workbenchRequired = false
     });
 
     addRecipe({
-        std::make_shared<InventoryItem>(WOODEN_PICKAXE, 1),
-        {{STICK, 2}, {PLANKS, 3}}, true
+        .resultId = (int)ItemID::WOODEN_PICKAXE,
+        .count = 1,
+        .ingredients = {{(int)ItemID::STICK, 2}, {(int)TileID::PLANKS, 3}}, 
+        .workbenchRequired = true
     });
 }
 
-bool RecipesManager::craftItem(std::shared_ptr<SimplePlayer> player, Recipe& recipe) {
+bool RecipesManager::craftItem(Player& player, Recipe& recipe) {
     for (auto& item : recipe.ingredients) {
-        auto playerItem = player->findItem(item.id);
+        auto playerItem = player.findItem(item.id);
 
-        if (playerItem == nullptr || playerItem->getCount() < item.count) {
+        if (playerItem == nullptr || playerItem->count < item.count) {
             return false;
         }
     }
 
     for (auto& item : recipe.ingredients) {
-        player->deleteItem(item.id, item.count);
+        player.deleteItem(item.id, item.count);
     }
 
-    player->addItem(std::make_shared<InventoryItem>(*recipe.result));
+    player.addItem(std::make_unique<Item>(recipe.resultId), recipe.count);
     
     return true;
 }

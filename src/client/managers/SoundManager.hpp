@@ -1,5 +1,6 @@
 #pragma once
 #include <filesystem>
+#include <fix_win32_compatibility.h>
 #include <raylib.h>
 #include <string>
 #include <map>

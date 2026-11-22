@@ -1,77 +1,52 @@
+#include "Types.hpp"
 #include <Item.hpp>
 #include <ItemDatabase.hpp>
-#include <world/Block.hpp>
+#include <world/Tile.hpp>
 
-Item::Item(ItemID id) : m_id(id) {}
-
-Item::Item(Item& itemPointer) : m_id(itemPointer.m_id), m_tags(itemPointer.m_tags) {}
-
-ItemType Item::getType() {
-    return gItemDatabase[m_id].type;
+int Item::getMaxCount() const {
+    return (isTool()) ? 1 : 64;
 }
 
-std::string Item::getName() {
-    return gItemDatabase[m_id].name;
+DataStream Item::serialize() {
+    auto ret = Serializable::serialize();
+
+    ret.add(m_id);
+    ret.add(m_aux);
+
+    return ret;
 }
 
-MaterialType Item::getMaterial() {
-    return gItemDatabase[m_id].material;
-}
-
-uint16_t Item::getSpriteIndex() {
-    return gItemDatabase[m_id].spriteIndex;
-}
-
-uint16_t Item::getMaxCount() {
-    if (std::find(gTools.begin(), gTools.end(), getType()) != gTools.end()) {
-        return 1;
-    }
-
-    return 64;
-}
-
-ByteVector Item::serialize() {
-    SerializedObject::serialize();
-
-    add(m_id);
-    add<uint8_t>(0x20);
-    add<uint16_t>(m_tags.size());
-
-    for(auto& [key, value] : m_tags) {
-        add<TagID>(key);
-
-        switch(key) {
-            case TAG_COLOR: add<Col3u>(std::get<Col3u>(value)); break;
-            case TAG_NATURAL:
-            case TAG_GHOST: add<bool>(std::get<bool>(value)); break;
-        }
-    }
-
-    return bytes();
-}
-
-size_t Item::deserialize(ByteVector const& bytes) {
-    SerializedObject::deserialize(bytes);
+bool Item::deserialize(DataStream& stream) {
+    if(!Serializable::deserialize(stream)) return false;
     
-    m_id = get<ItemID>();
+    m_id = stream.get<int>();
+    m_aux = stream.get<int>();
 
-    if(get<uint8_t>() == 0x20) {
-        auto tagsc = get<uint16_t>();
+    return true;
+}
 
-        for(int i = 0; i < tagsc; i++) {
-            TagID key = get<TagID>();
+bool Item::isTool() const {
+    auto type = getType();
+    return type > TYPE_ITEM;
+}
 
-            switch(key) {
-                case TAG_COLOR:
-                    m_tags[key] = get<Col3u>({255, 255, 255});
-                    break;
+float Item::getToolSpeed() const {
+    auto type = getType();
 
-                case TAG_GHOST:
-                    m_tags[key] = get<bool>();
-                    break;
-            }
+    if (type > TYPE_ITEM) {
+        if (type == TYPE_WEAPON) {
+            return 1.5f;
+        }
+
+        switch (getMaterial()) {
+            case MATERIAL_WOOD: return 2.f;
+            case MATERIAL_STONE: return 4.f;
+            case MATERIAL_IRON: return 6.f;
+            case MATERIAL_DIAMOND: return 8.f;
+            case MATERIAL_GOLD: return 12.f;
+            default: return 1.f;
         }
     }
 
-    return m_offset;
+    return 1.f;
 }

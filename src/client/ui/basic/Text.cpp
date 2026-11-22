@@ -2,6 +2,7 @@
 #include <managers/StyleManager.hpp>
 #include <managers/TextureManager.hpp>
 #include <managers/RenderManager.hpp>
+#include <fix_win32_compatibility.h>
 #include <raylib.h>
 
 Text::Text(std::string const& font, std::string const& text, float fontSize) : Node(), m_font(font), m_text(text), m_fontSize(fontSize), m_wordWrap(false) {

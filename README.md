@@ -2,7 +2,7 @@
 Welcome to **SFF Sandbox** - a 2D sandbox game that combines the best elements of **Minecraft** and **Terraria**!
 
 ## Features
-- Placing/destroying blocks.
+- Placing/destroying tiles.
 - Procedurally generated world.
 - Multiplayer.
 

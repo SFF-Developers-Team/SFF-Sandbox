@@ -1,17 +1,19 @@
 #include <ui/gameplay/InventoryNode.hpp>
 #include <managers/RenderManager.hpp>
+#include <fix_win32_compatibility.h>
 #include <raylib.h>
 
 float constexpr cellSize = 24.f;
-float constexpr blockSize = 16.f;
+float constexpr tileSize = 16.f;
 int const columnCount = 9;
 int const rowCount = 4;
 
-InventoryNode::InventoryNode(std::shared_ptr<Player> player) : Frame(), m_player(player) {
+InventoryNode::InventoryNode(std::shared_ptr<LocalPlayer> player) : Frame(), m_player(player) {
     setSize({
         cellSize * columnCount + m_border * (columnCount + 3), 
         cellSize * rowCount + m_border * (rowCount + 4)
     });
+    m_selected = nullptr;
 }
 
 Rectf InventoryNode::getCellPosition(int i) {
@@ -32,13 +34,15 @@ void InventoryNode::draw() {
 
     for (auto i = 0; i < m_player->getSlotsCount(); i++) {
         Rectf cellRect = getCellPosition(i);
-        Rectf itemRect = {cellRect.x + (cellRect.width - blockSize) / 2, cellRect.y + (cellRect.height - blockSize) / 2, blockSize, blockSize};
+        Rectf itemRect = {cellRect.x + (cellRect.width - tileSize) / 2, cellRect.y + (cellRect.height - tileSize) / 2, tileSize, tileSize};
         Vec2f mouse = getLocalMousePosition();
 
         RenderManager::drawFrame(cellRect, m_color, m_border);
+
+        auto& slot = m_player->getItem(i);
             
-        if (m_player->getItem(i) != nullptr) {
-            RenderManager::renderInventoryItem(itemRect, m_player->getItem(i));
+        if (slot.item != nullptr && m_selected != &slot) {
+            RenderManager::renderInventoryItem(itemRect, *slot.item, slot.count);
         }
 
         if (cellRect.contains(mouse)) {
@@ -49,8 +53,8 @@ void InventoryNode::draw() {
     if(m_selected != nullptr) {
         auto mouse = getLocalMousePosition();
 
-        Rectf blockRect = {mouse.x - blockSize / 2, mouse.y - blockSize / 2, blockSize, blockSize};
-        RenderManager::renderInventoryItem(blockRect, m_selected);
+        Rectf tileRect = {mouse.x - tileSize / 2, mouse.y - tileSize / 2, tileSize, tileSize};
+        RenderManager::renderInventoryItem(tileRect, *m_selected->item, m_selected->count);
     }
 }
 
@@ -61,74 +65,58 @@ void InventoryNode::update() {
         auto cell = getCellPosition(i);
         auto lclick = IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
         auto rclick = IsMouseButtonPressed(MOUSE_RIGHT_BUTTON);
-        auto item = m_player->getItem(i);
+        auto& slot = m_player->getItem(i);
         auto& inv = m_player->getInventory();
 
-        if(lclick && cell.contains(mouse) && m_selected == nullptr && item != nullptr) {
-            m_selected = std::move(inv[i]);
+        if(lclick && cell.contains(mouse) && m_selected == nullptr && slot.item != nullptr) {
+            m_selected = &inv[i];
 
             continue;
         }
 
         if(lclick && cell.contains(mouse) && m_selected != nullptr) {
-            if (item != nullptr) {
-                if (*item == *m_selected) {
-                    m_selected->sub(item->add(m_selected->getCount()));
-                    
-                    if(m_selected->getCount() <= 0) {
-                        m_selected = nullptr;
-                    }
-                    continue;
-                }
-
-                std::swap(m_selected, inv[i]);
+            if (slot.item != nullptr) {
+                std::swap(slot.item, m_selected->item);
+                std::swap(slot.count, m_selected->count);
                 continue;
             }
 
-            m_player->setItem(i, std::move(m_selected));
+            slot.item = std::move(m_selected->item);
+            slot.count = m_selected->count;
+            
+            m_selected = nullptr;
+            
+            continue;
         }
 
-        if(rclick && cell.contains(mouse) && m_selected != nullptr) {
-            if (item != nullptr && *item == *m_selected) {
-                m_selected->sub(item->add(1));
+        // if(rclick && cell.contains(mouse) && m_selected != nullptr) {
+        //     if (item != nullptr && *item == *m_selected) {
+        //         m_selected->sub(item->add(1));
                 
-                if(m_selected->getCount() <= 0) {
-                    m_selected = nullptr;
-                }
-                continue;
-            }
+        //         if(m_selected->getCount() <= 0) {
+        //             m_selected = nullptr;
+        //         }
+        //         continue;
+        //     }
 
-            if (item == nullptr) {
-                auto newItem = std::make_shared<InventoryItem>(*m_selected);
-                newItem->setCount(1);
-                m_player->setItem(i, newItem);
-                m_selected->sub(1);
+        //     if (item == nullptr) {
+        //         auto newItem = std::make_shared<InventorySlot>(*m_selected);
+        //         newItem->setCount(1);
+        //         m_player->setItem(i, newItem);
+        //         m_selected->sub(1);
 
-                if(m_selected->getCount() <= 0) {
-                    m_selected = nullptr;
-                }
-            }
-        }
-
-        if(rclick && cell.contains(mouse) && m_selected == nullptr && item != nullptr) {
-            if (item->getCount() == 1) {
-                m_selected = std::move(inv[i]);
-                continue;
-            }
-
-            int count = item->getCount() / 2;
-
-            m_selected = std::make_shared<InventoryItem>(*item);
-            m_selected->setCount(count);
-            item->sub(count);
-        }
+        //         if(m_selected->getCount() <= 0) {
+        //             m_selected = nullptr;
+        //         }
+        //     }
+        // }
     }
 }
 
 void InventoryNode::setEnabled(bool val) {
-    if (m_selected != nullptr) {
-        m_player->addItem(m_selected);
-    }
+    // if (m_selected != nullptr) {
+    //     m_player->addItem(m_selected);
+    // }
 
     Frame::setEnabled(val);
 }

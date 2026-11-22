@@ -1,8 +1,3 @@
-#ifdef _WIN32
-    #define NOGDI
-    #define NOUSER
-#endif
-
 #include <Game.hpp>
 #include <vector>
 #include <string>

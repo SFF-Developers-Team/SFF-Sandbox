@@ -4,20 +4,18 @@
 class Mob : public Entity {
 protected:
     int m_health;
-    uint64_t m_lastHurtTime;
     float m_fallY;
-
-    bool m_prevOnGround;
+    uint64_t m_lastHurtTime;
 
 public:
-    Mob(std::shared_ptr<World> world);
+    Mob(World& world);
 
-    void onTick();
+    void onTick(World& world);
 
     virtual int getMaxHealth() { return 20; }
     int getHealth() { return m_health; }
-    float getLastHeartTime() { return m_lastHurtTime; }
+    float getLastHurtTime() { return m_lastHurtTime; }
 
-    ByteVector serialize();
-    size_t deserialize(ByteVector const& bytes);
+    DataStream serialize();
+    bool deserialize(DataStream& stream);
 };

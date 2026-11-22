@@ -8,9 +8,8 @@
 #include <ui/basic/ListContainer.hpp>
 
 #include <managers/StyleManager.hpp>
-#include <world/World.hpp>
-#include <entity/Player.hpp>
-#include <world/gen/WorldGenNormal.hpp>
+#include <world/ClientWorld.hpp>
+#include <entity/LocalPlayer.hpp>
 #include <Game.hpp>
 #include <Platform.hpp>
 #include <list>
@@ -20,14 +19,16 @@ MainMenuScene::MainMenuScene() : MenuBase() {
 
     std::list<std::pair<std::string, MiniFunction<void(Button*)>>> const btns = {
         {"Singleplayer", [game](Button*) { 
-            auto world = std::make_shared<World>(Platform::getHomeDir() / "worlds" / "world1");
+            auto world = std::make_shared<ClientWorld>(Platform::getHomeDir() / "worlds" / "world1");
 
-            if (!world->load()) {
-                world->setGenerator(std::make_shared<WorldGenNormal>(world, 1));
+            srand(time(0));
+
+            // if (!world->load()) {
+                // world->setGenerator(std::make_shared<WorldGenNormal>(rand()));
                 world->generate();
-            }
+            // }
 
-            auto player = std::make_shared<Player>(world);
+            auto player = std::make_shared<LocalPlayer>(*world);
 
             game->setWorld(world);
             game->setPlayer(player);

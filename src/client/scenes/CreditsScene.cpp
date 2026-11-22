@@ -2,7 +2,7 @@
 #include <managers/StyleManager.hpp>
 #include <managers/RenderManager.hpp>
 #include <managers/TextureManager.hpp>
-#include <ui/basic/Tile.hpp>
+#include <ui/basic/TileNode.hpp>
 #include <ui/basic/SpriteNode.hpp>
 #include <ui/basic/List.hpp>
 #include <ui/basic/Button.hpp>
@@ -65,7 +65,7 @@ CreditsScene::CreditsScene() {
         container->addChild(m_developersBox);
 
         for(auto i = 0; i < devs.size(); i++) {
-            auto tile = std::make_shared<Tile>("developers.png", i);
+            auto tile = std::make_shared<TileNode>("developers.png", i);
             tile->setSize({128.f, 128.f});
             tile->setAnchorX(0.f);
             tile->setScale(0.5f);

@@ -1,4 +1,5 @@
-#include <entity/SimplePlayer.hpp>
+#pragma once
+#include <entity/ClientPlayer.hpp>
 #include <array>
 
 struct OnlinePosition {
@@ -7,14 +8,14 @@ struct OnlinePosition {
     float time;
 };
 
-class OnlinePlayer : public SimplePlayer {
+class OnlinePlayer : public ClientPlayer {
 protected:
     std::array<OnlinePosition, 2> m_positions;
     int m_index;
 
 public:
-    OnlinePlayer(std::shared_ptr<World> world);
+    OnlinePlayer(World& world);
 
     void update();
-    size_t deserialize(ByteVector const& bytes);
+    bool deserialize(DataStream& bytes);
 };

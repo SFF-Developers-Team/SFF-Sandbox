@@ -7,10 +7,6 @@
 #include <Game.hpp>
 #include <managers/SoundManager.hpp>
 
-#ifdef PLATFORM_DESKTOP
-#include <glfw3.h>
-#endif
-
 std::map<std::string, int> keybinds = {
     {"jump", KEY_W},
     {"duck", KEY_S},
@@ -20,25 +16,6 @@ std::map<std::string, int> keybinds = {
 };
 
 SettingsManager::SettingsManager() {
-    #ifdef PLATFORM_DESKTOP
-    auto monitorI = GetCurrentMonitor();
-    auto monitor = glfwGetPrimaryMonitor();
-    auto modeCount = 0;
-
-    auto modes = glfwGetVideoModes(monitor, &modeCount);
-    for(auto i = 0; i < modeCount; i++) {
-        if(modes[i].width <= GetMonitorWidth(monitorI) && modes[i].height <= GetMonitorHeight(monitorI)) {
-            auto it = std::find_if(m_modes.begin(), m_modes.end(), [&](auto const& mode) { 
-                return modes[i].width == mode.width && modes[i].height == mode.height; 
-            });
-
-            if(it == m_modes.end()) {
-                m_modes.push_back(VideoMode {modes[i].width, modes[i].height});
-            }
-        }
-    }
-    #endif
-
     try {
         m_settings = toml::parse_file("settings.toml");
     } catch(toml::parse_error const& e) {
@@ -56,21 +33,25 @@ SettingsManager::SettingsManager() {
     audio->setSoundVolume(getValue<float>("audio.volume.sound", 0.5f));
     SetMasterVolume(getValue<float>("audio.volume.general", 1.f));
     game->setGuiScale(getValue<int>("video.scale", 1));
-    (getValue<bool>("video.vsync", true) ? SetWindowState(FLAG_VSYNC_HINT) : ClearWindowState(FLAG_VSYNC_HINT));
+    getValue<bool>("video.vsync", true) ? SetWindowState(FLAG_VSYNC_HINT) : ClearWindowState(FLAG_VSYNC_HINT);
 
-    auto mon = GetCurrentMonitor();
-    Vec2i monSize = {GetMonitorWidth(mon), GetMonitorHeight(mon)};
+    // auto mon = GetCurrentMonitor();
+    // Vec2i monSize = {GetMonitorWidth(mon), GetMonitorHeight(mon)};
 
-    if (getValue<bool>("video.fullscreen", true)) {
-        SetWindowState(FLAG_WINDOW_UNDECORATED);
-        SetWindowSize(monSize.x, monSize.y);
-    } else {
-        auto winSize = Game::get()->getLastWindowSize();
+    // if (getValue<bool>("video.fullscreen", true)) {
+    //     SetWindowState(FLAG_WINDOW_UNDECORATED);
+    //     SetWindowSize(monSize.x, monSize.y);
+
+    //     if (!IsWindowFullscreen()) ToggleFullscreen();
+    // } else {
+    //     auto winSize = Game::get()->getLastWindowSize();
+
+    //     if (IsWindowFullscreen()) ToggleFullscreen();
         
-        ClearWindowState(FLAG_WINDOW_UNDECORATED);
-        SetWindowSize(winSize.x, winSize.y);
-        SetWindowPosition((monSize.x - winSize.x) / 2, (monSize.y - winSize.y) / 2);
-    }
+    //     ClearWindowState(FLAG_WINDOW_UNDECORATED);
+    //     SetWindowSize(winSize.x, winSize.y);
+    //     SetWindowPosition((monSize.x - winSize.x) / 2, (monSize.y - winSize.y) / 2);
+    // }
 }
 
 int SettingsManager::getKeybind(std::string const& action) {
@@ -116,13 +97,6 @@ std::vector<std::string> const SettingsManager::getKeyActions() {
 
 std::vector<VideoMode> const& SettingsManager::getModes() {
     return m_modes;
-}
-
-VideoMode SettingsManager::getFullscreenSize() { 
-    auto mode = getValue<int>("video.resolution", m_modes.size());
-    auto mon = GetCurrentMonitor();
-
-    return (mode > 0) ? m_modes[mode - 1] : VideoMode {GetMonitorWidth(mon), GetMonitorHeight(mon)}; 
 }
 
 std::string const SettingsManager::getKeyName(int key) {

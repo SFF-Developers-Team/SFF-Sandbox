@@ -1,14 +1,15 @@
 #include <ui/gameplay/Hotbar.hpp>
 #include <managers/RenderManager.hpp>
+#include <fix_win32_compatibility.h>
 #include <raylib.h>
-#include <entity/Player.hpp>
-#include <world/Block.hpp>
+#include <entity/LocalPlayer.hpp>
+#include <world/Tile.hpp>
 
 float constexpr cellSize = 26.f;
-float constexpr blockSize = 16.f;
+float constexpr tileSize = 16.f;
 int constexpr cellsCount = 9;
 
-Hotbar::Hotbar(std::shared_ptr<Player> player, MiniFunction<void()> const& inventoryCallback) : Frame(), m_player(player), m_invCallback(inventoryCallback) {
+Hotbar::Hotbar(std::shared_ptr<LocalPlayer> player, MiniFunction<void()> const& inventoryCallback) : Frame(), m_player(player), m_invCallback(inventoryCallback) {
     setSize({cellSize * (cellsCount + 1) + m_border * (cellsCount + 4), cellSize + m_border * 4});
 }
 
@@ -19,8 +20,8 @@ void Hotbar::draw() {
 
     for (auto i = 0; i <= cellsCount; i++) {
         Rectf cellRect = {m_border * 2 + cellSize * i + m_border * i, m_border * 2, cellSize, cellSize};
-        Rectf itemRect = {cellRect.x + (cellRect.width - blockSize) / 2, cellRect.y + (cellRect.height - blockSize) / 2, blockSize, blockSize};
-        auto item = m_player->getItem(i);
+        Rectf itemRect = {cellRect.x + (cellRect.width - tileSize) / 2, cellRect.y + (cellRect.height - tileSize) / 2, tileSize, tileSize};
+        auto& slot = m_player->getItem(i);
 
         RenderManager::drawFrame(cellRect, m_color, m_border);
 
@@ -29,8 +30,8 @@ void Hotbar::draw() {
             break;
         }
 
-        if(item != nullptr) {
-            RenderManager::renderInventoryItem(itemRect, item);
+        if(slot.item != nullptr) {
+            RenderManager::renderInventoryItem(itemRect, *slot.item, slot.count);
         }
 
         if(i == selected) {

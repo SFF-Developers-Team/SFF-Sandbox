@@ -1,43 +1,43 @@
 #pragma once
-#include <SerializedObject.hpp>
-#include <Logger.hpp>
+#include <DataStream.hpp>
 #include <enet.h>
+#include <format>
 
 #define CREATE_PACKET std::make_shared<Packet>
 
-class Packet : public SerializedObject {
-private:
-    using SerializedObject::deserialize;
-
+class Packet : public DataStream {
 public:
-    Packet() : SerializedObject() {}
-
-    Packet(ENetPacket* packet) : SerializedObject() {
-        resize(packet->dataLength);
-        std::copy(packet->data, packet->data + size(), data());
-    }
-
-    Packet(Header header) { add(header); }
-
-    Packet(ByteVector const& bytes) : SerializedObject() {
-        add(bytes);
-        reset();
-    }
-
     template<typename... Args>
-    Packet(Header const header, Args const&... args) : Packet(header) { (add(args), ...); }
+    Packet(Args const&... args) { (add(args), ...); }  
+    Packet(ENetPacket* packet) : DataStream(packet->data, packet->data + packet->dataLength) {}
+    Packet(ByteVector const& bytes) : DataStream(bytes) {}
+};
 
-    template<typename... Args>
-    Packet(Args const&... arg) { add(arg...); }
+template <>
+struct std::formatter<Packet> {
+    char separator = ' ';
 
-    ByteVector serialize() override { return bytes(); }
+    constexpr auto parse(std::format_parse_context& ctx) {
+        auto it = ctx.begin();
 
-    void print() {
-        std::string res;
-        for(auto i = 0; i < size(); i++) { 
-            res.append(std::format("{:02X} ", data()[i]));
+        if (it != ctx.end() && *it != '}') {
+            separator = *it++;
         }
 
-        logD("GamePacket: {}", res);
+        return it;
+    }
+
+    auto format(Packet const& p, std::format_context& ctx) const {
+        auto it = ctx.out();
+
+        for (auto i = 0; i < p.size(); i++) {
+            it = std::format_to(it, "{:02X}", p[i]);
+
+            if (i < p.size() - 1) {
+                *it++ = separator;
+            }
+        }
+
+        return it;
     }
 };

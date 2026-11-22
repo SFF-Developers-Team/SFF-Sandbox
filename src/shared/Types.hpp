@@ -4,6 +4,7 @@
 #include <variant>
 #include <cmath>
 #include <memory>
+#include <vector>
 #include <map>
 
 template <typename T>
@@ -24,18 +25,24 @@ struct Vec2 {
 
     Vec2<T> lerp(Vec2<T> other, float a) { return {x + a * (other.x - x), y + a * (other.y - y)}; }
 
-    
-    Vec2<T> const operator/(T value) { return Vec2<T> {x / value, y / value}; }
+    template <typename U>
+    inline Vec2<U> as() const { return Vec2<U> {static_cast<U>(x), static_cast<U>(y)}; }
 
-    template <typename T2>
-    inline T2 to() const {
-        return T2 {x, y};
-    }
+    template <typename U>
+    inline U to() const { return U {x, y}; }
 
     template <typename T2>
     inline float distance(T2 other) const {
         return sqrtf((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y));
     }
+
+    Vec2<T> const operator/(T value) { return Vec2<T> {x / value, y / value}; }
+    bool operator==(Vec2<T> const& other) const { return x == other.x && y == other.y; }
+};
+
+template <typename T>
+struct Vec2Hash {
+    size_t operator()(Vec2<T> const& v) const { return std::hash<T>()(v.x) ^ (std::hash<T>()(v.y) << 1); }
 };
 
 template <typename T>
@@ -176,6 +183,8 @@ struct Col4 {
 
 using Vec2f = Vec2<float>;
 using Vec2i = Vec2<int>;
+using Vec2fHash = Vec2Hash<float>;
+using Vec2iHash = Vec2Hash<int>;
 
 using Vec3f = Vec3<float>;
 using Vec3i = Vec3<int>;
@@ -224,9 +233,9 @@ enum DisconnectReasonID : uint32_t {
     KICKED_BY_SERVER
 };
 
-enum Direction : uint8_t {
-    LEFT = 0,
-    RIGHT = 1
+enum Direction : int8_t {
+    RIGHT = -1,
+    LEFT = 1
 };
 
 enum ControlType : uint8_t {
@@ -240,7 +249,9 @@ enum GameMode : uint8_t {
     GAMEMODE_SURVIVAL
 };
 
-enum ItemID : uint8_t {
+#define ITEM_ID_BEGIN 7000
+
+enum class TileID : uint16_t {
     AIR = 0,
     GRASS,
     DIRT,
@@ -251,18 +262,20 @@ enum ItemID : uint8_t {
     BEDROCK,
     BRICKS,
     OAK_LOG,
-    ANOTHER_OAK_LOG,
     LEAVES,
     COAL_ORE,
-    IRON_ORE_BLOCK,
-    GOLD_ORE_BLOCK,
+    IRON_ORE,
+    GOLD_ORE,
     DIAMOND_ORE,
     LAPIZ_ORE,
     BOOKSHELF,
     FLOWER_POT,
-    FURHANCE,
-    ACTIVE_FURHANCE,
-    STICK,
+    FURNACE,
+    ACTIVE_FURHANCE
+};
+
+enum class ItemID : uint16_t {
+    STICK = ITEM_ID_BEGIN,
     WOODEN_PICKAXE,
     WOODEN_SWORD,
     STONE_PICKAXE,
@@ -283,14 +296,15 @@ enum ItemID : uint8_t {
 
 enum MaterialType : uint8_t {
     MATERIAL_NONE,
-    MATERIAL_STONE,
-    MATERIAL_DIRT,
     MATERIAL_WOOD,
-    MATERIAL_WOOL
+    MATERIAL_GOLD,
+    MATERIAL_STONE,
+    MATERIAL_IRON,
+    MATERIAL_DIAMOND
 };
 
 enum ItemType : uint8_t {
-    TYPE_BLOCK,
+    TYPE_TILE,
     TYPE_ITEM,
     TYPE_TOOL_PICKAXE,
     TYPE_TOOL_AXE,
@@ -299,32 +313,13 @@ enum ItemType : uint8_t {
     TYPE_WEAPON
 };
 
-enum TagID : uint8_t {
-    TAG_COLOR,
-    TAG_GHOST,
-    TAG_EFFICIENCY,
-    TAG_DAMAGE,
-    TAG_NATURAL
-};
-
-using TagValue = std::variant<Col3u, bool, uint8_t>;
-using ItemTags = std::map<TagID, TagValue>;
-
-struct BlockPosition {
+struct TilePosition {
     int x;
     int y;
     uint8_t layer = 1;
 
-    bool operator==(BlockPosition const& other) const { return x == other.x && y == other.y && layer == other.layer; }
+    bool operator==(TilePosition const& other) const { return x == other.x && y == other.y && layer == other.layer; }
 };
-
-struct TreeStructure {
-    int x;
-    int y;
-    int trunkHeight;
-};
-
-using ChunkPosition = int32_t;
 
 enum AnimationType : uint8_t {
     PLAYER_IDLE,
@@ -337,10 +332,31 @@ enum AnimationType : uint8_t {
     PLAYER_CART
 };
 
-// clang-format off
-const static inline std::map<AnimationType, std::pair<uint8_t, uint8_t>> m_animLimits = {
-    {PLAYER_MOVE, {1, 5}},
-    {PLAYER_SNEAK, {6, 7}},
-    {PLAYER_HIT, {9, 13}}
+using ByteVector = std::vector<uint8_t>;
+
+enum ObjectHeader : uint8_t {
+    // World headers (also uses in mp)
+    PLAYER,
+    TILE,
+    CHUNK,
+    WORLD,
+    ENTITY,
+    ITEM,
+    INVENTORY_ITEM,
+
+    // Multiplayer headers
+    IDENTIFICATION, DISCONNECT,
+    LOAD_CHUNK,  UNLOAD_CHUNK,
+    LOAD_PLAYER, UNLOAD_PLAYER,
+    TILE_PLACE, TILE_DESTROY,
+
+    NETWORK_ERROR, ARRAY, TERRAIN, LOAD_TERRAIN, LOAD_PLAYERS, MESSAGE, LOAD_MESSAGE,
+    NULL_PACKET = 0xFF
 };
-//clang-format on
+
+enum WorldGenType : uint8_t {
+    NORMAL
+};
+
+using PlayerID = uint32_t;
+using TileVector = std::vector<std::shared_ptr<class Tile>>;

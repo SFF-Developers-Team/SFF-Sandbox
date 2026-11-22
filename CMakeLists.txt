@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.10)
 project(SFFSandbox 
     DESCRIPTION "SFF Sandbox Game"
     HOMEPAGE_URL "https://github.com/Kolyah35/SFF-Sandbox"
@@ -15,19 +15,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(BUILD_SHARED_LIBS OFF)
 set(ENET_STATIC ON CACHE BOOL "" FORCE)
 
-set(SHARED_HEADERS 
-    "libs/perlin-noise/"
-    "libs/enet/inlcude"
-    "libs/miniz/"
-    "libs/toml/"
-    "src/shared/"
-)
-
 file(GLOB SHARED_SOURCES CONFIGURE_DEPENDS
+    "src/shared/pch.c"
     "src/shared/entity/*.cpp"
     "src/shared/world/*.cpp"
     "src/shared/world/gen/*.cpp"
-    "src/shared/world/blocks/*.cpp"
+    "src/shared/world/tiles/*.cpp"
     "src/shared/managers/*.cpp"
     "src/shared/inventory/*.cpp"
     "src/shared/*.cpp"
@@ -41,6 +34,7 @@ file(GLOB CLIENT_SOURCES CONFIGURE_DEPENDS
     "src/client/particle/*.cpp"
     "src/client/scenes/*.cpp"
     "src/client/managers/*.cpp"
+    "src/client/world/*.cpp"
     "src/client/ui/basic/*.cpp"
     "src/client/ui/gameplay/*.cpp"
 )
@@ -50,10 +44,22 @@ file(GLOB SERVER_SOURCES CONFIGURE_DEPENDS
     "src/server/*.cpp"
 )
 
-add_subdirectory(libs/raylib)
-add_subdirectory(libs/GitHash)
-add_subdirectory(libs/miniz)
-add_subdirectory(libs/enet)
+include(cmake/CPM.cmake)
+
+CPMAddPackage("gh:raysan5/raylib#6.2")
+CPMAddPackage("gh:robloach/raylib-cpp@6.0.3")
+CPMAddPackage("gh:Svalorzen/GitHash#master")
+CPMAddPackage("gh:richgel999/miniz#3.1.2")
+CPMAddPackage("gh:zpl-c/enet@2.7.0")
+CPMAddPackage("gh:Auburn/FastNoiseLite#master")
+
+set(SHARED_HEADERS 
+    ${FastNoiseLite_SOURCE_DIR}/Cpp
+    "libs/enet/inlcude"
+    "libs/miniz/"
+    "libs/toml/"
+    "src/shared/"
+)
 
 if(${PLATFORM} STREQUAL "Android")
     set(PLATFORM_LIBS m c log android EGL GLESv2 OpenSLES dl unwind c++_static)

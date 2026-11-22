@@ -1,4 +1,5 @@
 #include <managers/Debug.hpp>
+#include <fix_win32_compatibility.h>
 #include <raylib.h>
 #include <GitHash.hpp>
 #include <ui/basic/ScrollableContainer.hpp>

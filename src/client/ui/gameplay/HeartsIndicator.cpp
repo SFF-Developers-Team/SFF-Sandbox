@@ -1,17 +1,17 @@
 #include <ui/gameplay/HeartsIndicator.hpp>
 #include <managers/RenderManager.hpp>
-#include <entity/Player.hpp>
+#include <entity/LocalPlayer.hpp>
 #include <world/World.hpp>
-#include <raylib.h>
 
-HeartsIndicator::HeartsIndicator(std::shared_ptr<Player> player) : m_player(player) {
+HeartsIndicator::HeartsIndicator(std::shared_ptr<LocalPlayer> player) : m_player(player) {
     // maxHealth = 20; spriteSize = 8;
     // maxHealth / 2 * spriteSize  
     setSize({m_player->getMaxHealth() * 4.5f, 7});
 }
 
 void HeartsIndicator::draw() {
-    auto add = (m_player->getWorld()->getTime() < m_player->getLastHeartTime() + 0.5f) * 3;
+    // auto add = (m_player->getWorld()->getTime() < m_player->getLastHurtTime() + 0.5f) * 3;
+    auto add = 0;
 
     for(auto i = 0; i < m_player->getMaxHealth() / 2.f; i++) {
         if(m_player->getHealth() / 2.f >= i + 1.f) {

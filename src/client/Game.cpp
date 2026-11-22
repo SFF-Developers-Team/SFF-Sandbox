@@ -1,7 +1,7 @@
 #include <scenes/MainMenuScene.hpp>
 #include <managers/TextureManager.hpp>
 #include <managers/SoundManager.hpp>
-#include <entity/Player.hpp>
+#include <entity/LocalPlayer.hpp>
 #include <world/World.hpp>
 #include <TileMap.hpp>
 #include <Logger.hpp>
@@ -84,7 +84,7 @@ void Game::init(std::vector<std::string>& args) {
     });
 #endif
 
-    InitWindow(GetScreenWidth(), GetScreenHeight(), "SFF Sandbox");
+    InitWindow(1280, 720, "SFF Sandbox");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetWindowMinSize(640, 360);
     InitAudioDevice();
@@ -106,7 +106,7 @@ void Game::init(std::vector<std::string>& args) {
     tm->loadTexture("player.png");
     tm->loadTexture("sff.png");
     tm->loadTexture("raylib.png");
-    tm->loadTileMap("blocks.png", {16, 16});
+    tm->loadTileMap("tiles.png", {16, 16});
     tm->loadTileMap("items.png", {16, 16});
     tm->loadTileMap("gui.png", {16, 16});
     tm->loadTileMap("developers.png", {128, 128});
@@ -128,6 +128,7 @@ void Game::init(std::vector<std::string>& args) {
     StyleManager::get();
     RecipesManager::get();
     // Debug::get()->allocateConsole();
+    Tile::init();
 
     // Load main menu
     pushScene(std::make_shared<MainMenuScene>());
@@ -207,7 +208,7 @@ void Game::render() {
 void Game::destroy() {
     auto mp = Multiplayer::get();
 
-    if (mp->connected()) {
+    if (mp->isConnected()) {
         mp->destroy();
     }
 

@@ -1,4 +1,3 @@
-#include <world/gen/WorldGenNormal.hpp>
 #include <scenes/PlayScene.hpp>
 #include <scenes/ErrorScene.hpp>
 #include <scenes/MainMenuScene.hpp>
@@ -12,13 +11,13 @@
 #include <ui/basic/TouchControlButton.hpp>
 
 #include <ui/gameplay/Hotbar.hpp>
-#include <ui/gameplay/BlockInfo.hpp>
+#include <ui/gameplay/TileInfo.hpp>
 #include <ui/gameplay/InventoryNode.hpp>
 #include <ui/gameplay/HeartsIndicator.hpp>
 #include <ui/gameplay/IngredientsList.hpp>
 
-#include <entity/Player.hpp>
-#include <world/World.hpp>
+#include <entity/LocalPlayer.hpp>
+#include <world/ClientWorld.hpp>
 
 #include <managers/SettingsManager.hpp>
 #include <managers/RecipesManager.hpp>
@@ -30,7 +29,6 @@
 #include <Timer.hpp>
 #include <Game.hpp>
 #include <Item.hpp>
-#include <chrono>
 
 PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(60)), m_online(isOnline), m_paused(false), m_inventoryEnabled(false) {
     auto game = Game::get();
@@ -50,14 +48,14 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     hotbar->setTag("hotbar");
     addChild(hotbar);
 
-    auto blockInfo = std::make_shared<BlockInfo>();
-    blockInfo->setFlags(FLAG_GUI_SCALE);
-    blockInfo->setAnchorY(0.f);
-    blockInfo->setVisible(false);
-    blockInfo->setEnabled(false);
-    blockInfo->setPos({getWidth() / 2, hotbar->getHeight() * getGlobalScaleY() + 10.f});
-    blockInfo->setTag("blockinfo");
-    addChild(blockInfo);
+    auto tileInfo = std::make_shared<TileInfo>();
+    tileInfo->setFlags(FLAG_GUI_SCALE);
+    tileInfo->setAnchorY(0.f);
+    tileInfo->setVisible(false);
+    tileInfo->setEnabled(false);
+    tileInfo->setPos({getWidth() / 2, hotbar->getHeight() * getGlobalScaleY() + 10.f});
+    tileInfo->setTag("tileinfo");
+    addChild(tileInfo);
 
     auto hp = std::make_shared<HeartsIndicator>(m_player);
     hp->setAnchor({1.f, 0.f});
@@ -89,9 +87,9 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
 
     std::vector<std::string> recipesList;
 
-    for (auto& recipe : RecipesManager::get()->getRecipes()) {
-        recipesList.push_back(recipe.result->getName());
-    }
+    // for (auto& recipe : RecipesManager::get()->getRecipes()) {
+    //     recipesList.push_back(recipe.result->getName());
+    // }
 
     auto craftList = std::make_shared<List>(recipesList, [inventoryContainer](auto, int id) {
         auto ingredients = inventoryContainer->getChild<IngredientsList>("ingredients");
@@ -122,11 +120,10 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
 
     auto craftBtn = std::make_shared<Button>("Craft!", [this, craftList](auto) {
         auto selected = craftList->getSelected();
-        logD("Selected: {}", selected);
         auto rm = RecipesManager::get();
         auto recipes = rm->getRecipes();
 
-        rm->craftItem(m_player, recipes[selected]);
+        rm->craftItem(*m_player, recipes[selected]);
     });
     craftBtn->setPos({craftList->getX(), craftList->getBottomY() + border});
     craftBtn->setAnchor({0.f, 0.f});
@@ -149,12 +146,12 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     pauseMenu->addChild(std::make_shared<Button>("Back to main menu", [this](auto) { destroy(); }));
     pauseLayer->addChild(pauseMenu);
 
-    m_pauseNodes = {hotbar, blockInfo};
+    m_pauseNodes = {hotbar, tileInfo};
 
     if(m_online) {
         auto playerList = std::make_shared<List>(nickList, [](auto, auto) {});
         playerList->setFlags(FLAG_GUI_SCALE);
-        playerList->setPos({static_cast<float>(GetScreenWidth() / 2 + 735), 0});
+        playerList->setPos({static_cast<float>(GetScreenWidth() / 2.f + 735), 0});
         playerList->setVisible(true);
         playerList->setEnabled(true);
         playerList->setAnchorY(0.f);
@@ -165,7 +162,7 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
 
         auto msgInput = std::make_shared<TextInput>("font", "");
         msgInput->setFlags(FLAG_GUI_SCALE);
-        msgInput->setPos({static_cast<float>(GetScreenWidth() / 2), static_cast<float>(GetScreenHeight() / 2)});
+        msgInput->setPos({static_cast<float>(GetScreenWidth() / 2.f), static_cast<float>(GetScreenHeight() / 2.f)});
         msgInput->setTag("inputmsg");
         addChild(msgInput);
     }
@@ -179,39 +176,42 @@ PlayScene::~PlayScene() {
 
 void PlayScene::draw() {
     Vector2 static mouse = {0};
-    BlockPosition static target = {0};
+    TilePosition static target = {0};
 
     if (!m_paused) {
         mouse = GetMousePosition();
-        target = m_player->getTargetBlock();
+        target = m_player->getTargetTile();
     }
 
     BeginMode2D(m_player->getCamera());
-        RenderManager::renderWorld(m_world, m_player);
+        m_world->draw(m_player);
 
-        if (m_player->isBreakingBlock()) {
-            auto breakingBlock = m_player->getBreakingBlockInfo();
+        // if (m_player->isBreakingTile()) {
+        //     auto breakingTile = m_player->getBreakingTileInfo(m_world.get());
     
-            RenderManager::drawTile("gui.png", 8 + (5.f - (breakingBlock.currentDurability / breakingBlock.totalDurability) * 5.f), BLOCK_RECT(target.x, target.y));
-        }
+        //     RenderManager::drawTile("gui.png", 8 + (5.f - (breakingTile.currentDurability / breakingTile.totalDurability) * 5.f), TILE_RECT(target.x, target.y));
+        // }
 
-        if (m_player->canAccessBlock(target)) {
-            if(m_player->canPlaceBlock(target)) {
-                RenderManager::drawTile("gui.png", 1, BLOCK_RECT(target.x, target.y));
+        if (m_player->canAccessTile(target)) {
+            if(m_player->canPlaceTile(*m_world, target)) {
+                RenderManager::drawTile("gui.png", 1, TILE_RECT(target.x, target.y));
             }
 
-            if(m_player->canDestroyBlock(target)) {
-                RenderManager::drawTile("gui.png", 2 + IsKeyDown(KEY_LEFT_CONTROL), BLOCK_RECT(target.x, target.y));
+            if(m_player->canDestroyTile(*m_world, target)) {
+                RenderManager::drawTile("gui.png", 2 + IsKeyDown(KEY_LEFT_CONTROL), TILE_RECT(target.x, target.y));
             }
         }
     EndMode2D();
+
     if(m_online) {
         auto mp = Multiplayer::get();
         auto messages = mp->getMessages();
+
         for(int i = 0; i < messages.size(); i++) {
             RenderManager::drawText("font", messages[i], {0, static_cast<float>(10 * i)});
         }
     }
+
     RenderManager::drawTile("gui.png", 0, {mouse.x, mouse.y, 16.f, 16.f}, COL_WHITE, 0.f, {0.5f, 0.5f});
 
     if(m_paused) {
@@ -246,16 +246,16 @@ void PlayScene::update() {
 
     
     auto stm = SettingsManager::get();
-    auto target = m_player->getTargetBlock();
-    auto block = m_world->getBlock(target.x, target.y, target.layer);
-    auto blockInfo = getChild<BlockInfo>("blockinfo");
+    auto target = m_player->getTargetTile();
+    auto tile = m_world->getTile(target);
+    auto tileInfo = getChild<TileInfo>("tileinfo");
     auto playerList = getChild<List>("playerlist"); 
     auto inputMsg = getChild<TextInput>("inputmsg");
 
-    auto enabledBlockInfo = stm->getValue<bool>("video.blockinfo", true) && block != nullptr && !m_inventoryEnabled && !m_paused;
+    // auto enabledTileInfo = stm->getValue<bool>("video.tileinfo", true) && tile != nullptr && !m_inventoryEnabled && !m_paused;
 
-    blockInfo->setVisible(enabledBlockInfo);
-    blockInfo->setEnabled(enabledBlockInfo);
+    // tileInfo->setVisible(enabledTileInfo);
+    // tileInfo->setEnabled(enabledTileInfo);
 
     if (playerList != nullptr) {
         playerList->setVisible(m_paused);
@@ -269,14 +269,14 @@ void PlayScene::update() {
         if(mp->getState() == ERROR) {
             Game::get()->pushScene(std::make_shared<ErrorScene>(mp->getError()));
             mp->destroy();
-            m_world->reset();
         }
 
         if(IsKeyPressed(KEY_ENTER)) {
             if(!inputMsg->getText().empty()) {
                 auto msg = inputMsg->getText();
-                auto pak = Packet(Header::MESSAGE, msg);
+                auto pak = Packet(ObjectHeader::MESSAGE, msg);
                 mp->sendPacket(pak);
+                m_world = nullptr;
             }
         }
     }

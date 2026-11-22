@@ -1,19 +1,6 @@
 #pragma once
-#ifdef _WIN32
-    #define NOGDI
-    #define NOUSER
-
-    #ifndef NOMINMAX
-        #define NOMINMAX
-    #endif
-
-    // Type required before windows.h inclusion
-    typedef struct tagMSG *LPMSG;
-#endif
-
+#include <entity/LocalPlayer.hpp>
 #include <managers/PacketManager.hpp>
-#include <entity/Player.hpp>
-#include <world/Chunk.hpp>
 #include <Packet.hpp>
 #include <Types.hpp>
 #include <memory>
@@ -31,7 +18,6 @@ class Multiplayer : public PacketManager {
 private:
     bool m_connected = false;
     PlayerID m_myPlayerId;
-    std::vector<Chunk::Position> m_chunkRequests;
     std::vector<std::string> messages;
     ENetHost* m_client;
     MultiplayerState m_state;
@@ -47,9 +33,7 @@ public:
     ~Multiplayer();
 
     bool connect(std::string const& host, uint16_t port);
-    bool connected();
-
-    void requestChunk(Chunk::Position pos);
+    bool isConnected() { return m_connected; }
     
     void update();
     void error(std::string const& str);
@@ -62,8 +46,8 @@ public:
     void handlePlayer(Packet& packet);
     void handleLoadPlayer(Packet& packet);
     void handleUnloadPlayer(Packet& packet);
-    void handleBlockPlace(Packet& packet);
-    void handleBlockDestroy(Packet& packet);
+    void handleTilePlace(Packet& packet);
+    void handleTileDestroy(Packet& packet);
     void handleMessage(Packet& packet);
     void handleLoadMessage(Packet& packet);
     std::string const& getError() { return m_error; }

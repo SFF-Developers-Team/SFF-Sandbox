@@ -1,6 +1,7 @@
 #include <ui/basic/ScrollableContainer.hpp>
 #include <managers/RenderManager.hpp>
 #include <algorithm>
+#include <fix_win32_compatibility.h>
 #include <raylib.h>
 #include <rlgl.h>
 

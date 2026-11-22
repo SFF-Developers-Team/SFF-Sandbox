@@ -1,5 +1,6 @@
 #include <ui/basic/Node.hpp>
 #include <ui/basic/Container.hpp>
+#include <fix_win32_compatibility.h>
 #include <raylib.h>
 #include <rlgl.h>
 #include <raymath.h>

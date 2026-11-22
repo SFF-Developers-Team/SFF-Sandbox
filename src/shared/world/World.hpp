@@ -1,8 +1,7 @@
 #pragma once
-#include <entity/SimplePlayer.hpp>
-#include <world/Block.hpp>
-#include <world/Chunk.hpp>
-#include <SerializedObject.hpp>
+#include "Types.hpp"
+#include <entity/Player.hpp>
+#include <world/Tile.hpp>
 #include <entity/Hitbox.hpp>
 
 #include <filesystem>
@@ -11,74 +10,91 @@
 #include <memory>
 #include <cmath>
 #include <map>
+#include <array>
+#include <unordered_map>
+#include <optional>
 
-#define WORLDVER 4
-
-class Player;
+class LocalPlayer;
 class WorldGen;
+class Structure;
 
-class World : public SerializedObject {
+struct BreakInfo {
+    TilePosition pos;
+    uint64_t time;
+    float progress;
+};
+
+#define WORLD_SIZE 512
+#define WORLD_LAYERS 2
+
+class World {
 private:
-    std::map<ChunkPosition, std::shared_ptr<Chunk>> m_chunks;
-    std::map<PlayerID, std::shared_ptr<SimplePlayer>> m_players;
-    std::vector<TreeStructure> m_postGenTrees;
+    std::array<TileID, WORLD_SIZE*WORLD_SIZE*WORLD_LAYERS> m_tiles;
+
+protected:
+    std::map<PlayerID, std::shared_ptr<Player>> m_players;
+    std::vector<std::shared_ptr<Structure>> m_structures;
+    std::unordered_map<PlayerID, BreakInfo> m_breakInfo;
     std::shared_ptr<WorldGen> m_worldGen;
     std::filesystem::path m_saveDir;
     PlayerID m_lastPlayerID;
     uint32_t m_version;
-    uint32_t m_height;
     uint64_t m_time;
+    uint8_t m_randomTickSpeed;
 
 public:
-    uint32_t const WORLD_VERSION = WORLDVER;
+    uint32_t const static WORLD_VERSION = 5;
 
-    World(uint32_t height, std::filesystem::path const& saveDir);
     World(std::filesystem::path const& saveDir);
 
     void generate();
     void onTick();
 
-    void placeBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block);
-    void destroyBlock(int32_t x, int32_t y, uint8_t layer);
-    Rectf getBlockHitbox(int32_t x, int32_t y);
-    bool isBlockClosed(int32_t x, int32_t y, uint8_t layer);
-    void setBlock(int32_t x, int32_t y, uint8_t layer, std::shared_ptr<Block> block, bool natural = false);
-    std::shared_ptr<Block> getBlock(int32_t x, int32_t y, uint8_t layer);
+    void placeTile(TilePosition pos, TileID tile) { if (getTile(pos) != TileID::AIR) setTile(pos, tile); }
+    void destroyTile(TilePosition pos) { setTile(pos, TileID::AIR); }
 
-    void unloadChunk(ChunkPosition pos);
-    void addChunk(std::shared_ptr<Chunk> chunk);
-    std::shared_ptr<Chunk> getChunk(ChunkPosition position);
-    bool saveChunk(ChunkPosition pos);
-    bool loadChunk(ChunkPosition pos);
+    void placeTile(PlayerID id, TilePosition pos);
+    void breakTile(PlayerID id, TilePosition pos);
+    void stopBreakingTile(PlayerID id);
 
+    bool isTileClosed(TilePosition pos);
+    bool isOutOfBound(TilePosition pos);
+    std::optional<Rectf> getTileHitbox(TilePosition pos);
     std::vector<Hitbox> getHitboxes(Hitbox entityHitbox, int radius = 1);
 
     bool save();
     bool load();
 
-    ByteVector serialize() override;
-    size_t deserialize(ByteVector const& bytes) override;
-
-    void addPlayer(PlayerID id, std::shared_ptr<SimplePlayer> player, std::string const username = "");
-    PlayerID addPlayer(std::shared_ptr<SimplePlayer> player, std::string const username = "");
-    std::shared_ptr<SimplePlayer> getPlayer(PlayerID id);
+    void setPlayer(PlayerID id, std::shared_ptr<Player> player, std::string const username = "");
+    PlayerID addPlayer(std::shared_ptr<Player> player, std::string const username = "");
+    std::shared_ptr<Player> getPlayer(PlayerID id);
     void unloadPlayer(PlayerID id);
     bool savePlayer(PlayerID id);
     bool loadPlayer(std::string const& username = "");
     bool isUsernameAlreadyTaken(std::string const& username);
-    bool isOutOfBound(int x, int y, uint8_t layer);
-
-    ChunkPosition xToChunk(int32_t x) { return static_cast<ChunkPosition>(floor(static_cast<float>(x) / CHUNK_WIDTH)); }
 
     void setGenerator(std::shared_ptr<WorldGen> generator) { m_worldGen = generator; }
 
-    uint32_t getHeight() { return m_height; }
     uint32_t getVersion() { return m_version; }
     uint64_t getTime() { return m_time; }
-    auto const& getGenerator() { return m_worldGen; }
-    auto const& getPlayers() { return m_players; }
-    auto const& getChunks() { return m_chunks; }
+    auto& getGenerator() { return m_worldGen; }
+    auto& getPlayers() { return m_players; }
 
-    void postGenerateTree(TreeStructure tree) { m_postGenTrees.push_back(tree); }
-    void generateChunk(ChunkPosition xPos);
+    void addStructure(std::shared_ptr<Structure> structure) { m_structures.push_back(structure); }
+
+    inline TileID getTile(TilePosition pos) {
+        if (isOutOfBound(pos)) {
+            return TileID::AIR;
+        }
+
+        return m_tiles[pos.layer * (WORLD_SIZE * WORLD_SIZE) + pos.y * WORLD_SIZE + pos.x];
+    }
+
+    inline void setTile(TilePosition pos, TileID tile) {
+        if (isOutOfBound(pos)) {
+            return;
+        }
+
+        m_tiles[pos.layer * (WORLD_SIZE * WORLD_SIZE) + pos.y * WORLD_SIZE + pos.x] = tile;
+    }
 };

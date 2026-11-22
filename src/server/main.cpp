@@ -1,6 +1,6 @@
 #include <Server.hpp>
-
 #include <enet.h>
+#include <Logger.hpp>
 
 int main() {
     if(enet_initialize() != 0) {
