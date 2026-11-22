@@ -15,14 +15,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(BUILD_SHARED_LIBS OFF)
 set(ENET_STATIC ON CACHE BOOL "" FORCE)
 
-set(SHARED_HEADERS 
-    "libs/perlin-noise/"
-    "libs/enet/inlcude"
-    "libs/miniz/"
-    "libs/toml/"
-    "src/shared/"
-)
-
 file(GLOB SHARED_SOURCES CONFIGURE_DEPENDS
     "src/shared/pch.c"
     "src/shared/entity/*.cpp"
@@ -59,6 +51,15 @@ CPMAddPackage("gh:robloach/raylib-cpp@6.0.3")
 CPMAddPackage("gh:Svalorzen/GitHash#master")
 CPMAddPackage("gh:richgel999/miniz#3.1.2")
 CPMAddPackage("gh:zpl-c/enet@2.7.0")
+CPMAddPackage("gh:Auburn/FastNoiseLite#master")
+
+set(SHARED_HEADERS 
+    ${FastNoiseLite_SOURCE_DIR}/Cpp
+    "libs/enet/inlcude"
+    "libs/miniz/"
+    "libs/toml/"
+    "src/shared/"
+)
 
 if(${PLATFORM} STREQUAL "Android")
     set(PLATFORM_LIBS m c log android EGL GLESv2 OpenSLES dl unwind c++_static)

@@ -13,6 +13,7 @@ InventoryNode::InventoryNode(std::shared_ptr<LocalPlayer> player) : Frame(), m_p
         cellSize * columnCount + m_border * (columnCount + 3), 
         cellSize * rowCount + m_border * (rowCount + 4)
     });
+    m_selected = nullptr;
 }
 
 Rectf InventoryNode::getCellPosition(int i) {
@@ -82,6 +83,8 @@ void InventoryNode::update() {
 
             slot.item = std::move(m_selected->item);
             slot.count = m_selected->count;
+            
+            m_selected = nullptr;
             
             continue;
         }

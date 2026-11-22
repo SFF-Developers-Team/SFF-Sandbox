@@ -36,9 +36,23 @@ void LocalPlayer::updateCamera() {
         m_camera.zoom = std::clamp(m_camera.zoom, 5.f * scaleX, 90.f * scaleX);
     }
 
-    if (IsWindowResized()) {
-        m_camera.offset = {GetScreenWidth() / 2.f, GetScreenHeight() / 2.f};
-    }
+    m_camera.offset = {GetScreenWidth() / 2.f, GetScreenHeight() / 2.f};
+
+    auto world = Game::get()->getWorld();
+    
+    const float minX = 0;
+    const float maxX = WORLD_SIZE;   
+    const float maxY = WORLD_SIZE;   
+
+    Vector2 minClamp = GetWorldToScreen2D({0, 0}, m_camera);
+    Vector2 maxClamp = GetWorldToScreen2D({maxX, maxY}, m_camera);
+    
+    auto screenWidth = GetScreenWidth();
+    auto screenHeight = GetScreenHeight();
+
+    if (maxClamp.x < screenWidth) m_camera.offset.x = screenWidth - (maxClamp.x - screenWidth / 2.f); 
+    if (minClamp.x > 0) m_camera.offset.x = screenWidth / 2 - minClamp.x;
+    if (maxClamp.y < screenHeight) m_camera.offset.y = screenHeight - (maxClamp.y - screenHeight / 2.f);
 }
 
 void LocalPlayer::updateAnimation() {

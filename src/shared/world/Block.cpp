@@ -34,25 +34,25 @@ std::unordered_map<BlockID, BlockInfo> BlocksDB = {
     {BlockID::STONE, {
         .name = "Stone", 
        //.type = TYPE_BLOCK, 
-        .material = MATERIAL_STONE, 
         //.spriteIndex = 2,
         .durability = 1.5f,
+        .material = MATERIAL_STONE, 
         //.bestTool = TYPE_TOOL_PICKAXE
     }},
     {BlockID::COBBLESTONE, {
         .name = "Cobblestone", 
        //.type = TYPE_BLOCK, 
-        .material = MATERIAL_STONE, 
         //.spriteIndex = 3,
         .durability = 2.f,
+        .material = MATERIAL_STONE, 
         //.bestTool = TYPE_TOOL_PICKAXE
     }},
     {BlockID::PLANKS, {
         .name = "Planks", 
        //.type = TYPE_BLOCK, 
-        .material = MATERIAL_WOOD, 
         //.spriteIndex = 4,
         .durability = 2.f,
+        .material = MATERIAL_WOOD, 
         //.bestTool = TYPE_TOOL_AXE
     }},
     {BlockID::WOOL, {
@@ -64,83 +64,83 @@ std::unordered_map<BlockID, BlockInfo> BlocksDB = {
     {BlockID::BEDROCK, {
         .name = "Bedrock", 
        //.type = TYPE_BLOCK, 
-        .material = MATERIAL_NONE, 
         //.spriteIndex = 6,
-        .durability = -1.f
+        .durability = -1.f,
+        .material = MATERIAL_NONE, 
     }},
     {BlockID::BRICKS, {
         .name = "Bricks", 
        //.type = TYPE_BLOCK, 
-        .material = MATERIAL_STONE, 
         //.spriteIndex = 7,
         .durability = 2.f,
+        .material = MATERIAL_STONE, 
         //.bestTool = TYPE_TOOL_PICKAXE
     }},
     {BlockID::OAK_LOG, {
         .name = "Oak log",
        //.type = TYPE_BLOCK,
-        .material = MATERIAL_WOOD,
         //.spriteIndex = 8,
         .durability = 2.f,
+        .material = MATERIAL_WOOD,
         //.bestTool = TYPE_TOOL_AXE
     }},
     {BlockID::LEAVES, {
         .name = "Leaves",
        //.type = TYPE_BLOCK,
-        .material = MATERIAL_NONE,
         //.spriteIndex = 10,
-        .durability = 0.2f
+        .durability = 0.2f,
+        .material = MATERIAL_NONE,
     }},
     {BlockID::COAL_ORE, {
         .name = "Coal ore",
        //.type = TYPE_BLOCK,
-        .material = MATERIAL_STONE,
         //.spriteIndex = 11,
         .durability = 3.f,
+        .material = MATERIAL_STONE,
         //.bestTool = TYPE_TOOL_PICKAXE
     }},
     {BlockID::IRON_ORE, {
         .name = "Iron ore",
        //.type = TYPE_BLOCK,
-        .material = MATERIAL_STONE,
         //.spriteIndex = 12,
         .durability = 3.f,
+        .material = MATERIAL_STONE,
         //.bestTool = TYPE_TOOL_PICKAXE,
         //.bestToolMaterial = MATERIAL_STONE
     }},
     {BlockID::GOLD_ORE, {
         .name = "Gold ore",
        //.type = TYPE_BLOCK,
-        .material = MATERIAL_STONE,
         //.spriteIndex = 13,
         .durability = 3.f,
+        .material = MATERIAL_STONE,
         //.bestTool = TYPE_TOOL_PICKAXE,
         //.bestToolMaterial = MATERIAL_IRON
     }},
     {BlockID::DIAMOND_ORE, {
         .name = "Diamond ore",
        //.type = TYPE_BLOCK,
-        .material = MATERIAL_STONE,
         //.spriteIndex = 14,
         .durability = 3.f,
+        .material = MATERIAL_STONE,
         //.bestTool = TYPE_TOOL_PICKAXE,
         //.bestToolMaterial = MATERIAL_IRON
     }},
     {BlockID::LAPIZ_ORE, {
         .name = "Lapiz ore",
        //.type = TYPE_BLOCK,
-        .material = MATERIAL_STONE,
         //.spriteIndex = 15,
         .durability = 3.f,
+        .material = MATERIAL_STONE,
         //.bestTool = TYPE_TOOL_PICKAXE,
         //.bestToolMaterial = MATERIAL_STONE
     }},
     {BlockID::BOOKSHELF, {
         .name = "Bookshelf",
        //.type = TYPE_BLOCK,
-        .material = MATERIAL_WOOD,
         //.spriteIndex = 16,
         .durability = 2.f,
+        .material = MATERIAL_WOOD,
         //.bestTool = TYPE_TOOL_AXE
     }},
     {BlockID::FLOWER_POT, {
@@ -152,9 +152,9 @@ std::unordered_map<BlockID, BlockInfo> BlocksDB = {
     {BlockID::FURNACE, {
         .name = "Furnace",
        //.type = TYPE_BLOCK,
-        .material = MATERIAL_STONE,
         //.spriteIndex = 18,
         .durability = 3.5f,
+        .material = MATERIAL_STONE,
         //.bestTool = TYPE_TOOL_PICKAXE,
     }},
 };

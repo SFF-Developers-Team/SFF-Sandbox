@@ -10,6 +10,7 @@
 #include <cmath>
 #include <Logger.hpp>
 #include <world/Structure.hpp>
+#include <FastNoiseLite.h>
 
 #define RENDER_DISTANCE 9
 
@@ -22,17 +23,52 @@ World::World(std::filesystem::path const& saveDir) : m_saveDir(saveDir), m_versi
 }
 
 void World::generate() {
-    for (auto y = 0; y < WORLD_SIZE; y++) {
-        for (auto x = 0; x < WORLD_SIZE; x++) {
-            if (y == 255) {
-                setBlock({x, y, 0}, BlockID::GRASS);
-                setBlock({x, y, 1}, BlockID::GRASS);
-            } else if (y < 255) {
-                setBlock({x, y, 0}, BlockID::AIR);
-                setBlock({x, y, 1}, BlockID::AIR);
-            } else {
-                setBlock({x, y, 0}, BlockID::DIRT);
-                setBlock({x, y, 1}, BlockID::DIRT);
+    // TODO: Move to worldgen
+    m_blocks.fill(BlockID::AIR);
+
+    FastNoiseLite mountains;
+    FastNoiseLite hills;
+    FastNoiseLite details;
+
+    int seed = 0;
+
+    mountains.SetSeed(seed);
+    hills.SetSeed(seed + 1);
+    details.SetSeed(seed + 2);
+
+    mountains.SetFrequency(0.002f);
+    hills.SetFrequency(0.012f);
+    details.SetFrequency(0.06f);
+
+    const int baseHeight = 10;
+    const int stoneLevel = 50;
+
+    for (int x = 0; x < WORLD_SIZE; ++x) {
+        float height =
+            baseHeight
+            + mountains.GetNoise(float(x), 0.0f) * 50.0f
+            + hills.GetNoise(float(x), 0.0f) * 15.0f
+            + details.GetNoise(float(x), 0.0f) * 3.0f;
+
+        int surfaceY = std::clamp(
+            static_cast<int>(height),
+            0,
+            WORLD_SIZE - 1
+        );
+
+        setBlock(BlockPosition{x, surfaceY, 1}, BlockID::GRASS);
+        setBlock(BlockPosition{x, surfaceY, 0}, BlockID::GRASS);
+
+        const auto stoneStart = stoneLevel + (int)(details.GetNoise(float(x), 0.0f) * 3.5f);
+        for (int y = surfaceY + 1; y < WORLD_SIZE; ++y) {
+            if (y < stoneStart) {
+                setBlock(BlockPosition{x, y, 1}, BlockID::DIRT);
+                setBlock(BlockPosition{x, y, 0}, BlockID::DIRT);
+            } else if (y >= stoneStart) {
+                setBlock(BlockPosition{x, y, 1}, BlockID::STONE);
+                setBlock(BlockPosition{x, y, 0}, BlockID::STONE);
+            } else if (y == WORLD_SIZE - 1) {
+                setBlock(BlockPosition{x, y, 1}, BlockID::BEDROCK);
             }
         }
     }
