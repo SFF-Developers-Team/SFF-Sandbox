@@ -28,10 +28,10 @@ public:
 
     bool isRectInView(Rectf rect);
     
-    BlockPosition getTargetBlock();
+    TilePosition getTargetTile();
     
-    void placeBlock(World& world);
-    void destroyBlock(World& world);
+    void placeTile(World& world);
+    void destroyTile(World& world);
 
     Camera2D& getCamera() { return m_camera; }
 

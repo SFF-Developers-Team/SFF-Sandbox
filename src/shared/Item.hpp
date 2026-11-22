@@ -5,7 +5,7 @@
 // TODO: ItemManager
 #include <ItemDatabase.hpp>
 
-class Block;
+class Tile;
 
 class Item : public Serializable {
 protected:
@@ -15,13 +15,13 @@ protected:
 public:
     Item(int id) : Serializable(ObjectHeader::ITEM), m_id(id), m_aux(0) {}
     Item(ItemID id) : Item(static_cast<int>(id)) {}
-    Item(BlockID id) : Item(static_cast<int>(id)) {}
+    Item(TileID id) : Item(static_cast<int>(id)) {}
 
     int getID() const { return m_id; }
     int getAux() const {return m_aux; }
     // void setID(int id) { m_id = id; }
 
-    bool isBlockItem() const { return m_id < ITEM_ID_BEGIN; }
+    bool isTileItem() const { return m_id < ITEM_ID_BEGIN; }
 
     ItemType getType() const { return gItemDatabase[(ItemID)m_id].type; }
     ItemType getBestTool() const { return gItemDatabase[(ItemID)m_id].bestTool; }

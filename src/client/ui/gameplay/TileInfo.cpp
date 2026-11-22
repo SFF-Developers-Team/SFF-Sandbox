@@ -1,0 +1,27 @@
+#include <ui/gameplay/TileInfo.hpp>
+#include <managers/RenderManager.hpp>
+#include <entity/LocalPlayer.hpp>
+#include <world/World.hpp>
+#include <world/Tile.hpp>
+#include <Game.hpp>
+#include <format>
+
+void TileInfo::draw() {
+    // Frame::draw();
+
+    // auto game = Game::get();
+    // auto target = game->getPlayer()->getTargetTile();
+    // auto tile = game->getWorld()->getTile(target);
+
+    // if (tile != nullptr) {
+    //     Rectf tileDest = {10, (getSize().y - 16) / 2, 16, 16};
+
+    //     std::string top = std::format("{} {} H: ???", tile->getName(), static_cast<int>(tile->getID()));
+    //     std::string bot = std::format("X: {} Y: {}", target.x, target.y);
+
+    //     RenderManager::renderTile(tileDest, );
+    //     RenderManager::drawText("font", top, {35, 15});
+    //     RenderManager::drawText("font", bot, {35, 1});
+    //     setSize({static_cast<float>(RenderManager::getTextSize(top, "font").x + tileDest.x + tileDest.width + m_border * 7), 40});
+    // }
+}

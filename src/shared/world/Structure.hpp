@@ -3,7 +3,7 @@
 
 class Structure {
 protected:
-    BlockVector m_blocks;
+    TileVector m_tiles;
     Vec2i m_pos;
     Vec2i m_size;
 
@@ -13,8 +13,8 @@ public:
     Vec2i getPos() { return m_pos; }
     Vec2i getSize() { return m_size; }
     
-    int getIndex(BlockPosition pos) { return (pos.layer * m_size.x * m_size.y) + (pos.y * m_size.x) + pos.x; }
-    void setBlock(BlockPosition pos, std::shared_ptr<Block> block);
-    std::shared_ptr<Block> getBlock(BlockPosition pos);
-    bool isOutOfBound(BlockPosition pos);
+    int getIndex(TilePosition pos) { return (pos.layer * m_size.x * m_size.y) + (pos.y * m_size.x) + pos.x; }
+    void setTile(TilePosition pos, std::shared_ptr<Tile> tile);
+    std::shared_ptr<Tile> getTile(TilePosition pos);
+    bool isOutOfBound(TilePosition pos);
 };

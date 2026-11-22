@@ -1,5 +1,5 @@
 #include <entity/Entity.hpp>
-#include <world/Block.hpp>
+#include <world/Tile.hpp>
 #include <world/World.hpp>
 
 Entity::Entity() : Serializable(ENTITY), m_hitbox(0.0f, 0.0f, 0.8f, 1.65f), m_speed({0.f, 0.f}), m_direction(RIGHT) {}

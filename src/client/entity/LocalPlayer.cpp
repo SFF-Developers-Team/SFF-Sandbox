@@ -2,7 +2,7 @@
 #include <raylib.h>
 #include <managers/SettingsManager.hpp>
 #include <entity/LocalPlayer.hpp>
-#include <world/Block.hpp>
+#include <world/Tile.hpp>
 #include <world/World.hpp>
 #include <net/Multiplayer.hpp>
 #include <managers/Debug.hpp>
@@ -77,41 +77,41 @@ void LocalPlayer::updateAnimation() {
     }
 }
 
-BlockPosition LocalPlayer::getTargetBlock() {
-    Vector2 cur = TO_CAMERA_POS(m_camera, GetMousePosition());
+TilePosition LocalPlayer::getTargetTile() {
+    Vector2 cur = GetScreenToWorld2D(GetMousePosition(), m_camera);
     auto layer = !IsKeyDown(KEY_LEFT_ALT);
 
     return {static_cast<int>(floorl(cur.x)), static_cast<int>(floorl(cur.y)), layer};
 }
 
 void LocalPlayer::onTickControls(World& world) {
-    auto target = getTargetBlock();
+    auto target = getTargetTile();
     auto mp = Multiplayer::get();
     auto ct = Game::get()->getControlType();
 
-    if (canAccessBlock(target)) {
-        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && canDestroyBlock(world, target)) {
+    if (canAccessTile(target)) {
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && canDestroyTile(world, target)) {
             if (m_onGround) {
                 setAnimation(PLAYER_HIT);
             }
 
-            destroyBlock(world);
+            destroyTile(world);
         }
 
-        if (m_breakingBlock && IsMouseButtonUp(MOUSE_LEFT_BUTTON)) {
-            world.stopBreakingBlock(m_id);
+        if (m_breakingTile && IsMouseButtonUp(MOUSE_LEFT_BUTTON)) {
+            world.stopBreakingTile(m_id);
         }
 
-        if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && canPlaceBlock(world, target)) {
+        if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && canPlaceTile(world, target)) {
             if(IsKeyDown(KEY_LEFT_CONTROL)) {
-                destroyBlock(world);
+                destroyTile(world);
             }
 
             if (m_onGround) {
                 setAnimation(PLAYER_HIT);
             }
 
-            placeBlock(world);
+            placeTile(world);
         }
     }
 }
@@ -192,10 +192,10 @@ void LocalPlayer::onTick(World& world) {
     }
 
     auto dbg = Debug::get();
-    auto target = getTargetBlock();
-    auto block = world.getBlock(target);
+    auto target = getTargetTile();
+    auto tile = world.getTile(target);
 
-    // dbg->setString(PLAYER_TARGET_BLOCK, "Target block: [{}, {}] ({})", target.x, target.y, (block ? block->getName() : "nullptr"));
+    dbg->setString(PLAYER_TARGET_TILE, "Target tile: [{}, {}] ({})", target.x, target.y, (tile != TileID::AIR ? Tile::getName(tile) : "nullptr"));
     dbg->setString(PLAYER_POSITION, "Position: [{:.2f}, {:.2f}]", m_hitbox.x, m_hitbox.y);
     dbg->setString(PLAYER_HEALTH, "Health: {}", m_health);
 }
@@ -247,11 +247,10 @@ void LocalPlayer::update() {
 }
 
 bool LocalPlayer::isRectInView(Rectf rect) {
-    Vec2i zero = {0, 0};
-    Vec2i screen = {GetScreenWidth(), GetScreenHeight()};
+    Vector2 screen = {float(GetScreenWidth()), float(GetScreenHeight())};
 
-    Vector2 min = TO_CAMERA_POS(m_camera, zero);
-    Vector2 max = TO_CAMERA_POS(m_camera, screen);
+    Vector2 min = GetScreenToWorld2D(Vector2Zero(), m_camera);
+    Vector2 max = GetScreenToWorld2D(screen, m_camera);
 
     return (rect.x + rect.width >= min.x && rect.x <= max.x) && (rect.y + rect.height >= min.y && rect.y <= max.y);
 }
@@ -284,26 +283,26 @@ void LocalPlayer::triggerDuck(bool toggle) {
     }
 }
 
-void LocalPlayer::placeBlock(World& world) {
+void LocalPlayer::placeTile(World& world) {
     if(getItem(m_selected).item != nullptr) {
-        auto target = getTargetBlock();
+        auto target = getTargetTile();
         auto mp = Multiplayer::get();
 
-        world.placeBlock(m_id, target);
+        world.placeTile(m_id, target);
 
         // if (mp->isConnected()) {
-        //     mp->sendPacket(Packet(ObjectHeader::BLOCK_PLACE, block->serialize()), BLOCKS);
+        //     mp->sendPacket(Packet(ObjectHeader::TILE_PLACE, tile->serialize()), TILES);
         // }
     }
 }
 
-void LocalPlayer::destroyBlock(World& world) {
+void LocalPlayer::destroyTile(World& world) {
     auto mp = Multiplayer::get();
-    auto target = getTargetBlock();
+    auto target = getTargetTile();
 
-    world.breakBlock(m_id, target);
+    world.breakTile(m_id, target);
 
     if (mp->isConnected()) {
-        mp->sendPacket(Packet(ObjectHeader::BLOCK_DESTROY, target), Channel::BLOCKS);
+        mp->sendPacket(Packet(ObjectHeader::TILE_DESTROY, target), Channel::TILES);
     }
 }

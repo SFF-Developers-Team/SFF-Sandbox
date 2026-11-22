@@ -10,7 +10,7 @@
 
 enum Channel : uint8_t {
     EVERYTHING,
-    BLOCKS,
+    TILES,
     NOTIFICATIONS,
     LAST_CHANNEL
 };

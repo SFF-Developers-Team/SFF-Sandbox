@@ -11,7 +11,7 @@
 #include <ui/basic/TouchControlButton.hpp>
 
 #include <ui/gameplay/Hotbar.hpp>
-#include <ui/gameplay/BlockInfo.hpp>
+#include <ui/gameplay/TileInfo.hpp>
 #include <ui/gameplay/InventoryNode.hpp>
 #include <ui/gameplay/HeartsIndicator.hpp>
 #include <ui/gameplay/IngredientsList.hpp>
@@ -48,14 +48,14 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     hotbar->setTag("hotbar");
     addChild(hotbar);
 
-    auto blockInfo = std::make_shared<BlockInfo>();
-    blockInfo->setFlags(FLAG_GUI_SCALE);
-    blockInfo->setAnchorY(0.f);
-    blockInfo->setVisible(false);
-    blockInfo->setEnabled(false);
-    blockInfo->setPos({getWidth() / 2, hotbar->getHeight() * getGlobalScaleY() + 10.f});
-    blockInfo->setTag("blockinfo");
-    addChild(blockInfo);
+    auto tileInfo = std::make_shared<TileInfo>();
+    tileInfo->setFlags(FLAG_GUI_SCALE);
+    tileInfo->setAnchorY(0.f);
+    tileInfo->setVisible(false);
+    tileInfo->setEnabled(false);
+    tileInfo->setPos({getWidth() / 2, hotbar->getHeight() * getGlobalScaleY() + 10.f});
+    tileInfo->setTag("tileinfo");
+    addChild(tileInfo);
 
     auto hp = std::make_shared<HeartsIndicator>(m_player);
     hp->setAnchor({1.f, 0.f});
@@ -146,7 +146,7 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     pauseMenu->addChild(std::make_shared<Button>("Back to main menu", [this](auto) { destroy(); }));
     pauseLayer->addChild(pauseMenu);
 
-    m_pauseNodes = {hotbar, blockInfo};
+    m_pauseNodes = {hotbar, tileInfo};
 
     if(m_online) {
         auto playerList = std::make_shared<List>(nickList, [](auto, auto) {});
@@ -176,29 +176,29 @@ PlayScene::~PlayScene() {
 
 void PlayScene::draw() {
     Vector2 static mouse = {0};
-    BlockPosition static target = {0};
+    TilePosition static target = {0};
 
     if (!m_paused) {
         mouse = GetMousePosition();
-        target = m_player->getTargetBlock();
+        target = m_player->getTargetTile();
     }
 
     BeginMode2D(m_player->getCamera());
         m_world->draw(m_player);
 
-        // if (m_player->isBreakingBlock()) {
-        //     auto breakingBlock = m_player->getBreakingBlockInfo(m_world.get());
+        // if (m_player->isBreakingTile()) {
+        //     auto breakingTile = m_player->getBreakingTileInfo(m_world.get());
     
-        //     RenderManager::drawTile("gui.png", 8 + (5.f - (breakingBlock.currentDurability / breakingBlock.totalDurability) * 5.f), BLOCK_RECT(target.x, target.y));
+        //     RenderManager::drawTile("gui.png", 8 + (5.f - (breakingTile.currentDurability / breakingTile.totalDurability) * 5.f), TILE_RECT(target.x, target.y));
         // }
 
-        if (m_player->canAccessBlock(target)) {
-            if(m_player->canPlaceBlock(*m_world, target)) {
-                RenderManager::drawTile("gui.png", 1, BLOCK_RECT(target.x, target.y));
+        if (m_player->canAccessTile(target)) {
+            if(m_player->canPlaceTile(*m_world, target)) {
+                RenderManager::drawTile("gui.png", 1, TILE_RECT(target.x, target.y));
             }
 
-            if(m_player->canDestroyBlock(*m_world, target)) {
-                RenderManager::drawTile("gui.png", 2 + IsKeyDown(KEY_LEFT_CONTROL), BLOCK_RECT(target.x, target.y));
+            if(m_player->canDestroyTile(*m_world, target)) {
+                RenderManager::drawTile("gui.png", 2 + IsKeyDown(KEY_LEFT_CONTROL), TILE_RECT(target.x, target.y));
             }
         }
     EndMode2D();
@@ -246,16 +246,16 @@ void PlayScene::update() {
 
     
     auto stm = SettingsManager::get();
-    auto target = m_player->getTargetBlock();
-    auto block = m_world->getBlock(target);
-    auto blockInfo = getChild<BlockInfo>("blockinfo");
+    auto target = m_player->getTargetTile();
+    auto tile = m_world->getTile(target);
+    auto tileInfo = getChild<TileInfo>("tileinfo");
     auto playerList = getChild<List>("playerlist"); 
     auto inputMsg = getChild<TextInput>("inputmsg");
 
-    // auto enabledBlockInfo = stm->getValue<bool>("video.blockinfo", true) && block != nullptr && !m_inventoryEnabled && !m_paused;
+    // auto enabledTileInfo = stm->getValue<bool>("video.tileinfo", true) && tile != nullptr && !m_inventoryEnabled && !m_paused;
 
-    // blockInfo->setVisible(enabledBlockInfo);
-    // blockInfo->setEnabled(enabledBlockInfo);
+    // tileInfo->setVisible(enabledTileInfo);
+    // tileInfo->setEnabled(enabledTileInfo);
 
     if (playerList != nullptr) {
         playerList->setVisible(m_paused);

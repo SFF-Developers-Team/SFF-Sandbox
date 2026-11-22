@@ -1,7 +1,7 @@
 #include "Types.hpp"
 #include <Item.hpp>
 #include <ItemDatabase.hpp>
-#include <world/Block.hpp>
+#include <world/Tile.hpp>
 
 int Item::getMaxCount() const {
     return (isTool()) ? 1 : 64;

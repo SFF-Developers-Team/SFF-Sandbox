@@ -1,5 +1,5 @@
 #include <entity/LocalPlayer.hpp>
-#include "world/Block.hpp"
+#include "world/Tile.hpp"
 #include "world/World.hpp"
 #include <memory>
 #include <world/ClientWorld.hpp>
@@ -14,8 +14,7 @@ ClientWorld::ClientWorld(std::filesystem::path const& saveDir) : World(saveDir) 
 void ClientWorld::draw(std::shared_ptr<LocalPlayer> player) {
     auto dbg = Debug::get();
     auto chunkCount = 0;
-    auto blockCount = 0;
-    auto playersCount = 0;
+    auto tilesCount = 0;
 
     Camera2D& camera = player->getCamera();
     Vector2 min = GetScreenToWorld2D(Vector2Zero(), camera);
@@ -23,16 +22,16 @@ void ClientWorld::draw(std::shared_ptr<LocalPlayer> player) {
 
     for (int y = min.y; y < max.y; y++) {
         for (int x = min.x; x < max.x; x++) {
-            BlockID block0 = getBlock({x, y, 0});
-            BlockID block1 = getBlock({x, y, 1});
+            TileID tile0 = getTile({x, y, 0});
+            TileID tile1 = getTile({x, y, 1});
 
-            if (block1 != BlockID::AIR) {
-                RenderManager::renderBlock(Rectf {float(x), float(y), 1.f, 1.f}, {x, y, 1}, block1);
+            if (tile1 != TileID::AIR) {
+                RenderManager::drawWorldTile(Rectf {float(x), float(y), 1.f, 1.f}, {x, y, 1}, tile1);
                 continue;
             }
 
-            if (block0 != BlockID::AIR) {
-                RenderManager::renderBlock(Rectf {float(x), float(y), 1.f, 1.f}, {x, y, 0}, block0);
+            if (tile0 != TileID::AIR) {
+                RenderManager::drawWorldTile(Rectf {float(x), float(y), 1.f, 1.f}, {x, y, 0}, tile0);
             }
         }
     }
@@ -54,19 +53,19 @@ void ClientWorld::draw(std::shared_ptr<LocalPlayer> player) {
     }
 
     for (auto& [playerId, info] : m_breakInfo) {
-        Rectf blockRect = {
+        Rectf tileRect = {
             static_cast<float>(info.pos.x), static_cast<float>(info.pos.y), 
             1.f, 1.f
         };
 
-        if (player->isRectInView(blockRect)) {
-            auto block = getBlock(info.pos);
-            RenderManager::drawTile("gui.png", 8 + (info.progress / Block::getDurability(block)) * 5.f, blockRect);   
+        if (player->isRectInView(tileRect)) {
+            auto tile = getTile(info.pos);
+            RenderManager::drawTile("gui.png", 8 + (info.progress / Tile::getDurability(tile)) * 5.f, tileRect);   
         }
     }
 
     if (dbg->isVisible()) {
         dbg->setString(DebugID::RENDER_CHUNKS, "Chunks rendered: {}", chunkCount);
-        dbg->setString(DebugID::RENDER_BLOCKS, "Blocks rendered: {}", blockCount);
+        dbg->setString(DebugID::RENDER_TILES, "Tiles rendered: {}", tilesCount);
     }
 }

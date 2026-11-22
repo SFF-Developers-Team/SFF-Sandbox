@@ -3,7 +3,7 @@
 #include <vector>
 #include <algorithm>
 
-class Block;
+class Tile;
 class LocalPlayer;
 
 class Hotbar : public Frame {

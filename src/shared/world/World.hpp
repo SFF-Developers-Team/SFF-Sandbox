@@ -1,7 +1,7 @@
 #pragma once
 #include "Types.hpp"
 #include <entity/Player.hpp>
-#include <world/Block.hpp>
+#include <world/Tile.hpp>
 #include <entity/Hitbox.hpp>
 
 #include <filesystem>
@@ -19,7 +19,7 @@ class WorldGen;
 class Structure;
 
 struct BreakInfo {
-    BlockPosition pos;
+    TilePosition pos;
     uint64_t time;
     float progress;
 };
@@ -29,7 +29,7 @@ struct BreakInfo {
 
 class World {
 private:
-    std::array<BlockID, WORLD_SIZE*WORLD_SIZE*WORLD_LAYERS> m_blocks;
+    std::array<TileID, WORLD_SIZE*WORLD_SIZE*WORLD_LAYERS> m_tiles;
 
 protected:
     std::map<PlayerID, std::shared_ptr<Player>> m_players;
@@ -50,16 +50,16 @@ public:
     void generate();
     void onTick();
 
-    void placeBlock(BlockPosition pos, BlockID blockId) { if (getBlock(pos) != BlockID::AIR) setBlock(pos, blockId); }
-    void destroyBlock(BlockPosition pos) { setBlock(pos, BlockID::AIR); }
+    void placeTile(TilePosition pos, TileID tile) { if (getTile(pos) != TileID::AIR) setTile(pos, tile); }
+    void destroyTile(TilePosition pos) { setTile(pos, TileID::AIR); }
 
-    void placeBlock(PlayerID id, BlockPosition pos);
-    void breakBlock(PlayerID id, BlockPosition pos);
-    void stopBreakingBlock(PlayerID id);
+    void placeTile(PlayerID id, TilePosition pos);
+    void breakTile(PlayerID id, TilePosition pos);
+    void stopBreakingTile(PlayerID id);
 
-    bool isBlockClosed(BlockPosition pos);
-    bool isOutOfBound(BlockPosition pos);
-    std::optional<Rectf> getBlockHitbox(BlockPosition pos);
+    bool isTileClosed(TilePosition pos);
+    bool isOutOfBound(TilePosition pos);
+    std::optional<Rectf> getTileHitbox(TilePosition pos);
     std::vector<Hitbox> getHitboxes(Hitbox entityHitbox, int radius = 1);
 
     bool save();
@@ -82,19 +82,19 @@ public:
 
     void addStructure(std::shared_ptr<Structure> structure) { m_structures.push_back(structure); }
 
-    inline BlockID getBlock(BlockPosition pos) {
+    inline TileID getTile(TilePosition pos) {
         if (isOutOfBound(pos)) {
-            return BlockID::AIR;
+            return TileID::AIR;
         }
 
-        return m_blocks[pos.layer * (WORLD_SIZE * WORLD_SIZE) + pos.y * WORLD_SIZE + pos.x];
+        return m_tiles[pos.layer * (WORLD_SIZE * WORLD_SIZE) + pos.y * WORLD_SIZE + pos.x];
     }
 
-    inline void setBlock(BlockPosition pos, BlockID block) {
+    inline void setTile(TilePosition pos, TileID tile) {
         if (isOutOfBound(pos)) {
             return;
         }
 
-        m_blocks[pos.layer * (WORLD_SIZE * WORLD_SIZE) + pos.y * WORLD_SIZE + pos.x] = block;
+        m_tiles[pos.layer * (WORLD_SIZE * WORLD_SIZE) + pos.y * WORLD_SIZE + pos.x] = tile;
     }
 };

@@ -3,7 +3,7 @@
 
 Mob::Mob(World& world) : Entity(), m_health(getMaxHealth()), m_lastHurtTime(0.f) {
     for(auto i = 0; i < 512; i++) {
-        auto hitbox = world.getBlockHitbox({(int)m_hitbox.x, i, 1});
+        auto hitbox = world.getTileHitbox({(int)m_hitbox.x, i, 1});
 
         if(hitbox.has_value()) {
             m_hitbox.y = i - 2;
@@ -21,10 +21,10 @@ void Mob::onTick(World& world) {
         m_fallY = m_hitbox.y;
     }
 
-    float fallenBlocks = m_hitbox.y - m_fallY;
+    float fallenTiles = m_hitbox.y - m_fallY;
 
-    if(!prevOnGround && m_onGround && fallenBlocks > 4.f) {
-        m_health -= floor(fallenBlocks / 4.f);
+    if(!prevOnGround && m_onGround && fallenTiles > 4.f) {
+        m_health -= floor(fallenTiles / 4.f);
         m_lastHurtTime = world.getTime();
     }
 

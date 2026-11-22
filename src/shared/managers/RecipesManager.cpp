@@ -4,23 +4,23 @@
 
 RecipesManager::RecipesManager() {
     addRecipe({
-        .resultId = (int)BlockID::PLANKS, 
+        .resultId = (int)TileID::PLANKS, 
         .count = 4,
-        .ingredients = {{(int)BlockID::OAK_LOG, 1}},
+        .ingredients = {{(int)TileID::OAK_LOG, 1}},
         .workbenchRequired = false
     });
 
     addRecipe({
         .resultId = (int)ItemID::STICK, 
         .count = 4,
-        .ingredients = {{(int)BlockID::PLANKS, 2}},
+        .ingredients = {{(int)TileID::PLANKS, 2}},
         .workbenchRequired = false
     });
 
     addRecipe({
         .resultId = (int)ItemID::WOODEN_PICKAXE,
         .count = 1,
-        .ingredients = {{(int)ItemID::STICK, 2}, {(int)BlockID::PLANKS, 3}}, 
+        .ingredients = {{(int)ItemID::STICK, 2}, {(int)TileID::PLANKS, 3}}, 
         .workbenchRequired = true
     });
 }

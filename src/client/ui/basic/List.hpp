@@ -18,8 +18,8 @@ public:
     virtual float getContentHeight();
 
     void setList(std::vector<std::string> const& elements) { m_elements = elements; }
-    void update();
-    void draw();
+    void update() override;
+    void draw() override;
 
     int getSelected() { return m_selected; }
 };

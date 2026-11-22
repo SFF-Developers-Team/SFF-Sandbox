@@ -9,28 +9,28 @@ struct ItemInfo {
     MaterialType material = MATERIAL_NONE;
     uint8_t spriteIndex = 0;
     float durability = 0.f;
-    ItemType bestTool = TYPE_BLOCK;
+    ItemType bestTool = TYPE_TILE;
     MaterialType bestToolMaterial = MATERIAL_NONE;
 };
 
 inline std::unordered_map<ItemID, ItemInfo> gItemDatabase = {
     // {GRASS, {
     //     .name = "Grass", 
-    //     .type = TYPE_BLOCK,
+    //     .type = TYPE_TILE,
     //     .spriteIndex = 0,
     //     .durability = 0.6f,
     //     .bestTool = TYPE_TOOL_SHOVEL
     // }},
     // {DIRT, {
     //     .name = "Dirt", 
-    //     .type = TYPE_BLOCK, 
+    //     .type = TYPE_TILE, 
     //     .spriteIndex = 1,
     //     .durability = 0.5f,
     //     .bestTool = TYPE_TOOL_SHOVEL
     // }},
     // {STONE, {
     //     .name = "Stone", 
-    //     .type = TYPE_BLOCK, 
+    //     .type = TYPE_TILE, 
     //     .material = MATERIAL_STONE, 
     //     .spriteIndex = 2,
     //     .durability = 1.5f,
@@ -38,7 +38,7 @@ inline std::unordered_map<ItemID, ItemInfo> gItemDatabase = {
     // }},
     // {COBBLESTONE, {
     //     .name = "Cobblestone", 
-    //     .type = TYPE_BLOCK, 
+    //     .type = TYPE_TILE, 
     //     .material = MATERIAL_STONE, 
     //     .spriteIndex = 3,
     //     .durability = 2.f,
@@ -46,7 +46,7 @@ inline std::unordered_map<ItemID, ItemInfo> gItemDatabase = {
     // }},
     // {PLANKS, {
     //     .name = "Planks", 
-    //     .type = TYPE_BLOCK, 
+    //     .type = TYPE_TILE, 
     //     .material = MATERIAL_WOOD, 
     //     .spriteIndex = 4,
     //     .durability = 2.f,
@@ -54,20 +54,20 @@ inline std::unordered_map<ItemID, ItemInfo> gItemDatabase = {
     // }},
     // {WOOL, {
     //     .name = "Wool", 
-    //     .type = TYPE_BLOCK, 
+    //     .type = TYPE_TILE, 
     //     .spriteIndex = 5,
     //     .durability = 0.8f,
     // }},
     // {BEDROCK, {
     //     .name = "Bedrock", 
-    //     .type = TYPE_BLOCK, 
+    //     .type = TYPE_TILE, 
     //     .material = MATERIAL_NONE, 
     //     .spriteIndex = 6,
     //     .durability = -1.f
     // }},
     // {BRICKS, {
     //     .name = "Bricks", 
-    //     .type = TYPE_BLOCK, 
+    //     .type = TYPE_TILE, 
     //     .material = MATERIAL_STONE, 
     //     .spriteIndex = 7,
     //     .durability = 2.f,
@@ -75,7 +75,7 @@ inline std::unordered_map<ItemID, ItemInfo> gItemDatabase = {
     // }},
     // {OAK_LOG, {
     //     .name = "Oak log",
-    //     .type = TYPE_BLOCK,
+    //     .type = TYPE_TILE,
     //     .material = MATERIAL_WOOD,
     //     .spriteIndex = 8,
     //     .durability = 2.f,
@@ -83,31 +83,31 @@ inline std::unordered_map<ItemID, ItemInfo> gItemDatabase = {
     // }},
     // {LEAVES, {
     //     .name = "Leaves",
-    //     .type = TYPE_BLOCK,
+    //     .type = TYPE_TILE,
     //     .material = MATERIAL_NONE,
     //     .spriteIndex = 10,
     //     .durability = 0.2f
     // }},
     // {COAL_ORE, {
     //     .name = "Coal ore",
-    //     .type = TYPE_BLOCK,
+    //     .type = TYPE_TILE,
     //     .material = MATERIAL_STONE,
     //     .spriteIndex = 11,
     //     .durability = 3.f,
     //     .bestTool = TYPE_TOOL_PICKAXE
     // }},
-    // {IRON_ORE_BLOCK, {
+    // {IRON_ORE_TILE, {
     //     .name = "Iron ore",
-    //     .type = TYPE_BLOCK,
+    //     .type = TYPE_TILE,
     //     .material = MATERIAL_STONE,
     //     .spriteIndex = 12,
     //     .durability = 3.f,
     //     .bestTool = TYPE_TOOL_PICKAXE,
     //     .bestToolMaterial = MATERIAL_STONE
     // }},
-    // {GOLD_ORE_BLOCK, {
+    // {GOLD_ORE_TILE, {
     //     .name = "Gold ore",
-    //     .type = TYPE_BLOCK,
+    //     .type = TYPE_TILE,
     //     .material = MATERIAL_STONE,
     //     .spriteIndex = 13,
     //     .durability = 3.f,
@@ -116,7 +116,7 @@ inline std::unordered_map<ItemID, ItemInfo> gItemDatabase = {
     // }},
     // {DIAMOND_ORE, {
     //     .name = "Diamond ore",
-    //     .type = TYPE_BLOCK,
+    //     .type = TYPE_TILE,
     //     .material = MATERIAL_STONE,
     //     .spriteIndex = 14,
     //     .durability = 3.f,
@@ -125,7 +125,7 @@ inline std::unordered_map<ItemID, ItemInfo> gItemDatabase = {
     // }},
     // {LAPIZ_ORE, {
     //     .name = "Lapiz ore",
-    //     .type = TYPE_BLOCK,
+    //     .type = TYPE_TILE,
     //     .material = MATERIAL_STONE,
     //     .spriteIndex = 15,
     //     .durability = 3.f,
@@ -134,7 +134,7 @@ inline std::unordered_map<ItemID, ItemInfo> gItemDatabase = {
     // }},
     // {BOOKSHELF, {
     //     .name = "Bookshelf",
-    //     .type = TYPE_BLOCK,
+    //     .type = TYPE_TILE,
     //     .material = MATERIAL_WOOD,
     //     .spriteIndex = 16,
     //     .durability = 2.f,
@@ -142,13 +142,13 @@ inline std::unordered_map<ItemID, ItemInfo> gItemDatabase = {
     // }},
     // {FLOWER_POT, {
     //     .name = "Flower pot",
-    //     .type = TYPE_BLOCK,
+    //     .type = TYPE_TILE,
     //     .spriteIndex = 17,
     //     .durability = 0.f,
     // }},
     // {FURNACE, {
     //     .name = "Furnace",
-    //     .type = TYPE_BLOCK,
+    //     .type = TYPE_TILE,
     //     .material = MATERIAL_STONE,
     //     .spriteIndex = 18,
     //     .durability = 3.5f,

@@ -19,7 +19,7 @@ MenuBase::MenuBase() : Scene() {
         m_bgRender = LoadRenderTexture(bgwidth * 16, bgheight * 16);
     
         // 0 - AIR; 1 - GRASS; 2 - DIRT; 3 - STONE
-        std::array<uint8_t, bgwidth * bgheight> blocks = {
+        std::array<uint8_t, bgwidth * bgheight> tiles = {
             0,  0, 11, 11, 11,  0, 0, 0, 0, 0, 0,
             0, 11, 11, 11, 11, 11, 0, 0, 0, 0, 0,
             0, 11, 11,  9, 11, 11, 0, 0, 0, 0, 0,
@@ -35,13 +35,13 @@ MenuBase::MenuBase() : Scene() {
         BeginTextureMode(m_bgRender);
             ClearBackground({0, 0, 0, 0});
 
-            for(int i = 0; i < blocks.size(); i++) {
-                if(blocks[i] != 0) {
-                    auto color = (blocks[i] == 11) ? COL_GREEN : COL_WHITE;
+            for(int i = 0; i < tiles.size(); i++) {
+                if(tiles[i] != 0) {
+                    auto color = (tiles[i] == 11) ? COL_GREEN : COL_WHITE;
                     auto x = static_cast<float>(i % bgwidth);
                     auto y = static_cast<float>(i / bgwidth);
 
-                    RenderManager::drawTile("blocks.png", blocks[i] - 1, {x * 16, y * 16, 16, 16}, color);
+                    RenderManager::drawTile("tiles.png", tiles[i] - 1, {x * 16, y * 16, 16, 16}, color);
                 }
             }
 

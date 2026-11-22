@@ -106,7 +106,7 @@ void Game::init(std::vector<std::string>& args) {
     tm->loadTexture("player.png");
     tm->loadTexture("sff.png");
     tm->loadTexture("raylib.png");
-    tm->loadTileMap("blocks.png", {16, 16});
+    tm->loadTileMap("tiles.png", {16, 16});
     tm->loadTileMap("items.png", {16, 16});
     tm->loadTileMap("gui.png", {16, 16});
     tm->loadTileMap("developers.png", {128, 128});
@@ -128,7 +128,7 @@ void Game::init(std::vector<std::string>& args) {
     StyleManager::get();
     RecipesManager::get();
     // Debug::get()->allocateConsole();
-    Block::init();
+    Tile::init();
 
     // Load main menu
     pushScene(std::make_shared<MainMenuScene>());

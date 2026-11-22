@@ -11,8 +11,8 @@ protected:
 public:
     DropDown(std::vector<std::string> const& elements, MiniFunction<void(List*, int)> callback);
 
-    void draw();
-    void update();
+    void draw() override;
+    void update() override;
 
     void setMaxHeight(float height) { m_maxHeight = height; }
     float getMaxHeight() { return m_maxHeight; }

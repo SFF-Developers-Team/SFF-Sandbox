@@ -46,8 +46,8 @@ public:
     void handlePlayer(Packet& packet);
     void handleLoadPlayer(Packet& packet);
     void handleUnloadPlayer(Packet& packet);
-    void handleBlockPlace(Packet& packet);
-    void handleBlockDestroy(Packet& packet);
+    void handleTilePlace(Packet& packet);
+    void handleTileDestroy(Packet& packet);
     void handleMessage(Packet& packet);
     void handleLoadMessage(Packet& packet);
     std::string const& getError() { return m_error; }

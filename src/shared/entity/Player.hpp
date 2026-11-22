@@ -19,7 +19,7 @@ protected:
     GameMode m_gamemode;
 
     bool m_fly;
-    bool m_breakingBlock;
+    bool m_breakingTile;
 
 public:
     Player(World& world);
@@ -40,9 +40,9 @@ public:
     void setAnimCurrentFrame(uint8_t frame) { m_animFrame = frame; }
     void setID(PlayerID id) { m_id = id; }
 
-    bool canDestroyBlock(World& world, BlockPosition target);
-    bool canPlaceBlock(World& world, BlockPosition target);
-    bool canAccessBlock(BlockPosition target);
+    bool canDestroyTile(World& world, TilePosition target);
+    bool canPlaceTile(World& world, TilePosition target);
+    bool canAccessTile(TilePosition target);
 
     auto getAnimCurrentFrame() { return m_animFrame; }
     auto& getUsername() { return m_username; }
@@ -55,6 +55,6 @@ public:
 
     InventorySlot* getItemHand() { return &m_inventory[m_selected]; }
 
-    void setBreakingBlock(bool flag) { m_breakingBlock = flag; }
-    bool isBreakingBlock() { return m_breakingBlock; }
+    void setBreakingTile(bool flag) { m_breakingTile = flag; }
+    bool isBreakingTile() { return m_breakingTile; }
 };

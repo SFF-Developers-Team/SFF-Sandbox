@@ -20,7 +20,7 @@ file(GLOB SHARED_SOURCES CONFIGURE_DEPENDS
     "src/shared/entity/*.cpp"
     "src/shared/world/*.cpp"
     "src/shared/world/gen/*.cpp"
-    "src/shared/world/blocks/*.cpp"
+    "src/shared/world/tiles/*.cpp"
     "src/shared/managers/*.cpp"
     "src/shared/inventory/*.cpp"
     "src/shared/*.cpp"

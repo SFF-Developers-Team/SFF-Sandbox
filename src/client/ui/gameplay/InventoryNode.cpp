@@ -4,7 +4,7 @@
 #include <raylib.h>
 
 float constexpr cellSize = 24.f;
-float constexpr blockSize = 16.f;
+float constexpr tileSize = 16.f;
 int const columnCount = 9;
 int const rowCount = 4;
 
@@ -34,7 +34,7 @@ void InventoryNode::draw() {
 
     for (auto i = 0; i < m_player->getSlotsCount(); i++) {
         Rectf cellRect = getCellPosition(i);
-        Rectf itemRect = {cellRect.x + (cellRect.width - blockSize) / 2, cellRect.y + (cellRect.height - blockSize) / 2, blockSize, blockSize};
+        Rectf itemRect = {cellRect.x + (cellRect.width - tileSize) / 2, cellRect.y + (cellRect.height - tileSize) / 2, tileSize, tileSize};
         Vec2f mouse = getLocalMousePosition();
 
         RenderManager::drawFrame(cellRect, m_color, m_border);
@@ -53,8 +53,8 @@ void InventoryNode::draw() {
     if(m_selected != nullptr) {
         auto mouse = getLocalMousePosition();
 
-        Rectf blockRect = {mouse.x - blockSize / 2, mouse.y - blockSize / 2, blockSize, blockSize};
-        RenderManager::renderInventoryItem(blockRect, *m_selected->item, m_selected->count);
+        Rectf tileRect = {mouse.x - tileSize / 2, mouse.y - tileSize / 2, tileSize, tileSize};
+        RenderManager::renderInventoryItem(tileRect, *m_selected->item, m_selected->count);
     }
 }
 

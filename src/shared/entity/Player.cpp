@@ -3,7 +3,7 @@
 #include <entity/Entity.hpp>
 #include <world/World.hpp>
 
-Player::Player(World& world) : Mob(world), Inventory(36), m_id(0), m_gamemode(GAMEMODE_SURVIVAL), m_fly(false), m_breakingBlock(false) {
+Player::Player(World& world) : Mob(world), Inventory(36), m_id(0), m_gamemode(GAMEMODE_SURVIVAL), m_fly(false), m_breakingTile(false) {
     m_header = ObjectHeader::PLAYER;
 
     // clang-format off
@@ -27,7 +27,7 @@ Player::Player(World& world) : Mob(world), Inventory(36), m_id(0), m_gamemode(GA
 
     if(m_gamemode == GAMEMODE_CREATIVE) {
         for(int i = 1; i < 20; i++) {
-            if(i == (int)BlockID::BEDROCK) {
+            if(i == (int)TileID::BEDROCK) {
                 continue;
             }
 
@@ -95,37 +95,37 @@ bool Player::deserialize(DataStream& stream) {
     return true;
 }
 
-bool Player::canAccessBlock(BlockPosition target) {
+bool Player::canAccessTile(TilePosition target) {
     Vec2f playerPos{m_hitbox.x, m_hitbox.y};
     return playerPos.distance(Vec2f {static_cast<float>(target.x), static_cast<float>(target.y)}) <= 4.f;
 }
 
-bool Player::canDestroyBlock(World& world, BlockPosition target) {
+bool Player::canDestroyTile(World& world, TilePosition target) {
     if (world.isOutOfBound(target)) {
         return false;
     }
 
-    auto block = world.getBlock(target);
+    auto tile = world.getTile(target);
 
-    if (block == BlockID::AIR || block == BlockID::BEDROCK) return false;
+    if (tile == TileID::AIR || tile == TileID::BEDROCK) return false;
 
     return true;
 }
 
-bool Player::canPlaceBlock(World& world, BlockPosition target) {
+bool Player::canPlaceTile(World& world, TilePosition target) {
     if (world.isOutOfBound(target)) {
         return false;
     }
 
-    bool blockAround = (
-        BlockID::AIR != world.getBlock({target.x - 1, target.y, target.layer}) || 
-        BlockID::AIR != world.getBlock({target.x + 1, target.y, target.layer}) ||
-        BlockID::AIR != world.getBlock({target.x, target.y - 1, target.layer}) || 
-        BlockID::AIR != world.getBlock({target.x, target.y + 1, target.layer}) ||
-        BlockID::AIR != world.getBlock({target.x, target.y, !target.layer})
+    bool tileAround = (
+        TileID::AIR != world.getTile({target.x - 1, target.y, target.layer}) || 
+        TileID::AIR != world.getTile({target.x + 1, target.y, target.layer}) ||
+        TileID::AIR != world.getTile({target.x, target.y - 1, target.layer}) || 
+        TileID::AIR != world.getTile({target.x, target.y + 1, target.layer}) ||
+        TileID::AIR != world.getTile({target.x, target.y, !target.layer})
     );
 
-    return world.getBlock(target) == BlockID::AIR && blockAround;
+    return world.getTile(target) == TileID::AIR && tileAround;
 }
 
 void Player::setGamemode(GameMode gamemode) {

@@ -25,8 +25,8 @@ public:
     void handleLoadChunk(Packet& packet);
     void handleLoadPlayer(Packet& packet);
     void handleLoadMessages(Packet& packet);
-    void handleBlockPlace(Packet& packet);
-    void handleBlockDestroy(Packet& packet);
+    void handleTilePlace(Packet& packet);
+    void handleTileDestroy(Packet& packet);
     void handleLoadTerrain(Packet& packet);
     void handleLoadPlayers(Packet& packet);
     void handleMessage(Packet& packet);

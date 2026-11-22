@@ -251,7 +251,7 @@ enum GameMode : uint8_t {
 
 #define ITEM_ID_BEGIN 7000
 
-enum class BlockID : uint16_t {
+enum class TileID : uint16_t {
     AIR = 0,
     GRASS,
     DIRT,
@@ -304,7 +304,7 @@ enum MaterialType : uint8_t {
 };
 
 enum ItemType : uint8_t {
-    TYPE_BLOCK,
+    TYPE_TILE,
     TYPE_ITEM,
     TYPE_TOOL_PICKAXE,
     TYPE_TOOL_AXE,
@@ -313,12 +313,12 @@ enum ItemType : uint8_t {
     TYPE_WEAPON
 };
 
-struct BlockPosition {
+struct TilePosition {
     int x;
     int y;
     uint8_t layer = 1;
 
-    bool operator==(BlockPosition const& other) const { return x == other.x && y == other.y && layer == other.layer; }
+    bool operator==(TilePosition const& other) const { return x == other.x && y == other.y && layer == other.layer; }
 };
 
 enum AnimationType : uint8_t {
@@ -337,7 +337,7 @@ using ByteVector = std::vector<uint8_t>;
 enum ObjectHeader : uint8_t {
     // World headers (also uses in mp)
     PLAYER,
-    BLOCK,
+    TILE,
     CHUNK,
     WORLD,
     ENTITY,
@@ -348,7 +348,7 @@ enum ObjectHeader : uint8_t {
     IDENTIFICATION, DISCONNECT,
     LOAD_CHUNK,  UNLOAD_CHUNK,
     LOAD_PLAYER, UNLOAD_PLAYER,
-    BLOCK_PLACE, BLOCK_DESTROY,
+    TILE_PLACE, TILE_DESTROY,
 
     NETWORK_ERROR, ARRAY, TERRAIN, LOAD_TERRAIN, LOAD_PLAYERS, MESSAGE, LOAD_MESSAGE,
     NULL_PACKET = 0xFF
@@ -359,4 +359,4 @@ enum WorldGenType : uint8_t {
 };
 
 using PlayerID = uint32_t;
-using BlockVector = std::vector<std::shared_ptr<class Block>>;
+using TileVector = std::vector<std::shared_ptr<class Tile>>;

@@ -3,7 +3,7 @@
 #include <Item.hpp>
 
 float const cellSize = 24.f;
-float const blockSize = 16.f;
+float const tileSize = 16.f;
 
 IngredientsList::IngredientsList() : Frame() {
     setHeight(cellSize + m_border * 4);
@@ -16,7 +16,7 @@ void IngredientsList::draw() {
         for (auto i = 0; i < m_recipe.ingredients.size(); i++) {
             auto ingredient = m_recipe.ingredients[i];
             Rectf cellRect = {m_border * 2 + cellSize * i, m_border * 2, cellSize, cellSize};
-            Rectf itemRect = {cellRect.x + (cellRect.width - blockSize) / 2, cellRect.y + (cellRect.height - blockSize) / 2, blockSize, blockSize};
+            Rectf itemRect = {cellRect.x + (cellRect.width - tileSize) / 2, cellRect.y + (cellRect.height - tileSize) / 2, tileSize, tileSize};
 
             RenderManager::drawFrame(cellRect, m_color, m_border);
             RenderManager::renderInventoryItem(itemRect, Item(m_recipe.resultId), m_recipe.count);

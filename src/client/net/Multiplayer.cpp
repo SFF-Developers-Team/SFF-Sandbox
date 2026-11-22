@@ -134,8 +134,8 @@ void Multiplayer::handle(Packet& packet) {
         case ObjectHeader::NETWORK_ERROR: return handleError(packet);
         case ObjectHeader::PLAYER: return handlePlayer(packet);
         case ObjectHeader::CHUNK: return handleChunk(packet);
-        case ObjectHeader::BLOCK_DESTROY: return handleBlockDestroy(packet);
-        case ObjectHeader::BLOCK_PLACE: return handleBlockPlace(packet);
+        case ObjectHeader::TILE_DESTROY: return handleTileDestroy(packet);
+        case ObjectHeader::TILE_PLACE: return handleTilePlace(packet);
         case ObjectHeader::TERRAIN: return handleTerrain(packet);
         case ObjectHeader::MESSAGE: return handleMessage(packet);
         case ObjectHeader::LOAD_MESSAGE: return handleLoadMessage(packet);
@@ -244,22 +244,22 @@ void Multiplayer::handleTerrain(Packet& packet) {
     sendPacket(Packet(ObjectHeader::LOAD_PLAYERS));
 }
 
-void Multiplayer::handleBlockPlace(Packet& packet) {
+void Multiplayer::handleTilePlace(Packet& packet) {
     // auto game = Game::get();
 
-    // auto blockBytes = DataStream();
-    // blockBytes.deserialize(packet.getN(packet.size() - 1));
-    // auto block = Block::create(blockBytes);
-    // block->deserialize(blockBytes);
+    // auto tileBytes = DataStream();
+    // tileBytes.deserialize(packet.getN(packet.size() - 1));
+    // auto tile = Tile::create(tileBytes);
+    // tile->deserialize(tileBytes);
 
-    // auto pos = block->getPos();
-    // auto lay = block->getLayer();
+    // auto pos = tile->getPos();
+    // auto lay = tile->getLayer();
 
-    // game->getWorld()->setBlock(pos.x, pos.y, lay, block);
+    // game->getWorld()->setTile(pos.x, pos.y, lay, tile);
 }
 
-void Multiplayer::handleBlockDestroy(Packet& packet) {
-    Game::get()->getWorld()->destroyBlock(packet.get<BlockPosition>());
+void Multiplayer::handleTileDestroy(Packet& packet) {
+    Game::get()->getWorld()->destroyTile(packet.get<TilePosition>());
 }
 
 std::string const Multiplayer::getAddress() {

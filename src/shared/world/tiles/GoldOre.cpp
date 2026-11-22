@@ -1,4 +1,4 @@
-#include <world/blocks/GoldOre.hpp>
+#include "GoldOre.hpp"
 
 std::unique_ptr<Item> GoldOre::dropItem(Item* tool) {
     if (tool && tool->getType() == TYPE_TOOL_PICKAXE) {

@@ -1,15 +1,15 @@
 #include <ui/basic/Frame.hpp>
 
-class Block;
+class Tile;
 
-class BlockInfo : public Frame {
+class TileInfo : public Frame {
 private:
     using Frame::setSize;
     using Frame::setWidth;
     using Frame::setHeight;
 
 public:
-    BlockInfo() { setSize({140.f, 40.f}); }
+    TileInfo() { setSize({140.f, 40.f}); }
     
     void draw();
 };

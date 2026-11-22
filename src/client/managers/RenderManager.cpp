@@ -148,8 +148,8 @@ Vec2f RenderManager::getTextSize(std::string const& text, std::string const& fon
     return Vec2f {size.x, size.y}; 
 }
 
-void RenderManager::renderBlock(Rectf dest, BlockPosition position, BlockID block, uint8_t alpha) {
-    if (block != BlockID::AIR) {
+void RenderManager::drawWorldTile(Rectf dest, TilePosition position, TileID tile, uint8_t alpha) {
+    if (tile != TileID::AIR) {
         auto sm = SettingsManager::get();
         
         Col3u col = {255, 255, 255};
@@ -158,13 +158,13 @@ void RenderManager::renderBlock(Rectf dest, BlockPosition position, BlockID bloc
             col.brightness(-(1.f - sm->getValue<float>("video.layer0.brightness", 0.75f)));
         }
 
-        drawTile("blocks.png", (int)block - 1, dest, {col.r, col.g, col.b, alpha});
+        drawTile("tiles.png", (int)tile - 1, dest, {col.r, col.g, col.b, alpha});
     }
 }
 
 void RenderManager::renderInventoryItem(Rectf dest, Item const& item, int count) {
-    auto id = item.isBlockItem() ? item.getID() : item.getID() - ITEM_ID_BEGIN;
-    drawTile((item.isBlockItem() ? "blocks.png" : "items.png"), id - 1, dest);
+    auto id = item.isTileItem() ? item.getID() : item.getID() - ITEM_ID_BEGIN;
+    drawTile((item.isTileItem() ? "tiles.png" : "items.png"), id - 1, dest);
 
     if(count > 1) {
         RenderManager::drawText("font", std::to_string(count), {dest.x + dest.width, dest.y + dest.height}, COL_WHITE, 0.f, {1.f, 1.f});

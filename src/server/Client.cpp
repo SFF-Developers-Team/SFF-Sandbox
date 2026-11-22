@@ -69,8 +69,8 @@ void Client::handle(Packet& packet) {
     switch (packet.get<ObjectHeader>()) {
         case ObjectHeader::LOAD_PLAYER: return handleLoadPlayer(packet);
         case ObjectHeader::LOAD_CHUNK: return handleLoadChunk(packet);
-        case ObjectHeader::BLOCK_PLACE: return handleBlockPlace(packet);
-        case ObjectHeader::BLOCK_DESTROY: return handleBlockDestroy(packet);
+        case ObjectHeader::TILE_PLACE: return handleTilePlace(packet);
+        case ObjectHeader::TILE_DESTROY: return handleTileDestroy(packet);
         case ObjectHeader::PLAYER: return handlePlayer(packet);
         case ObjectHeader::LOAD_TERRAIN: return handleLoadTerrain(packet);
         case ObjectHeader::LOAD_PLAYERS: return handleLoadPlayers(packet);
@@ -136,23 +136,23 @@ void Client::handleLoadPlayer(Packet& packet) {
     sendPacket(Packet(ObjectHeader::UNLOAD_PLAYER, id), Channel::NOTIFICATIONS);
 }
 
-void Client::handleBlockPlace(Packet& packet) {
+void Client::handleTilePlace(Packet& packet) {
     // auto srv = Server::get();
-    // auto blockBytes = DataStream();
-    // blockBytes.deserialize(packet.getN(packet.size() - 1));
-    // auto block = Block::create(blockBytes);
-    // auto pos = block->getPos();
-    // auto lay = block->getLayer();
+    // auto tileBytes = DataStream();
+    // tileBytes.deserialize(packet.getN(packet.size() - 1));
+    // auto tile = Tile::create(tileBytes);
+    // auto pos = tile->getPos();
+    // auto lay = tile->getLayer();
 
-    // srv->getWorld()->setBlock(pos.x, pos.y, lay, block);
+    // srv->getWorld()->setTile(pos.x, pos.y, lay, tile);
 
-    // logD("Player changed block {}, {}, {}", pos.x, pos.y, lay);
+    // logD("Player changed tile {}, {}, {}", pos.x, pos.y, lay);
     // srv->broadcast(packet);
 }
 
-void Client::handleBlockDestroy(Packet& packet) {
+void Client::handleTileDestroy(Packet& packet) {
     auto srv = Server::get();
-    srv->getWorld()->destroyBlock(packet.get<BlockPosition>());
+    srv->getWorld()->destroyTile(packet.get<TilePosition>());
     srv->broadcast(packet);
 }
 

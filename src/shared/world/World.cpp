@@ -24,7 +24,7 @@ World::World(std::filesystem::path const& saveDir) : m_saveDir(saveDir), m_versi
 
 void World::generate() {
     // TODO: Move to worldgen
-    m_blocks.fill(BlockID::AIR);
+    m_tiles.fill(TileID::AIR);
 
     FastNoiseLite mountains;
     FastNoiseLite hills;
@@ -56,19 +56,19 @@ void World::generate() {
             WORLD_SIZE - 1
         );
 
-        setBlock(BlockPosition{x, surfaceY, 1}, BlockID::GRASS);
-        setBlock(BlockPosition{x, surfaceY, 0}, BlockID::GRASS);
+        setTile(TilePosition{x, surfaceY, 1}, TileID::GRASS);
+        setTile(TilePosition{x, surfaceY, 0}, TileID::GRASS);
 
         const auto stoneStart = stoneLevel + (int)(details.GetNoise(float(x), 0.0f) * 3.5f);
         for (int y = surfaceY + 1; y < WORLD_SIZE; ++y) {
             if (y < stoneStart) {
-                setBlock(BlockPosition{x, y, 1}, BlockID::DIRT);
-                setBlock(BlockPosition{x, y, 0}, BlockID::DIRT);
+                setTile(TilePosition{x, y, 1}, TileID::DIRT);
+                setTile(TilePosition{x, y, 0}, TileID::DIRT);
             } else if (y >= stoneStart) {
-                setBlock(BlockPosition{x, y, 1}, BlockID::STONE);
-                setBlock(BlockPosition{x, y, 0}, BlockID::STONE);
+                setTile(TilePosition{x, y, 1}, TileID::STONE);
+                setTile(TilePosition{x, y, 0}, TileID::STONE);
             } else if (y == WORLD_SIZE - 1) {
-                setBlock(BlockPosition{x, y, 1}, BlockID::BEDROCK);
+                setTile(TilePosition{x, y, 1}, TileID::BEDROCK);
             }
         }
     }
@@ -82,14 +82,14 @@ void World::onTick() {
     // for (auto& [pos, chunk] : m_chunks) {
     //     for (auto x = 0; x < CHUNK_WIDTH; x++) {
     //         for (auto y = 0; y < CHUNK_HEIGHT; y++) {
-    //             auto block0 = chunk->getBlock({x, y, 0});
-    //             if (block0 != nullptr) {
-    //                 block0->onTick(this, {x, y, 0});
+    //             auto tile0 = chunk->getTile({x, y, 0});
+    //             if (tile0 != nullptr) {
+    //                 tile0->onTick(this, {x, y, 0});
     //             }
 
-    //             auto block1 = chunk->getBlock({x, y, 1});
-    //             if (block1 != nullptr) {
-    //                 block1->onTick(this, {x, y, 0});
+    //             auto tile1 = chunk->getTile({x, y, 1});
+    //             if (tile1 != nullptr) {
+    //                 tile1->onTick(this, {x, y, 0});
     //             }
     //         }
     //     }
@@ -98,10 +98,10 @@ void World::onTick() {
     //         int x = rand() % CHUNK_WIDTH;
     //         int y = rand() % CHUNK_HEIGHT;
     //         uint8_t z = rand() % CHUNK_DEPTH;
-    //         auto block = chunk->getBlock({x, y, z});
+    //         auto tile = chunk->getTile({x, y, z});
         
-    //         if(block != nullptr) {
-    //             block->onRandomTick(this, {x, y, z});
+    //         if(tile != nullptr) {
+    //             tile->onRandomTick(this, {x, y, z});
     //         }
     //     }
 
@@ -144,47 +144,47 @@ void World::onTick() {
 
     for (auto& [playerId, info] : m_breakInfo) {
         auto player = m_players[playerId];
-        auto block = getBlock(info.pos);
+        auto tile = getTile(info.pos);
         auto tool = player->getItemHand();
         // auto toolType = (tool != nullptr) ? tool->getType() : TYPE_ITEM;
         // auto toolMaterial = (tool != nullptr) ? tool->getMaterial() : MATERIAL_NONE;
         float speed = 1.f;
-        float d = Block::getDurability(block);
+        float d = Tile::getDurability(tile);
 
-        // if (tool != nullptr && block->getBestTool() == toolType) {
+        // if (tool != nullptr && tile->getBestTool() == toolType) {
         //     speed = tool->getToolSpeed();
         // }
     
         info.progress += speed / d * 0.01f;
     
         if (info.progress >= d || player->getGamemode() == GAMEMODE_CREATIVE) {
-            if (player->getGamemode() != GAMEMODE_CREATIVE /* && toolMaterial >= block->getBestToolMaterial() */) {
-                auto blockObject = Block::get(block);
+            if (player->getGamemode() != GAMEMODE_CREATIVE /* && toolMaterial >= tile->getBestToolMaterial() */) {
+                auto tileObject = Tile::get(tile);
                 
-                if (blockObject != nullptr) {
-                    player->addItem(blockObject->dropItem(player->getItemHand()->item.get()));
+                if (tileObject != nullptr) {
+                    player->addItem(tileObject->dropItem(player->getItemHand()->item.get()));
                 } else {
-                    player->addItem(std::make_unique<Item>(block));
+                    player->addItem(std::make_unique<Item>(tile));
                 }
             }
             
-            destroyBlock(info.pos);
-            player->setBreakingBlock(false);
+            destroyTile(info.pos);
+            player->setBreakingTile(false);
         }
     }
 
     std::erase_if(m_breakInfo, [this](auto& info) {
-        auto block = getBlock(info.second.pos);
-        return block == BlockID::AIR;
+        auto tile = getTile(info.second.pos);
+        return tile == TileID::AIR;
     });
 }
 
-bool World::isBlockClosed(BlockPosition pos) {
-    if (BlockID::AIR != getBlock({pos.x - 1, pos.y, pos.layer}) || 
-        BlockID::AIR != getBlock({pos.x + 1, pos.y, pos.layer}) || 
-        BlockID::AIR != getBlock({pos.x, pos.y - 1, pos.layer}) || 
-        BlockID::AIR != getBlock({pos.x, pos.y + 1, pos.layer}) || 
-        BlockID::AIR != getBlock({pos.x, pos.y, static_cast<uint8_t>(pos.layer ^ 1)})) {
+bool World::isTileClosed(TilePosition pos) {
+    if (TileID::AIR != getTile({pos.x - 1, pos.y, pos.layer}) || 
+        TileID::AIR != getTile({pos.x + 1, pos.y, pos.layer}) || 
+        TileID::AIR != getTile({pos.x, pos.y - 1, pos.layer}) || 
+        TileID::AIR != getTile({pos.x, pos.y + 1, pos.layer}) || 
+        TileID::AIR != getTile({pos.x, pos.y, static_cast<uint8_t>(pos.layer ^ 1)})) {
         return false;
     }
 
@@ -290,7 +290,7 @@ std::vector<Hitbox> World::getHitboxes(Hitbox entityHitbox, int radius) {
 
     for (int x = minX; x <= maxX; x++) {
         for (int y = minY; y <= maxY; y++) {
-            auto hitbox = getBlockHitbox({x, y, 1});
+            auto hitbox = getTileHitbox({x, y, 1});
 
             if (hitbox.has_value()) {
                 ret.push_back(hitbox.value());
@@ -395,11 +395,11 @@ bool World::isUsernameAlreadyTaken(std::string const& username) {
     return it != m_players.end();
 }
 
-std::optional<Rectf> World::getBlockHitbox(BlockPosition pos) {
+std::optional<Rectf> World::getTileHitbox(TilePosition pos) {
     if (pos.layer > 0) {
-        auto block = getBlock(pos);
+        auto tile = getTile(pos);
 
-        if (block != BlockID::AIR) {
+        if (tile != TileID::AIR) {
             return Rectf {static_cast<float>(pos.x), static_cast<float>(pos.y), 1.f, 1.f};
         } 
     }
@@ -407,16 +407,16 @@ std::optional<Rectf> World::getBlockHitbox(BlockPosition pos) {
     return std::nullopt;
 }
 
-bool World::isOutOfBound(BlockPosition pos) {
+bool World::isOutOfBound(TilePosition pos) {
     return pos.x < 0 || pos.x >= WORLD_SIZE || pos.y < 0 || pos.y >= WORLD_SIZE && pos.layer < 0 && pos.layer >= WORLD_LAYERS;
 }
 
-void World::placeBlock(PlayerID m_id, BlockPosition pos) {
+void World::placeTile(PlayerID m_id, TilePosition pos) {
     auto player = m_players[m_id];
     auto slot = player->getItemHand();
 
-    if (slot != nullptr && slot->item->isBlockItem() && getBlock(pos) == BlockID::AIR) {
-        setBlock(pos, (BlockID)slot->item->getID());
+    if (slot != nullptr && slot->item->isTileItem() && getTile(pos) == TileID::AIR) {
+        setTile(pos, (TileID)slot->item->getID());
 
         if(player->getGamemode() == GAMEMODE_SURVIVAL) {
             slot->count--;
@@ -425,12 +425,12 @@ void World::placeBlock(PlayerID m_id, BlockPosition pos) {
     }
 }
 
-void World::breakBlock(PlayerID id, BlockPosition pos) {
+void World::breakTile(PlayerID id, TilePosition pos) {
     auto player = m_players[id];
-    auto blockId = getBlock(pos);
+    auto tileId = getTile(pos);
 
     // Bedrock has -1.f
-    if (Block::getDurability(blockId) < 0) {
+    if (Tile::getDurability(tileId) < 0) {
         return;
     }
 
@@ -447,10 +447,10 @@ void World::breakBlock(PlayerID id, BlockPosition pos) {
     }
 
     m_breakInfo.insert(std::make_pair(id, BreakInfo {pos, m_time, 0}));
-    player->setBreakingBlock(true);
+    player->setBreakingTile(true);
 }
 
-void World::stopBreakingBlock(PlayerID id) {
-    m_players[id]->setBreakingBlock(false);
+void World::stopBreakingTile(PlayerID id) {
+    m_players[id]->setBreakingTile(false);
     m_breakInfo.erase(id);   
 }
