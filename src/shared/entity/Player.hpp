@@ -20,9 +20,13 @@ protected:
 
     bool m_fly;
     bool m_breakingTile;
-
+    
+    int m_coyotTime;
 public:
+    int getCoyotTime() { return m_coyotTime; }
     Player(World& world);
+
+    virtual void onTick(World& world);
 
     uint8_t animationClamp(uint8_t value, uint8_t min, uint8_t max) { return (value > max || value < min) ? min : value; }
     void setAnimation(AnimationType type);

@@ -263,8 +263,9 @@ void LocalPlayer::triggerMove(Direction dir) {
 }
 
 void LocalPlayer::triggerJump() {
-    if(m_onGround || m_fly) {
-        m_speed.y = ((!m_fly) ? -0.3f : -0.25f);
+    if(m_coyotTime > 0 || m_fly) {
+        m_speed.y   = ((!m_fly) ? -0.3f : -0.25f);
+        m_coyotTime = 0;
     }
 }
 
