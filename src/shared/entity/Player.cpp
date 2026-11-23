@@ -110,7 +110,7 @@ bool Player::canPlaceTile(World& world, TilePosition target) {
 }
 
 void Player::setGamemode(GameMode gamemode) {
-    if(gamemode == GAMEMODE_SURVIVAL) {
+    if(gamemode != GAMEMODE_CREATIVE) {
         m_fly = false;
     }
 
@@ -121,4 +121,14 @@ void Player::toggleFly() {
     if(m_gamemode == GAMEMODE_CREATIVE) {
         m_fly = !m_fly;
     }
+}
+
+void Player::onTick(World& world) {
+    if (m_onGround) {
+        m_coyotTime = 7;
+    } else if (m_coyotTime > 0) {
+        m_coyotTime--;
+    }
+
+    Mob::onTick(world);
 }

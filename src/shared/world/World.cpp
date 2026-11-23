@@ -41,8 +41,8 @@ void World::generate() {
     hills.SetFrequency(0.012f);
     details.SetFrequency(0.06f);
 
-    const int baseHeight = 10;
-    const int stoneLevel = 50;
+    const int baseHeight = 50;
+    const int stoneLevel = 100;
 
     for (int x = 0; x < WORLD_SIZE; ++x) {
         float height =
