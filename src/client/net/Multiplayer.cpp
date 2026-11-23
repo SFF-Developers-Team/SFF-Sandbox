@@ -4,6 +4,8 @@
 #include <managers/Debug.hpp>
 #include <Logger.hpp>
 #include <Game.hpp>
+#include <fix_win32_compatibility.h>
+#include <enet.h>
 
 Multiplayer::Multiplayer() : PacketManager(nullptr), m_client(nullptr) {
     if (enet_initialize() != 0) {
@@ -18,7 +20,7 @@ Multiplayer::~Multiplayer() {
 
 void Multiplayer::error(std::string const& str) {
     m_connected = false;
-    m_state = ERROR;
+    m_state = MultiplayerState::ERROR;
     m_error = str;
 }
 
@@ -28,7 +30,7 @@ bool Multiplayer::connect(std::string const& host, uint16_t port) {
 
     logD("Connecting to {}:{}...", host, port);
 
-    m_state = CONNECTING;
+    m_state = MultiplayerState::CONNECTING;
     m_client = enet_host_create(0, 1, Channel::LAST_CHANNEL, 0, 0);
 
     if(!m_client) {
@@ -61,7 +63,7 @@ bool Multiplayer::connect(std::string const& host, uint16_t port) {
     
     if(sendPacket(packet)) {
         logD("Identification sent. Waiting for response...");
-        m_state = LOGGING_IN;
+        m_state = MultiplayerState::LOGGING_IN;
     }
 
     return true;
@@ -86,7 +88,7 @@ void Multiplayer::update() {
                     Game::get()->setWorld(std::make_shared<ClientWorld>("mp"));
 
                     m_connected = true;
-                    m_state = LOADING_TERRAIN;
+                    m_state = MultiplayerState::LOADING_TERRAIN;
 
                     sendPacket(Packet(ObjectHeader::LOAD_TERRAIN));
                     sendPacket(Packet(ObjectHeader::LOAD_MESSAGE));
@@ -221,7 +223,6 @@ void Multiplayer::handleUnloadPlayer(Packet& packet) {
 void Multiplayer::handleChunk(Packet& packet) {
     // auto game = Game::get();
     // auto world = game->getWorld();
-    // auto pos = packet.get<Vec2i>();
     // packet.reset();
 
     // auto chunk = std::make_shared<Chunk>();
@@ -239,7 +240,7 @@ void Multiplayer::handleTerrain(Packet& packet) {
     auto player = std::make_shared<LocalPlayer>(*world);
     game->setPlayer(player);
     world->setPlayer(m_myPlayerId, player);
-    m_state = PLAYING;
+    m_state = MultiplayerState::PLAYING;
 
     sendPacket(Packet(ObjectHeader::LOAD_PLAYERS));
 }
@@ -266,4 +267,8 @@ std::string const Multiplayer::getAddress() {
     char buf[256];
     enet_address_get_host(&m_client->address, buf, sizeof(buf));
     return std::string(buf);
+}
+
+uint16_t const Multiplayer::getPort() { 
+    return m_client->address.port; 
 }

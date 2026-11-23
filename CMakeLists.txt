@@ -69,7 +69,7 @@ else()
     add_executable(SFFSandbox-server ${SHARED_SOURCES} ${SERVER_SOURCES})
 endif()
 
-target_link_libraries(SFFSandbox raylib enet_static ${GITHASH_LIBRARIES} miniz ${PLATFORM_LIBS})
+target_link_libraries(SFFSandbox raylib raylib_cpp enet_static ${GITHASH_LIBRARIES} miniz ${PLATFORM_LIBS})
 
 if(NOT ${PLATFORM} STREQUAL "Android")
     target_link_libraries(SFFSandbox-server enet_static ${GITHASH_LIBRARIES} miniz)
@@ -78,8 +78,7 @@ endif()
 target_include_directories(SFFSandbox PRIVATE
     ${SHARED_HEADERS}
     "src/client/"
-    "libs/raygui/src/"
-    "libs/raylib/src/external/glfw/include/GLFW/"
+    "${raylib-cpp_SOURCE_DIR}/include"
 )
 
 if(NOT ${PLATFORM} STREQUAL "Android")

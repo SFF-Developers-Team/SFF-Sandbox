@@ -1,3 +1,4 @@
+#include <RaylibExtras.hpp>
 #include <managers/SettingsManager.hpp>
 #include <filesystem>
 #include <fstream>
@@ -5,7 +6,7 @@
 #include <string>
 #include <Logger.hpp>
 #include <Game.hpp>
-#include <managers/SoundManager.hpp>
+#include <managers/ResourceManager.hpp>
 
 std::map<std::string, int> keybinds = {
     {"jump", KEY_W},
@@ -28,30 +29,12 @@ SettingsManager::SettingsManager() {
     }
 
     auto game = Game::get();
-    auto audio = SoundManager::get();
-    audio->setMusicVolume(getValue<float>("audio.volume.music", 0.5f));
-    audio->setSoundVolume(getValue<float>("audio.volume.sound", 0.5f));
-    SetMasterVolume(getValue<float>("audio.volume.general", 1.f));
+    auto& audio = ResourceManager::Get();
+    audio.SetMusicVolume(getValue<float>("audio.volume.music", 0.5f));
+    audio.SetSoundVolume(getValue<float>("audio.volume.sound", 0.5f));
+    Game::get()->getAudioDevice().SetVolume(getValue<float>("audio.volume.general", 1.f));
     game->setGuiScale(getValue<int>("video.scale", 1));
-    getValue<bool>("video.vsync", true) ? SetWindowState(FLAG_VSYNC_HINT) : ClearWindowState(FLAG_VSYNC_HINT);
-
-    // auto mon = GetCurrentMonitor();
-    // Vec2i monSize = {GetMonitorWidth(mon), GetMonitorHeight(mon)};
-
-    // if (getValue<bool>("video.fullscreen", true)) {
-    //     SetWindowState(FLAG_WINDOW_UNDECORATED);
-    //     SetWindowSize(monSize.x, monSize.y);
-
-    //     if (!IsWindowFullscreen()) ToggleFullscreen();
-    // } else {
-    //     auto winSize = Game::get()->getLastWindowSize();
-
-    //     if (IsWindowFullscreen()) ToggleFullscreen();
-        
-    //     ClearWindowState(FLAG_WINDOW_UNDECORATED);
-    //     SetWindowSize(winSize.x, winSize.y);
-    //     SetWindowPosition((monSize.x - winSize.x) / 2, (monSize.y - winSize.y) / 2);
-    // }
+    getValue<bool>("video.vsync", true) ? Game::get()->getWindow().SetState(FLAG_VSYNC_HINT) : Game::get()->getWindow().ClearState(FLAG_VSYNC_HINT);
 }
 
 int SettingsManager::getKeybind(std::string const& action) {

@@ -10,7 +10,7 @@ private:
 
     using Frame::setSize;
 
-    Rectf getCellPosition(int index);
+    raylib::Rectangle getCellPosition(int index);
 
 public:
     InventoryNode(std::shared_ptr<LocalPlayer> player);

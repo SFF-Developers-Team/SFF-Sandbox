@@ -1,6 +1,6 @@
 #pragma once
-#include <fix_win32_compatibility.h>
-#include <raylib.h>
+#include <Rectangle.hpp>
+#include <raylib-cpp.hpp>
 #include <entity/ClientPlayer.hpp>
 #include <Types.hpp>
 #include <memory>
@@ -9,7 +9,7 @@ class World;
 
 class LocalPlayer : public ClientPlayer {
 private:
-    Camera2D m_camera;
+    raylib::Camera2D m_camera;
 
     bool m_sneakToggled = false;
     bool m_sneak = false;
@@ -26,14 +26,14 @@ public:
     void updateAnimation();
     void updateControls();
 
-    bool isRectInView(Rectf rect);
+    bool isRectInView(raylib::Rectangle rect);
     
     TilePosition getTargetTile();
     
     void placeTile(World& world);
     void destroyTile(World& world);
 
-    Camera2D& getCamera() { return m_camera; }
+    raylib::Camera2D& getCamera() { return m_camera; }
 
     void triggerMove(Direction dir);
     void triggerJump();

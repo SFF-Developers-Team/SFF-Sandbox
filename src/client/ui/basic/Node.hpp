@@ -5,6 +5,9 @@
 #include <memory>
 #include <vector>
 #include <managers/Debug.hpp>
+#include <Rectangle.hpp>
+#include <Vector2.hpp>
+#include <Color.hpp>
 
 enum NodeFlags : uint8_t {
     FLAG_GUI_SCALE = 1 << 0,
@@ -22,10 +25,10 @@ private:
 
 protected:
     std::string m_tag;
-    Rectf m_bounds;
-    Vec2f m_anchor;
-    Vec2f m_scale;
-    Col4u m_color;
+    raylib::Rectangle m_bounds;
+    raylib::Vector2 m_anchor;
+    raylib::Vector2 m_scale;
+    raylib::Color m_color;
     uint8_t m_flags;
     float m_rotation;
     bool m_visible;
@@ -42,39 +45,39 @@ public:
     void setTag(std::string const& tag) { m_tag = tag; }
     std::string const& getTag() { return m_tag; }
 
-    Vec2f getPos() { return Vec2f {m_bounds.x, m_bounds.y}; }
+    raylib::Vector2 getPos() { return m_bounds.GetPosition(); }
     float getX() { return m_bounds.x; }
     float getY() { return m_bounds.y; }
 
-    void setPos(Vec2f pos) { m_bounds.x = pos.x; m_bounds.y = pos.y; }
+    void setPos(raylib::Vector2 pos) { m_bounds.x = pos.x; m_bounds.y = pos.y; }
     void setX(float x) { m_bounds.x = x; }
     void setY(float y) { m_bounds.y = y; }
 
-    Vec2f getSize() { return Vec2f {m_bounds.width, m_bounds.height}; }
+    raylib::Vector2 getSize() { return m_bounds.GetSize(); }
     float getWidth() { return m_bounds.width; }
     float getHeight() { return m_bounds.height; }
 
-    Vec2f getScaledSize() { return Vec2f {m_bounds.width * m_scale.x, m_bounds.height * m_scale.y}; }
+    raylib::Vector2 getScaledSize() { return raylib::Vector2{m_bounds.width * m_scale.x, m_bounds.height * m_scale.y}; }
     float getScaledWidth() { return m_bounds.width * m_scale.x; }
     float getScaledHeight() { return m_bounds.height * m_scale.y; }
 
-    void setSize(Vec2f size) { m_bounds.width = size.x; m_bounds.height = size.y; }
+    void setSize(raylib::Vector2 size) { m_bounds.SetSize(size); }
     void setWidth(float w) { m_bounds.width = w; }
     void setHeight(float h) { m_bounds.height = h; }
 
-    Vec2f getAnchor() { return m_anchor; }
+    raylib::Vector2 getAnchor() { return m_anchor; }
     float getAnchorX() { return m_anchor.x; }
     float getAnchorY() { return m_anchor.y; }
 
-    void setAnchor(Vec2f anchor) { m_anchor = anchor; }
+    void setAnchor(raylib::Vector2 anchor) { m_anchor = anchor; }
     void setAnchorX(float x) { m_anchor.x = x; }
     void setAnchorY(float y) { m_anchor.y = y; }
 
     void setZOrder(int z);
     int getZOrder() { return m_zOrder; }
 
-    Col4u getColor() { return m_color; }
-    void setColor(Col4u color) { m_color = color; }
+    raylib::Color getColor() { return m_color; }
+    void setColor(raylib::Color color) { m_color = color; }
 
     void setVisible(bool flag) { m_visible = flag; }
     void setEnabled(bool flag) { m_enabled = flag; }
@@ -82,11 +85,11 @@ public:
     bool isEnabled() { return m_enabled; }
 
     Container* getParent() { return m_parent; }
-    Rectf getWorldBounds();
-    Vec2f getLocalMousePosition();
+    raylib::Rectangle getWorldBounds();
+    raylib::Vector2 getLocalMousePosition();
 
-    void setScale(float scale) { m_scale = {scale, scale}; }
-    Vec2f getScale() { return m_scale; }
+    void setScale(float scale) { m_scale = raylib::Vector2{scale, scale}; }
+    raylib::Vector2 getScale() { return m_scale; }
 
     void setScaleX(float x) { m_scale.x = x; }
     void setScaleY(float y) { m_scale.y = y; }

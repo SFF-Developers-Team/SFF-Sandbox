@@ -2,8 +2,7 @@
 #include <ui/basic/Container.hpp>
 #include <Types.hpp>
 #include <Game.hpp>
-#include <fix_win32_compatibility.h>
-#include <raylib.h>
+#include <raylib-cpp.hpp>
 
 class Scene : public Container {
 protected:

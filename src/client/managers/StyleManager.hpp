@@ -3,6 +3,8 @@
 #include <variant>
 #include <string>
 #include <Types.hpp>
+#include <Color.hpp>
+#include <Vector2.hpp>
 
 enum StyleKey : uint8_t {
     DEFAULT_UI_COLOR,
@@ -10,7 +12,7 @@ enum StyleKey : uint8_t {
     DEFAULT_ELEMENT_SIZE
 };
 
-using StyleValue = std::variant<Col4u, Vec2f, float>;
+using StyleValue = std::variant<raylib::Color, raylib::Vector2, float>;
 
 class StyleManager {
 private:

@@ -68,7 +68,6 @@ void Client::handle(Packet& packet) {
 
     switch (packet.get<ObjectHeader>()) {
         case ObjectHeader::LOAD_PLAYER: return handleLoadPlayer(packet);
-        case ObjectHeader::LOAD_CHUNK: return handleLoadChunk(packet);
         case ObjectHeader::TILE_PLACE: return handleTilePlace(packet);
         case ObjectHeader::TILE_DESTROY: return handleTileDestroy(packet);
         case ObjectHeader::PLAYER: return handlePlayer(packet);
@@ -156,19 +155,6 @@ void Client::handleTileDestroy(Packet& packet) {
     srv->broadcast(packet);
 }
 
-void Client::handleLoadChunk(Packet& packet) {
-    auto srv = Server::get();
-    auto world = srv->getWorld();
-    auto pos = packet.get<Vec2i>();
-    auto chunk = world->getChunk(pos);
-
-    if (chunk == nullptr) {
-        chunk = world->getGenerator()->generateChunk(world.get(), pos);
-        world->addChunk(pos, chunk);
-    }
-
-    sendObj(chunk);
-}
 
 void Client::handleLoadTerrain(Packet& packet) {
     auto world = Server::get()->getWorld();

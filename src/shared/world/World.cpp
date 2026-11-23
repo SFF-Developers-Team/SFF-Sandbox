@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <fstream>
 #include <cmath>
+#include <algorithm>
 #include <Logger.hpp>
 #include <world/Structure.hpp>
 #include <FastNoiseLite.h>

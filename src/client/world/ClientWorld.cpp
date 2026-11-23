@@ -1,3 +1,4 @@
+#include <raylib-cpp.hpp>
 #include <entity/LocalPlayer.hpp>
 #include "world/Tile.hpp"
 #include "world/World.hpp"
@@ -6,8 +7,8 @@
 #include <managers/Debug.hpp>
 #include <managers/RenderManager.hpp>
 #include <entity/ClientPlayer.hpp>
-#include <raylib.h>
-#include <raymath.h>
+#include <managers/SettingsManager.hpp>
+#include <managers/ResourceManager.hpp>
 
 ClientWorld::ClientWorld(std::filesystem::path const& saveDir) : World(saveDir) {}
 
@@ -16,9 +17,12 @@ void ClientWorld::draw(std::shared_ptr<LocalPlayer> player) {
     auto chunkCount = 0;
     auto tilesCount = 0;
 
-    Camera2D& camera = player->getCamera();
-    Vector2 min = GetScreenToWorld2D(Vector2Zero(), camera);
-    Vector2 max = GetScreenToWorld2D(Vector2 {float(GetScreenWidth()), float(GetScreenHeight())}, camera);
+    auto& camera = player->getCamera();
+    raylib::Vector2 min = camera.GetScreenToWorld(raylib::Vector2::Zero());
+    raylib::Vector2 max = camera.GetScreenToWorld(raylib::Window::GetSize());
+
+    auto& rm = ResourceManager::Get();
+    auto& gui = rm.GetTilemap("gui.png");
 
     for (int y = min.y; y < max.y; y++) {
         for (int x = min.x; x < max.x; x++) {
@@ -26,12 +30,12 @@ void ClientWorld::draw(std::shared_ptr<LocalPlayer> player) {
             TileID tile1 = getTile({x, y, 1});
 
             if (tile1 != TileID::AIR) {
-                RenderManager::drawWorldTile(Rectf {float(x), float(y), 1.f, 1.f}, {x, y, 1}, tile1);
+                drawTile(raylib::Rectangle(float(x), float(y), 1.f, 1.f), TilePosition{x, y, 1});
                 continue;
             }
 
             if (tile0 != TileID::AIR) {
-                RenderManager::drawWorldTile(Rectf {float(x), float(y), 1.f, 1.f}, {x, y, 0}, tile0);
+                drawTile(raylib::Rectangle(float(x), float(y), 1.f, 1.f), TilePosition{x, y, 0});
             }
         }
     }
@@ -46,26 +50,42 @@ void ClientWorld::draw(std::shared_ptr<LocalPlayer> player) {
                 auto env = getHitboxes(player->getHitbox());
 
                 for (auto& h : env) {
-                    RenderManager::drawRectLines(h.getRect(), COL_RED, 0.05f);
+                    RenderManager::drawRectLines({h.x, h.y, h.width, h.height}, raylib::Color::Red(), 0.05f);
                 }
             }
         }
     }
 
     for (auto& [playerId, info] : m_breakInfo) {
-        Rectf tileRect = {
+        raylib::Rectangle tileRect = {
             static_cast<float>(info.pos.x), static_cast<float>(info.pos.y), 
             1.f, 1.f
         };
 
         if (player->isRectInView(tileRect)) {
             auto tile = getTile(info.pos);
-            RenderManager::drawTile("gui.png", 8 + (info.progress / Tile::getDurability(tile)) * 5.f, tileRect);   
+            gui.DrawTile(int(8 + (info.progress / Tile::getDurability(tile)) * 5), tileRect);   
         }
     }
 
     if (dbg->isVisible()) {
         dbg->setString(DebugID::RENDER_CHUNKS, "Chunks rendered: {}", chunkCount);
         dbg->setString(DebugID::RENDER_TILES, "Tiles rendered: {}", tilesCount);
+    }
+}
+
+void ClientWorld::drawTile(raylib::Rectangle dest, TilePosition position) {
+    TileID tile = getTile(position);
+
+    if (tile != TileID::AIR) {
+        auto sm = SettingsManager::get();
+        
+        raylib::Color col{255, 255, 255};
+
+        if(position.layer < 1) {
+            col = col.Brightness(-(1.f - sm->getValue<float>("video.layer0.brightness", 0.75f)));
+        }
+
+        ResourceManager::Get().GetTilemap("tiles.png").DrawTile((int)tile - 1, dest, col);
     }
 }

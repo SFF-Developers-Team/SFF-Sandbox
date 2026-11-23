@@ -1,4 +1,6 @@
 #include <managers/PacketManager.hpp>
+#include <fix_win32_compatibility.h>
+#include <enet.h>
 
 PacketManager::PacketManager(ENetPeer* peer) : m_peer(peer) {}
 

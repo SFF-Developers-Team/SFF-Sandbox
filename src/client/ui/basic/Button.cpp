@@ -1,21 +1,20 @@
+#include <raylib-cpp.hpp>
 #include <ui/basic/Button.hpp>
 #include <ui/basic/Text.hpp>
-#include <fix_win32_compatibility.h>
-#include <raylib.h>
 #include <managers/StyleManager.hpp>
 #include <managers/RenderManager.hpp>
-#include <managers/TextureManager.hpp>
+#include <managers/ResourceManager.hpp>
 
 Button::Button(std::string const& text, MiniFunction<void(Button*)> const& callback) : Frame(), m_text(text), m_callback(callback), m_fontSize(0.f) {}
 
 void Button::update() {
     auto sm = StyleManager::get();
-    m_color = sm->getValue<Col4u>(DEFAULT_UI_COLOR);
+    m_color = sm->getValue<raylib::Color>(DEFAULT_UI_COLOR);
     
     if(isMouseHover()) {
-        m_color.brightness(-0.3f * (IsMouseButtonDown(MOUSE_BUTTON_LEFT) + 1));
+        m_color = m_color.Brightness(-0.3f * (raylib::Mouse::IsButtonDown(MOUSE_BUTTON_LEFT) + 1));
     
-        if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        if(raylib::Mouse::IsButtonReleased(MOUSE_BUTTON_LEFT)) {
             m_callback(this);
         }
     }
@@ -23,7 +22,10 @@ void Button::update() {
 
 void Button::draw() {
     Frame::draw();
-    RenderManager::drawText("boldfont", m_text, {m_bounds.width / 2, m_bounds.height / 2}, COL_WHITE, m_fontSize, {0.5f, 0.5f});
+    auto& font = ResourceManager::Get().GetFont("boldfont");
+    float fontSize = m_fontSize > 0.f ? m_fontSize : static_cast<float>(font.baseSize);
+    auto textSize = font.MeasureText(m_text, fontSize, 1.f);
+    font.DrawText(m_text, (getSize() - textSize) / 2, fontSize, 1.f, raylib::Color::White());
 }
 
 void Button::setText(std::string const& text) {

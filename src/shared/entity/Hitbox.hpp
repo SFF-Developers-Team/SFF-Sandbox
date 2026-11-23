@@ -9,6 +9,7 @@ public:
     float width;
     float height;
     
+    Hitbox(Hitbox& hitbox) = default;
     Hitbox(Rectf rec);
     Hitbox(float x, float y, float width, float height);
 
@@ -19,5 +20,9 @@ public:
     void move(float x, float y);
     Hitbox expand(float x, float y);
 
-    Rectf getRect() { return Rectf {x, y, width, height }; }
+    operator Rectf() const { return Rectf {x, y, width, height }; }
+
+#ifdef RL_RECTANGLE_TYPE
+    operator raylib::Rectangle() const { return raylib::Rectangle {x, y, width, height }; }
+#endif
 };

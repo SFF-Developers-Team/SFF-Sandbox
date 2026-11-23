@@ -1,3 +1,4 @@
+#include <raylib-cpp.hpp>
 #include <scenes/MultiplayerScene.hpp>
 #include <scenes/JoinServerScene.hpp>
 #include <scenes/ErrorScene.hpp>
@@ -10,7 +11,7 @@
 #include <format>
 #include <thread>
 
-JoinServerScene::JoinServerScene(std::string const& hostname, uint16_t port) : m_startTime(GetTime()) {
+JoinServerScene::JoinServerScene(std::string const& hostname, uint16_t port) : m_startTime(raylib::Window::GetTime()) {
     auto mp = Multiplayer::get();
     std::thread(&Multiplayer::connect, mp, hostname, port).detach();
 
@@ -30,29 +31,29 @@ void JoinServerScene::update() {
     auto mp = Multiplayer::get();
 
     switch(mp->getState()) {
-        case CONNECTING:
+        case MultiplayerState::CONNECTING:
             m_message = "Connecting to server";
             break;       
-        case LOGGING_IN:
+        case MultiplayerState::LOGGING_IN:
             mp->update();
             m_message = "Logging in";
             break;
 
-        case LOADING_TERRAIN:
+        case MultiplayerState::LOADING_TERRAIN:
             mp->update();
             m_message = "Loading terrain";
             break;
-        case ERROR:
+        case MultiplayerState::ERROR:
             game->pushScene(std::make_shared<ErrorScene>(mp->getError()));
             return;
             
-        case PLAYING:
+        case MultiplayerState::PLAYING:
             game->pushScene(std::make_shared<PlayScene>(true));
             break;
     }
 
-    if(GetTime() > m_dotTime + 1.f) {
-        m_dotTime = GetTime();
+    if(raylib::Window::GetTime() > m_dotTime + 1.f) {
+        m_dotTime = raylib::Window::GetTime();
         m_dots++;
     }
 
@@ -60,8 +61,8 @@ void JoinServerScene::update() {
 
     for(int i = 0; i < m_dots; i++) m_message += '.';
 
-    if(GetTime() >= m_startTime + 5.f) {
-        m_message += std::format(" ({}s)", static_cast<int>(GetTime() - m_startTime));
+    if(raylib::Window::GetTime() >= m_startTime + 5.f) {
+        m_message += std::format(" ({}s)", static_cast<int>(raylib::Window::GetTime() - m_startTime));
     
         if(!m_cancelBtn) {
             m_cancelBtn = std::make_shared<Button>("Cancel", [this, mp] (Button*) {

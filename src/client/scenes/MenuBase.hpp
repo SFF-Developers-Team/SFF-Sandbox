@@ -6,4 +6,5 @@ public:
     MenuBase();
     
     virtual void draw() override;
+    static void releaseBackground();
 };

@@ -1,3 +1,4 @@
+#include <raylib-cpp.hpp>
 #include <ui/basic/Scene.hpp>
 #include <rlgl.h>
 #include <MiniFunction.hpp>
@@ -25,7 +26,7 @@ void Scene::keyBackClicked() {
 
 void Scene::update() {
 #ifndef PLATFORM_ANDROID
-    if(IsWindowResized()) {
+    if(raylib::Window::IsResized()) {
         onShow();
     }
 #endif
@@ -34,8 +35,8 @@ void Scene::update() {
 }
 
 void Scene::onShow() {
-    auto scrW = static_cast<float>(GetScreenWidth());
-    auto scrH = static_cast<float>(GetScreenHeight());
+    auto scrW = static_cast<float>(raylib::Window::GetWidth());
+    auto scrH = static_cast<float>(raylib::Window::GetHeight());
 
     if (scrW != getWidth() || scrH != getHeight()) {
         for (auto& node : m_childs) {

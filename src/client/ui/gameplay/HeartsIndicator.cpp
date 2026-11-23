@@ -1,5 +1,5 @@
 #include <ui/gameplay/HeartsIndicator.hpp>
-#include <managers/RenderManager.hpp>
+#include <managers/ResourceManager.hpp>
 #include <entity/LocalPlayer.hpp>
 #include <world/World.hpp>
 
@@ -13,17 +13,19 @@ void HeartsIndicator::draw() {
     // auto add = (m_player->getWorld()->getTime() < m_player->getLastHurtTime() + 0.5f) * 3;
     auto add = 0;
 
+    auto& rm = ResourceManager::Get();
+
     for(auto i = 0; i < m_player->getMaxHealth() / 2.f; i++) {
         if(m_player->getHealth() / 2.f >= i + 1.f) {
-            RenderManager::drawTile("indicators.png", add, {i * 8.f + i, 0.f, 8.f, 7.f});
+            rm.GetTilemap("indicators.png").DrawTile(add, raylib::Rectangle{i * 8.f + i, 0.f, 8.f, 7.f});
             continue;
         }
 
         if(m_player->getHealth() / 2.f >= i + 0.5f) {
-            RenderManager::drawTile("indicators.png", 1 + add, {i * 8.f + i, 0.f, 8.f, 7.f});
+            rm.GetTilemap("indicators.png").DrawTile(1 + add, raylib::Rectangle{i * 8.f + i, 0.f, 8.f, 7.f});
             continue;
         }
 
-        RenderManager::drawTile("indicators.png", 2 + add, {i * 8.f + i, 0.f, 8.f, 7.f});
+        rm.GetTilemap("indicators.png").DrawTile(2 + add, raylib::Rectangle{i * 8.f + i, 0.f, 8.f, 7.f});
     }
 }

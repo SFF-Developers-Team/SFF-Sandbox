@@ -1,7 +1,6 @@
+#include <raylib-cpp.hpp>
 #include <ui/gameplay/InventoryNode.hpp>
 #include <managers/RenderManager.hpp>
-#include <fix_win32_compatibility.h>
-#include <raylib.h>
 
 float constexpr cellSize = 24.f;
 float constexpr tileSize = 16.f;
@@ -16,11 +15,11 @@ InventoryNode::InventoryNode(std::shared_ptr<LocalPlayer> player) : Frame(), m_p
     m_selected = nullptr;
 }
 
-Rectf InventoryNode::getCellPosition(int i) {
+raylib::Rectangle InventoryNode::getCellPosition(int i) {
     auto cellX = i % columnCount;
     auto cellY = i / columnCount;
 
-    Rectf cell = {
+    raylib::Rectangle cell = {
         m_border * 2 + cellSize * cellX + m_border * cellX, 
         m_border * 2 + cellSize * cellY + m_border * cellY + (cellY > 0 ? m_border : 0), 
         cellSize, cellSize
@@ -33,9 +32,9 @@ void InventoryNode::draw() {
     Frame::draw();
 
     for (auto i = 0; i < m_player->getSlotsCount(); i++) {
-        Rectf cellRect = getCellPosition(i);
-        Rectf itemRect = {cellRect.x + (cellRect.width - tileSize) / 2, cellRect.y + (cellRect.height - tileSize) / 2, tileSize, tileSize};
-        Vec2f mouse = getLocalMousePosition();
+        raylib::Rectangle cellRect = getCellPosition(i);
+        raylib::Rectangle itemRect{cellRect.GetPosition() + (cellRect.GetSize() - tileSize) / 2, Vector2{tileSize, tileSize}};
+        raylib::Vector2 mouse = getLocalMousePosition();
 
         RenderManager::drawFrame(cellRect, m_color, m_border);
 
@@ -45,15 +44,15 @@ void InventoryNode::draw() {
             RenderManager::renderInventoryItem(itemRect, *slot.item, slot.count);
         }
 
-        if (cellRect.contains(mouse)) {
-            RenderManager::drawRect(cellRect, {255, 255, 255, 64});
+        if (cellRect.CheckCollision(mouse)) {
+            cellRect.Draw(raylib::Color{255, 255, 255, 64});
         }
     }
 
     if(m_selected != nullptr) {
         auto mouse = getLocalMousePosition();
 
-        Rectf tileRect = {mouse.x - tileSize / 2, mouse.y - tileSize / 2, tileSize, tileSize};
+        raylib::Rectangle tileRect = {mouse.x - tileSize / 2, mouse.y - tileSize / 2, tileSize, tileSize};
         RenderManager::renderInventoryItem(tileRect, *m_selected->item, m_selected->count);
     }
 }
@@ -63,18 +62,18 @@ void InventoryNode::update() {
 
     for (auto i = 0; i < columnCount * rowCount; i++) {
         auto cell = getCellPosition(i);
-        auto lclick = IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
-        auto rclick = IsMouseButtonPressed(MOUSE_RIGHT_BUTTON);
+        auto lclick = raylib::Mouse::IsButtonPressed(MOUSE_LEFT_BUTTON);
+        auto rclick = raylib::Mouse::IsButtonPressed(MOUSE_RIGHT_BUTTON);
         auto& slot = m_player->getItem(i);
         auto& inv = m_player->getInventory();
 
-        if(lclick && cell.contains(mouse) && m_selected == nullptr && slot.item != nullptr) {
+        if(lclick && cell.CheckCollision(mouse) && m_selected == nullptr && slot.item != nullptr) {
             m_selected = &inv[i];
 
             continue;
         }
 
-        if(lclick && cell.contains(mouse) && m_selected != nullptr) {
+        if(lclick && cell.CheckCollision(mouse) && m_selected != nullptr) {
             if (slot.item != nullptr) {
                 std::swap(slot.item, m_selected->item);
                 std::swap(slot.count, m_selected->count);
@@ -89,7 +88,7 @@ void InventoryNode::update() {
             continue;
         }
 
-        // if(rclick && cell.contains(mouse) && m_selected != nullptr) {
+        // if(rclick && cell.CheckCollision(mouse) && m_selected != nullptr) {
         //     if (item != nullptr && *item == *m_selected) {
         //         m_selected->sub(item->add(1));
                 

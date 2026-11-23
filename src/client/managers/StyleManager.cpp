@@ -2,8 +2,8 @@
 
 StyleManager::StyleManager() {
     m_style = {
-        {DEFAULT_UI_COLOR, Col4u {0, 50, 100, 255}},
-        {DEFAULT_ELEMENT_SIZE, Vec2f {200.f, 20.f}},
+        {DEFAULT_UI_COLOR, raylib::Color{0, 50, 100, 255}},
+        {DEFAULT_ELEMENT_SIZE, raylib::Vector2 {200.f, 20.f}},
         {DEFAULT_BORDER_WIDTH, 2.5f}
     };
 }

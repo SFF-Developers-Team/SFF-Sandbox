@@ -11,7 +11,7 @@ MultiplayerScene::MultiplayerScene() : MenuBase() {
     // TODO: Optimize it
     auto const game = Game::get();
 
-    auto elementSize = StyleManager::get()->getValue<Vec2f>(DEFAULT_ELEMENT_SIZE);
+    auto elementSize = StyleManager::get()->getValue<raylib::Vector2>(DEFAULT_ELEMENT_SIZE);
     auto container = std::make_shared<Container>();
     container->setTag("center-buttons");
     container->setWidth(elementSize.x);

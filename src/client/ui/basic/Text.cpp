@@ -1,19 +1,18 @@
 #include <ui/basic/Text.hpp>
 #include <managers/StyleManager.hpp>
-#include <managers/TextureManager.hpp>
+#include <managers/ResourceManager.hpp>
 #include <managers/RenderManager.hpp>
-#include <fix_win32_compatibility.h>
-#include <raylib.h>
+#include <raylib-cpp.hpp>
 
 Text::Text(std::string const& font, std::string const& text, float fontSize) : Node(), m_font(font), m_text(text), m_fontSize(fontSize), m_wordWrap(false) {
     auto sm = StyleManager::get();
-    auto fnt = TextureManager::get()->getFont(m_font);
+    auto& fnt = ResourceManager::Get().GetFont(m_font);
 
     if(fontSize == 0.f) {
         m_fontSize = fnt.baseSize;
     }
 
-    auto size = MeasureTextEx(fnt, m_text.c_str(), m_fontSize, 1.f);
+    auto size = fnt.MeasureText(m_text, m_fontSize, 1.f);
     setSize({size.x, size.y});
     m_alignHorizontal = H_CENTER;
     m_alignVertical = V_CENTER;
@@ -24,9 +23,11 @@ std::vector<std::string> Text::wrapText() {
     std::string currentLine;
     std::string currentWord;
 
+    auto& rm = ResourceManager::Get();
+
     for (char ch : m_text) {
         if (ch == ' ') {
-            auto wordWidth = RenderManager::getTextSize(currentLine + currentWord, m_font, m_fontSize).x;
+            auto wordWidth = rm.GetFont(m_font).MeasureText(currentLine + currentWord, m_fontSize, 1.f).x;
             
             if (wordWidth > getWidth()) {
                 lines.push_back(currentLine);
@@ -40,7 +41,7 @@ std::vector<std::string> Text::wrapText() {
         }
     }
 
-    auto wordWidth = RenderManager::getTextSize(currentLine + currentWord, m_font, m_fontSize).x;
+    auto wordWidth = rm.GetFont(m_font).MeasureText(currentLine + currentWord, m_fontSize, 1.f).x;
     if (wordWidth > getWidth()) {
         lines.push_back(currentLine);
         lines.push_back(currentWord);
@@ -54,8 +55,8 @@ std::vector<std::string> Text::wrapText() {
 void Text::draw() {
     Node::draw();
     
-    auto tm = TextureManager::get();
-    auto textpos = Vec2f {0.f, 0.f};
+    auto textpos = raylib::Vector2 {0.f, 0.f};
+    auto& rm = ResourceManager::Get();
 
     if(m_wordWrap) {
         std::vector<std::string> lines = wrapText();
@@ -67,18 +68,18 @@ void Text::draw() {
         if(m_alignVertical == V_BOTTOM) textpos.y += getHeight()- totalHeight;
 
         for (const auto& line : lines) {
-            auto size = RenderManager::getTextSize(line, m_font, m_fontSize);
+            auto size = rm.GetFont(m_font).MeasureText(line, m_fontSize, 1.f);
 
             if(m_alignHorizontal == H_CENTER) textpos.x = getWidth() * 0.5f - size.x * 0.5f;
             if(m_alignHorizontal == H_RIGHT) textpos.x = getWidth() - size.x;
 
-            RenderManager::drawColoredText(m_font, line, textpos, m_color, m_fontSize);
+            rm.GetFont(m_font).DrawText(line, textpos, m_fontSize, 1.f, m_color);
             textpos.y += size.y + 2.f;
 
             if (textpos.y + lineHeight > getHeight()) return;
         }
     } else {
-        auto size = RenderManager::getTextSize(m_text, m_font, m_fontSize);
+        auto size = rm.GetFont(m_font).MeasureText(m_text, m_fontSize, 1.f);
 
         if(m_alignHorizontal == H_CENTER) textpos.x += getWidth() * 0.5f - size.x * 0.5f;
         if(m_alignHorizontal == H_RIGHT) textpos.x += getWidth() - size.x;
@@ -86,7 +87,7 @@ void Text::draw() {
         if(m_alignVertical == V_CENTER) textpos.y += getHeight() * 0.5f - size.y * 0.5f;
         if(m_alignVertical == V_BOTTOM) textpos.y += getHeight() - size.y;
 
-        RenderManager::drawColoredText(m_font, m_text, textpos, m_color, m_fontSize);
+        rm.GetFont(m_font).DrawText(m_text, textpos, m_fontSize, 1.f, m_color);
     }
 }
 
@@ -98,7 +99,7 @@ void Text::setWordWrap(bool flag, bool autoHeight) {
         auto height = 0.f;
 
         for(auto& line : lines) {
-            auto size = RenderManager::getTextSize(line, m_font, m_fontSize).y;
+            auto size = ResourceManager::Get().GetFont(m_font).MeasureText(line, m_fontSize, 1.f).y;
             height += size + 2.f;
         }
 
@@ -109,15 +110,17 @@ void Text::setWordWrap(bool flag, bool autoHeight) {
 void Text::updateHeight() {
     auto height = 0.f;
 
+    auto& rm = ResourceManager::Get();
+
     if (m_wordWrap) {
         auto lines = wrapText();
 
         for(auto& line : lines) {
-            auto size = RenderManager::getTextSize(line, m_font, m_fontSize).y;
+            auto size = rm.GetFont(m_font).MeasureText(line, m_fontSize, 1.f).y;
             height += size + 2.f;
         }
     } else {
-        height = RenderManager::getTextSize(m_text, m_font, m_fontSize).y;
+        height = rm.GetFont(m_font).MeasureText(m_text, m_fontSize, 1.f).y;
     }
 
     setHeight(height);

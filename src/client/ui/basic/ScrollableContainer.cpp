@@ -1,14 +1,14 @@
+#include <RaylibExtras.hpp>
+#include <raylib-cpp.hpp>
 #include <ui/basic/ScrollableContainer.hpp>
 #include <managers/RenderManager.hpp>
 #include <algorithm>
-#include <fix_win32_compatibility.h>
-#include <raylib.h>
 #include <rlgl.h>
 
 ScrollableContainer::ScrollableContainer() : Container() {}
 
-Vec2f ScrollableContainer::getTotalSize() {
-    Vec2f ret;
+raylib::Vector2 ScrollableContainer::getTotalSize() {
+    raylib::Vector2 ret;
     
     for(auto& node : m_childs) {
         ret.x = std::max(ret.x, node->getRightX());
@@ -19,13 +19,13 @@ Vec2f ScrollableContainer::getTotalSize() {
 }
 
 void ScrollableContainer::draw() {
-    Rectf bounds = getWorldBounds();
-    Vec2f totalSize = getTotalSize();
-    Vec2f contentSize = {m_bounds.width - m_border * 2, m_bounds.height - m_border * 2};
-    Col4u color = m_color;
-    color.brightness(-0.25f);
+    auto bounds = getWorldBounds();
+    raylib::Vector2 totalSize = getTotalSize();
+    raylib::Vector2 contentSize = {m_bounds.width - m_border * 2, m_bounds.height - m_border * 2};
+    raylib::Color color = m_color;
+    color = color.Brightness(-0.25f);
 
-    Rectf cutRect = {
+    raylib::Rectangle cutRect = {
         bounds.x + m_border * getGlobalScaleX(),
         bounds.y + m_border * getGlobalScaleY(),
         bounds.width - (m_border * 2) * getGlobalScaleX(),
@@ -34,41 +34,41 @@ void ScrollableContainer::draw() {
 
     Frame::draw();
 
-    BeginScissorMode(cutRect.x, cutRect.y, cutRect.width, cutRect.height);
+    raylib::Scissor scissor({cutRect.x, cutRect.y, cutRect.width, cutRect.height});
+    {
         Container::draw();
 
         if (totalSize.y > bounds.height) {
-            RenderManager::drawRect({
+            raylib::Rectangle{
                 m_bounds.width - m_border * 2, 
                 m_border + (m_offset.y / totalSize.y) * contentSize.y, m_border, 
-                (contentSize.y / totalSize.y) * contentSize.y}, color
-            );
+                (contentSize.y / totalSize.y) * contentSize.y}.Draw(color);
         }
 
         if (totalSize.x > bounds.width) {
-            RenderManager::drawRect({
+            raylib::Rectangle{
                 m_border + (m_offset.x / totalSize.x) * contentSize.x,
                 m_bounds.height - m_border * 2,
                 (contentSize.x / totalSize.x) * contentSize.x, m_border
-            }, color);
+            }.Draw(color);
         }
-    EndScissorMode();
+    }
 }
 
 void ScrollableContainer::update() {
     Container::update();
 
-    Vec2f totalSize = getTotalSize();
-    Vec2f contentSize = {m_bounds.width - m_border * 2, m_bounds.height - m_border * 2};
+    raylib::Vector2 totalSize = getTotalSize();
+    raylib::Vector2 contentSize = {m_bounds.width - m_border * 2, m_bounds.height - m_border * 2};
 
-    if(isMouseHover() && GetMouseWheelMove() != 0.f) {
-        if(totalSize.x > m_bounds.width && IsKeyDown(KEY_LEFT_CONTROL)) {
-            m_offset.x -= GetMouseWheelMove() * 10.f;
+    if(isMouseHover() && raylib::Mouse::GetWheelMove() != 0.f) {
+        if(totalSize.x > m_bounds.width && raylib::Keyboard::IsKeyDown(KEY_LEFT_CONTROL)) {
+            m_offset.x -= raylib::Mouse::GetWheelMove() * 10.f;
             m_offset.x = std::clamp(m_offset.x, 0.f, totalSize.x - contentSize.x);
         }
 
-        if(totalSize.y > m_bounds.height && !IsKeyDown(KEY_LEFT_CONTROL)) {
-            m_offset.y -= GetMouseWheelMove() * 10.f;
+        if(totalSize.y > m_bounds.height && !raylib::Keyboard::IsKeyDown(KEY_LEFT_CONTROL)) {
+            m_offset.y -= raylib::Mouse::GetWheelMove() * 10.f;
             m_offset.y = std::clamp(m_offset.y, 0.f, totalSize.y - contentSize.y);
         }
     }

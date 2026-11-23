@@ -53,7 +53,7 @@ void Hitbox::move(float x, float y) {
 }
 
 Hitbox Hitbox::expand(float x, float y) {
-    Rectf newh = getRect();
+    Hitbox newh = *this;
 
     if (x < 0.f) {
         newh.x += x;

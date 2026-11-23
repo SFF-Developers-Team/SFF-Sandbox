@@ -4,7 +4,7 @@
 class Container : public Frame {
 protected:
     std::vector<std::shared_ptr<Node>> m_childs;
-    Vec2f m_offset;
+    raylib::Vector2 m_offset;
     bool m_frame;
 
 public:

@@ -6,25 +6,6 @@
 Player::Player(World& world) : Mob(world), Inventory(36), m_id(0), m_gamemode(GAMEMODE_SURVIVAL), m_fly(false), m_breakingTile(false) {
     m_header = ObjectHeader::PLAYER;
 
-    // clang-format off
-    Col3u const colors[] = {
-        {255, 255, 255}, 
-        {255, 41, 55}, 
-        {255, 128, 0},   
-        {255, 255, 0},   
-        {0, 255, 0},     
-        {0, 255, 255}, 
-        {0, 0, 255},
-        {128, 0, 255},   
-        {255, 0, 255}, 
-        {255, 128, 255}, 
-        {255, 128, 255}, 
-        {128, 128, 128}, 
-        {0, 0, 0},     
-        {128, 64, 0}
-    };
-    // clang-format on
-
     if(m_gamemode == GAMEMODE_CREATIVE) {
         for(int i = 1; i < 20; i++) {
             if(i == (int)TileID::BEDROCK) {

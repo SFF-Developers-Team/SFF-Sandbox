@@ -1,5 +1,7 @@
 #pragma once
 #include <list>
+#include <cstdint>
+#include <vector>
 #include <memory>
 #include <unordered_map>
 

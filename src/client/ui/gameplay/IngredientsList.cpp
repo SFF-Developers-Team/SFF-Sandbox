@@ -15,8 +15,8 @@ void IngredientsList::draw() {
     if(m_recipe.resultId != 0) {
         for (auto i = 0; i < m_recipe.ingredients.size(); i++) {
             auto ingredient = m_recipe.ingredients[i];
-            Rectf cellRect = {m_border * 2 + cellSize * i, m_border * 2, cellSize, cellSize};
-            Rectf itemRect = {cellRect.x + (cellRect.width - tileSize) / 2, cellRect.y + (cellRect.height - tileSize) / 2, tileSize, tileSize};
+            raylib::Rectangle cellRect{m_border * 2 + cellSize * i, m_border * 2, cellSize, cellSize};
+            raylib::Rectangle itemRect{cellRect.x + (cellRect.width - tileSize) / 2, cellRect.y + (cellRect.height - tileSize) / 2, tileSize, tileSize};
 
             RenderManager::drawFrame(cellRect, m_color, m_border);
             RenderManager::renderInventoryItem(itemRect, Item(m_recipe.resultId), m_recipe.count);

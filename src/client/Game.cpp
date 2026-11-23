@@ -1,9 +1,10 @@
+#include <raylib-cpp.hpp>
 #include <scenes/MainMenuScene.hpp>
-#include <managers/TextureManager.hpp>
-#include <managers/SoundManager.hpp>
+#include <scenes/MenuBase.hpp>
+#include <managers/ResourceManager.hpp>
 #include <entity/LocalPlayer.hpp>
 #include <world/World.hpp>
-#include <TileMap.hpp>
+#include <Tilemap.hpp>
 #include <Logger.hpp>
 #include <Game.hpp>
 #include <managers/SettingsManager.hpp>
@@ -17,7 +18,7 @@
 #define CHECK_DIR(path) if (!std::filesystem::exists(path)) std::filesystem::create_directory(path);
 
 void Game::pushScene(std::shared_ptr<Scene> scene) {
-    if(m_scene != nullptr) {    
+    if(m_scene != nullptr) {
         m_sceneHistory.push_back(m_scene);
         m_scene->onHide();
     }
@@ -57,40 +58,12 @@ void Game::checkSceneFlags(std::shared_ptr<Container> scene) {
 }
 
 void Game::init(std::vector<std::string>& args) {
-#if 0
-    SetTraceLogCallback([](int logLevel, const char *text, va_list args) {
-        std::unordered_map<int, std::string> static prefixes = {
-            {LOG_ALL, "\\cw"},
-            {LOG_TRACE, "\\cwTRACE: "},
-            {LOG_DEBUG, "\\cwDEBUG: "},
-            {LOG_INFO, "\\cwINFO: "},
-            {LOG_WARNING, "\\cyWARNING: "},
-            {LOG_ERROR, "\\crERROR: "},
-            {LOG_FATAL, "\\crFATAL: "}
-        };
-        
-        va_list argsCopy;
-        va_copy(argsCopy, args);
-        int size = vsnprintf(nullptr, 0, text, argsCopy);
-        va_end(argsCopy);
+    m_window.Init(1280, 720, "SFF Sandbox", FLAG_WINDOW_RESIZABLE);
+    m_window.SetMinSize(640, 360);
+    m_audioDevice.emplace();
+    raylib::Window::SetExitKey(-1);
 
-        std::string buffer = prefixes[logLevel];
-        buffer.resize(prefixes[logLevel].size() + size - 1);
-
-        std::vsnprintf(buffer.data() + prefixes[logLevel].size(), size, text, args);
-        buffer.append("\n");
-
-        Debug::get()->log(buffer);
-    });
-#endif
-
-    InitWindow(1280, 720, "SFF Sandbox");
-    SetWindowState(FLAG_WINDOW_RESIZABLE);
-    SetWindowMinSize(640, 360);
-    InitAudioDevice();
-    SetExitKey(-1);
-
-    m_lastWindowSize = {1280, 720};
+    m_lastWindowSize = Vector2 {1280, 720};
     m_close = false;
 
     auto home = Platform::getHomeDir();
@@ -99,22 +72,21 @@ void Game::init(std::vector<std::string>& args) {
     CHECK_DIR(home / "worlds");
 
     // Load assets
-    auto sm = SoundManager::get();
-    auto tm = TextureManager::get();
+    auto& resources = ResourceManager::Get();
     auto stm = SettingsManager::get();
 
-    tm->loadTexture("player.png");
-    tm->loadTexture("sff.png");
-    tm->loadTexture("raylib.png");
-    tm->loadTileMap("tiles.png", {16, 16});
-    tm->loadTileMap("items.png", {16, 16});
-    tm->loadTileMap("gui.png", {16, 16});
-    tm->loadTileMap("developers.png", {128, 128});
-    tm->loadTileMap("indicators.png", {8, 7});
-    tm->loadFont("fonts/boldfont.fnt");
-    tm->loadFont("fonts/font.fnt");
-    sm->loadMusic("menu.mp3");
-    
+    resources.LoadTexture("player.png");
+    resources.LoadTexture("sff.png");
+    resources.LoadTexture("raylib.png");
+    resources.LoadTilemap("tiles.png", 16, 16);
+    resources.LoadTilemap("items.png", 16, 16);
+    resources.LoadTilemap("gui.png", 8, 8);
+    resources.LoadTilemap("developers.png", 6, 1);
+    resources.LoadTilemap("indicators.png", 6, 1);
+    resources.LoadFont("fonts/boldfont.fnt");
+    resources.LoadFont("fonts/font.fnt");
+    resources.LoadMusic("menu.mp3");
+
     m_guiScale = getMaximumGuiScale();
 
 #ifdef PLATFORM_ANDROID
@@ -122,7 +94,7 @@ void Game::init(std::vector<std::string>& args) {
 #else
     m_controlType = CONTROL_KEYBOARD_MOUSE;
 #endif
-    
+
     // Load settings
     SettingsManager::get();
     StyleManager::get();
@@ -132,10 +104,10 @@ void Game::init(std::vector<std::string>& args) {
 
     // Load main menu
     pushScene(std::make_shared<MainMenuScene>());
-    PlayMusicStream(sm->getMusic("menu.mp3"));
+    resources.GetMusic("menu.mp3").Play().SetLooping(true);
 
     while (!m_close) {
-        if(WindowShouldClose()) {
+        if(raylib::Window::ShouldClose()) {
             m_close = true;
         }
 
@@ -147,24 +119,18 @@ void Game::init(std::vector<std::string>& args) {
 }
 
 void Game::update() {
-    auto sm = SoundManager::get();
-    
-    UpdateMusicStream(sm->getMusic("menu.mp3"));
-    if(GetMusicTimePlayed(sm->getMusic("menu.mp3")) >= GetMusicTimeLength(sm->getMusic("menu.mp3"))) {
-        StopMusicStream(sm->getMusic("menu.mp3"));
-        PlayMusicStream(sm->getMusic("menu.mp3"));
-    }
+    ResourceManager::Get().UpdateMusic();
 
     if(m_scene != nullptr) {
         auto debug = Debug::get();
 
         checkSceneFlags(m_scene);
 
-        if(IsKeyPressed(KEY_BACK) || IsKeyPressed(KEY_ESCAPE) && m_scene->isKeyBackEnabled()) {
+        if(raylib::Keyboard::IsKeyPressed(KEY_BACK) || raylib::Keyboard::IsKeyPressed(KEY_ESCAPE) && m_scene->isKeyBackEnabled()) {
             m_scene->keyBackClicked();
         }
 
-        if(IsKeyPressed(KEY_F3)) {
+        if(raylib::Keyboard::IsKeyPressed(KEY_F3)) {
             debug->toggleVisibility();
         }
 
@@ -176,33 +142,33 @@ void Game::update() {
         // debug->update();
     }
 
-    if(GetKeyPressed() > 0 || IsMouseButtonPressed(MOUSE_LEFT_BUTTON) || IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)) {
+    if(raylib::Keyboard::GetKeyPressed() > 0 || raylib::Mouse::IsButtonPressed(MOUSE_LEFT_BUTTON) || raylib::Mouse::IsButtonPressed(MOUSE_RIGHT_BUTTON)) {
         m_controlType = CONTROL_KEYBOARD_MOUSE;
     }
 
-    if(GetTouchPointCount() > 0) {
+    if(raylib::Touch::GetPointCount() > 0) {
         m_controlType = CONTROL_TOUCH;
     }
 
-    if(GetGamepadButtonPressed() > 0) {
+    if(raylib::Gamepad::GetButtonPressed() > 0) {
         m_controlType = CONTROL_GAMEPAD;
     }
 
 // #ifndef PLATFORM_ANDROID
-//     if(IsWindowResized()) {
-//         m_lastWindowSize = {GetScreenWidth(), GetScreenHeight()};
+//     if(raylib::Window::IsResized()) {
+//         m_lastWindowSize = {raylib::Window::GetWidth(), raylib::Window::GetHeight()};
 //     }
 // #endif
 }
 
 void Game::render() {
-    BeginDrawing();
-        ClearBackground((m_scene ? m_scene->getColor().to<Color>() : WHITE));
-        
+    m_window.BeginDrawing();
+        m_window.ClearBackground((m_scene ? m_scene->getColor() : raylib::Color::White()));
+
         if(m_scene != nullptr) {
             m_scene->draw();
         }
-    EndDrawing();
+    m_window.EndDrawing();
 }
 
 void Game::destroy() {
@@ -212,12 +178,18 @@ void Game::destroy() {
         mp->destroy();
     }
 
-    CloseAudioDevice();
-    CloseWindow();
+    m_sceneHistory.clear();
+    m_scene.reset();
+    m_player.reset();
+    m_world.reset();
+    MenuBase::releaseBackground();
+    ResourceManager::Get().Clear();
+    m_audioDevice.reset();
+    m_window.Close();
 }
 
-int Game::getMaximumGuiScale() { 
-    return std::min(GetScreenWidth() / 640, GetScreenHeight() / 360); 
+int Game::getMaximumGuiScale() {
+    return std::min(raylib::Window::GetWidth() / 640, raylib::Window::GetHeight() / 360);
 }
 
 void Game::updateGuiScale() {

@@ -6,7 +6,8 @@
 #include <memory>
 #include <map>
 #include <mutex>
-#include <enet.h>
+
+typedef struct _ENetPeer ENetPeer;
 
 enum Channel : uint8_t {
     EVERYTHING,

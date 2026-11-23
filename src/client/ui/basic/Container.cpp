@@ -1,14 +1,13 @@
 #include <ui/basic/Container.hpp>
 #include <managers/RenderManager.hpp>
 #include <algorithm>
-#include <fix_win32_compatibility.h>
-#include <raylib.h>
+#include <raylib-cpp.hpp>
 #include <rlgl.h>
 #include <Logger.hpp>
 #include <Game.hpp>
 #include <raymath.h>
 
-Container::Container() : Frame(), m_offset({0.f, 0.f}), m_frame(true) {}
+Container::Container() : Frame(), m_offset(0.f, 0.f), m_frame(true) {}
 
 void Container::alignItemsHorizontal(float padding) {
     if(!m_childs.empty()) {

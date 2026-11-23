@@ -48,6 +48,15 @@
 #define WIN32_LEAN_AND_MEAN 
 #include <windows.h>
 #include <playsoundapi.h>
+#include <ws2tcpip.h>
+#include <WinSock2.h>
+#include <minwindef.h>
+#include <mciapi.h>
+#include <mmiscapi.h>
+#include <mmiscapi2.h>
+#include <mmeapi.h>
+#include <joystickapi.h>
+#include <timeapi.h>
 
 // remove all our redefinitions so that raylib can define them properly
 #undef CloseWindow
@@ -66,6 +75,8 @@
 #undef PlaySoundW
 #undef max
 #undef min
+#undef near
+#undef far
 
 // scary
 #undef ERROR

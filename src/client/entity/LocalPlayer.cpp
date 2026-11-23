@@ -1,5 +1,5 @@
-#include <fix_win32_compatibility.h>
-#include <raylib.h>
+#include <RaylibExtras.hpp>
+#include <raylib-cpp.hpp>
 #include <managers/SettingsManager.hpp>
 #include <entity/LocalPlayer.hpp>
 #include <world/Tile.hpp>
@@ -13,30 +13,31 @@
 #include <ItemDatabase.hpp>
 #include <raymath.h>
 
-LocalPlayer::LocalPlayer(World& world) : ClientPlayer(world), m_forward(0.f), m_camera{0} {
+LocalPlayer::LocalPlayer(World& world) : ClientPlayer(world), m_forward(0.f), m_camera{} {
     m_camera.zoom = 50.f;
-    m_camera.offset = {GetScreenWidth() / 2.f, GetScreenHeight() / 2.f};
+    m_camera.offset = {raylib::Window::GetWidth() / 2.f, raylib::Window::GetHeight() / 2.f};
 }
 
 void LocalPlayer::updateCamera() {
-    float wheel = GetMouseWheelMove();
-    Vector2 playerCenter = {
+    float wheel = raylib::Mouse::GetWheelMove();
+
+    raylib::Vector2 playerCenter = {
         m_hitbox.x + m_hitbox.width / 2,
         m_hitbox.y - m_hitbox.height / 2
     };
 
     m_camera.target = playerCenter;
     
-    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0) {
+    if (raylib::Keyboard::IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0) {
         m_camera.zoom -= wheel;
 
-        float scaleX = static_cast<float>(GetScreenWidth()) / 640;
-        float scaleY = static_cast<float>(GetScreenHeight()) / 360;
+        float scaleX = static_cast<float>(raylib::Window::GetWidth()) / 640;
+        float scaleY = static_cast<float>(raylib::Window::GetHeight()) / 360;
 
         m_camera.zoom = std::clamp(m_camera.zoom, 5.f * scaleX, 90.f * scaleX);
     }
 
-    m_camera.offset = {GetScreenWidth() / 2.f, GetScreenHeight() / 2.f};
+    m_camera.offset = {raylib::Window::GetWidth() / 2.f, raylib::Window::GetHeight() / 2.f};
 
     auto world = Game::get()->getWorld();
     
@@ -44,11 +45,11 @@ void LocalPlayer::updateCamera() {
     const float maxX = WORLD_SIZE;   
     const float maxY = WORLD_SIZE;   
 
-    Vector2 minClamp = GetWorldToScreen2D({0, 0}, m_camera);
-    Vector2 maxClamp = GetWorldToScreen2D({maxX, maxY}, m_camera);
+    raylib::Vector2 minClamp = m_camera.GetWorldToScreen({0, 0});
+    raylib::Vector2 maxClamp = m_camera.GetWorldToScreen({maxX, maxY});
     
-    auto screenWidth = GetScreenWidth();
-    auto screenHeight = GetScreenHeight();
+    auto screenWidth = raylib::Window::GetWidth();
+    auto screenHeight = raylib::Window::GetHeight();
 
     if (maxClamp.x < screenWidth) m_camera.offset.x = screenWidth - (maxClamp.x - screenWidth / 2.f); 
     if (minClamp.x > 0) m_camera.offset.x = screenWidth / 2 - minClamp.x;
@@ -58,8 +59,8 @@ void LocalPlayer::updateCamera() {
 void LocalPlayer::updateAnimation() {
     float static lastAnimTime = 0.f;
 
-    if (GetTime() >= lastAnimTime + (1.0f / m_animFps)) {
-        lastAnimTime = GetTime();
+    if (raylib::Window::GetTime() >= lastAnimTime + (1.0f / m_animFps)) {
+        lastAnimTime = raylib::Window::GetTime();
         m_animFrame++;
 
         // clang-format: off
@@ -78,8 +79,8 @@ void LocalPlayer::updateAnimation() {
 }
 
 TilePosition LocalPlayer::getTargetTile() {
-    Vector2 cur = GetScreenToWorld2D(GetMousePosition(), m_camera);
-    auto layer = !IsKeyDown(KEY_LEFT_ALT);
+    raylib::Vector2 cur = m_camera.GetScreenToWorld(raylib::Mouse::GetPosition());
+    auto layer = !raylib::Keyboard::IsKeyDown(KEY_LEFT_ALT);
 
     return {static_cast<int>(floorl(cur.x)), static_cast<int>(floorl(cur.y)), layer};
 }
@@ -90,7 +91,7 @@ void LocalPlayer::onTickControls(World& world) {
     auto ct = Game::get()->getControlType();
 
     if (canAccessTile(target)) {
-        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && canDestroyTile(world, target)) {
+        if (raylib::Mouse::IsButtonDown(MOUSE_LEFT_BUTTON) && canDestroyTile(world, target)) {
             if (m_onGround) {
                 setAnimation(PLAYER_HIT);
             }
@@ -98,12 +99,12 @@ void LocalPlayer::onTickControls(World& world) {
             destroyTile(world);
         }
 
-        if (m_breakingTile && IsMouseButtonUp(MOUSE_LEFT_BUTTON)) {
+        if (m_breakingTile && raylib::Mouse::IsButtonUp(MOUSE_LEFT_BUTTON)) {
             world.stopBreakingTile(m_id);
         }
 
-        if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON) && canPlaceTile(world, target)) {
-            if(IsKeyDown(KEY_LEFT_CONTROL)) {
+        if (raylib::Mouse::IsButtonDown(MOUSE_RIGHT_BUTTON) && canPlaceTile(world, target)) {
+            if(raylib::Keyboard::IsKeyDown(KEY_LEFT_CONTROL)) {
                 destroyTile(world);
             }
 
@@ -202,41 +203,41 @@ void LocalPlayer::onTick(World& world) {
 
 void LocalPlayer::updateControls() {
     auto stm = SettingsManager::get();
-    auto wheel = GetMouseWheelMove();
+    auto wheel = raylib::Mouse::GetWheelMove();
 
-    if (IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.f) {
+    if (raylib::Keyboard::IsKeyDown(KEY_LEFT_CONTROL) && wheel != 0.f) {
         m_camera.zoom -= wheel * 10.f;
     }
 
-    if(IsGestureDetected(GESTURE_PINCH_IN) || IsGestureDetected(GESTURE_PINCH_OUT)) {
-        m_camera.zoom += GetGesturePinchAngle();
+    if(raylib::IsGestureDetected(GESTURE_PINCH_IN) || raylib::IsGestureDetected(GESTURE_PINCH_OUT)) {
+        m_camera.zoom += raylib::GetGesturePinchAngle();
     }
 
-    if (IsKeyPressed(stm->getKeybind("fly"))) {
+    if (raylib::Keyboard::IsKeyPressed(stm->getKeybind("fly"))) {
         toggleFly();
     }
 
-    if (IsKeyDown(stm->getKeybind("right")) || IsKeyDown(KEY_RIGHT)) {
+    if (raylib::Keyboard::IsKeyDown(stm->getKeybind("right")) || raylib::Keyboard::IsKeyDown(KEY_RIGHT)) {
         triggerMove(RIGHT);
     }
 
-    if (IsKeyDown(stm->getKeybind("left")) || IsKeyDown(KEY_LEFT)) {
+    if (raylib::Keyboard::IsKeyDown(stm->getKeybind("left")) || raylib::Keyboard::IsKeyDown(KEY_LEFT)) {
         triggerMove(LEFT);
     }
 
-    if ((IsKeyDown(stm->getKeybind("jump")) || IsKeyDown(KEY_UP))) {
+    if ((raylib::Keyboard::IsKeyDown(stm->getKeybind("jump")) || raylib::Keyboard::IsKeyDown(KEY_UP))) {
         triggerJump();
     }
 
-    if ((IsKeyDown(stm->getKeybind("duck"))) || IsKeyDown(KEY_DOWN)) {
+    if ((raylib::Keyboard::IsKeyDown(stm->getKeybind("duck"))) || raylib::Keyboard::IsKeyDown(KEY_DOWN)) {
         triggerDuck(false);
     }
 
-    if ((IsKeyReleased(stm->getKeybind("duck"))) || IsKeyReleased(KEY_DOWN)) {
+    if ((raylib::Keyboard::IsKeyReleased(stm->getKeybind("duck"))) || raylib::Keyboard::IsKeyReleased(KEY_DOWN)) {
         m_sneak = false;
     }
 
-    if (IsKeyPressed(KEY_F4)) {
+    if (raylib::Keyboard::IsKeyPressed(KEY_F4)) {
         m_gamemode = (m_gamemode == GAMEMODE_CREATIVE) ? GAMEMODE_SURVIVAL : GAMEMODE_CREATIVE;
     }
 }
@@ -246,11 +247,9 @@ void LocalPlayer::update() {
     updateAnimation();
 }
 
-bool LocalPlayer::isRectInView(Rectf rect) {
-    Vector2 screen = {float(GetScreenWidth()), float(GetScreenHeight())};
-
-    Vector2 min = GetScreenToWorld2D(Vector2Zero(), m_camera);
-    Vector2 max = GetScreenToWorld2D(screen, m_camera);
+bool LocalPlayer::isRectInView(raylib::Rectangle rect) {
+    raylib::Vector2 min = m_camera.GetScreenToWorld(raylib::Vector2::Zero());
+    raylib::Vector2 max = m_camera.GetScreenToWorld(raylib::Window::GetSize());
 
     return (rect.x + rect.width >= min.x && rect.x <= max.x) && (rect.y + rect.height >= min.y && rect.y <= max.y);
 }

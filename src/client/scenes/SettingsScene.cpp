@@ -1,3 +1,4 @@
+#include <RaylibExtras.hpp>
 #include <scenes/SettingsScene.hpp>
 #include <ui/basic/SettingsToggle.hpp>
 #include <ui/basic/DropDown.hpp>
@@ -5,7 +6,7 @@
 #include <ui/basic/ListContainer.hpp>
 #include <ui/basic/Text.hpp>
 #include <managers/SettingsManager.hpp>
-#include <managers/SoundManager.hpp>
+#include <managers/ResourceManager.hpp>
 #include <Logger.hpp>
 
 SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolution(true) {
@@ -65,33 +66,13 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
         float const elementWidth = video->getWidth() - video->getBorderWidth() * 4;
         
 #ifdef PLATFORM_DESKTOP
-        // video->addChild(std::make_shared<SettingsToggle>("video.fullscreen", "Fullscreen", [stm, this](ToggleButton*, bool flag) {
-        //     // auto modes = stm->getModes();
-        //     auto mon = GetCurrentMonitor();
-        //     auto game =  Game::get();
-        //     // auto mode = stm->getValue<int>("video.resolution", modes.size());
-
-        //     Vec2i windowSize = game->getLastWindowSize();
-        //     Vec2i fullscreenSize = {GetMonitorWidth(mon), GetMonitorHeight(mon)};
-
-        //     auto states = FLAG_WINDOW_UNDECORATED;
-
-        //     (flag) ? SetWindowState(states) : ClearWindowState(states);
-        //     SetWindowSize((flag) ? fullscreenSize.x : windowSize.x, (flag) ? fullscreenSize.y : windowSize.y);
-        //     SetWindowPosition((flag) ? 0 : (GetMonitorWidth(mon) - windowSize.x) / 2, (flag) ? 0 : (GetMonitorHeight(mon) - windowSize.y) / 2);
-        
-        //     game->updateGuiScale();
-        //     game->checkSceneFlags(game->getScene());
-        //     onShow();
-        // }));
-
         video->addChild(std::make_shared<SettingsToggle>("video.vsync", "VSYNC", [stm](ToggleButton*, bool flag) {
-            if(!flag && IsWindowState(FLAG_VSYNC_HINT)) {
-                ClearWindowState(FLAG_VSYNC_HINT);
+            if(!flag && raylib::Window::IsState(FLAG_VSYNC_HINT)) {
+                Game::get()->getWindow().ClearState(FLAG_VSYNC_HINT);
             }
 
-            if(flag && !IsWindowState(FLAG_VSYNC_HINT)) {
-                SetWindowState(FLAG_VSYNC_HINT);
+            if(flag && !raylib::Window::IsState(FLAG_VSYNC_HINT)) {
+                Game::get()->getWindow().SetState(FLAG_VSYNC_HINT);
             }
         }));
 #endif
@@ -121,15 +102,15 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
         auto const elementWidth = audio->getWidth() - audio->getBorderWidth() * 4;
 
         audio->addChild(std::make_shared<SettingsSlider<float>>("audio.volume.general", "General volume: ", 0.f, 1.f, 0.5f, [stm](auto, auto value) {
-            SetMasterVolume(value);
+            Game::get()->getAudioDevice().SetVolume(value);
         }));
 
         audio->addChild(std::make_shared<SettingsSlider<float>>("audio.volume.music", "Music volume: ", 0.f, 1.f, 1.f, [stm](auto, auto value) {
-            SoundManager::get()->setMusicVolume(value);
+            ResourceManager::Get().SetMusicVolume(value);
         }));
 
         audio->addChild(std::make_shared<SettingsSlider<float>>("audio.volume.sound", "Sound volume: ", 0.f, 1.f, 1.f, [stm](auto, auto value) {
-            SoundManager::get()->setSoundVolume(value);
+            ResourceManager::Get().SetSoundVolume(value);
         }));
     }
 
@@ -180,7 +161,7 @@ SettingsScene::SettingsScene() : MenuBase(), m_keySelect(nullptr), m_autoResolut
 void SettingsScene::update() {
     MenuBase::update();
 
-    auto key = GetKeyPressed();
+    auto key = raylib::Keyboard::GetKeyPressed();
     auto stm = SettingsManager::get();
 
     if(m_keySelect != nullptr && key > 0) {

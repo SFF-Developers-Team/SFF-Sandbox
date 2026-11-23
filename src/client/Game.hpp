@@ -1,5 +1,7 @@
 #pragma once
 #include <Types.hpp>
+#include <raylib-cpp.hpp>
+#include <optional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -8,11 +10,12 @@
 class Scene;
 class ClientWorld;
 class LocalPlayer;
-class TileMap;
 class Container;
 
 class Game {
 private:
+    raylib::Window m_window;
+    std::optional<raylib::AudioDevice> m_audioDevice;
     std::string m_username;
 
     std::shared_ptr<Scene> m_scene;
@@ -21,7 +24,7 @@ private:
 
     std::deque<std::shared_ptr<Scene>> m_sceneHistory;
 
-    Vec2i m_lastWindowSize;
+    raylib::Vector2 m_lastWindowSize;
     int m_guiScale;
     bool m_close;
 
@@ -38,6 +41,8 @@ public:
     void update();
     void destroy();
     void close() { m_close = true; }
+    raylib::Window& getWindow() { return m_window; }
+    raylib::AudioDevice& getAudioDevice() { return *m_audioDevice; }
     
     auto getScene() { return m_scene; }
     void clearSceneHistory() { m_sceneHistory.clear(); }
@@ -56,7 +61,7 @@ public:
     std::shared_ptr<LocalPlayer> getPlayer() { return m_player; }
     void setPlayer(std::shared_ptr<LocalPlayer> player) { m_player = player; };
     
-    Vec2i const getLastWindowSize() { return m_lastWindowSize; }
+    raylib::Vector2 const getLastWindowSize() { return m_lastWindowSize; }
     
     int getGuiScale() { return m_guiScale; }
     void setGuiScale(int scale) { m_guiScale = scale; }

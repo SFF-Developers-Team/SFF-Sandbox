@@ -6,8 +6,8 @@ Frame::Frame() : Node() {
     auto sm = StyleManager::get();
     
     setBorderWidth(sm->getValue<float>(DEFAULT_BORDER_WIDTH));
-    setColor(sm->getValue<Col4u>(DEFAULT_UI_COLOR));
-    setSize(StyleManager::get()->getValue<Vec2f>(DEFAULT_ELEMENT_SIZE));
+    setColor(sm->getValue<raylib::Color>(DEFAULT_UI_COLOR));
+    setSize(StyleManager::get()->getValue<raylib::Vector2>(DEFAULT_ELEMENT_SIZE));
 }
 
 void Frame::draw() {

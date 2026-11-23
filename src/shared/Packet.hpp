@@ -1,7 +1,7 @@
 #pragma once
 #include <DataStream.hpp>
-#include <enet.h>
 #include <format>
+#include <span>
 
 #define CREATE_PACKET std::make_shared<Packet>
 
@@ -9,7 +9,7 @@ class Packet : public DataStream {
 public:
     template<typename... Args>
     Packet(Args const&... args) { (add(args), ...); }  
-    Packet(ENetPacket* packet) : DataStream(packet->data, packet->data + packet->dataLength) {}
+    Packet(std::span<uint8_t> bytes) : DataStream(bytes.data(), bytes.data() + bytes.size()) {}
     Packet(ByteVector const& bytes) : DataStream(bytes) {}
 };
 

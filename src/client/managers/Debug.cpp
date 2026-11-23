@@ -1,12 +1,12 @@
+#include <raylib-cpp.hpp>
 #include <managers/Debug.hpp>
-#include <fix_win32_compatibility.h>
-#include <raylib.h>
 #include <GitHash.hpp>
 #include <ui/basic/ScrollableContainer.hpp>
 #include <ui/basic/Text.hpp>
 #include <ui/basic/TextInput.hpp>
 #include <managers/RenderManager.hpp>
 #include <ui/basic/Scene.hpp>
+#include <managers/ResourceManager.hpp>
 
 Debug::Debug() {
     setString(GAME_VERSION, "SFF Sandbox {}-dev ({} {})", GitHash::shortSha1, __DATE__, __TIME__);
@@ -14,12 +14,18 @@ Debug::Debug() {
 
 void Debug::draw() {
     float y = 0.f;
-    setString(FPS, "{} FPS", GetFPS());
+    setString(FPS, "{} FPS", raylib::Window::GetFPS());
+
+    auto& rm = ResourceManager::Get();
+    auto& font = rm.GetFont("font");
 
     for (auto& [id, str] : m_debugList) {
-        auto size = RenderManager::getTextSize(str, "font", 20.f);
-        RenderManager::drawRect({0.f, y, size.x, size.y}, {0, 0, 0, 128});
-        RenderManager::drawText("font", str, {0.f, y}, COL_WHITE, 20.f);
+        raylib::Vector2 size = font.MeasureText(str, 20.f, 1.f);
+        raylib::Vector2 pos{0.f, y};
+        
+        raylib::Rectangle(pos, size).Draw(raylib::Color(0, 0, 0, 128));
+        font.DrawText(str, pos, 20.f, 1.f);
+
         y += size.y;
 
         if(!isVisible() && (id != GAME_VERSION || id != FPS)) {
@@ -62,7 +68,7 @@ void Debug::allocateConsole() {
 void Debug::update() {
     auto border = m_debugConsole->getBorderWidth();
     m_debugConsole->setPos({0.f, 0.f});
-    m_debugConsole->setSize({static_cast<float>(GetScreenWidth()), static_cast<float>(GetScreenHeight()) / 3});
+    m_debugConsole->setSize({static_cast<float>(raylib::Window::GetWidth()), static_cast<float>(raylib::Window::GetHeight()) / 3});
     auto textCont = m_debugConsole->getChild<ScrollableContainer>(0);
     auto input = m_debugConsole->getChild<TextInput>(1);
     auto text = textCont->getChild<Text>(0);
@@ -76,7 +82,7 @@ void Debug::update() {
     input->setPos({border * 2, textCont->getBottomY() + border});
     input->setWidth(textCont->getWidth());
 
-    if(IsKeyPressed(KEY_GRAVE)) {
+    if(raylib::Keyboard::IsKeyPressed(KEY_GRAVE)) {
         auto scene = Scene::get();
         if (scene && !scene->hasChild("debug-console")) {
             scene->addChild(m_debugConsole);

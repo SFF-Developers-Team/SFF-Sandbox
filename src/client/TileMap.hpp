@@ -1,26 +1,24 @@
 #pragma once
-#include <fix_win32_compatibility.h>
-#include <raylib.h>
-#include <vector>
-#include <string>
-#include <cmath>
-#include <map>
-#include <Types.hpp>
-#include <filesystem>
 
-class TileMap {
-protected:
-    Texture2D m_map;
-    Vec2i m_tileSize;
-    std::map<uint16_t, Texture2D> m_cachedTextures;
+#include <Rectangle.hpp>
+#include <Texture.hpp>
+#include <Vector2.hpp>
 
+class Tilemap {
 public:
-    TileMap(std::filesystem::path const& path, Vec2i tileSize);
-    ~TileMap();
+    // columns and rows are the number of sprites in the atlas.
+    Tilemap(raylib::Texture2D& texture, int columns, int rows);
 
-    Vec2i getPositionByIndex(uint16_t index);
-    Rectangle getRectForTile(Vec2i position);
-    Rectangle getRectForTile(uint16_t index);
-    Texture2D& getTextureOfTileCached(uint16_t index);
-    Texture2D& getMap();
+    void DrawTile(int index, raylib::Vector2 position, raylib::Color color = raylib::Color::White()) const;
+    void DrawTile(int index, raylib::Rectangle dest, raylib::Color color = raylib::Color::White(),
+                  float rotation = 0.f, raylib::Vector2 origin = raylib::Vector2::Zero()) const;
+
+private:
+    [[nodiscard]] raylib::Rectangle GetRectForTile(int index) const;
+
+    raylib::Texture2D& m_texture;
+    int m_columns;
+    int m_rows;
+    float m_tileWidth;
+    float m_tileHeight;
 };

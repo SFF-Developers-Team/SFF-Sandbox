@@ -9,5 +9,5 @@ public:
     void update();
 
     void resetScroll() { m_offset.y = 0.f; }
-    Vec2f getTotalSize();
+    raylib::Vector2 getTotalSize();
 };

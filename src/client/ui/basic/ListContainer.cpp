@@ -3,7 +3,7 @@
 
 ListContainer::ListContainer(bool horizontal, bool resizeElements, bool selfAutoResize, float padding) 
     : ScrollableContainer(), m_horizontal(horizontal), m_last(m_border * 2), m_resizeElements(resizeElements), m_padding(padding), m_selfAutoResize(selfAutoResize) {
-    auto size = StyleManager::get()->getValue<Vec2f>(DEFAULT_ELEMENT_SIZE);
+    auto size = StyleManager::get()->getValue<raylib::Vector2>(DEFAULT_ELEMENT_SIZE);
     setSize({size.x + m_border * 4, size.y + m_border * 4 * (!m_horizontal ? 10.f : 1.f)});
 }
 

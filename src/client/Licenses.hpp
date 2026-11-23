@@ -53,7 +53,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.)";
 
-char const* raylib = R"(Copyright (c) 2013-2024 Ramon Santamaria (@raysan5)
+char const* raylibLicense = R"(Copyright (c) 2013-2024 Ramon Santamaria (@raysan5)
 
 This software is provided "as-is", without any express or implied warranty. In no event 
 will the authors be held liable for any damages arising from the use of this software.
@@ -107,4 +107,4 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 )";
 
-char const* licensesText[] = {enet, gitHash, perlinNoise, raylib, toml, miniz};
+char const* licensesText[] = {enet, gitHash, perlinNoise, raylibLicense, toml, miniz};

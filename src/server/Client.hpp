@@ -22,7 +22,6 @@ public:
 
     void handle(Packet& packet) override;
     void handlePlayer(Packet& packet);
-    void handleLoadChunk(Packet& packet);
     void handleLoadPlayer(Packet& packet);
     void handleLoadMessages(Packet& packet);
     void handleTilePlace(Packet& packet);

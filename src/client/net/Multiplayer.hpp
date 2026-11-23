@@ -6,7 +6,9 @@
 #include <memory>
 #include <map>
 
-enum MultiplayerState {
+typedef struct _ENetHost ENetHost;
+
+enum class MultiplayerState {
     CONNECTING,
     LOGGING_IN,
     LOADING_TERRAIN,
@@ -54,7 +56,7 @@ public:
     MultiplayerState const getState() { return m_state; }
 
     std::string const getAddress();
-    uint16_t const getPort() { return m_client->address.port; }
+    uint16_t const getPort();
 
     std::vector<std::string> getMessages() { return messages; }
 };

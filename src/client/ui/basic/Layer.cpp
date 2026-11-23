@@ -1,13 +1,12 @@
+#include <raylib-cpp.hpp>
 #include <ui/basic/Layer.hpp>
-#include <fix_win32_compatibility.h>
-#include <raylib.h>
 #include <rlgl.h>
 
 Layer::Layer() : Container() {
-    m_color = {0, 0, 0, 0};
+    m_color = raylib::Color::Blank();
     m_border = 0;
-    m_bounds = {0, 0, static_cast<float>(GetScreenWidth()), static_cast<float>(GetScreenHeight())};
-    m_anchor = {0, 0};
+    m_bounds = raylib::Window::GetSize();
+    m_anchor = raylib::Vector2::Zero();
 }
 
 void Layer::draw() {

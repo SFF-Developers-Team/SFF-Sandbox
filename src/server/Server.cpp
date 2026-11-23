@@ -1,4 +1,3 @@
-#include <world/gen/WorldGenNormal.hpp>
 #include <DefaultConfig.hpp>
 #include <world/World.hpp>
 #include <Packet.hpp>
@@ -64,17 +63,6 @@ void Server::init() {
 
     if(!m_world->load()) {
         logD("Generating world...");
-        srand(time(NULL));
-        auto seed = config["world-seed"].value_or(rand());
-
-        std::shared_ptr<WorldGen> generator;
-        switch(config["world-generator"].value_or(0)) {
-            default:
-            case 0: generator = std::make_shared<WorldGenNormal>(seed); break;
-            // Oh fu*k I thought we have more worldgens
-        }
-
-        m_world->setGenerator(generator);
         m_world->generate();
     }
 
@@ -212,7 +200,7 @@ void Server::send(PlayerID pid, Packet const& packet, Channel channel, bool reli
 }
 
 PlayerID Server::joinPlayer(std::string const& username) {
-    auto playerId = m_world->addPlayer(std::make_unique<Player>(m_world), username);
+    auto playerId = m_world->addPlayer(std::make_shared<Player>(*m_world), username);
     logD("{} joined the game", username);
 
     auto packet = Packet(ObjectHeader::LOAD_PLAYER);

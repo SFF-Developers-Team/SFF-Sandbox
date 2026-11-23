@@ -1,3 +1,4 @@
+#include <raylib-cpp.hpp>
 #include <scenes/PlayScene.hpp>
 #include <scenes/ErrorScene.hpp>
 #include <scenes/MainMenuScene.hpp>
@@ -21,7 +22,7 @@
 
 #include <managers/SettingsManager.hpp>
 #include <managers/RecipesManager.hpp>
-#include <managers/RenderManager.hpp>
+#include <managers/ResourceManager.hpp>
 #include <managers/StyleManager.hpp>
 #include <net/Multiplayer.hpp>
 #include <Types.hpp>
@@ -34,12 +35,12 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     auto game = Game::get();
     m_world = game->getWorld();
     m_player = game->getPlayer();
-    m_color = COL_SKYBLUE;
+    m_color = raylib::Color::SkyBlue();
     m_keyBack = false;
 
     game->clearSceneHistory();
 
-    HideCursor();
+    raylib::Window::HideCursor();
     
     auto hotbar = std::make_shared<Hotbar>(m_player, [this]() { setInventoryOpened(!m_inventoryEnabled); });
     hotbar->setAnchorY(0.f);
@@ -151,18 +152,18 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
     if(m_online) {
         auto playerList = std::make_shared<List>(nickList, [](auto, auto) {});
         playerList->setFlags(FLAG_GUI_SCALE);
-        playerList->setPos({static_cast<float>(GetScreenWidth() / 2.f + 735), 0});
+        playerList->setPos({static_cast<float>(raylib::Window::GetWidth() / 2.f + 735), 0});
         playerList->setVisible(true);
         playerList->setEnabled(true);
         playerList->setAnchorY(0.f);
-        playerList->setSize({150, static_cast<float>(GetScreenHeight() / Game::get()->getGuiScale())});
+        playerList->setSize({150, static_cast<float>(raylib::Window::GetHeight() / Game::get()->getGuiScale())});
         playerList->setTag("playerlist");
         m_playersList = playerList;
         pauseLayer->addChild(m_playersList);
 
         auto msgInput = std::make_shared<TextInput>("font", "");
         msgInput->setFlags(FLAG_GUI_SCALE);
-        msgInput->setPos({static_cast<float>(GetScreenWidth() / 2.f), static_cast<float>(GetScreenHeight() / 2.f)});
+        msgInput->setPos(raylib::Window::GetSize() / 2);
         msgInput->setTag("inputmsg");
         addChild(msgInput);
     }
@@ -175,47 +176,48 @@ PlayScene::~PlayScene() {
 }
 
 void PlayScene::draw() {
-    Vector2 static mouse = {0};
+    raylib::Vector2 static mouse = {0};
     TilePosition static target = {0};
+    auto& rm = ResourceManager::Get();
 
     if (!m_paused) {
-        mouse = GetMousePosition();
+        mouse = raylib::Mouse::GetPosition();
         target = m_player->getTargetTile();
     }
 
-    BeginMode2D(m_player->getCamera());
+    m_player->getCamera().BeginMode();
         m_world->draw(m_player);
 
         // if (m_player->isBreakingTile()) {
         //     auto breakingTile = m_player->getBreakingTileInfo(m_world.get());
     
-        //     RenderManager::drawTile("gui.png", 8 + (5.f - (breakingTile.currentDurability / breakingTile.totalDurability) * 5.f), TILE_RECT(target.x, target.y));
+        //     rm.GetTilemap("gui.png").DrawTile(8 + (5.f - (breakingTile.currentDurability / breakingTile.totalDurability) * 5.f), TILE_RECT(target.x, target.y));
         // }
 
         if (m_player->canAccessTile(target)) {
             if(m_player->canPlaceTile(*m_world, target)) {
-                RenderManager::drawTile("gui.png", 1, TILE_RECT(target.x, target.y));
+                rm.GetTilemap("gui.png").DrawTile(1, TILE_RECT(target.x, target.y));
             }
 
             if(m_player->canDestroyTile(*m_world, target)) {
-                RenderManager::drawTile("gui.png", 2 + IsKeyDown(KEY_LEFT_CONTROL), TILE_RECT(target.x, target.y));
+                rm.GetTilemap("gui.png").DrawTile(2 + raylib::Keyboard::IsKeyDown(KEY_LEFT_CONTROL), TILE_RECT(target.x, target.y));
             }
         }
-    EndMode2D();
+    m_player->getCamera().EndMode();
 
     if(m_online) {
         auto mp = Multiplayer::get();
         auto messages = mp->getMessages();
 
         for(int i = 0; i < messages.size(); i++) {
-            RenderManager::drawText("font", messages[i], {0, static_cast<float>(10 * i)});
+            rm.GetFont("font").DrawText(messages[i], {0, static_cast<float>(10 * i)}, 10.f, 1.f, raylib::Color::White());
         }
     }
 
-    RenderManager::drawTile("gui.png", 0, {mouse.x, mouse.y, 16.f, 16.f}, COL_WHITE, 0.f, {0.5f, 0.5f});
+    rm.GetTilemap("gui.png").DrawTile(0, raylib::Rectangle{mouse.x, mouse.y, 16.f, 16.f}, raylib::Color::White(), 0.f, {8.f, 8.f});
 
     if(m_paused) {
-        RenderManager::drawRect({0.f, 0.f, getWidth(), getHeight()}, {0, 0, 0, 127});
+        RRectangle(getSize()).Draw(raylib::Color{0, 0, 0, 127});
     }
 
     Scene::draw();
@@ -266,12 +268,12 @@ void PlayScene::update() {
         auto mp = Multiplayer::get();
         mp->update();
 
-        if(mp->getState() == ERROR) {
+        if(mp->getState() == MultiplayerState::ERROR) {
             Game::get()->pushScene(std::make_shared<ErrorScene>(mp->getError()));
             mp->destroy();
         }
 
-        if(IsKeyPressed(KEY_ENTER)) {
+        if(raylib::Keyboard::IsKeyPressed(KEY_ENTER)) {
             if(!inputMsg->getText().empty()) {
                 auto msg = inputMsg->getText();
                 auto pak = Packet(ObjectHeader::MESSAGE, msg);
@@ -281,23 +283,23 @@ void PlayScene::update() {
         }
     }
 
-    if(IsKeyPressed(KEY_F6)) {
+    if(raylib::Keyboard::IsKeyPressed(KEY_F6)) {
         m_world->save();
     }
 
-    if(IsKeyPressed(KEY_F1)) {
-        CloseWindow();
+    if(raylib::Keyboard::IsKeyPressed(KEY_F1)) {
+        Game::get()->close();
     }
 
-    if(IsKeyPressed(KEY_ESCAPE) && !m_inventoryEnabled) {
+    if(raylib::Keyboard::IsKeyPressed(KEY_ESCAPE) && !m_inventoryEnabled) {
         setPaused(!m_paused);
     }
 
-    if(IsKeyPressed(KEY_ESCAPE) && m_inventoryEnabled) {
+    if(raylib::Keyboard::IsKeyPressed(KEY_ESCAPE) && m_inventoryEnabled) {
         setInventoryOpened(false);
     }
 
-    if(IsKeyPressed(KEY_E) && !m_paused) {
+    if(raylib::Keyboard::IsKeyPressed(KEY_E) && !m_paused) {
         setInventoryOpened(!m_inventoryEnabled);
     }
 
@@ -328,7 +330,7 @@ void PlayScene::setPaused(bool paused) {
     }
 
     m_paused = paused;
-    (paused ? ShowCursor() : HideCursor());
+    (paused ? raylib::Window::ShowCursor() : raylib::Window::HideCursor());
 
     for (auto& node : m_pauseNodes) {
         node->setEnabled(!paused);
@@ -341,7 +343,7 @@ void PlayScene::setInventoryOpened(bool isOpen) {
     inventory->setEnabled(isOpen);
     m_inventoryEnabled = isOpen;
 
-    (isOpen ? ShowCursor() : HideCursor());
+    (isOpen ? raylib::Window::ShowCursor() : raylib::Window::HideCursor());
 }
 
 void PlayScene::keyBackClicked() {
@@ -349,5 +351,5 @@ void PlayScene::keyBackClicked() {
 }
 
 void PlayScene::onPop() {
-    ShowCursor();
+    raylib::Window::ShowCursor();
 }

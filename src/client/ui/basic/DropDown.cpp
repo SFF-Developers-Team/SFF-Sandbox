@@ -1,10 +1,9 @@
+#include <raylib-cpp.hpp>
 #include <ui/basic/DropDown.hpp>
 #include <managers/RenderManager.hpp>
-#include <managers/TextureManager.hpp>
+#include <managers/ResourceManager.hpp>
 #include <managers/StyleManager.hpp>
 #include <algorithm>
-#include <fix_win32_compatibility.h>
-#include <raylib.h>
 #include <format>
 #include <rlgl.h>
 
@@ -18,17 +17,19 @@ float DropDown::getContentHeight() {
 void DropDown::draw() {
     Frame::draw();
 
+    auto& rm = ResourceManager::Get();
+
     auto bounds = getWorldBounds();
     auto selected = std::vformat(m_mask, std::make_format_args(m_elements[m_selected]));
-    auto size = RenderManager::getTextSize(selected, "boldfont");
-    auto arrowSize = RenderManager::getTextSize("^", "boldfont");
+    auto size = rm.GetFont("boldfont").MeasureText(selected, 20.f, 1.f);
+    auto arrowSize = rm.GetFont("boldfont").MeasureText("^", 20.f, 1.f);
 
-    RenderManager::drawText("boldfont", selected, {m_bounds.width / 2, m_bounds.height / 2}, COL_WHITE, 0.f, {0.5f, 0.5f});
+    rm.GetFont("boldfont").DrawText(selected, {(getWidth() - size.x) / 2.f, (getHeight() - size.y) / 2.f}, 20.f, 1.f, raylib::Color::White());
     rlPushMatrix();
         rlTranslatef(m_bounds.width - m_border - m_bounds.height / 2, m_bounds.height / 2, 0);
         rlRotatef((!m_opened ? 180 : 0), 0, 0, 1);
 
-        RenderManager::drawText("boldfont", "^", {-arrowSize.x / 2, -arrowSize.y / 3}, COL_WHITE);
+        rm.GetFont("boldfont").DrawText("^", {-arrowSize.x / 2, -arrowSize.y / 3}, 20.f, 1.f, raylib::Color::White());
     rlPopMatrix();
 
     if(m_opened) {
@@ -66,7 +67,7 @@ void DropDown::update() {
         rlTranslatef(0.f, -(m_bounds.height + m_border), 0.f);
     }
 
-    if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+    if(raylib::Mouse::IsButtonPressed(MOUSE_LEFT_BUTTON)) {
         m_opened = (isMouseHover()) ? !m_opened : false;
     }
 }
