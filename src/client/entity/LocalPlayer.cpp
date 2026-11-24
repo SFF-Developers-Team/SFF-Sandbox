@@ -38,14 +38,11 @@ void LocalPlayer::updateCamera() {
     }
 
     m_camera.offset = {raylib::Window::GetWidth() / 2.f, raylib::Window::GetHeight() / 2.f};
-
-    auto world = Game::get()->getWorld();
     
-    const float minX = 0;
     const float maxX = WORLD_SIZE;   
     const float maxY = WORLD_SIZE;   
 
-    raylib::Vector2 minClamp = m_camera.GetWorldToScreen({0, 0});
+    raylib::Vector2 minClamp = m_camera.GetWorldToScreen(raylib::Vector2::Zero());
     raylib::Vector2 maxClamp = m_camera.GetWorldToScreen({maxX, maxY});
     
     auto screenWidth = raylib::Window::GetWidth();

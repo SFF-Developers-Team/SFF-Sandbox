@@ -1,7 +1,6 @@
 #include <managers/ResourceManager.hpp>
 #include <managers/RenderManager.hpp>
 #include <entity/LocalPlayer.hpp>
-#include <world/ClientWorld.hpp>
 #include <Tilemap.hpp>
 #include <Types.hpp>
 #include <managers/Debug.hpp>

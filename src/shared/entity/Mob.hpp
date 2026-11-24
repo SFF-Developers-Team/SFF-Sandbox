@@ -10,12 +10,12 @@ protected:
 public:
     Mob(World& world);
 
-    void onTick(World& world);
+    void onTick(World& world) override;
 
     virtual int getMaxHealth() { return 20; }
     int getHealth() { return m_health; }
     float getLastHurtTime() { return m_lastHurtTime; }
 
-    DataStream serialize();
-    bool deserialize(DataStream& stream);
+    DataStream serialize() override;
+    bool deserialize(DataStream& stream) override;
 };

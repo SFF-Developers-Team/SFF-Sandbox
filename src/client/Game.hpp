@@ -6,9 +6,9 @@
 #include <string>
 #include <vector>
 #include <deque>
+#include <world/World.hpp>
 
 class Scene;
-class ClientWorld;
 class LocalPlayer;
 class Container;
 
@@ -19,7 +19,7 @@ private:
     std::string m_username;
 
     std::shared_ptr<Scene> m_scene;
-    std::shared_ptr<ClientWorld> m_world;
+    std::unique_ptr<World> m_world;
     std::shared_ptr<LocalPlayer> m_player;
 
     std::deque<std::shared_ptr<Scene>> m_sceneHistory;
@@ -55,8 +55,8 @@ public:
     void setUsername(std::string const& username) { m_username = username; }
     std::string const& getUsername() { return m_username; }
 
-    std::shared_ptr<ClientWorld> getWorld() { return m_world; }
-    void setWorld(std::shared_ptr<ClientWorld> world) { m_world = world; };
+    World& getWorld() const { return *m_world; }
+    void setWorld(std::unique_ptr<World> world) { m_world = std::move(world); };
 
     std::shared_ptr<LocalPlayer> getPlayer() { return m_player; }
     void setPlayer(std::shared_ptr<LocalPlayer> player) { m_player = player; };

@@ -19,6 +19,7 @@ public:
     static void init();
     static Tile* get(TileID id);
     static float getDurability(TileID id);
+    static bool isPhantom(TileID id);
     static std::string_view getName(TileID id);
 
     virtual TileID getId() const = 0;

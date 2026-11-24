@@ -35,19 +35,18 @@ protected:
     std::map<PlayerID, std::shared_ptr<Player>> m_players;
     std::vector<std::shared_ptr<Structure>> m_structures;
     std::unordered_map<PlayerID, BreakInfo> m_breakInfo;
-    std::shared_ptr<WorldGen> m_worldGen;
-    std::filesystem::path m_saveDir;
-    PlayerID m_lastPlayerID;
-    uint32_t m_version;
-    uint64_t m_time;
-    uint8_t m_randomTickSpeed;
+    PlayerID m_lastPlayerID = 1;
+    uint32_t m_version = WORLD_VERSION;
+    uint64_t m_time = 0;
+    uint8_t m_randomTickSpeed = 3;
 
 public:
     uint32_t const static WORLD_VERSION = 5;
 
-    World(std::filesystem::path const& saveDir);
+    static std::unique_ptr<World> GenerateWorld(int seed);
 
-    void generate();
+    World();
+
     void onTick();
 
     void placeTile(TilePosition pos, TileID tile) { if (getTile(pos) != TileID::AIR) setTile(pos, tile); }
@@ -57,32 +56,31 @@ public:
     void breakTile(PlayerID id, TilePosition pos);
     void stopBreakingTile(PlayerID id);
 
-    bool isTileClosed(TilePosition pos);
-    bool isOutOfBound(TilePosition pos);
+    bool isTileClosed(TilePosition pos) const;
+    bool isOutOfBound(TilePosition pos) const;
     std::optional<Rectf> getTileHitbox(TilePosition pos);
     std::vector<Hitbox> getHitboxes(Hitbox entityHitbox, int radius = 1);
 
-    bool save();
+    bool save() const;
     bool load();
 
     void setPlayer(PlayerID id, std::shared_ptr<Player> player, std::string const username = "");
     PlayerID addPlayer(std::shared_ptr<Player> player, std::string const username = "");
-    std::shared_ptr<Player> getPlayer(PlayerID id);
+    std::shared_ptr<Player> getPlayer(PlayerID id) const;
     void unloadPlayer(PlayerID id);
-    bool savePlayer(PlayerID id);
+    bool savePlayer(PlayerID id) const;
     bool loadPlayer(std::string const& username = "");
-    bool isUsernameAlreadyTaken(std::string const& username);
+    bool isUsernameAlreadyTaken(std::string const& username) const;
 
-    void setGenerator(std::shared_ptr<WorldGen> generator) { m_worldGen = generator; }
+    uint32_t getVersion() const { return m_version; }
+    uint64_t getTime() const { return m_time; }
 
-    uint32_t getVersion() { return m_version; }
-    uint64_t getTime() { return m_time; }
-    auto& getGenerator() { return m_worldGen; }
-    auto& getPlayers() { return m_players; }
+    auto& getPlayers() const { return m_players; }
+    auto& getBreakInfo() const { return m_breakInfo; }
 
     void addStructure(std::shared_ptr<Structure> structure) { m_structures.push_back(structure); }
 
-    inline TileID getTile(TilePosition pos) {
+    inline TileID getTile(TilePosition pos) const {
         if (isOutOfBound(pos)) {
             return TileID::AIR;
         }
@@ -97,4 +95,10 @@ public:
 
         m_tiles[pos.layer * (WORLD_SIZE * WORLD_SIZE) + pos.y * WORLD_SIZE + pos.x] = tile;
     }
+private:
+    using CaveMap = std::vector<uint8_t>;
+
+    static float HashNoise(int seed, int x, int y); 
+    static CaveMap GenerateCave(int seed, int iterations = 5);
+    static void CarveCircle(World& world, TilePosition position, int radius); 
 };

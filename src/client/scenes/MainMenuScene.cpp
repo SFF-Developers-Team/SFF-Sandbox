@@ -8,7 +8,6 @@
 #include <ui/basic/ListContainer.hpp>
 
 #include <managers/StyleManager.hpp>
-#include <world/ClientWorld.hpp>
 #include <entity/LocalPlayer.hpp>
 #include <Game.hpp>
 #include <Platform.hpp>
@@ -19,25 +18,17 @@ MainMenuScene::MainMenuScene() : MenuBase() {
 
     std::list<std::pair<std::string, MiniFunction<void(Button*)>>> const btns = {
         {"Singleplayer", [game](Button*) { 
-            auto world = std::make_shared<ClientWorld>(Platform::getHomeDir() / "worlds" / "world1");
-
-            srand(time(0));
-
-            // if (!world->load()) {
-                // world->setGenerator(std::make_shared<WorldGenNormal>(rand()));
-                world->generate();
-            // }
-
+            auto world = World::GenerateWorld(11111);
             auto player = std::make_shared<LocalPlayer>(*world);
 
-            game->setWorld(world);
-            game->setPlayer(player);
+            // TODO: World save
+
             world->addPlayer(player);
             world->loadPlayer();
 
-            // I HATE THIS SHIT
-            // WHEN I CLEAR SCENE HISTORY, PLAYSCENE CAUSES CRASH
-            game->pushScene(std::make_shared<PlayScene>()); 
+            game->setWorld(std::move(world));
+            game->setPlayer(player); 
+            game->pushScene(std::make_shared<PlayScene>(game->getWorld(), false)); 
         }},
         {"Multiplayer", [game](Button*) { game->pushScene(std::make_shared<MultiplayerScene>()); }},
         {"Credits", [game](Button*) { game->pushScene(std::make_shared<CreditsScene>()); }},

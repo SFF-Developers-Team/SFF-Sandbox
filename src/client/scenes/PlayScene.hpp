@@ -10,7 +10,7 @@ class List;
 
 class PlayScene : public Scene {
 private:
-    std::shared_ptr<ClientWorld> m_world;
+    World& m_world;
     std::shared_ptr<LocalPlayer> m_player;
     std::shared_ptr<Timer> m_timer;
     std::shared_ptr<List> m_playersList;
@@ -22,11 +22,14 @@ private:
     std::vector<std::string> nickList;
     std::vector<std::shared_ptr<Node>> m_pauseNodes;
 public:
-    PlayScene(bool isOnline = false);
+    PlayScene(World& world, bool isOnline = false);
     ~PlayScene();
 
     void draw() override;
     void update() override;
+
+    void drawWorld();
+    void drawTile(raylib::Rectangle dest, TilePosition position);
 
     void setPaused(bool paused);
     void setInventoryOpened(bool isOpen);

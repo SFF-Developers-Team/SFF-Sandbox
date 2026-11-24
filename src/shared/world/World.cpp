@@ -12,67 +12,311 @@
 #include <Logger.hpp>
 #include <world/Structure.hpp>
 #include <FastNoiseLite.h>
+#include <random>
 
-#define RENDER_DISTANCE 9
-
-World::World(std::filesystem::path const& saveDir) : m_saveDir(saveDir), m_version(World::WORLD_VERSION), m_time(0), m_lastPlayerID(1), m_randomTickSpeed(3) {
-    if (!saveDir.empty() && !std::filesystem::exists(m_saveDir)) {
-        std::filesystem::create_directory(m_saveDir);
-        std::filesystem::create_directory(m_saveDir / "chunks");
-        std::filesystem::create_directory(m_saveDir / "players");
-    }
+World::World() {
+    m_tiles.fill(TileID::AIR);
 }
 
-void World::generate() {
-    // TODO: Move to worldgen
-    m_tiles.fill(TileID::AIR);
+float World::HashNoise(int seed, int x, int y) {
+    uint32_t h = static_cast<uint32_t>(seed);
+
+    h ^= static_cast<uint32_t>(x) * 0x9E3779B1u;
+    h ^= static_cast<uint32_t>(y) * 0x85EBCA77u;
+
+    h ^= h >> 16;
+    h *= 0x7FEB352Du;
+    h ^= h >> 15;
+    h *= 0x846CA68Bu;
+    h ^= h >> 16;
+
+    return float(h >> 8) * (1.f / 16777216.f);
+}
+
+std::unique_ptr<World> World::GenerateWorld(int seed) {
+    auto ret = std::make_unique<World>();
+
+    std::vector<int> surfaceHeights(WORLD_SIZE);
+    std::vector<TileID> surfaceBlocks(WORLD_SIZE);
 
     FastNoiseLite mountains;
     FastNoiseLite hills;
     FastNoiseLite details;
-
-    int seed = 0;
+    FastNoiseLite climate;
+    FastNoiseLite biomeEdges;
+    FastNoiseLite materialNoise;
 
     mountains.SetSeed(seed);
     hills.SetSeed(seed + 1);
     details.SetSeed(seed + 2);
+    climate.SetSeed(seed + 3);
+    biomeEdges.SetSeed(seed + 4);
+    materialNoise.SetSeed(seed + 5);
 
     mountains.SetFrequency(0.002f);
     hills.SetFrequency(0.012f);
     details.SetFrequency(0.06f);
+    climate.SetFrequency(0.005f);
+    biomeEdges.SetFrequency(0.04f);
+    materialNoise.SetFrequency(0.2f);
 
-    const int baseHeight = 50;
-    const int stoneLevel = 100;
+    const int baseHeight = 216;
+
+    auto smoothstep = [](float a, float b, float x) {
+        float t = std::clamp((x - a) / (b - a), 0.f, 1.f);
+        return t * t * (3.f - 2.f * t);
+    };
+
+    auto spray = [&](int x, int y) {
+        float grain = World::HashNoise(seed, x, y);
+
+        float cloud = 0.5f + 0.5f * materialNoise.GetNoise(float(x), float(y));
+
+        return grain * 0.75f + cloud * 0.25f;
+    };
+
+    // Mountains / Hills / Small deformations
+    constexpr std::array<float, 3> forestN = {10.f, 5.f, 1.f};
+    constexpr std::array<float, 3> snowN = {50.f, 9.f, 2.f};
+    constexpr std::array<float, 3> desertN = {0.f, 1.f, 1.f};
+
+    // Generating surface
 
     for (int x = 0; x < WORLD_SIZE; ++x) {
-        float height =
-            baseHeight
-            + mountains.GetNoise(float(x), 0.0f) * 50.0f
-            + hills.GetNoise(float(x), 0.0f) * 15.0f
-            + details.GetNoise(float(x), 0.0f) * 3.0f;
+        float temperature = climate.GetNoise(float(x), 0.f);
+        float snowWeight = 1.f - smoothstep(-0.05f, 0.25f, temperature);
+        float desertWeight = smoothstep(0.35f, 0.65f, temperature);
 
-        int surfaceY = std::clamp(
-            static_cast<int>(height),
-            0,
-            WORLD_SIZE - 1
-        );
+        std::array<float, 3> N;
 
-        setTile(TilePosition{x, surfaceY, 1}, TileID::GRASS);
-        setTile(TilePosition{x, surfaceY, 0}, TileID::GRASS);
+        for (int i = 0; i < 3; i++) {
+            N[i] = forestN[i] + (snowN[i] - forestN[i]) * snowWeight + (desertN[i] - forestN[i]) * desertWeight;
+        }
 
-        const auto stoneStart = stoneLevel + (int)(details.GetNoise(float(x), 0.0f) * 3.5f);
+        float edgeNoise = biomeEdges.GetNoise(float(x), 0.f) * 0.25f;
+
+        TileID surfaceBlock = TileID::GRASS;
+        TileID depthBlock = TileID::DIRT;
+
+        if (snowWeight > 0.5f + edgeNoise) {
+            surfaceBlock = TileID::SNOW;
+        } else if (desertWeight > 0.5f + edgeNoise) {
+            surfaceBlock = TileID::SAND;
+            depthBlock = TileID::SAND;
+        }
+
+        float height = baseHeight
+            + mountains.GetNoise(float(x), 0.f) * N[0]
+            + hills.GetNoise(float(x), 0.f) * N[1]
+            + details.GetNoise(float(x), 0.f) * N[2];
+
+        int surfaceY = std::clamp(static_cast<int>(height), 0, WORLD_SIZE - 1);
+
+        {
+            float sample = spray(x, surfaceY);
+
+            bool snow = sample < snowWeight;
+            bool sand = sample < desertWeight;
+
+            if (snow) 
+                surfaceBlock = TileID::SNOW;
+            else if (sand)
+                surfaceBlock = TileID::SAND;
+            else
+                surfaceBlock = TileID::GRASS;
+        }
+
+        ret->setTile(TilePosition{x, surfaceY, 1}, surfaceBlock);
+        ret->setTile(TilePosition{x, surfaceY, 0}, surfaceBlock);
+
+        int stoneStart = surfaceY + 30 + static_cast<int>(hills.GetNoise(float(x), 123.0f) * 8.f);
+
+        // Under surface
         for (int y = surfaceY + 1; y < WORLD_SIZE; ++y) {
-            if (y < stoneStart) {
-                setTile(TilePosition{x, y, 1}, TileID::DIRT);
-                setTile(TilePosition{x, y, 0}, TileID::DIRT);
-            } else if (y >= stoneStart) {
-                setTile(TilePosition{x, y, 1}, TileID::STONE);
-                setTile(TilePosition{x, y, 0}, TileID::STONE);
-            } else if (y == WORLD_SIZE - 1) {
-                setTile(TilePosition{x, y, 1}, TileID::BEDROCK);
+            TileID block;
+
+            if (y == WORLD_SIZE - 1) {
+                block = TileID::BEDROCK;
+            } else if (y < stoneStart) {
+                float sample = spray(x, y);
+                block = sample < desertWeight ? TileID::SAND : TileID::DIRT;
+            } else {
+                block = TileID::STONE;
+            }
+
+            ret->setTile(TilePosition{x, y, 1}, block);
+            ret->setTile(TilePosition{x, y, 0}, block);
+        }
+        
+        surfaceHeights[x] = surfaceY;
+        surfaceBlocks[x] = surfaceBlock;
+    }
+
+    // Planting
+
+    int lastCactusX = -100;
+
+    for (int x = 0; x < WORLD_SIZE; ++x) {
+        int surfaceY = surfaceHeights[x];
+        int plantY = surfaceY - 1;
+
+        if (plantY < 0)
+            continue;
+
+        TileID ground = surfaceBlocks[x];
+
+        float chance = HashNoise(seed, x, -1000);
+
+        switch (ground) {
+            case TileID::GRASS: {
+                TileID plant = TileID::AIR;
+
+                if (chance < 0.80f) {
+                    float type = HashNoise(seed, x, -2000);
+
+                    if (type < 0.20f)
+                        plant = TileID::TALL_GRASS;
+                    else if (type < 0.60f)
+                        plant = TileID::MEDIUM_GRASS;
+                    else
+                        plant = TileID::TINY_GRASS;
+                } else if (chance < 0.83f) {
+                    plant = TileID::ROSE;
+                }
+
+                if (plant != TileID::AIR) {
+                    ret->setTile(
+                        TilePosition{x, plantY, 1},
+                        plant
+                    );
+                }
+
+                break;
+            }
+
+            case TileID::SNOW: {
+                ret->setTile(TilePosition{x, plantY, 1}, TileID::SNOW_CARPET);
+                break;
+            }
+
+            case TileID::SAND: {
+                if (x - lastCactusX < 4)
+                    break;
+
+                if (chance >= 0.08f)
+                    break;
+
+                for (int i = 0; i < 2; ++i) {
+                    TileID part = (i == 1) ? TileID::CACTUS_HEAD : TileID::CACTUS_BASE;
+
+                    ret->setTile(TilePosition{x, plantY - i, 1}, part);
+                }
+
+                lastCactusX = x;
+                break;
+            }
+
+            default:
+                break;
+        }
+    }
+
+    // Caving
+
+    auto cave = GenerateCave(seed, 6);
+
+    for (int i = 0; i < WORLD_SIZE*WORLD_SIZE; i++) {
+        if (!cave[i] && ret->m_tiles[WORLD_SIZE*WORLD_SIZE + i] == TileID::STONE) 
+            ret->m_tiles[WORLD_SIZE*WORLD_SIZE + i] = TileID::AIR; 
+    }
+
+    float angle = 4.71f;
+    float turnStrength = 0.3f;
+    float radiusVariation = 1.f;
+
+    FastNoiseLite turnNoise(seed + 12);
+    FastNoiseLite radiusNoise(seed + 13);
+
+    const int speed = 3;
+    const int baseRadius = 3;
+
+    for (int i = 0; i < WORLD_SIZE / 100; i++) {
+        Vec2i wormPos{i * 100, surfaceHeights[i * 100] - baseRadius * 2};
+
+        for (int step = 0; step < 100; step++) {
+            angle += turnNoise.GetNoise(float(step), float(i)) * turnStrength;
+
+            wormPos.x += std::cos(angle) * speed;
+            wormPos.y += std::sin(angle) * speed;
+
+            float radius = baseRadius + radiusNoise.GetNoise(float(step), float(i)) * radiusVariation;
+
+            CarveCircle(*ret, {int(wormPos.x), int(wormPos.y), 1}, radius);
+        }
+    }
+
+    return ret;
+}
+
+void World::CarveCircle(World& world, TilePosition position, int radius) {
+    Vec2i pos{position.x, position.y};
+    for (int y = position.y - radius; y < position.y + radius; y++) {
+        for (int x = position.x - radius; x < position.x + radius; x++) {
+            if (pos.distance(Vec2i{x, y}) <= radius) {
+                world.setTile(TilePosition{x, y, position.layer}, TileID::AIR);
             }
         }
     }
+}
+
+World::CaveMap World::GenerateCave(int seed, int iterations) {
+    std::mt19937 rng(seed);
+    std::bernoulli_distribution wallChance(0.63);
+
+    CaveMap map(WORLD_SIZE * WORLD_SIZE);
+    CaveMap next(WORLD_SIZE * WORLD_SIZE);
+
+    auto index = [](int x, int y) { return y * WORLD_SIZE + x; };
+
+    for (int y = 0; y < WORLD_SIZE; ++y) {
+        for (int x = 0; x < WORLD_SIZE; ++x) {
+            bool border = x == 0 || y == 0 || x == WORLD_SIZE - 1 || y == WORLD_SIZE - 1;
+
+            map[index(x, y)] = border || wallChance(rng);
+        }
+    }
+
+    for (int i = 0; i < iterations; ++i) {
+        for (int y = 0; y < WORLD_SIZE; ++y) {
+            for (int x = 0; x < WORLD_SIZE; ++x) {
+                int walls = 0;
+
+                for (int dy = -1; dy <= 1; ++dy) {
+                    for (int dx = -1; dx <= 1; ++dx) {
+                        if (dx == 0 && dy == 0)
+                            continue;
+
+                        int nx = x + dx;
+                        int ny = y + dy;
+
+                        if (nx < 0 || ny < 0 ||
+                            nx >= WORLD_SIZE || ny >= WORLD_SIZE) {
+                            ++walls;
+                        } else {
+                            walls += map[index(nx, ny)];
+                        }
+                    }
+                }
+
+                bool border = x == 0 || y == 0 || x == WORLD_SIZE - 1 || y == WORLD_SIZE - 1;
+                next[index(x, y)] = border || walls >= 5;
+            }
+        }
+
+        map.swap(next);
+    }
+
+    return map;
 }
 
 void World::onTick() {
@@ -123,8 +367,6 @@ void World::onTick() {
     //     saveChunk(pos);
     //     unloadChunk(pos);
     // }
-
-    auto halfDistance = RENDER_DISTANCE / 2;
 
     for (auto& [id, player] : m_players) {
         player->onTick(*this);
@@ -180,7 +422,7 @@ void World::onTick() {
     });
 }
 
-bool World::isTileClosed(TilePosition pos) {
+bool World::isTileClosed(TilePosition pos) const {
     if (TileID::AIR != getTile({pos.x - 1, pos.y, pos.layer}) || 
         TileID::AIR != getTile({pos.x + 1, pos.y, pos.layer}) || 
         TileID::AIR != getTile({pos.x, pos.y - 1, pos.layer}) || 
@@ -192,7 +434,7 @@ bool World::isTileClosed(TilePosition pos) {
     return true;
 }
 
-bool World::save() {
+bool World::save() const {
     // if (!std::filesystem::exists(m_saveDir) && !std::filesystem::create_directory(m_saveDir)) {
     //     logE("Failed to save world!");
     //     return false;
@@ -220,7 +462,7 @@ bool World::save() {
     
     // worldFile.write((char const*)worldData.data(), worldData.size());
 
-    return true;
+    return false;
 }
 
 bool World::load() {
@@ -278,7 +520,7 @@ bool World::load() {
     // }
 
 
-    return true;
+    return false;
 }
 
 std::vector<Hitbox> World::getHitboxes(Hitbox entityHitbox, int radius) {
@@ -325,7 +567,7 @@ PlayerID World::addPlayer(std::shared_ptr<Player> player, std::string const user
     return m_lastPlayerID++;
 }
 
-std::shared_ptr<Player> World::getPlayer(PlayerID id) {
+std::shared_ptr<Player> World::getPlayer(PlayerID id) const {
     auto it = m_players.find(id);
     return (it != m_players.end()) ? it->second : nullptr;
 }
@@ -335,26 +577,26 @@ void World::unloadPlayer(PlayerID id) {
     m_players.erase(id);
 }
 
-bool World::savePlayer(PlayerID id) {
-    auto player = m_players[id];
-    auto pbytes = player->serialize();
+bool World::savePlayer(PlayerID id) const {
+    // auto player = m_players[id];
+    // auto pbytes = player->serialize();
 
-    if (!pbytes.size()) {
-        logE("Failed to serialize player {}!", id);
-    }
+    // if (!pbytes.size()) {
+    //     logE("Failed to serialize player {}!", id);
+    // }
 
-    auto username = player->getUsername();
+    // auto username = player->getUsername();
 
-    std::ofstream file(m_saveDir / "players" / ((username.empty() ? "player" : username) + ".dat"), std::ios::binary);
+    // std::ofstream file(m_saveDir / "players" / ((username.empty() ? "player" : username) + ".dat"), std::ios::binary);
     
-    if(file.is_open()) {
-        file.write((char const*)pbytes.data(), pbytes.size());
-        file.close();
+    // if(file.is_open()) {
+    //     file.write((char const*)pbytes.data(), pbytes.size());
+    //     file.close();
 
-        return true;
-    }
+    //     return true;
+    // }
 
-    logE("Failed to save player {}!", id);
+    // logE("Failed to save player {}!", id);
     return false;
 }
 
@@ -385,10 +627,10 @@ bool World::loadPlayer(std::string const& username) {
     // it->second->deserialize(playerBytes);
     // it->second->setUsername(username);
 
-    return true;
+    return false;
 }
 
-bool World::isUsernameAlreadyTaken(std::string const& username) {
+bool World::isUsernameAlreadyTaken(std::string const& username) const {
     auto it = std::find_if(m_players.begin(), m_players.end(), [username](auto&& pair) {
         return pair.second->getUsername() == username;
     });
@@ -400,7 +642,7 @@ std::optional<Rectf> World::getTileHitbox(TilePosition pos) {
     if (pos.layer > 0) {
         auto tile = getTile(pos);
 
-        if (tile != TileID::AIR) {
+        if (tile != TileID::AIR && !Tile::isPhantom(tile)) {
             return Rectf {static_cast<float>(pos.x), static_cast<float>(pos.y), 1.f, 1.f};
         } 
     }
@@ -408,7 +650,7 @@ std::optional<Rectf> World::getTileHitbox(TilePosition pos) {
     return std::nullopt;
 }
 
-bool World::isOutOfBound(TilePosition pos) {
+bool World::isOutOfBound(TilePosition pos) const {
     return pos.x < 0 || pos.x >= WORLD_SIZE || pos.y < 0 || pos.y >= WORLD_SIZE && pos.layer < 0 && pos.layer >= WORLD_LAYERS;
 }
 
@@ -427,28 +669,29 @@ void World::placeTile(PlayerID m_id, TilePosition pos) {
 }
 
 void World::breakTile(PlayerID id, TilePosition pos) {
-    auto player = m_players[id];
-    auto tileId = getTile(pos);
+    destroyTile(pos);
+    // auto player = m_players[id];
+    // auto tileId = getTile(pos);
 
-    // Bedrock has -1.f
-    if (Tile::getDurability(tileId) < 0) {
-        return;
-    }
+    // // Bedrock has -1.f
+    // if (Tile::getDurability(tileId) < 0) {
+    //     return;
+    // }
 
-    auto it = m_breakInfo.find(id);
+    // auto it = m_breakInfo.find(id);
 
-    if (it != m_breakInfo.end()) {
-        if(it->second.pos != pos) {
-            it->second.pos = pos;
-            it->second.progress = 0;
-            it->second.time = m_time;
-        }
+    // if (it != m_breakInfo.end()) {
+    //     if(it->second.pos != pos) {
+    //         it->second.pos = pos;
+    //         it->second.progress = 0;
+    //         it->second.time = m_time;
+    //     }
         
-        return;
-    }
+    //     return;
+    // }
 
-    m_breakInfo.insert(std::make_pair(id, BreakInfo {pos, m_time, 0}));
-    player->setBreakingTile(true);
+    // m_breakInfo.insert(std::make_pair(id, BreakInfo {pos, m_time, 0}));
+    // player->setBreakingTile(true);
 }
 
 void World::stopBreakingTile(PlayerID id) {

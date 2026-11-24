@@ -26,7 +26,7 @@ public:
     int getCoyotTime() { return m_coyotTime; }
     Player(World& world);
 
-    virtual void onTick(World& world);
+    virtual void onTick(World& world) override;
 
     uint8_t animationClamp(uint8_t value, uint8_t min, uint8_t max) { return (value > max || value < min) ? min : value; }
     void setAnimation(AnimationType type);

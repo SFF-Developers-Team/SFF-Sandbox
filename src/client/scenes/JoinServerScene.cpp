@@ -48,7 +48,7 @@ void JoinServerScene::update() {
             return;
             
         case MultiplayerState::PLAYING:
-            game->pushScene(std::make_shared<PlayScene>(true));
+            game->pushScene(std::make_shared<PlayScene>(game->getWorld(), true));
             break;
     }
 

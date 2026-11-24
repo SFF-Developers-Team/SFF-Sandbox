@@ -1,6 +1,5 @@
 #include <net/Multiplayer.hpp>
 #include <entity/OnlinePlayer.hpp>
-#include <world/ClientWorld.hpp>
 #include <managers/Debug.hpp>
 #include <Logger.hpp>
 #include <Game.hpp>
@@ -85,7 +84,7 @@ void Multiplayer::update() {
                     m_myPlayerId = packet.get<PlayerID>(0);
                     logD("Received PlayerID from server {}", m_myPlayerId);
                     
-                    Game::get()->setWorld(std::make_shared<ClientWorld>("mp"));
+                    Game::get()->setWorld(std::make_unique<World>());
 
                     m_connected = true;
                     m_state = MultiplayerState::LOADING_TERRAIN;
@@ -174,11 +173,11 @@ void Multiplayer::handlePlayer(Packet& packet) {
             return;
         }
 
-        auto otherPlayer = world->getPlayer(id);
+        auto otherPlayer = world.getPlayer(id);
 
         if(!otherPlayer) {
-            otherPlayer = std::make_shared<OnlinePlayer>(*world);
-            world->setPlayer(id, otherPlayer);
+            otherPlayer = std::make_shared<OnlinePlayer>(world);
+            world.setPlayer(id, otherPlayer);
         }
 
         if(otherPlayer->getUsername().empty()) {
@@ -197,12 +196,12 @@ void Multiplayer::handleLoadPlayer(Packet& packet) {
     logD("Load player {}", id);
     
     if(id > 0) {
-        auto player = world->getPlayer(id);
+        auto player = world.getPlayer(id);
         std::string username = packet.get("");
         
         if(!player) {
-            player = std::make_shared<OnlinePlayer>(*world);
-            world->setPlayer(id, player);
+            player = std::make_shared<OnlinePlayer>(world);
+            world.setPlayer(id, player);
         }
 
         player->setUsername(username);
@@ -215,8 +214,8 @@ void Multiplayer::handleUnloadPlayer(Packet& packet) {
     auto id = packet.get<PlayerID>(0);
     logD("Unload player {}", id);
 
-    if(world->getPlayer(id)) {
-        world->unloadPlayer(id);
+    if(world.getPlayer(id)) {
+        world.unloadPlayer(id);
     }
 }
 
@@ -237,9 +236,9 @@ void Multiplayer::handleTerrain(Packet& packet) {
 
     auto game = Game::get();
     auto world = game->getWorld();
-    auto player = std::make_shared<LocalPlayer>(*world);
+    auto player = std::make_shared<LocalPlayer>(world);
     game->setPlayer(player);
-    world->setPlayer(m_myPlayerId, player);
+    world.setPlayer(m_myPlayerId, player);
     m_state = MultiplayerState::PLAYING;
 
     sendPacket(Packet(ObjectHeader::LOAD_PLAYERS));
@@ -260,7 +259,7 @@ void Multiplayer::handleTilePlace(Packet& packet) {
 }
 
 void Multiplayer::handleTileDestroy(Packet& packet) {
-    Game::get()->getWorld()->destroyTile(packet.get<TilePosition>());
+    Game::get()->getWorld().destroyTile(packet.get<TilePosition>());
 }
 
 std::string const Multiplayer::getAddress() {

@@ -18,7 +18,6 @@
 #include <ui/gameplay/IngredientsList.hpp>
 
 #include <entity/LocalPlayer.hpp>
-#include <world/ClientWorld.hpp>
 
 #include <managers/SettingsManager.hpp>
 #include <managers/RecipesManager.hpp>
@@ -31,9 +30,12 @@
 #include <Game.hpp>
 #include <Item.hpp>
 
-PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(60)), m_online(isOnline), m_paused(false), m_inventoryEnabled(false) {
+#include <Rectangle.hpp>
+#include <managers/RenderManager.hpp>
+#include <managers/Debug.hpp>
+
+PlayScene::PlayScene(World& world, bool isOnline) : Scene(), m_world(world), m_timer(std::make_shared<Timer>(60)), m_online(isOnline), m_paused(false), m_inventoryEnabled(false) {
     auto game = Game::get();
-    m_world = game->getWorld();
     m_player = game->getPlayer();
     m_color = raylib::Color::SkyBlue();
     m_keyBack = false;
@@ -171,7 +173,7 @@ PlayScene::PlayScene(bool isOnline) : Scene(), m_timer(std::make_shared<Timer>(6
 
 PlayScene::~PlayScene() {
     if(!m_online) {
-        m_world->save();
+        m_world.save();
     }
 }
 
@@ -186,26 +188,20 @@ void PlayScene::draw() {
     }
 
     m_player->getCamera().BeginMode();
-        m_world->draw(m_player);
-
-        // if (m_player->isBreakingTile()) {
-        //     auto breakingTile = m_player->getBreakingTileInfo(m_world.get());
-    
-        //     rm.GetTilemap("gui.png").DrawTile(8 + (5.f - (breakingTile.currentDurability / breakingTile.totalDurability) * 5.f), TILE_RECT(target.x, target.y));
-        // }
+        drawWorld();
 
         if (m_player->canAccessTile(target)) {
-            if(m_player->canPlaceTile(*m_world, target)) {
+            if(m_player->canPlaceTile(m_world, target)) {
                 rm.GetTilemap("gui.png").DrawTile(1, TILE_RECT(target.x, target.y));
             }
 
-            if(m_player->canDestroyTile(*m_world, target)) {
+            if(m_player->canDestroyTile(m_world, target) && !m_player->isBreakingTile()) {
                 rm.GetTilemap("gui.png").DrawTile(2 + raylib::Keyboard::IsKeyDown(KEY_LEFT_CONTROL), TILE_RECT(target.x, target.y));
             }
         }
     m_player->getCamera().EndMode();
 
-    if(m_online) {
+    if (m_online) {
         auto mp = Multiplayer::get();
         auto messages = mp->getMessages();
 
@@ -216,7 +212,7 @@ void PlayScene::draw() {
 
     rm.GetTilemap("gui.png").DrawTile(0, raylib::Rectangle{mouse.x, mouse.y, 16.f, 16.f}, raylib::Color::White(), 0.f, {8.f, 8.f});
 
-    if(m_paused) {
+    if (m_paused) {
         RRectangle(getSize()).Draw(raylib::Color{0, 0, 0, 127});
     }
 
@@ -224,14 +220,92 @@ void PlayScene::draw() {
     Debug::get()->draw();
 }
 
+void PlayScene::drawWorld() {
+    auto dbg = Debug::get();
+    auto chunkCount = 0;
+    auto tilesCount = 0;
+
+    auto& camera = m_player->getCamera();
+    raylib::Vector2 min = camera.GetScreenToWorld(raylib::Vector2::Zero());
+    raylib::Vector2 max = camera.GetScreenToWorld(raylib::Window::GetSize());
+
+    auto& rm = ResourceManager::Get();
+    auto& gui = rm.GetTilemap("gui.png");
+
+    for (int y = min.y; y < max.y; y++) {
+        for (int x = min.x; x < max.x; x++) {
+            TileID tile0 = m_world.getTile({x, y, 0});
+            TileID tile1 = m_world.getTile({x, y, 1});
+
+            if (tile1 != TileID::AIR) {
+                drawTile(raylib::Rectangle(float(x), float(y), 1.f, 1.f), TilePosition{x, y, 1});
+                continue;
+            }
+
+            if (tile0 != TileID::AIR) {
+                drawTile(raylib::Rectangle(float(x), float(y), 1.f, 1.f), TilePosition{x, y, 0});
+            }
+        }
+    }
+
+    for (auto& [_, player] : m_world.getPlayers()) {
+        auto clPlayer = std::dynamic_pointer_cast<ClientPlayer>(player);
+
+        if (clPlayer != nullptr) {
+            clPlayer->draw();
+
+            if (dbg->isVisible()) {
+                auto env = m_world.getHitboxes(player->getHitbox());
+
+                for (auto& h : env) {
+                    RenderManager::drawRectLines({h.x, h.y, h.width, h.height}, raylib::Color::Red(), 0.05f);
+                }
+            }
+        }
+    }
+
+    for (auto& [playerId, info] : m_world.getBreakInfo()) {
+        raylib::Rectangle tileRect = {
+            static_cast<float>(info.pos.x), static_cast<float>(info.pos.y), 
+            1.f, 1.f
+        };
+
+        if (m_player->isRectInView(tileRect)) {
+            auto tile = m_world.getTile(info.pos);
+            gui.DrawTile(int(8 + (info.progress / Tile::getDurability(tile)) * 5), tileRect);   
+        }
+    }
+
+    if (dbg->isVisible()) {
+        dbg->setString(DebugID::RENDER_CHUNKS, "Chunks rendered: {}", chunkCount);
+        dbg->setString(DebugID::RENDER_TILES, "Tiles rendered: {}", tilesCount);
+    }
+}
+
+void PlayScene::drawTile(raylib::Rectangle dest, TilePosition position) {
+    TileID tile = m_world.getTile(position);
+
+    if (tile != TileID::AIR) {
+        auto sm = SettingsManager::get();
+        
+        raylib::Color col{255, 255, 255};
+
+        if(position.layer < 1) {
+            col = col.Brightness(-(1.f - sm->getValue<float>("video.layer0.brightness", 0.75f)));
+        }
+
+        ResourceManager::Get().GetTilemap("tiles.png").DrawTile((int)tile - 1, dest, col);
+    }
+}
+
 void PlayScene::update() {
     m_timer->advanceTime();
 
     if(!m_paused) {
         for (uint32_t i = 0; i < m_timer->getTicks(); i++) {
-            m_world->onTick();
+            m_world.onTick();
 
-            auto time = m_world->getTime();
+            auto time = m_world.getTime();
             auto seconds = (time / 60) % 60;
             auto minutes = (time / 3600) % 60;
             auto hours = time / 216000;
@@ -249,7 +323,7 @@ void PlayScene::update() {
     
     auto stm = SettingsManager::get();
     auto target = m_player->getTargetTile();
-    auto tile = m_world->getTile(target);
+    auto tile = m_world.getTile(target);
     auto tileInfo = getChild<TileInfo>("tileinfo");
     auto playerList = getChild<List>("playerlist"); 
     auto inputMsg = getChild<TextInput>("inputmsg");
@@ -278,13 +352,12 @@ void PlayScene::update() {
                 auto msg = inputMsg->getText();
                 auto pak = Packet(ObjectHeader::MESSAGE, msg);
                 mp->sendPacket(pak);
-                m_world = nullptr;
             }
         }
     }
 
     if(raylib::Keyboard::IsKeyPressed(KEY_F6)) {
-        m_world->save();
+        m_world.save();
     }
 
     if(raylib::Keyboard::IsKeyPressed(KEY_F1)) {
@@ -313,7 +386,7 @@ void PlayScene::setPaused(bool paused) {
     pauseMenu->setEnabled(paused);
     
     if(m_online) {
-        auto players = m_world->getPlayers();
+        auto players = m_world.getPlayers();
         if(nickList.size() != players.size() && m_playersList != nullptr) {
             nickList.clear();
             nickList.push_back(Game::get()->getUsername());
