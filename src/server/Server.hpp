@@ -50,10 +50,10 @@ public:
     void send(PlayerID pid, Packet const& packet, Channel channel = EVERYTHING, bool reliable = true);
 
     PlayerID joinPlayer(std::string const& username);
-    void disconnectPlayer(PlayerID id, DisconnectReasonID reason);
+    void disconnectPlayer(PlayerID id, DisconnectReason reason);
     void kickPlayer(std::string const& username);
     
-    std::string const getDisconnectReasonByID(DisconnectReasonID id);
+    std::string const getDisconnectReasonByID(DisconnectReason id);
 
     auto getWorld() { return m_world; }
     auto getTimer() { return m_timer; }

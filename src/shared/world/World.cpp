@@ -13,6 +13,7 @@
 #include <world/Structure.hpp>
 #include <FastNoiseLite.h>
 #include <random>
+#include <numbers>
 
 World::World() {
     m_tiles.fill(TileID::AIR);
@@ -156,23 +157,23 @@ std::unique_ptr<World> World::GenerateWorld(int seed) {
 
     int lastCactusX = -100;
 
-    for (int x = 0; x < WORLD_SIZE; ++x) {
-        int surfaceY = surfaceHeights[x];
+    for (int terrainX = 0; terrainX < WORLD_SIZE; ++terrainX) {
+        int surfaceY = surfaceHeights[terrainX];
         int plantY = surfaceY - 1;
 
         if (plantY < 0)
             continue;
 
-        TileID ground = surfaceBlocks[x];
+        TileID ground = surfaceBlocks[terrainX];
 
-        float chance = HashNoise(seed, x, -1000);
+        float chance = HashNoise(seed, terrainX, -1000);
 
         switch (ground) {
             case TileID::GRASS: {
                 TileID plant = TileID::AIR;
 
                 if (chance < 0.80f) {
-                    float type = HashNoise(seed, x, -2000);
+                    float type = HashNoise(seed, terrainX, -2000);
 
                     if (type < 0.20f)
                         plant = TileID::TALL_GRASS;
@@ -182,11 +183,26 @@ std::unique_ptr<World> World::GenerateWorld(int seed) {
                         plant = TileID::TINY_GRASS;
                 } else if (chance < 0.83f) {
                     plant = TileID::ROSE;
+                } else if (chance < 0.90f) {
+                    for (int x = -2; x <= 2; x++) {
+                        for (int y = -2; y <= 2; y++) {
+                            if (x * x + y * y <= 5) {
+                                ret->setTile(TilePosition{terrainX + x, plantY - 5 + y, 0}, TileID::LEAVES);
+                                ret->setTile(TilePosition{terrainX + x, plantY - 5 + y, 1}, TileID::LEAVES);
+                            }
+                        }
+                    }
+
+                    for (int y = 0; y < 6; y++) {
+                        ret->setTile(TilePosition{terrainX, plantY - y, 0}, TileID::OAK_LOG);
+                    }
+                    
+                    break;
                 }
 
                 if (plant != TileID::AIR) {
                     ret->setTile(
-                        TilePosition{x, plantY, 1},
+                        TilePosition{terrainX, plantY, 1},
                         plant
                     );
                 }
@@ -195,12 +211,12 @@ std::unique_ptr<World> World::GenerateWorld(int seed) {
             }
 
             case TileID::SNOW: {
-                ret->setTile(TilePosition{x, plantY, 1}, TileID::SNOW_CARPET);
+                ret->setTile(TilePosition{terrainX, plantY, 1}, TileID::SNOW_CARPET);
                 break;
             }
 
             case TileID::SAND: {
-                if (x - lastCactusX < 4)
+                if (terrainX - lastCactusX < 4)
                     break;
 
                 if (chance >= 0.08f)
@@ -209,10 +225,10 @@ std::unique_ptr<World> World::GenerateWorld(int seed) {
                 for (int i = 0; i < 2; ++i) {
                     TileID part = (i == 1) ? TileID::CACTUS_HEAD : TileID::CACTUS_BASE;
 
-                    ret->setTile(TilePosition{x, plantY - i, 1}, part);
+                    ret->setTile(TilePosition{terrainX, plantY - i, 1}, part);
                 }
 
-                lastCactusX = x;
+                lastCactusX = terrainX;
                 break;
             }
 
@@ -230,28 +246,64 @@ std::unique_ptr<World> World::GenerateWorld(int seed) {
             ret->m_tiles[WORLD_SIZE*WORLD_SIZE + i] = TileID::AIR; 
     }
 
-    float angle = 4.71f;
-    float turnStrength = 0.3f;
-    float radiusVariation = 1.f;
+    float angle = 1.69f;
+    float turnStrength = 0.1f;
+    float radiusVariation = 0.9f;
 
     FastNoiseLite turnNoise(seed + 12);
     FastNoiseLite radiusNoise(seed + 13);
+    // turnNoise.SetFrequency(0.010f);
+    // radiusNoise.SetFrequency(0.010f);
 
     const int speed = 3;
     const int baseRadius = 3;
 
-    for (int i = 0; i < WORLD_SIZE / 100; i++) {
-        Vec2i wormPos{i * 100, surfaceHeights[i * 100] - baseRadius * 2};
+    std::mt19937 caveRng(seed + 14);
+    std::uniform_real_distribution<float> chance(0.f, 1.f);
+    std::uniform_real_distribution<float> direction(0.f, 2.f * std::numbers::pi_v<float>);
 
-        for (int step = 0; step < 100; step++) {
-            angle += turnNoise.GetNoise(float(step), float(i)) * turnStrength;
+    int caveIndex = 0;
 
-            wormPos.x += std::cos(angle) * speed;
-            wormPos.y += std::sin(angle) * speed;
+    for (int regionY = 0; regionY < WORLD_SIZE; regionY += 120) {
+        for (int regionX = 0; regionX < WORLD_SIZE; regionX += 150) {
+            if (chance(caveRng) >= 0.6f) {
+                continue;
+            }
 
-            float radius = baseRadius + radiusNoise.GetNoise(float(step), float(i)) * radiusVariation;
+            int maxX = std::min(regionX + 149, WORLD_SIZE - 1);
+            int startX = std::uniform_int_distribution<int>(regionX, maxX)(caveRng);
 
-            CarveCircle(*ret, {int(wormPos.x), int(wormPos.y), 1}, radius);
+            int minY = std::min(regionY, surfaceHeights[startX] + 25);
+            int maxY = std::min(regionY + 119, WORLD_SIZE - 1);
+
+            if (minY > maxY) {
+                continue;
+            }
+
+            int startY = std::uniform_int_distribution<int>(minY, maxY)(caveRng);
+            Vec2f wormPosition{static_cast<float>(startX), static_cast<float>(startY)};
+            float angle = direction(caveRng);
+            int length = std::uniform_int_distribution<int>(50, 170)(caveRng);
+
+            for (int step = 0; step < length; step++) {
+                angle += turnNoise.GetNoise(float(step), float(caveIndex) * 100.f) * turnStrength;
+
+                wormPosition.x += std::cos(angle) * speed;
+                wormPosition.y += std::sin(angle) * speed;
+
+                Vec2i tilePosition = wormPosition.as<int>();
+
+                if (tilePosition.y < surfaceHeights[tilePosition.x] + 5) {
+                    break;
+                }
+
+                float radius = baseRadius + radiusNoise.GetNoise(float(step), float(caveIndex) * 100.f) * radiusVariation;
+                radius = std::max(1.f, radius);
+
+                CarveCircle(*ret, {tilePosition.x, tilePosition.y, 1}, radius);
+            }
+
+            caveIndex++;
         }
     }
 
@@ -322,96 +374,71 @@ World::CaveMap World::GenerateCave(int seed, int iterations) {
 void World::onTick() {
     m_time++;
 
-    std::vector<Vec2i> unloadList;
-
-    // for (auto& [pos, chunk] : m_chunks) {
-    //     for (auto x = 0; x < CHUNK_WIDTH; x++) {
-    //         for (auto y = 0; y < CHUNK_HEIGHT; y++) {
-    //             auto tile0 = chunk->getTile({x, y, 0});
-    //             if (tile0 != nullptr) {
-    //                 tile0->onTick(this, {x, y, 0});
-    //             }
-
-    //             auto tile1 = chunk->getTile({x, y, 1});
-    //             if (tile1 != nullptr) {
-    //                 tile1->onTick(this, {x, y, 0});
-    //             }
-    //         }
-    //     }
-
-    //     for (int i = 0; i < m_randomTickSpeed; i++) {
-    //         int x = rand() % CHUNK_WIDTH;
-    //         int y = rand() % CHUNK_HEIGHT;
-    //         uint8_t z = rand() % CHUNK_DEPTH;
-    //         auto tile = chunk->getTile({x, y, z});
-        
-    //         if(tile != nullptr) {
-    //             tile->onRandomTick(this, {x, y, z});
-    //         }
-    //     }
-
-    //     bool shouldUnload = true;
-
-    //     for (auto& [id, player] : m_players) {
-    //         auto playerPos = player->getPosition();
-    //         auto playerChunk = TO_CHUNK_POS(playerPos);
-    //         shouldUnload &= playerChunk.distance(pos) > RENDER_DISTANCE;
-    //     }
-
-    //     if (shouldUnload) {
-    //         unloadList.push_back(pos);
-    //     }
-    // }
-
-    // for (auto& pos : unloadList) {
-    //     saveChunk(pos);
-    //     unloadChunk(pos);
-    // }
-
     for (auto& [id, player] : m_players) {
         player->onTick(*this);
-        // auto playerPos = player->getPosition();
-        // auto pos = TO_CHUNK_POS(playerPos);
-        
-        // for (int x = pos.x - halfDistance; x < pos.x + halfDistance; x++) {
-        //     for (int y = pos.y - halfDistance; y < pos.y + halfDistance; y++) {
-        //         auto chunk = getChunk({x, y});
-                
-        //         if (chunk == nullptr) {
-        //             generateChunk({x, y});
-        //             break;
-        //         }
-        //     }
-        // }
+
+        auto position = player->getPosition();
+
+        int distance = 20;
+
+        for (auto layer = 0; layer < WORLD_LAYERS; layer++) {
+            for (int x = position.x - distance; x < position.x + distance; x++) {
+                for (int y = position.y - distance; y < position.y + distance; y++) {
+                    auto tile0 = Tile::Get(getTile({x, y, 0}));
+                    if (tile0 != nullptr) {
+                        tile0->onTick(*this, {x, y, 0});
+                    }
+
+                    auto tile1 = Tile::Get(getTile({x, y, 1}));
+                    if (tile1 != nullptr) {
+                        tile1->onTick(*this, {x, y, 1});
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < m_randomTickSpeed; i++) {
+            std::uniform_int_distribution<int> positionX(position.x - distance, position.x + distance);
+            std::uniform_int_distribution<int> positionY(position.y - distance, position.y + distance);
+
+            int x = positionX(m_rng);
+            int y = positionY(m_rng);
+
+            auto tile0 = Tile::Get(getTile({x, y, 0}));
+            if (tile0 != nullptr) {
+                tile0->onRandomTick(*this, {x, y, 0});
+            }
+
+            auto tile1 = Tile::Get(getTile({x, y, 1}));
+            if (tile1 != nullptr) {
+                tile1->onRandomTick(*this, {x, y, 1});
+            }
+        }
     }
 
     for (auto& [playerId, info] : m_breakInfo) {
         auto player = m_players[playerId];
         auto tile = getTile(info.pos);
-        auto tool = player->getItemHand();
-        // auto toolType = (tool != nullptr) ? tool->getType() : TYPE_ITEM;
-        // auto toolMaterial = (tool != nullptr) ? tool->getMaterial() : MATERIAL_NONE;
-        float speed = 1.f;
-        float d = Tile::getDurability(tile);
-
-        // if (tool != nullptr && tile->getBestTool() == toolType) {
-        //     speed = tool->getToolSpeed();
-        // }
+        float speed = Tile::GetBreakingSpeed(tile, player->getItemHand().item.get());
+        float d = Tile::GetDurability(tile);
     
         info.progress += speed / d * 0.01f;
     
         if (info.progress >= d || player->getGamemode() == GAMEMODE_CREATIVE) {
-            if (player->getGamemode() != GAMEMODE_CREATIVE /* && toolMaterial >= tile->getBestToolMaterial() */) {
-                auto tileObject = Tile::get(tile);
-                
-                if (tileObject != nullptr) {
-                    player->addItem(tileObject->dropItem(player->getItemHand()->item.get()));
-                } else {
-                    player->addItem(std::make_unique<Item>(tile));
-                }
+            auto drop = Tile::GetDrop(tile, player->getItemHand().item.get());
+
+            if (player->getGamemode() != GAMEMODE_CREATIVE && drop.has_value()) {
+                player->addItem(std::make_unique<Item>(*drop));
+            }
+
+            destroyTile(info.pos);
+
+            auto destroyedTile = Tile::Get(tile);
+
+            if (destroyedTile != nullptr) {
+                destroyedTile->tileChanged(*this, info.pos);
             }
             
-            destroyTile(info.pos);
             player->setBreakingTile(false);
         }
     }
@@ -642,7 +669,7 @@ std::optional<Rectf> World::getTileHitbox(TilePosition pos) {
     if (pos.layer > 0) {
         auto tile = getTile(pos);
 
-        if (tile != TileID::AIR && !Tile::isPhantom(tile)) {
+        if (tile != TileID::AIR && !Tile::IsPhantom(tile)) {
             return Rectf {static_cast<float>(pos.x), static_cast<float>(pos.y), 1.f, 1.f};
         } 
     }
@@ -651,50 +678,66 @@ std::optional<Rectf> World::getTileHitbox(TilePosition pos) {
 }
 
 bool World::isOutOfBound(TilePosition pos) const {
-    return pos.x < 0 || pos.x >= WORLD_SIZE || pos.y < 0 || pos.y >= WORLD_SIZE && pos.layer < 0 && pos.layer >= WORLD_LAYERS;
+    return pos.x < 0 || pos.x >= WORLD_SIZE || pos.y < 0 || pos.y >= WORLD_SIZE || pos.layer < 0 || pos.layer >= WORLD_LAYERS;
 }
 
 void World::placeTile(PlayerID m_id, TilePosition pos) {
     auto player = m_players[m_id];
-    auto slot = player->getItemHand();
+    auto& slot = player->getItemHand();
 
-    if (slot != nullptr && slot->item->isTileItem() && getTile(pos) == TileID::AIR) {
-        setTile(pos, (TileID)slot->item->getID());
+    if (slot.item != nullptr && Item::IsTileItem(slot.item->getID()) && getTile(pos) == TileID::AIR) {
+        auto newTile = Item::GetTile(slot.item->getID());
+        setTile(pos, newTile);
+
+        auto placedTile = Tile::Get(newTile);
+
+        if (placedTile != nullptr) {
+            placedTile->tileChanged(*this, pos);
+        }
 
         if(player->getGamemode() == GAMEMODE_SURVIVAL) {
-            slot->count--;
+            slot.count--;
             player->gc();
         }
     }
 }
 
 void World::breakTile(PlayerID id, TilePosition pos) {
-    destroyTile(pos);
-    // auto player = m_players[id];
-    // auto tileId = getTile(pos);
+    // destroyTile(pos);
+    auto player = m_players[id];
+    auto tileId = getTile(pos);
 
-    // // Bedrock has -1.f
-    // if (Tile::getDurability(tileId) < 0) {
-    //     return;
-    // }
+    // Bedrock has -1.f
+    if (Tile::GetDurability(tileId) < 0) {
+        return;
+    }
 
-    // auto it = m_breakInfo.find(id);
+    auto it = m_breakInfo.find(id);
 
-    // if (it != m_breakInfo.end()) {
-    //     if(it->second.pos != pos) {
-    //         it->second.pos = pos;
-    //         it->second.progress = 0;
-    //         it->second.time = m_time;
-    //     }
+    if (it != m_breakInfo.end()) {
+        if(it->second.pos != pos) {
+            it->second.pos = pos;
+            it->second.progress = 0;
+            it->second.time = m_time;
+        }
         
-    //     return;
-    // }
+        return;
+    }
 
-    // m_breakInfo.insert(std::make_pair(id, BreakInfo {pos, m_time, 0}));
-    // player->setBreakingTile(true);
+    m_breakInfo.insert(std::make_pair(id, BreakInfo {pos, m_time, 0}));
+    player->setBreakingTile(true);
 }
 
 void World::stopBreakingTile(PlayerID id) {
     m_players[id]->setBreakingTile(false);
     m_breakInfo.erase(id);   
+}
+
+void World::tileChanged(TilePosition position) {
+    auto newTile = getTile(position);
+    auto tile = Tile::Get(newTile);
+
+    if (tile != nullptr) {
+        tile->tileChanged(*this, position);
+    }
 }

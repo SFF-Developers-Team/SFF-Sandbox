@@ -54,7 +54,7 @@ void Client::packetReceived(Packet& packet) {
     handle(packet);
 }
 
-void Client::disconnect(DisconnectReasonID reason) {
+void Client::disconnect(DisconnectReason reason) {
     auto srv = Server::get();
     logD("Disconnecting client {} because of {}", m_id, srv->getDisconnectReasonByID(reason));
     sendPacket(Packet(ObjectHeader::NETWORK_ERROR, srv->getDisconnectReasonByID(reason)));

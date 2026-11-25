@@ -34,7 +34,7 @@ void Hotbar::draw() {
         }
 
         if(slot.item != nullptr) {
-            RenderManager::renderInventoryItem(itemRect, *slot.item, slot.count);
+            RenderManager::renderInventoryItem(itemRect, slot.item->getID(), slot.count);
         }
 
         if(i == selected) {

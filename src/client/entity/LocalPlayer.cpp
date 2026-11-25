@@ -10,7 +10,6 @@
 #include <Game.hpp>
 #include <algorithm>
 #include <Types.hpp>
-#include <ItemDatabase.hpp>
 #include <raymath.h>
 
 LocalPlayer::LocalPlayer(World& world) : ClientPlayer(world), m_forward(0.f), m_camera{} {
@@ -193,7 +192,7 @@ void LocalPlayer::onTick(World& world) {
     auto target = getTargetTile();
     auto tile = world.getTile(target);
 
-    dbg->setString(PLAYER_TARGET_TILE, "Target tile: [{}, {}] ({})", target.x, target.y, (tile != TileID::AIR ? Tile::getName(tile) : "nullptr"));
+    dbg->setString(PLAYER_TARGET_TILE, "Target tile: [{}, {}] ({})", target.x, target.y, (tile != TileID::AIR ? Tile::GetName(tile) : "nullptr"));
     dbg->setString(PLAYER_POSITION, "Position: [{:.2f}, {:.2f}]", m_hitbox.x, m_hitbox.y);
     dbg->setString(PLAYER_HEALTH, "Health: {}", m_health);
 }

@@ -1,11 +1,13 @@
 #pragma once
 #include <type_traits>
 #include <cstdint>
-#include <variant>
 #include <cmath>
 #include <memory>
 #include <vector>
-#include <map>
+
+#ifdef GOLD
+#   undef GOLD
+#endif
 
 template <typename T>
 struct Vec2 {
@@ -88,7 +90,7 @@ using Recti = Rect<int>;
 
 // Enums
 
-enum DisconnectReasonID : uint32_t {
+enum class DisconnectReason : uint32_t {
     INVALID_FIRST_PACKET,
     TOO_SHORT_USERNAME,
     TOO_LONG_USERNAME,
@@ -153,7 +155,30 @@ enum class TileID : uint16_t {
 };
 
 enum class ItemID : uint16_t {
-    STICK = ITEM_ID_BEGIN,
+    GRASS,
+    DIRT,
+    STONE,
+    COBBLESTONE,
+    PLANKS,
+    WOOL,
+    BEDROCK,
+    BRICKS,
+    OAK_LOG,
+    LEAVES,
+    BOOKSHELF,
+    FLOWER_POT,
+    FURNACE,
+    WORKBENCH,
+    CHEST,
+    BED,
+    DEAD_ROSE,
+    ROSE,
+    TORCH,
+    GLASS,
+    SIGN,
+    SNOW,
+    SAND,
+    STICK,
     WOODEN_PICKAXE,
     WOODEN_SWORD,
     STONE_PICKAXE,
@@ -172,14 +197,7 @@ enum class ItemID : uint16_t {
     DIAMOND
 };
 
-enum MaterialType : uint8_t {
-    MATERIAL_NONE,
-    MATERIAL_WOOD,
-    MATERIAL_GOLD,
-    MATERIAL_STONE,
-    MATERIAL_IRON,
-    MATERIAL_DIAMOND
-};
+enum class ItemMaterial : uint8_t {NONE, WOOD, GOLD, STONE, IRON, DIAMOND};
 
 enum ItemType : uint8_t {
     TYPE_TILE,

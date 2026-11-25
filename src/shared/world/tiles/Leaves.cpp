@@ -6,8 +6,8 @@ void Leaves::onRandomTick(World& world, TilePosition pos) {
 
     bool isThereTree = false;
 
-    for (int x = pos.x - 4; x < pos.x + 4; x++) {
-        for (int y = pos.y - 4; y < pos.y + 4; y++) {
+    for (int x = pos.x - 8; x < pos.x + 8; x++) {
+        for (int y = pos.y - 8; y < pos.y + 8; y++) {
             auto tile0 = world.getTile({x, y, 0});
             auto tile1 = world.getTile({x, y, 1});
 
@@ -19,8 +19,4 @@ void Leaves::onRandomTick(World& world, TilePosition pos) {
     if (!isThereTree) {
         world.destroyTile(pos);
     }
-}
-
-std::unique_ptr<Item> Leaves::dropItem(Item* tool) {
-    return nullptr;
 }

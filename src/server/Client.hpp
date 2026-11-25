@@ -18,7 +18,7 @@ public:
     bool accept(Packet& packet);
     // void update();
     void packetReceived(Packet& packet) override;
-    void disconnect(DisconnectReasonID reason);
+    void disconnect(DisconnectReason reason);
 
     void handle(Packet& packet) override;
     void handlePlayer(Packet& packet);

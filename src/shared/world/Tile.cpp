@@ -1,89 +1,116 @@
 #include "Tile.hpp"
-#include "tiles/CoalOre.hpp"
-#include "tiles/DiamondOre.hpp"
-#include "tiles/GoldOre.hpp"
-#include "tiles/Grass.hpp"
-#include "tiles/IronOre.hpp"
 #include "tiles/Leaves.hpp"
-#include "tiles/Stone.hpp"
+#include "tiles/Grass.hpp"
+#include "tiles/Cactus.hpp"
+#include <optional>
 
 struct TileProperties {
     std::string_view name;
     float durability;
-    ItemType toolType;
+    ItemType bestTool;
     bool phantom;
+    std::optional<ItemID> drop;
+    bool transparent = false;
+    bool needsCorrectTool = false;
 };
 
 bool Tile::m_inited = false;
-std::unordered_map<TileID, std::unique_ptr<Tile>> Tile::m_tilesDb;
+std::unordered_map<TileID, std::unique_ptr<Tile>> Tile::m_tileObjectDb;
 
-//   id                   name            type        durability  best tool           phantom
-std::unordered_map<TileID, TileProperties> TilesDB = {
-    {TileID::GRASS,       {"Grass",        0.6f,       TYPE_TOOL_SHOVEL,  false}},
-    {TileID::DIRT,        {"Dirt",         0.5f,       TYPE_TOOL_SHOVEL,  false}},
-    {TileID::STONE,       {"Stone",        1.5f,       TYPE_TOOL_PICKAXE, false}},
-    {TileID::COBBLESTONE, {"Cobblestone",  2.0f,       TYPE_TOOL_PICKAXE, false}},
-    {TileID::PLANKS,      {"Planks",       2.0f,       TYPE_TOOL_AXE,     false}},
-    {TileID::WOOL,        {"Wool",         0.8f,       TYPE_ITEM,         false}},
-    {TileID::BEDROCK,     {"Bedrock",     -1.0f,       TYPE_ITEM,         false}},
-    {TileID::BRICKS,      {"Bricks",       2.0f,       TYPE_TOOL_PICKAXE, false}},
-    {TileID::OAK_LOG,     {"Oak log",      2.0f,       TYPE_TOOL_AXE,     false}},
-    {TileID::LEAVES,      {"Leaves",       0.2f,       TYPE_ITEM,         false}},
-    {TileID::COAL_ORE,    {"Coal ore",     3.0f,       TYPE_TOOL_PICKAXE, false}},
-    {TileID::IRON_ORE,    {"Iron ore",     3.0f,       TYPE_TOOL_PICKAXE, false}},
-    {TileID::GOLD_ORE,    {"Gold ore",     3.0f,       TYPE_TOOL_PICKAXE, false}},
-    {TileID::DIAMOND_ORE, {"Diamond ore",  3.0f,       TYPE_TOOL_PICKAXE, false}},
-    {TileID::BOOKSHELF,   {"Bookshelf",    2.0f,       TYPE_TOOL_AXE,     false}},
-    {TileID::FLOWER_POT,  {"Flower pot",   0.0f,       TYPE_ITEM,         true}},
-    {TileID::FURNACE,     {"Furnace",      3.5f,       TYPE_TOOL_PICKAXE, false}},
-    {TileID::CHEST,       {"Chest",        2.0f,       TYPE_TOOL_AXE,     true}},
-    {TileID::ROSE,        {"Rose",         0.0f,       TYPE_ITEM,         true}},
-    {TileID::CACTUS_HEAD, {"Cactus Head",  0.5f,       TYPE_TOOL_AXE,     true}},
-    {TileID::CACTUS_BASE, {"Cactus Base",  0.5f,       TYPE_TOOL_AXE,     true}},
-    {TileID::TALL_GRASS,  {"Tall Grass",   0.0f,       TYPE_ITEM,         true}},
-    {TileID::MEDIUM_GRASS,{"Medium Grass", 0.0f,       TYPE_ITEM,         true}},
-    {TileID::TINY_GRASS,  {"Tiny Grass",   0.0f,       TYPE_ITEM,         true}},
-    {TileID::DEAD_ROSE,   {"Dead Rose",    0.0f,       TYPE_ITEM,         true}},
-    {TileID::BED,         {"Bed",          2.0f,       TYPE_TOOL_AXE,     true}},
-    {TileID::SIGN,        {"Sign",         1.0f,       TYPE_TOOL_AXE,     true}},
-    {TileID::SNOW_CARPET, {"Snow Carpet",  0.1f,       TYPE_TOOL_SHOVEL,  true}},
+// id                          name          hardness   tool           phantom  drop                trans  requires tool
+const std::unordered_map<TileID, TileProperties> TilesDB = {
+    {TileID::AIR,             {"Air",          0.f,  TYPE_ITEM,         true,  std::nullopt,        true}},
+    {TileID::GRASS,           {"Grass",        0.6f, TYPE_TOOL_SHOVEL,  false, ItemID::DIRT,        false}},
+    {TileID::DIRT,            {"Dirt",         0.5f, TYPE_TOOL_SHOVEL,  false, ItemID::DIRT,        false}},
+    {TileID::STONE,           {"Stone",        1.5f, TYPE_TOOL_PICKAXE, false, ItemID::COBBLESTONE, false, true}},
+    {TileID::COBBLESTONE,     {"Cobblestone",  2.0f, TYPE_TOOL_PICKAXE, false, ItemID::COBBLESTONE, false}},
+    {TileID::PLANKS,          {"Planks",       2.0f, TYPE_TOOL_AXE,     false, ItemID::PLANKS,      false}},
+    {TileID::WOOL,            {"Wool",         0.8f, TYPE_ITEM,         false, ItemID::WOOL,        false}},
+    {TileID::BEDROCK,         {"Bedrock",     -1.0f, TYPE_ITEM,         false, std::nullopt,        false}},
+    {TileID::BRICKS,          {"Bricks",       2.0f, TYPE_TOOL_PICKAXE, false, ItemID::BRICKS,      false}},
+    {TileID::OAK_LOG,         {"Oak log",      2.0f, TYPE_TOOL_AXE,     false, ItemID::OAK_LOG,     false}},
+    {TileID::LEAVES,          {"Leaves",       0.2f, TYPE_ITEM,         false, std::nullopt,        true}},
+    {TileID::BOOKSHELF,       {"Bookshelf",    2.0f, TYPE_TOOL_AXE,     false, ItemID::BOOKSHELF,   false}},
+    {TileID::FLOWER_POT,      {"Flower pot",   0.0f, TYPE_ITEM,         true,  ItemID::FLOWER_POT,  true}},
+    {TileID::FURNACE,         {"Furnace",      3.5f, TYPE_TOOL_PICKAXE, false, ItemID::FURNACE,     false}},
+    {TileID::ACTIVE_FURHANCE, {"Lit furnace",  3.5f, TYPE_TOOL_PICKAXE, false, ItemID::FURNACE,     false}},
+    {TileID::WORKBENCH,       {"Workbench",    2.5f, TYPE_TOOL_AXE,     false, ItemID::WORKBENCH,   false}},
+    {TileID::CHEST,           {"Chest",        2.0f, TYPE_TOOL_AXE,     true,  ItemID::CHEST,       true}},
+    {TileID::BED,             {"Bed",          2.0f, TYPE_TOOL_AXE,     true,  ItemID::BED,         true}},
+    {TileID::DEAD_ROSE,       {"Dead rose",    0.0f, TYPE_ITEM,         true,  ItemID::DEAD_ROSE,   true}},
+    {TileID::ROSE,            {"Rose",         0.0f, TYPE_ITEM,         true,  ItemID::ROSE,        true}},
+    {TileID::IRON_ORE,        {"Iron ore",     3.0f, TYPE_TOOL_PICKAXE, false, ItemID::IRON_ORE,    false, true}},
+    {TileID::COAL_ORE,        {"Coal ore",     3.0f, TYPE_TOOL_PICKAXE, false, ItemID::COAL,        false, true}},
+    {TileID::DIAMOND_ORE,     {"Diamond ore",  3.0f, TYPE_TOOL_PICKAXE, false, ItemID::DIAMOND,     false, true}},
+    {TileID::GOLD_ORE,        {"Gold ore",     3.0f, TYPE_TOOL_PICKAXE, false, ItemID::GOLD_ORE,    false, true}},
+    {TileID::TORCH,           {"Torch",        0.0f, TYPE_ITEM,         true,  ItemID::TORCH,       true}},
+    {TileID::GLASS,           {"Glass",        0.3f, TYPE_ITEM,         false, std::nullopt,        false}},
+    {TileID::SIGN,            {"Sign",         1.0f, TYPE_TOOL_AXE,     true,  ItemID::SIGN,        true}},
+    {TileID::SNOW,            {"Snow",         0.5f, TYPE_TOOL_SHOVEL,  false, ItemID::SNOW,        false}},
+    {TileID::SNOW_CARPET,     {"Snow carpet",  0.1f, TYPE_TOOL_SHOVEL,  true,  std::nullopt,        true}},
+    {TileID::SAND,            {"Sand",         0.5f, TYPE_TOOL_SHOVEL,  false, ItemID::SAND,        false}},
+    {TileID::CACTUS_HEAD,     {"Cactus head",  0.5f, TYPE_TOOL_AXE,     true,  std::nullopt,        true}},
+    {TileID::CACTUS_BASE,     {"Cactus",       0.5f, TYPE_TOOL_AXE,     true,  std::nullopt,        true}},
+    {TileID::TALL_GRASS,      {"Tall grass",   0.0f, TYPE_ITEM,         true,  std::nullopt,        true}},
+    {TileID::MEDIUM_GRASS,    {"Medium grass", 0.0f, TYPE_ITEM,         true,  std::nullopt,        true}},
+    {TileID::TINY_GRASS,      {"Tiny grass",   0.0f, TYPE_ITEM,         true,  std::nullopt,        true}},
 };
+
+const TileProperties* findProperties(TileID id) {
+    const auto it = TilesDB.find(id);
+    return it == TilesDB.end() ? nullptr : &it->second;
+}
+
+Tile* Tile::Get(TileID id) {
+    const auto it = m_tileObjectDb.find(id);
+    return it == m_tileObjectDb.end() ? nullptr : it->second.get();
+}
 
 void Tile::init() {
     if (m_inited) return;
 
-    m_tilesDb.try_emplace(TileID::COAL_ORE, std::make_unique<CoalOre>());
-    m_tilesDb.try_emplace(TileID::DIAMOND_ORE, std::make_unique<DiamondOre>());
-    m_tilesDb.try_emplace(TileID::GOLD_ORE, std::make_unique<GoldOre>());
-    m_tilesDb.try_emplace(TileID::GRASS, std::make_unique<Grass>());
-    m_tilesDb.try_emplace(TileID::IRON_ORE, std::make_unique<IronOre>());
-    m_tilesDb.try_emplace(TileID::LEAVES, std::make_unique<Leaves>());
-    m_tilesDb.try_emplace(TileID::STONE, std::make_unique<Stone>());
+    m_tileObjectDb.try_emplace(TileID::LEAVES, std::make_unique<Leaves>());
+    m_tileObjectDb.try_emplace(TileID::GRASS, std::make_unique<Grass>());
+    m_tileObjectDb.try_emplace(TileID::CACTUS_BASE, std::make_unique<Cactus>());
+    m_tileObjectDb.try_emplace(TileID::CACTUS_HEAD, std::make_unique<Cactus>());
 
     m_inited = true;
 }
 
-Tile* Tile::get(TileID id) {
-    auto it = m_tilesDb.find(id);
+float Tile::GetDurability(TileID id) {
+    if (auto* tile = findProperties(id)) return tile->durability; 
+    return 0.f;
+}
 
-    if (it != m_tilesDb.end()) {
-        return it->second.get();
+float Tile::GetBreakingSpeed(TileID id, Item* tool) {
+    auto* prop = findProperties(id);
+
+    if (tool != nullptr && prop->bestTool == Item::GetType(tool->getID())) {
+        return Item::GetToolSpeed(tool->getID());
     }
 
-    return nullptr;
+    return 1.f;
 }
 
-float Tile::getDurability(TileID id) {
-    auto it = TilesDB.find(id);
-    return (it != TilesDB.end() ? it->second.durability : 0.f);
+bool Tile::IsPhantom(TileID id) {
+    if (auto* tile = findProperties(id)) return tile->phantom; 
+    return false;
 }
 
-bool Tile::isPhantom(TileID id) {
-    auto it = TilesDB.find(id);
-    return (it != TilesDB.end() ? it->second.phantom : false);
+bool Tile::IsTransparent(TileID id) {
+    if (auto* tile = findProperties(id)) return tile->transparent; 
+    return false;
 }
 
-std::string_view Tile::getName(TileID id) {
-    auto it = TilesDB.find(id);
-    return (it != TilesDB.end() ? it->second.name : "Unknown");
+std::string_view Tile::GetName(TileID id) {
+    if (auto* tile = findProperties(id)) return tile->name; 
+    return "Unknown";
+}
+
+std::optional<ItemID> Tile::GetDrop(TileID id, Item* tool) {
+    auto* p = findProperties(id);
+
+    if (!p || !p->drop || p->durability < 0.f) return std::nullopt;
+    if (p->needsCorrectTool && (!tool || Item::GetType(tool->getID()) != p->bestTool)) return std::nullopt;
+    return p->drop;
 }

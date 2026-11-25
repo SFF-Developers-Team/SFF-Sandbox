@@ -3,6 +3,5 @@
 
 class Grass : public Tile {
 public:
-    TileID getId() const override { return TileID::GRASS; }
-    std::unique_ptr<Item> dropItem(Item* tool) override;
+    void onRandomTick(World& world, TilePosition position) override;
 };

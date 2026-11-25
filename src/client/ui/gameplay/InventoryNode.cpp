@@ -41,7 +41,7 @@ void InventoryNode::draw() {
         auto& slot = m_player->getItem(i);
             
         if (slot.item != nullptr && m_selected != &slot) {
-            RenderManager::renderInventoryItem(itemRect, *slot.item, slot.count);
+            RenderManager::renderInventoryItem(itemRect, slot.item->getID(), slot.count);
         }
 
         if (cellRect.CheckCollision(mouse)) {
@@ -53,7 +53,7 @@ void InventoryNode::draw() {
         auto mouse = getLocalMousePosition();
 
         raylib::Rectangle tileRect = {mouse.x - tileSize / 2, mouse.y - tileSize / 2, tileSize, tileSize};
-        RenderManager::renderInventoryItem(tileRect, *m_selected->item, m_selected->count);
+        RenderManager::renderInventoryItem(tileRect, m_selected->item->getID(), m_selected->count);
     }
 }
 

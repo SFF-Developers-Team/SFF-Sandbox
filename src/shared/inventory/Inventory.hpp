@@ -27,9 +27,9 @@ public:
     void setSelectedItem(uint8_t selected) { m_selected = selected % 9; }
     uint8_t getSelectedItem() { return m_selected; }
 
-    InventorySlot* findItem(int id);
-    InventorySlot* findItem(int id, int aux);
+    InventorySlot* findItem(ItemID id);
+    InventorySlot* findItem(ItemID id, int aux);
 
-    void deleteItem(int id, int count = 1);
+    void deleteItem(ItemID id, int count = 1);
     void gc();
 };

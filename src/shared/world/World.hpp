@@ -13,6 +13,7 @@
 #include <array>
 #include <unordered_map>
 #include <optional>
+#include <random>
 
 class LocalPlayer;
 class WorldGen;
@@ -38,7 +39,8 @@ protected:
     PlayerID m_lastPlayerID = 1;
     uint32_t m_version = WORLD_VERSION;
     uint64_t m_time = 0;
-    uint8_t m_randomTickSpeed = 3;
+    uint8_t m_randomTickSpeed = 60;
+    std::mt19937 m_rng;
 
 public:
     uint32_t const static WORLD_VERSION = 5;
@@ -49,12 +51,13 @@ public:
 
     void onTick();
 
-    void placeTile(TilePosition pos, TileID tile) { if (getTile(pos) != TileID::AIR) setTile(pos, tile); }
     void destroyTile(TilePosition pos) { setTile(pos, TileID::AIR); }
 
     void placeTile(PlayerID id, TilePosition pos);
     void breakTile(PlayerID id, TilePosition pos);
     void stopBreakingTile(PlayerID id);
+
+    void tileChanged(TilePosition position);
 
     bool isTileClosed(TilePosition pos) const;
     bool isOutOfBound(TilePosition pos) const;

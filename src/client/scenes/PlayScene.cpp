@@ -90,9 +90,9 @@ PlayScene::PlayScene(World& world, bool isOnline) : Scene(), m_world(world), m_t
 
     std::vector<std::string> recipesList;
 
-    // for (auto& recipe : RecipesManager::get()->getRecipes()) {
-    //     recipesList.push_back(recipe.result->getName());
-    // }
+    for (auto& recipe : RecipesManager::get()->getRecipes()) {
+        recipesList.push_back(Item::GetName(recipe.resultId).data());
+    }
 
     auto craftList = std::make_shared<List>(recipesList, [inventoryContainer](auto, int id) {
         auto ingredients = inventoryContainer->getChild<IngredientsList>("ingredients");
@@ -237,13 +237,12 @@ void PlayScene::drawWorld() {
             TileID tile0 = m_world.getTile({x, y, 0});
             TileID tile1 = m_world.getTile({x, y, 1});
 
-            if (tile1 != TileID::AIR) {
-                drawTile(raylib::Rectangle(float(x), float(y), 1.f, 1.f), TilePosition{x, y, 1});
-                continue;
+            if (tile0 != TileID::AIR && Tile::IsTransparent(tile1)) {
+                drawTile(raylib::Rectangle(float(x), float(y), 1.f, 1.f), TilePosition{x, y, 0});
             }
 
-            if (tile0 != TileID::AIR) {
-                drawTile(raylib::Rectangle(float(x), float(y), 1.f, 1.f), TilePosition{x, y, 0});
+            if (tile1 != TileID::AIR) {
+                drawTile(raylib::Rectangle(float(x), float(y), 1.f, 1.f), TilePosition{x, y, 1});
             }
         }
     }
@@ -272,7 +271,7 @@ void PlayScene::drawWorld() {
 
         if (m_player->isRectInView(tileRect)) {
             auto tile = m_world.getTile(info.pos);
-            gui.DrawTile(int(8 + (info.progress / Tile::getDurability(tile)) * 5), tileRect);   
+            gui.DrawTile(int(8 + (info.progress / Tile::GetDurability(tile)) * 5), tileRect);   
         }
     }
 

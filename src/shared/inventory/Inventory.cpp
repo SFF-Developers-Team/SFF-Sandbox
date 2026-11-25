@@ -39,7 +39,7 @@ bool Inventory::addItem(std::unique_ptr<Item> item, int count) {
     return false;
 }
 
-InventorySlot* Inventory::findItem(int id) {
+InventorySlot* Inventory::findItem(ItemID id) {
     for (auto i = 0; i < m_inventory.size(); i++) {
         if (m_inventory[i].item != nullptr && m_inventory[i].item->getID() == id) {
             return &m_inventory[i];
@@ -49,7 +49,7 @@ InventorySlot* Inventory::findItem(int id) {
     return nullptr;
 }
 
-InventorySlot* Inventory::findItem(int id, int aux) {
+InventorySlot* Inventory::findItem(ItemID id, int aux) {
     for (auto i = 0; i < m_inventory.size(); i++) {
         if (m_inventory[i].item != nullptr && m_inventory[i].item->getID() == id && m_inventory[i].item->getAux() == aux) {
             return &m_inventory[i];
@@ -59,7 +59,7 @@ InventorySlot* Inventory::findItem(int id, int aux) {
     return nullptr;
 }
 
-void Inventory::deleteItem(int id, int count) {
+void Inventory::deleteItem(ItemID id, int count) {
     auto slot = findItem(id);
 
     if (slot != nullptr) {

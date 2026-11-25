@@ -1,19 +1,19 @@
 #pragma once
 #include <list>
-#include <cstdint>
 #include <vector>
 #include <memory>
 #include <unordered_map>
+#include <Types.hpp>
 
 class Player;
 
 struct RecipeIngredient {
-    int id;
-    uint16_t count;
+    ItemID id;
+    int count;
 };
 
 struct Recipe {
-    int resultId;
+    ItemID resultId;
     int count;
 
     std::vector<RecipeIngredient> ingredients;

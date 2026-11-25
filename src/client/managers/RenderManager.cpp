@@ -27,13 +27,12 @@ void RenderManager::drawFrame(raylib::Rectangle rect, raylib::Color col, float b
 }
 
 
-void RenderManager::renderInventoryItem(raylib::Rectangle dest, Item const& item, int count) {
-    auto id = item.isTileItem() ? item.getID() : item.getID() - ITEM_ID_BEGIN;
+void RenderManager::renderInventoryItem(raylib::Rectangle dest, ItemID itemId, int count) {
     auto& rm = ResourceManager::Get();
-    auto& tilemap = rm.GetTilemap(item.isTileItem() ? "tiles.png" : "items.png");
+    auto& tilemap = rm.GetTilemap(Item::IsTileItem(itemId) ? "tiles.png" : "items.png");
     auto& font = rm.GetFont("font");
 
-    tilemap.DrawTile(id - 1, dest);
+    tilemap.DrawTile(Item::GetSpriteIndex(itemId), dest);
 
     if(count > 1) {
         auto text = std::to_string(count);

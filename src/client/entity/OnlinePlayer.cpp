@@ -1,6 +1,5 @@
 #include <raylib-cpp.hpp>
 #include <entity/OnlinePlayer.hpp>
-#include <algorithm>
 
 OnlinePlayer::OnlinePlayer(World& world) : ClientPlayer(world), m_index(0) {}
 

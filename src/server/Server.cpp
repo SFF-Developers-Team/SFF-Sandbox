@@ -115,7 +115,7 @@ void Server::onTick() {
             case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT:
             case ENET_EVENT_TYPE_DISCONNECT: 
                 if(m_clients.contains(id)) {
-                    disconnectPlayer(m_clients[id]->getPlayerID(), static_cast<DisconnectReasonID>(event.data));
+                    disconnectPlayer(m_clients[id]->getPlayerID(), static_cast<DisconnectReason>(event.data));
                 }
 
                 break;
@@ -222,7 +222,7 @@ void Server::kickPlayer(std::string const& username) {
     logW("Player with username {} not found", username);
 }
 
-void Server::disconnectPlayer(PlayerID id, DisconnectReasonID reason) {
+void Server::disconnectPlayer(PlayerID id, DisconnectReason reason) {
     logD("{} left the game", m_world->getPlayer(id)->getUsername());
     
     m_world->unloadPlayer(id);
@@ -231,7 +231,7 @@ void Server::disconnectPlayer(PlayerID id, DisconnectReasonID reason) {
     broadcast(Packet(ObjectHeader::UNLOAD_PLAYER, id), EVERYTHING);
 }
 
-std::string const Server::getDisconnectReasonByID(DisconnectReasonID id) {
+std::string const Server::getDisconnectReasonByID(DisconnectReason id) {
     switch(id) {
         case INVALID_FIRST_PACKET: return "First packet should be identification!";
         case TOO_SHORT_USERNAME: return "Too short username!";

@@ -57,7 +57,7 @@ public:
 
     void toggleFly();
 
-    InventorySlot* getItemHand() { return &m_inventory[m_selected]; }
+    InventorySlot& getItemHand() { return m_inventory[m_selected]; }
 
     void setBreakingTile(bool flag) { m_breakingTile = flag; }
     bool isBreakingTile() { return m_breakingTile; }
