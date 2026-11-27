@@ -184,9 +184,9 @@ void LocalPlayer::onTick(World& world) {
     );
     // clang-format on
 
-    if (mp->isConnected() && shouldupd) {
-        mp->sendObj(std::shared_ptr<Player>(Game::get()->getPlayer()), EVERYTHING, false);
-    }
+    // if (mp->isConnected() && shouldupd) {
+    //     mp->sendObj(std::shared_ptr<Player>(Game::get()->getPlayer()), EVERYTHING, false);
+    // }
 
     auto dbg = Debug::get();
     auto target = getTargetTile();

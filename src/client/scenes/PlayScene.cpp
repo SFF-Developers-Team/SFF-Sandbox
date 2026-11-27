@@ -20,7 +20,7 @@
 #include <entity/LocalPlayer.hpp>
 
 #include <managers/SettingsManager.hpp>
-#include <managers/RecipesManager.hpp>
+#include <managers/Recipes.hpp>
 #include <managers/ResourceManager.hpp>
 #include <managers/StyleManager.hpp>
 #include <net/Multiplayer.hpp>
@@ -90,16 +90,16 @@ PlayScene::PlayScene(World& world, bool isOnline) : Scene(), m_world(world), m_t
 
     std::vector<std::string> recipesList;
 
-    for (auto& recipe : RecipesManager::get()->getRecipes()) {
+    for (auto& recipe : Recipes::Get()) {
         recipesList.push_back(Item::GetName(recipe.resultId).data());
     }
 
     auto craftList = std::make_shared<List>(recipesList, [inventoryContainer](auto, int id) {
         auto ingredients = inventoryContainer->getChild<IngredientsList>("ingredients");
-        auto recipes = RecipesManager::get()->getRecipes();
+        auto& recipes = Recipes::Get();
 
         if (ingredients != nullptr) {
-            ingredients->setRecipe(recipes[id]);
+            ingredients->setRecipe(recipes.at(id));
         }
     });
     craftList->setPos({inventory->getRightX() + border, border * 2});
@@ -123,10 +123,8 @@ PlayScene::PlayScene(World& world, bool isOnline) : Scene(), m_world(world), m_t
 
     auto craftBtn = std::make_shared<Button>("Craft!", [this, craftList](auto) {
         auto selected = craftList->getSelected();
-        auto rm = RecipesManager::get();
-        auto recipes = rm->getRecipes();
-
-        rm->craftItem(*m_player, recipes[selected]);
+        auto& recipes = Recipes::Get();
+        Recipes::CraftItem(*m_player, recipes.at(selected));
     });
     craftBtn->setPos({craftList->getX(), craftList->getBottomY() + border});
     craftBtn->setAnchor({0.f, 0.f});
@@ -158,7 +156,7 @@ PlayScene::PlayScene(World& world, bool isOnline) : Scene(), m_world(world), m_t
         playerList->setVisible(true);
         playerList->setEnabled(true);
         playerList->setAnchorY(0.f);
-        playerList->setSize({150, static_cast<float>(raylib::Window::GetHeight() / Game::get()->getGuiScale())});
+        playerList->setSize({150, static_cast<float>(raylib::Window::GetHeight()) / Game::get()->getGuiScale()});
         playerList->setTag("playerlist");
         m_playersList = playerList;
         pauseLayer->addChild(m_playersList);

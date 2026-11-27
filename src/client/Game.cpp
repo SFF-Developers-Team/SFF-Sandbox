@@ -10,7 +10,7 @@
 #include <managers/SettingsManager.hpp>
 #include <managers/StyleManager.hpp>
 #include <managers/RenderManager.hpp>
-#include <managers/RecipesManager.hpp>
+#include <managers/Recipes.hpp>
 #include <managers/Debug.hpp>
 #include <net/Multiplayer.hpp>
 #include <Platform.hpp>
@@ -98,7 +98,6 @@ void Game::init(std::vector<std::string>& args) {
     // Load settings
     SettingsManager::get();
     StyleManager::get();
-    RecipesManager::get();
     // Debug::get()->allocateConsole();
     Tile::init();
 

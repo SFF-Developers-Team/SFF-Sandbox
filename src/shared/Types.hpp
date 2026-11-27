@@ -155,6 +155,7 @@ enum class TileID : uint16_t {
 };
 
 enum class ItemID : uint16_t {
+    // blocks.png
     GRASS,
     DIRT,
     STONE,
@@ -173,11 +174,12 @@ enum class ItemID : uint16_t {
     BED,
     DEAD_ROSE,
     ROSE,
-    TORCH,
     GLASS,
     SIGN,
     SNOW,
     SAND,
+
+    // items.png
     STICK,
     WOODEN_PICKAXE,
     WOODEN_SWORD,
@@ -194,7 +196,34 @@ enum class ItemID : uint16_t {
     COAL,
     IRON_INGOT,
     GOLD_INGOT,
-    DIAMOND
+    DIAMOND,
+    WOODEN_AXE,
+    STONE_AXE,
+    IRON_AXE,
+    GOLDEN_AXE,
+    DIAMOND_AXE,
+    WOODEN_SHOVEL,
+    STONE_SHOVEL,
+    IRON_SHOVEL,
+    GOLDEN_SHOVEL,
+    DIAMOND_SHOVEL,
+    WOODEN_HOE,
+    STONE_HOE,
+    IRON_HOE,
+    GOLDEN_HOE,
+    DIAMOND_HOE,
+    TORCH,
+    FISHING_ROPE,
+    FULL_BUCKET,
+    EMPTY_BUCKET,
+    BOOK,
+    BOW,
+    ARROW,
+    FEATHER,
+    APPLE,
+    STEAK,
+    BONE,
+    EGG
 };
 
 enum class ItemMaterial : uint8_t {NONE, WOOD, GOLD, STONE, IRON, DIAMOND};

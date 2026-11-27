@@ -1,6 +1,8 @@
 #include <managers/PacketManager.hpp>
 #include <fix_win32_compatibility.h>
 #include <enet.h>
+#include <Serializable.hpp>
+#include <Packet.hpp>
 
 PacketManager::PacketManager(ENetPeer* peer) : m_peer(peer) {}
 
@@ -8,7 +10,7 @@ PacketManager::~PacketManager() {
     enet_peer_disconnect(m_peer, 0);
 }
 
-bool PacketManager::sendObj(std::shared_ptr<Serializable> obj, Channel channel, bool reliable) {
+bool PacketManager::sendObj(Serializable* obj, Channel channel, bool reliable) {
     auto bytes = obj->serialize();
     // Uhm object allocated vector with bytes
     // Then enet copy vector to internal queue

@@ -5,8 +5,6 @@ project(SFFSandbox
     LANGUAGES C CXX
 )
 
-project(SFFSandbox-server)
-
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW) 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 20)
@@ -82,18 +80,20 @@ target_include_directories(SFFSandbox PRIVATE
 )
 
 if(NOT ${PLATFORM} STREQUAL "Android")
+    add_custom_command(
+        TARGET SFFSandbox POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+                "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
+        COMMENT "Copying game assets..."
+        VERBATIM
+    )
+
     target_include_directories(SFFSandbox-server PRIVATE
         ${SHARED_HEADERS}
         "src/server/"
     )
 endif()
-
-add_custom_command(
-    TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_SOURCE_DIR}/assets"
-            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
-)
 
 if(${PLATFORM} STREQUAL "Android")
     set(VERSION_NUMBER 1)

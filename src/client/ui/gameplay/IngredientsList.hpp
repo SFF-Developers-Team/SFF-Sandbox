@@ -1,15 +1,15 @@
 #pragma once
 #include <ui/basic/Frame.hpp>
-#include <managers/RecipesManager.hpp>
+#include <managers/Recipes.hpp>
 
 class IngredientsList : public Frame {
 private:
-    Recipe m_recipe;
+    const Recipes::Recipe* m_recipe = nullptr;
 
 public:
     IngredientsList();
 
     void draw();
 
-    void setRecipe(Recipe const& recipe) { m_recipe = recipe; }
+    void setRecipe(Recipes::Recipe const& recipe) { m_recipe = &recipe; }
 };

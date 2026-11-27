@@ -11,9 +11,13 @@ IngredientsList::IngredientsList() : Frame() {
 
 void IngredientsList::draw() {
     Frame::draw();
+
+    if (m_recipe == nullptr) {
+        return;
+    }
     
-    for (auto i = 0; i < m_recipe.ingredients.size(); i++) {
-        auto ingredient = m_recipe.ingredients[i];
+    for (auto i = 0; i < m_recipe->ingredients.size(); i++) {
+        auto& ingredient = m_recipe->ingredients.at(i);
         raylib::Rectangle cellRect{m_border * 2 + cellSize * i, m_border * 2, cellSize, cellSize};
         raylib::Rectangle itemRect{cellRect.x + (cellRect.width - tileSize) / 2, cellRect.y + (cellRect.height - tileSize) / 2, tileSize, tileSize};
 
